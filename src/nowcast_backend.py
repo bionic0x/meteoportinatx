@@ -339,7 +339,7 @@ class Service:
             except (OSError,ValueError,KeyError):
                 states[d].update({"data_state":"UNKNOWN","issued":None,
                                   "interval_seconds":self.intervals[d]})
-        return {"version":VERSION,"mode":"persistent-backend","domains":states}
+        return {"version": VERSION, "mode": ("persistent-backend" if os.environ.get("NOWCAST_REQUIRE_DISK") == "1" else "ephemeral-preview"), "durable_state": os.environ.get("NOWCAST_REQUIRE_DISK") == "1", "domains": states}
 
 
 def handler(service: Service, allowed_origins=CORS_ORIGINS):
@@ -371,7 +371,7 @@ def handler(service: Service, allowed_origins=CORS_ORIGINS):
         def do_GET(self):
             path=urlsplit(self.path).path
             if path=="/healthz":
-                return self._json(200,{"status":"ok","version":VERSION})
+                return self._json(200,{"status":"ok","version":VERSION,"storage":("persistent" if os.environ.get("NOWCAST_REQUIRE_DISK") == "1" else "ephemeral")})
             if path=="/v1/status":
                 return self._json(200,service.status())
             if path=="/v1/forensics/summary":

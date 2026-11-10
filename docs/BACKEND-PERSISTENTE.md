@@ -1,3 +1,5 @@
+> **ACTUALIZACIÓN 2026-11-10 · modo exclusivamente gratuito.** El despliegue actual utiliza Render Free sin disco persistente. Esta guía documenta la arquitectura duradera original, **que no se activa** porque exige recursos de pago. En la instancia gratuita, los ciclos guardados localmente y SQLite son volátiles y desaparecen con sleep, restart o deploy; tampoco existe una garantía de ejecución cada cinco minutos. La web GitHub Pages sigue siendo el respaldo de datos de ambos dominios. Véase [Render Free](https://render.com/docs/free).
+
 # MeteoPortinatx Backend 0.5.0 — despliegue verificable
 
 ## Objetivo y límites
