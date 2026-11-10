@@ -1,3 +1,20 @@
+# Release 0.5.1 — correcciones de integración y seguridad
+
+- Reparada lectura de `X-Meteo-Freshness` mediante `Access-Control-Expose-Headers`.
+- Añadida `X-Meteo-Snapshot` y verificación de que cada pantalla usa una sola generación de datos, con fallback estático completo.
+- Sustituida la copia indiscriminada del `core` público por una proyección explícita de campos permitidos.
+- Corregidos los assets JS del servidor local y el empaquetado `.pyz`.
+- Unificada versión en motores de integración, portal, manifiesto, release y documentación.
+- Regenerada la tabla SHA-256 con verificación obligatoria en CI.
+- Render Free desplegado como servicio experimental sin disco: su histórico forense es temporal, no durable.
+- Validación ampliada a Python 3.10/3.11 y pruebas Node del puente. Los proveedores meteorológicos aún requieren verificación de campo.
+
+## Histórico — Release 0.4.0
+
+La sección siguiente describe **el estado histórico de la fusión 0.4.0**, anterior al despliegue de GitHub Pages y del backend Render Free. No representa el estado operativo actual.
+
+---
+
 # Release 0.4.0 — fusión Portinatx + Pirineo
 
 Fecha: 10 de noviembre de 2026.

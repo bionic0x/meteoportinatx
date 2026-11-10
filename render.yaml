@@ -1,6 +1,5 @@
-# Render Free preview — no paid services, no persistent disks.
-# Historical forensic archive is VOLATILE here. GitHub Pages remains the durable public snapshot.
-# This is a non-production preview: Render Free spins down after inactivity.
+# Free-only Render preview, intentionally WITHOUT a paid volume or database.
+# DO NOT use this service for durable forensic research.
 services:
   - type: web
     name: meteoportinatx-backend-free

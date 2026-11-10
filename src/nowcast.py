@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 import portinatx_degen as coastal
 import pirineo as mountain
 
-VERSION = "0.4.0"
+VERSION = "0.5.1"
 DOMAINS = ("portinatx", "pirineo")
 PARTS = {
     "portinatx": frozenset(("core", "radar", "series", "atmos", "sat", "mar", "modx", "forense")),
@@ -153,6 +153,13 @@ def server_handler(workers: dict[str, Collector]):
                     return self.send_bytes(200, page_for(path), "text/html; charset=utf-8")
                 except (OSError, KeyError):
                     return self.send_error(404)
+            if path == "/public_fetch.js":
+                return self.send_bytes(200, coastal.resource_bytes("public_fetch.js"),
+                                       "text/javascript; charset=utf-8")
+            if path == "/public_config.js":
+                # Loopback is a local server, not a remote production backend.
+                return self.send_bytes(200, b"window.METEO_BACKEND_URL=\"\";\n",
+                                       "text/javascript; charset=utf-8")
             segments = path.strip("/").split("/")
             if len(segments) == 3 and segments[0] in DOMAINS and segments[1] == "api":
                 domain = segments[0]
