@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import os
 import shutil
 import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 PORT = ("core", "radar", "series", "atmos", "sat", "mar", "modx", "forense")
@@ -46,9 +48,19 @@ def build_site(port_home: Path, pir_home: Path, target: Path, max_age_h: float =
     reports = {}
     for domain, (home, required, _) in specs.items():
         _, reports[domain] = validated_export(home, required, max_age_h)
+    api_base = os.environ.get("METEO_BACKEND_URL", "").strip().rstrip("/")
+    if api_base:
+        parsed_url = urlsplit(api_base)
+        if (parsed_url.scheme != "https" or not parsed_url.hostname or parsed_url.username
+                or parsed_url.password or parsed_url.query or parsed_url.fragment or parsed_url.path
+                or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.\-]*[A-Za-z0-9]", parsed_url.hostname)
+                or parsed_url.hostname in ("localhost", "127.0.0.1")):
+            raise ValueError("METEO_BACKEND_URL must be an HTTPS origin without paths or credentials")
     staging = Path(tempfile.mkdtemp(prefix="nowcast-site-", dir=str(target.parent)))
     try:
         shutil.copy2(ROOT / "src" / "nowcast_hub.html", staging / "index.html")
+        shutil.copy2(ROOT / "src" / "public_fetch.js", staging / "public_fetch.js")
+        (staging / "public_config.js").write_text("window.METEO_BACKEND_URL=" + json.dumps(api_base) + ";\n", encoding="utf-8")
         for domain, (home, required, page) in specs.items():
             dest = staging / domain
             (dest / "api").mkdir(parents=True)
