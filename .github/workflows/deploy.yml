@@ -32,8 +32,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     env:
       PYTHONUNBUFFERED: '1'
-      PORTINATX_HOME: ${{ runner.temp }}/portinatx_state
-      PIRINEO_HOME: ${{ runner.temp }}/pirineo_state
+      PORTINATX_HOME: './portinatx_state'
+      PIRINEO_HOME: './portinatx_state/pirineo'
       PIRINEO_EXTENDED: '1'
       AEMET_API_KEY: ${{ secrets.AEMET_API_KEY }}
       # No household telemetry, owner notes, local state, or secrets are uploaded.
@@ -49,7 +49,7 @@ jobs:
       - name: Restore only the non-sensitive terrain DEM cache
         uses: actions/cache@v4
         with:
-          path: ${{ runner.temp }}/pirineo_state/cache/dem.json
+          path: ${{ github.workspace }}/portinatx_state/pirineo/cache/dem.json
           key: pirineo-dem-terrain-v1-${{ hashFiles('src/pirineo.py') }}
       - name: Acquire real meteorological data for both domains
         run: python -u src/nowcast.py export
