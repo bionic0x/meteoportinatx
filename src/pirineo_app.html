@@ -86,6 +86,7 @@ a{color:var(--ice)}
 </style>
 
 <header>
+  <a href="../" aria-label="Volver a observatorios" style="color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:4px;padding:2px 9px">← Observatorios</a>
   <h1>Pirineo <span>Nowcast</span></h1>
   <div class="meta"><span id="m-issued">esperando datos…</span><span id="m-src"></span></div>
   <div class="actions"><button class="btn act" id="btn-refresh" type="button" hidden>Actualizar y publicar</button><span id="refresh-st" role="status" aria-live="polite"></span><button class="btn act" id="btn-chat" type="button" hidden aria-expanded="false">Preguntar a Claude</button></div>
@@ -228,9 +229,39 @@ async function start(){
     for (const p of ["core","dem","grid","series","extended"]) db.doc("app/"+p).onSnapshot(s=>{ if(s.exists){ D[p]=s.data(); if(p==="dem") S.Z=null; renderAll(); } }, ()=>{});
     setupRefresh(db); setupChat();
   } else {
-    for (const p of ["core","dem","grid","series","extended"]) { try{ const r=await fetch(`api/${p}.json`,{cache:"no-store"}); if(r.ok) D[p]=await r.json(); }catch(e){} }
-    renderAll();
+    await loadLocal();
+    setupLocalRefresh();
+    if (location.protocol.startsWith("http")) setInterval(loadLocal, 60000);
   }
+}
+async function loadLocal(){
+  let changed=false;
+  for (const p of ["core","dem","grid","series","extended"]) {
+    try { const r=await fetch(`api/${p}.json`,{cache:"no-store"}); if(r.ok){ D[p]=await r.json(); changed=true; } }catch(e){}
+  }
+  if (changed){ S.Z=null; renderAll(); }
+}
+async function setupLocalRefresh(){
+  try{const r=await fetch("api/status",{cache:"no-store"});if(!r.ok)return;}catch(e){return;}
+  const b=$("btn-refresh"); b.hidden=false;b.textContent="Actualizar ahora";
+  b.onclick=async()=>{
+    if(b.disabled)return; b.disabled=true; $("refresh-st").textContent="Recogiendo datos…";
+    try{
+      const before=await(await fetch("api/status",{cache:"no-store"})).json();
+      const accepted=await fetch("api/refresh",{method:"POST"});if(!accepted.ok)throw Error("HTTP "+accepted.status);
+      const start=Date.now();
+      while(Date.now()-start<360000){
+        await new Promise(ok=>setTimeout(ok,3000));
+        const st=await(await fetch("api/status",{cache:"no-store"})).json();
+        if(st.last_end&&st.last_end!==before.last_end&&!st.running){
+          if(st.last_error)throw Error(st.last_error);
+          await loadLocal();$("refresh-st").textContent="Actualizado · "+fmtT(D.core?.issued);return;
+        }
+      }
+      throw Error("Tiempo agotado");
+    }catch(e){$("refresh-st").textContent="No actualizado: "+e.message;}
+    finally{b.disabled=false;}
+  };
 }
 function demArr(){ if(S.Z || !D.dem?.data) return S.Z; const b=atob(D.dem.data), u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); S.Z=new Uint16Array(u.buffer); return S.Z; }
 function demAt(lat, lon){ const d=D.dem, Z=demArr(); if(!Z) return null; const i=(d.lat_n-lat)/d.step, j=(lon-d.lon_w)/d.step; if(i<0||j<0||i>d.nlat-1||j>d.nlon-1) return null; const i0=Math.floor(i), j0=Math.floor(j), i1=Math.min(i0+1,d.nlat-1), j1=Math.min(j0+1,d.nlon-1), a=i-i0, b=j-j0, z=(r,c)=>Z[r*d.nlon+c]; return z(i0,j0)*(1-a)*(1-b)+z(i0,j1)*(1-a)*b+z(i1,j0)*a*(1-b)+z(i1,j1)*a*b; }

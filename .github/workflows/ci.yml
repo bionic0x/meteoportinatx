@@ -1,26 +1,25 @@
-name: Python synthetic regression
+name: Unified meteorological regression
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   tests:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Basic compile
-        run: python -m compileall -q src tests
-      - name: Portinatx baseline logic tests
-        run: python src/portinatx_degen.py selftest
-      - name: Pirineo baseline logic tests
-        run: python src/pirineo.py selftest
-      - name: 15-day metaanalysis tests
-        run: python src/pirineo_meta.py selftest
-      - name: Integrated regression suite
-        run: python -m unittest discover -s tests -v
+      - name: Compile entire source and test tree
+        run: python -m compileall -q src tests scripts
+      - name: Domain logic, metaanalysis and unified integration
+        run: python src/nowcast.py selftest
+      - name: Build one portable application
+        run: python scripts/build.py
+      - name: Confirm no deployment workflow exists
+        run: test ! -e .github/workflows/deploy.yml
