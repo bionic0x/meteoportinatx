@@ -1,0 +1,547 @@
+<meta charset="utf-8">
+<title>Pirineo Nowcast</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Consola cartográfica de alta montaña en oscuro: mapa de relieve como pieza central, pestañas por tarea (mapa, corte, puntos, diagnóstico). */
+:root{
+  --bg:#0d1417; --panel:#141e22; --panel2:#10181c; --ink:#e4ebe9; --muted:#8fa19f; --line:#26363b;
+  --contour:#b08a5c; --contour-i:#d9b07a; --snow:#f2f6f7; --ice:#7cc6ff; --fz:#ff9a4d; --accent:#5fd0c4;
+  --q:#4cc184; --w:#e8be33; --a:#ff9447; --x:#ff5f5f; --std:#62b0ff; --diag:#e8be33; --exp:#c58cff;
+  --f-disp:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 32px;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3{font-family:var(--f-disp);font-weight:600;letter-spacing:.02em;margin:0;text-wrap:balance}
+h2{font-size:1.1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;padding-block:12px 8px;border-bottom:1px solid var(--line)}
+header h1{font-size:1.7rem;line-height:1}
+header h1 span{color:var(--accent)}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted);font-size:.84rem}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.84rem;color:var(--muted)}
+nav.tabs{flex-basis:100%;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.tabs a{flex:none;font-family:var(--f-disp);font-size:1rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:4px;border:1px solid transparent}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--line);background:var(--panel)}
+main{display:grid;gap:16px;margin-top:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+@media (max-width:1000px){.grid2{grid-template-columns:1fr}}
+.bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:10px}
+.ctrl{display:flex;flex-wrap:wrap;gap:4px}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:4px;padding:4px 10px;cursor:pointer}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.btn.act{font-weight:600;border-color:var(--ink)}
+.btn:disabled{opacity:.55;cursor:progress}
+.hour{display:flex;gap:10px;align-items:center;flex:1;min-width:240px}
+.hour input{flex:1}
+.mapwrap{position:relative;width:100%;max-width:100%;aspect-ratio:1.512/1;border-radius:4px;overflow:hidden;background:var(--panel2)}
+.mapwrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:manipulation}
+.probe{position:absolute;left:8px;top:8px;background:rgba(13,20,23,.86);border:1px solid var(--line);border-radius:4px;padding:4px 8px;font:12px/1.35 var(--f-mono);pointer-events:none}
+.legend{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:.75rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:18px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.legend i.ln{height:0;border-top:2px solid;border-radius:0}
+.src{font-size:.75rem;color:var(--muted);margin:6px 0 0}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:8px}
+.kv div{border:1px solid var(--line);border-radius:4px;padding:6px 8px}
+.kv span{display:block;font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kv b{font-family:var(--f-mono);font-size:1rem;font-weight:500}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-family:var(--f-disp);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-size:.78rem}
+td.num,th.num{text-align:right}
+tr.zone td{color:var(--accent);font-family:var(--f-disp);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--line);padding-top:10px}
+.ev{color:var(--muted);font-size:.75rem}
+.st{font-family:var(--f-mono);font-size:.68rem;border:1px solid;border-radius:3px;padding:1px 5px;letter-spacing:.04em}
+.st-ESTÁNDAR{color:var(--std)}.st-DIAGNÓSTICO{color:var(--diag)}.st-EXPERIMENTAL{color:var(--exp)}
+.snow{color:var(--snow);font-weight:600}.warmc{color:var(--fz)}
+.pill{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:2px 10px;font-size:.76rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.p-amarillo{background:#372f12;color:var(--w)}.p-naranja{background:#3d240f;color:var(--a)}.p-rojo{background:#431a1a;color:var(--x)}
+ul.plain{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+svg.ch{width:100%;height:auto;display:block}
+svg.ch text{fill:var(--muted);font:11px var(--f-mono)}
+.empty{color:var(--muted);font-style:italic}
+footer{color:var(--muted);font-size:.78rem;max-width:72ch}
+a{color:var(--ice)}
+.chat{position:fixed;right:0;top:0;bottom:0;width:min(460px,100vw);background:var(--panel2);border-left:1px solid var(--line);z-index:20;display:flex;flex-direction:column;gap:6px;padding:12px max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) 12px;box-shadow:-10px 0 28px rgba(0,0,0,.4)}
+.chat-h{display:flex;gap:8px;align-items:center}.chat-h b{flex:1;font-family:var(--f-disp);font-size:1.2rem}
+.chat-log{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
+.msg{border-radius:6px;padding:8px 10px;font-size:.9rem;line-height:1.5;overflow-wrap:anywhere}
+.msg.u{align-self:flex-end;background:#16303a;border:1px solid var(--line);max-width:88%;white-space:pre-wrap}
+.msg.a{background:var(--panel);border:1px solid var(--line)}.msg.a p{margin:0 0 6px}.msg.a ul{margin:2px 0 6px;padding-left:18px}
+.msg.think{color:var(--muted);font-style:italic}.msg .mt{font-size:.72rem;color:var(--muted)}
+.chat textarea{width:100%;min-height:48px;resize:vertical;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px}
+.chat-opts{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:.82rem;margin-top:6px}.chat-opts .sp{flex:1}
+@media (max-width:600px){header{position:static}.chat{width:100vw;top:auto;height:88vh;border-left:0;border-top:1px solid var(--line);border-radius:10px 10px 0 0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <h1>Pirineo <span>Nowcast</span></h1>
+  <div class="meta"><span id="m-issued">esperando datos…</span><span id="m-src"></span></div>
+  <div class="actions"><button class="btn act" id="btn-refresh" type="button" hidden>Actualizar y publicar</button><span id="refresh-st" role="status" aria-live="polite"></span><button class="btn act" id="btn-chat" type="button" hidden aria-expanded="false">Preguntar a Claude</button></div>
+  <nav class="tabs" aria-label="Secciones">
+    <a href="#mapa" data-tab="mapa">Mapa</a>
+    <a href="#corte" data-tab="corte">Corte y cotas</a>
+    <a href="#puntos" data-tab="puntos">Puntos</a>
+    <a href="#diagnostico" data-tab="diagnostico">Diagnóstico</a>
+    <a href="#extendido" data-tab="extendido">15 días · metaanálisis</a>
+  </nav>
+</header>
+
+<main>
+  <section class="card">
+    <div class="bar">
+      <div class="ctrl" role="group" aria-label="Modelo" id="models"></div>
+      <div class="hour"><label for="hour">Hora</label><input type="range" id="hour" min="0" max="0" value="0"><span id="hour-t" class="mono">—</span></div>
+    </div>
+    <div class="kv" id="now-kv"></div>
+  </section>
+
+  <div class="tab" id="tab-mapa">
+    <section class="card">
+      <div class="bar"><h2>Relieve y tiempo</h2>
+        <div class="ctrl" role="group" aria-label="Capa">
+          <button class="btn" data-ov="relieve" aria-pressed="true">Relieve</button>
+          <button class="btn" data-ov="cota" aria-pressed="false">Cota de nieve</button>
+          <button class="btn" data-ov="temp" aria-pressed="false">Temperatura</button>
+          <button class="btn" data-ov="prec" aria-pressed="false">Precipitación 3 h</button>
+          <button class="btn" data-ov="racha" aria-pressed="false">Racha</button>
+        </div>
+        <div class="ctrl"><button class="btn" id="tg-names" aria-pressed="true">Nombres</button><button class="btn" id="tg-cont" aria-pressed="true">Curvas</button></div>
+      </div>
+      <div class="mapwrap"><canvas id="map" aria-label="Mapa de relieve de Andorra, la Cerdanya y el Capcir con curvas de nivel y la capa elegida"></canvas><div class="probe" id="probe" hidden></div></div>
+      <div class="legend" id="legend"></div>
+      <p class="src" id="map-note"></p>
+    </section>
+  </div>
+
+  <div class="tab" id="tab-corte" hidden>
+    <section class="card">
+      <div class="bar"><h2>Corte vertical · Andorra la Vella → Envalira → Puymorens → Cerdanya → Tossa d'Alp</h2><span id="cut-st"></span></div>
+      <div id="ch-cut"></div>
+      <p class="src" id="cut-note"></p>
+    </section>
+    <section class="card">
+      <div class="bar"><h2>Cotas en las próximas 72 h</h2><div class="ctrl" role="group" aria-label="Vertiente"><button class="btn" data-pf="sur" aria-pressed="true">Vertiente sur (Cerdanya)</button><button class="btn" data-pf="norte" aria-pressed="false">Vertiente norte (Ariège)</button></div></div>
+      <div id="ch-cotas"></div>
+      <p class="src" id="cotas-note"></p>
+    </section>
+  </div>
+
+  <div class="tab" id="tab-puntos" hidden>
+    <section class="card">
+      <div class="bar"><h2>Puntos de control</h2><span id="pts-st"></span></div>
+      <div class="tbl"><table id="t-pts"><thead><tr><th>Punto</th><th class="num">Alt. m</th><th class="num">T °C</th><th class="num">Tw °C</th><th class="num">Mín/Máx 24 h</th><th class="num">Lluvia 24/72 h</th><th class="num">Nieve 24/72 h</th><th class="num">Racha 24 h</th><th class="num">Viento</th><th>Nota</th></tr></thead><tbody></tbody></table></div>
+      <p class="src" id="pts-note"></p>
+    </section>
+  </div>
+
+  <div class="tab" id="tab-diagnostico" hidden>
+    <section class="grid2">
+      <article class="card">
+        <div class="bar"><h2>Flujo y föhn</h2><span id="foehn-st"></span></div>
+        <div class="tbl"><table id="t-flow"><thead><tr><th>Hora</th><th class="num">700 hPa</th><th class="num">Froude</th><th class="num">Isocero</th><th class="num">Tw 0 °C</th><th class="num">Copo</th><th class="num">SLR</th><th>Lectura</th></tr></thead><tbody></tbody></table></div>
+        <ul class="plain" id="foehn" style="margin-top:10px"></ul>
+      </article>
+      <article class="card">
+        <div class="bar"><h2>Inversión observada</h2><span id="inv-st"></span></div>
+        <div id="ch-inv"></div>
+        <p class="src" id="inv-note"></p>
+      </article>
+    </section>
+    <section class="grid2">
+      <article class="card">
+        <h2>Observación</h2>
+        <div class="tbl" style="margin-top:8px"><table id="t-obs"><thead><tr><th>Estación</th><th>Red</th><th class="num">Alt. m</th><th class="num">T °C</th><th class="num">HR %</th><th class="num">Viento km/h</th><th class="num">Racha día</th><th class="num">Lluvia día</th><th class="num">Hace</th></tr></thead><tbody></tbody></table></div>
+        <p class="src">AEMET (red oficial; La Molina, Planoles, Martinet, Tuixent), Météo-France y SMA de Andorra a través de Meteociel (lectura no oficial de su tabla horaria), ClimayNievePirineos (Envalira, Bordes, El Tarter, Incles), Meteoclimatic (aficionados, coordenadas de núcleo) y METAR de Andorra–La Seu. Las estaciones de AEMET publican con 1–2 h de retraso.</p>
+      </article>
+      <article class="card">
+        <h2>Avisos oficiales</h2>
+        <ul class="plain" id="warns" style="margin-top:8px"></ul>
+        <h2 style="margin-top:14px">Predicción de montaña de AEMET</h2>
+        <div id="aemet-mt" style="margin-top:8px;font-size:.86rem"></div>
+        <h2 style="margin-top:14px">Aludes y carreteras</h2>
+        <ul class="plain" id="links" style="margin-top:8px"></ul>
+        <h2 style="margin-top:14px">Fuentes</h2>
+        <ul class="plain" id="srcs" style="margin-top:8px;font-size:.8rem"></ul>
+      </article>
+    </section>
+  </div>
+
+  <div class="tab" id="tab-extendido" hidden>
+    <section class="card">
+      <div class="bar"><h2>Metaanálisis de nieve y frío · 15 días</h2><span id="meta-st"></span></div>
+      <p class="src">Resultados por familias independientes ECMWF/ENS, GEFS y ICON-EPS. Los porcentajes son <b>fracciones de miembros, no probabilidades locales calibradas</b>. Los modelos no predicen qué remontes abrirán. ENOS/ENSO, NAO/AO, vórtice y Atlántico son contexto sin ajuste automático de probabilidades.</p>
+      <div class="bar">
+        <label>Estación <select id="meta-station" aria-label="Estación del pronóstico extendido"><option value="masella">Masella</option><option value="la_molina">La Molina</option><option value="font_romeu">Font-Romeu</option><option value="les_angles">Les Angles</option><option value="formigueres">Formiguères</option><option value="porte">Porté-Puymorens</option></select></label>
+        <label>Cota <select id="meta-level" aria-label="Nivel de pista"><option value="base">Base de pistas</option><option value="upper">Cota alta</option></select></label>
+      </div>
+      <div class="tbl"><table id="t-meta"><thead><tr><th>Fecha</th><th class="num">Fracción nieve ≥5 cm</th><th class="num">Fracción nieve ≥10 cm</th><th class="num">Tw min ≤0 °C</th><th class="num">Familias</th><th>Calidad de evidencia</th></tr></thead><tbody></tbody></table></div>
+      <p class="src" id="meta-note"></p>
+    </section>
+    <section class="grid2">
+      <article class="card"><h2>Salud de modelos y revisión entre salidas</h2><ul class="plain" id="meta-sources"></ul></article>
+      <article class="card"><h2>Señales contrarian · verificadas o desconocidas</h2><ul class="plain" id="meta-context"></ul></article>
+    </section>
+  </div>
+
+  <footer>Estimación diagnóstica de un motor propio, no un aviso oficial: mandan el Servei Meteorològic d'Andorra, Meteocat/AEMET y Météo-France. Para aludes, los boletines oficiales. En emergencia, 112.</footer>
+</main>
+
+<aside id="chat" class="chat" hidden aria-label="Chat con Claude">
+  <div class="chat-h"><b>Pregunta a Claude</b><button class="btn" type="button" id="chat-clear">Nueva</button><button class="btn" type="button" id="chat-x" aria-label="Cerrar el chat">✕</button></div>
+  <div class="chat-log" id="chat-log" role="log" aria-live="polite"></div>
+  <form id="chat-f">
+    <textarea id="chat-in" rows="2" placeholder="Pregunta por la cota de nieve, el viento en Envalira, la Molina…" aria-label="Tu pregunta"></textarea>
+    <div class="chat-opts"><label id="chat-img-l"><input type="checkbox" id="chat-img" checked> Adjuntar lo que veo</label><label><input type="checkbox" id="chat-deep"> Análisis a fondo</label><span class="sp"></span><button class="btn" type="button" id="chat-stop" hidden>Detener</button><button class="btn act" type="submit" id="chat-send">Enviar</button></div>
+  </form>
+  <p class="src">Responde Claude con los datos publicados. Estimación diagnóstica, no aviso oficial.</p>
+</aside>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const n0 = x => x==null||isNaN(x) ? "—" : Math.round(+x).toString();
+const n1 = x => x==null||isNaN(x) ? "—" : (+x).toFixed(1);
+const TZ = "Europe/Madrid";
+const fmtT = (iso, o={weekday:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}) => { if(!iso) return "—"; const d=new Date(/Z|[+-]\d\d:?\d\d$/.test(iso)?iso:iso+"Z"); return isNaN(d)?"—":new Intl.DateTimeFormat("es-ES",{timeZone:TZ,...o}).format(d); };
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const D = {core:null, dem:null, grid:null, series:null, extended:null};
+const S = {tab:"mapa", k:0, model:null, ov:"relieve", names:true, cont:true, pf:"sur", Z:null, times:[]};
+const ZONE_ORDER = ["Andorra","Puymorens","Cerdanya","Cerdagne","Capcir"];
+const ST = k => { const s=D.core?.status?.[k]; return s ? `<span class="st st-${s.estado}" title="${esc(s.nota)}">${s.estado}</span>` : ""; };
+
+/* ── datos ── */
+async function start(){
+  let db=null; try{ db = window.claude?.use ? await window.claude.use("db") : null; }catch(e){ db=null; }
+  if (db){
+    for (const p of ["core","dem","grid","series","extended"]) db.doc("app/"+p).onSnapshot(s=>{ if(s.exists){ D[p]=s.data(); if(p==="dem") S.Z=null; renderAll(); } }, ()=>{});
+    setupRefresh(db); setupChat();
+  } else {
+    for (const p of ["core","dem","grid","series","extended"]) { try{ const r=await fetch(`api/${p}.json`,{cache:"no-store"}); if(r.ok) D[p]=await r.json(); }catch(e){} }
+    renderAll();
+  }
+}
+function demArr(){ if(S.Z || !D.dem?.data) return S.Z; const b=atob(D.dem.data), u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); S.Z=new Uint16Array(u.buffer); return S.Z; }
+function demAt(lat, lon){ const d=D.dem, Z=demArr(); if(!Z) return null; const i=(d.lat_n-lat)/d.step, j=(lon-d.lon_w)/d.step; if(i<0||j<0||i>d.nlat-1||j>d.nlon-1) return null; const i0=Math.floor(i), j0=Math.floor(j), i1=Math.min(i0+1,d.nlat-1), j1=Math.min(j0+1,d.nlon-1), a=i-i0, b=j-j0, z=(r,c)=>Z[r*d.nlon+c]; return z(i0,j0)*(1-a)*(1-b)+z(i0,j1)*(1-a)*b+z(i1,j0)*a*(1-b)+z(i1,j1)*a*b; }
+const poi = id => D.core?.pois?.find(p=>p.id===id);
+function timeList(){ const s=D.series; if(!s) return []; const first=Object.values(s)[0]; return first?.time||[]; }
+function profAt(t, side){ const P=D.core?.perfil?.[side||S.pf]||[]; if(!P.length||!t) return null; const target=+new Date(t+"Z"); let best=P[0], bd=1e15; for(const p of P){ const d=Math.abs(+new Date(p.t+"Z")-target); if(d<bd){bd=d;best=p;} } return best; }
+function ser(pid, varName){ const P=D.series?.[pid]; if(!P) return null; const m=P.m[S.model]||P.m[Object.keys(P.m)[0]]; return m?.[varName]||null; }
+
+/* ── cabecera, modelo y hora ── */
+function renderHeader(){
+  const c=D.core; if(!c) return;
+  $("m-issued").textContent = `Ciclo ${fmtT(c.issued)} · motor ${c.engine}`;
+  const bad = Object.entries(c.fuentes||{}).filter(([k,v])=>!String(v).startsWith("ok")&&!String(v).startsWith("caché"));
+  $("m-src").textContent = `Puntos: ${c.modelo_puntos||"—"}` + (bad.length ? ` · sin datos: ${bad.map(([k])=>k).join(", ")}` : "");
+  if(!S.model || !c.modelos.includes(S.model)) S.model=c.modelos[0];
+  $("models").innerHTML = c.modelos.map(m=>`<button class="btn" data-m="${m}" aria-pressed="${m===S.model}">${esc(c.modelo_nombre?.[m]||m)}</button>`).join("");
+  document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{ S.model=b.dataset.m; renderAll(); });
+  S.times=timeList(); const h=$("hour"); h.max=Math.max(0,S.times.length-1); if(S.k>h.max) S.k=0; h.value=S.k;
+  const t=S.times[S.k]; $("hour-t").textContent = t ? fmtT(t) : "—";
+  const pr=profAt(t,"sur"), pn=profAt(t,"norte");
+  const at = id => { const v=ser(id,"temperature_2m"); return v?v[S.k]:null; };
+  $("now-kv").innerHTML = [
+    ["Isocero (sur)", pr?.isocero_m!=null?`${n0(pr.isocero_m)} m`:"—"],
+    ["Tw 0 °C (sur / norte)", pr?.tw0_m!=null?`${n0(pr.tw0_m)} / ${n0(pn?.tw0_m)} m`:"—"],
+    ["Cota de copo", pr?.cota_copo_m!=null?`${n0(pr.cota_copo_m)} m`:"—"],
+    ["Flujo 700 hPa", pr?.flujo?`${pr.flujo} ${n0(pr.viento700_kmh)} km/h`:"—"],
+    ["Puigcerdà", `${n1(at("puigcerda"))} °C`], ["Pas de la Casa", `${n1(at("pas_casa"))} °C`], ["Tossa d'Alp", `${n1(at("tossa_alp"))} °C`]
+  ].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
+}
+$("hour").addEventListener("input", e=>{ S.k=+e.target.value; renderAll(); });
+
+/* ── mapa: relieve sombreado, tintas hipsométricas, curvas y capas ── */
+const HYPSO = [[600,[46,74,58]],[1000,[66,94,64]],[1400,[104,112,72]],[1800,[134,120,84]],[2200,[128,108,92]],[2500,[140,132,126]],[2800,[196,196,192]],[3000,[232,232,228]]];
+function hypso(z){ let a=HYPSO[0],b=HYPSO[HYPSO.length-1]; for(let i=0;i<HYPSO.length-1;i++){ if(z>=HYPSO[i][0]&&z<=HYPSO[i+1][0]){a=HYPSO[i];b=HYPSO[i+1];break;} } if(z<=HYPSO[0][0]) return HYPSO[0][1]; if(z>=b[0]) return b[1]; const f=(z-a[0])/(b[0]-a[0]); return a[1].map((v,i)=>v+(b[1][i]-v)*f); }
+const RAMP_T = [[-15,[80,60,180]],[-5,[70,130,230]],[0,[230,240,250]],[5,[120,200,160]],[12,[235,200,80]],[20,[240,120,60]],[30,[200,40,40]]];
+const RAMP_P = [[0.2,[120,170,230]],[1,[60,120,220]],[3,[40,80,200]],[6,[230,200,60]],[12,[240,120,50]],[24,[200,40,60]]];
+const RAMP_G = [[20,[90,140,120]],[40,[200,200,90]],[60,[240,150,60]],[80,[230,70,60]],[100,[180,60,180]],[130,[120,40,140]]];
+function ramp(R,v){ if(v==null||isNaN(v)) return null; if(v<=R[0][0]) return R[0][1]; for(let i=0;i<R.length-1;i++) if(v<=R[i+1][0]){ const f=(v-R[i][0])/(R[i+1][0]-R[i][0]); return R[i][1].map((x,c)=>x+(R[i+1][1][c]-x)*f); } return R[R.length-1][1]; }
+function gridVal(field, lat, lon, kGrid){ const G=D.grid; if(!G?.fields?.[field]) return null; const la=G.lats, lo=G.lons, F=G.fields[field][kGrid]; if(!F) return null;
+  const fi=(lat-la[0])/(la[1]-la[0]), fj=(lon-lo[0])/(lo[1]-lo[0]); const i0=Math.max(0,Math.min(la.length-2,Math.floor(fi))), j0=Math.max(0,Math.min(lo.length-2,Math.floor(fj))); const a=Math.max(0,Math.min(1,fi-i0)), b=Math.max(0,Math.min(1,fj-j0));
+  const v=(i,j)=>F[i*lo.length+j]; const q=[v(i0,j0),v(i0,j0+1),v(i0+1,j0),v(i0+1,j0+1)]; if(q.some(x=>x==null)) return q.find(x=>x!=null)??null; return q[0]*(1-a)*(1-b)+q[1]*(1-a)*b+q[2]*a*(1-b)+q[3]*a*b; }
+function gridElev(lat, lon){ const G=D.grid; if(!G?.elev) return null; const la=G.lats, lo=G.lons; const i=Math.max(0,Math.min(la.length-1,Math.round((lat-la[0])/(la[1]-la[0])))), j=Math.max(0,Math.min(lo.length-1,Math.round((lon-lo[0])/(lo[1]-lo[0])))); return G.elev[i*lo.length+j]; }
+function gridK(){ const G=D.grid, t=S.times[S.k]; if(!G?.time||!t) return null; const T=+new Date(t+"Z"); let best=0,bd=1e15; G.time.forEach((x,i)=>{ const d=Math.abs(+new Date(x+"Z")-T); if(d<bd){bd=d;best=i;} }); return bd<=3*3600e3?best:null; }
+
+/* curvas de nivel: marching squares sobre la malla del DEM */
+function contourSegs(Z, nlat, nlon, level){
+  const segs=[]; const v=(i,j)=>Z[i*nlon+j];
+  const interp=(i1,j1,i2,j2)=>{ const a=v(i1,j1), b=v(i2,j2), t=(level-a)/(b-a); return [i1+(i2-i1)*t, j1+(j2-j1)*t]; };
+  for(let i=0;i<nlat-1;i++) for(let j=0;j<nlon-1;j++){
+    const c=(v(i,j)>=level?8:0)|(v(i,j+1)>=level?4:0)|(v(i+1,j+1)>=level?2:0)|(v(i+1,j)>=level?1:0);
+    if(c===0||c===15) continue;
+    const T=()=>interp(i,j,i,j+1), R=()=>interp(i,j+1,i+1,j+1), B=()=>interp(i+1,j,i+1,j+1), L=()=>interp(i,j,i+1,j);
+    switch(c){ case 1:case 14: segs.push([L(),B()]); break; case 2:case 13: segs.push([B(),R()]); break; case 3:case 12: segs.push([L(),R()]); break;
+      case 4:case 11: segs.push([T(),R()]); break; case 5: segs.push([L(),T()],[B(),R()]); break; case 6:case 9: segs.push([T(),B()]); break;
+      case 7:case 8: segs.push([L(),T()]); break; case 10: segs.push([T(),R()],[L(),B()]); break; }
+  }
+  return segs;
+}
+function setupCanvas(cv){ const r=cv.getBoundingClientRect(), d=window.devicePixelRatio||1; cv.width=Math.max(1,Math.round(r.width*d)); cv.height=Math.max(1,Math.round(r.height*d)); const ctx=cv.getContext("2d"); ctx.setTransform(d,0,0,d,0,0); return {ctx, W:r.width, H:r.height}; }
+function drawMap(){
+  const cv=$("map"); if(!cv || $("tab-mapa").hidden || !D.dem) return;
+  const Z=demArr(), d=D.dem, g=setupCanvas(cv), {ctx,W,H}=g; const nlat=d.nlat, nlon=d.nlon;
+  const lat_s=d.lat_n-(nlat-1)*d.step, lon_e=d.lon_w+(nlon-1)*d.step;
+  const X=lon=>(lon-d.lon_w)/(lon_e-d.lon_w)*W, Y=lat=>(d.lat_n-lat)/(d.lat_n-lat_s)*H;
+  // relieve sombreado + tintas (o capa) a la resolución del DEM
+  const off=document.createElement("canvas"); off.width=nlon; off.height=nlat; const oc=off.getContext("2d"), img=oc.createImageData(nlon,nlat);
+  const dx=d.step*111320*Math.cos(42.5*Math.PI/180), dy=d.step*110574, az=315*Math.PI/180, alt=45*Math.PI/180;
+  const t=S.times[S.k], pr=profAt(t,"sur"), kG=gridK();
+  for(let i=0;i<nlat;i++) for(let j=0;j<nlon;j++){
+    const z=Z[i*nlon+j], zl=Z[i*nlon+Math.max(0,j-1)], zr=Z[i*nlon+Math.min(nlon-1,j+1)], zu=Z[Math.max(0,i-1)*nlon+j], zd=Z[Math.min(nlat-1,i+1)*nlon+j];
+    const sx=(zr-zl)/(2*dx), sy=(zd-zu)/(2*dy), slope=Math.atan(Math.hypot(sx,sy)), aspect=Math.atan2(sy,-sx);
+    const hs=Math.max(0, Math.cos(alt)*Math.cos(slope)+Math.sin(alt)*Math.sin(slope)*Math.cos(az-aspect));
+    let col=hypso(z), shade=0.35+0.75*hs;
+    const lat=d.lat_n-i*d.step, lon=d.lon_w+j*d.step;
+    if(S.ov==="cota" && pr?.tw0_m!=null){ col=col.map(c=>c*0.55+40); if(z>=pr.cota_copo_m){ const f=z>=pr.cota_acum_m?0.85:z>=pr.cota_cuajado_m?0.6:0.35; col=col.map(c=>c*(1-f)+242*f); } }
+    else if(S.ov!=="relieve" && kG!=null){
+      let v=null, R=null;
+      if(S.ov==="temp"){ const tg=gridVal("temperature_2m",lat,lon,kG), ze=gridElev(lat,lon); v=tg==null?null:tg-0.0065*(z-(ze??z)); R=RAMP_T; }
+      if(S.ov==="prec"){ v=gridVal("precipitation",lat,lon,kG); R=RAMP_P; if(v!=null&&v<0.2) v=null; }
+      if(S.ov==="racha"){ v=gridVal("wind_gusts_10m",lat,lon,kG); R=RAMP_G; }
+      const rc=ramp(R,v); if(rc){ col=rc; shade=0.55+0.5*hs; if(S.ov==="prec" && pr?.cota_copo_m!=null && z>=pr.cota_copo_m) col=[245,248,250]; }
+      else col=col.map(c=>c*0.6+30);
+    }
+    const p=(i*nlon+j)*4; img.data[p]=Math.min(255,col[0]*shade); img.data[p+1]=Math.min(255,col[1]*shade); img.data[p+2]=Math.min(255,col[2]*shade); img.data[p+3]=255;
+  }
+  oc.putImageData(img,0,0); ctx.imageSmoothingEnabled=true; ctx.drawImage(off,0,0,W,H);
+  const toXY=([fi,fj])=>[fj/(nlon-1)*W, fi/(nlat-1)*H];
+  if(S.cont){
+    for(let lv=700; lv<=2900; lv+=100){ const idx=lv%500===0; const segs=contourSegs(Z,nlat,nlon,lv);
+      ctx.strokeStyle=idx?css("--contour-i"):css("--contour"); ctx.globalAlpha=idx?0.85:0.45; ctx.lineWidth=idx?1.1:0.6; ctx.beginPath();
+      for(const [a,b] of segs){ const A=toXY(a), B=toXY(b); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); } ctx.stroke(); ctx.globalAlpha=1;
+      if(idx && W>500){ let placed=0; ctx.font="10px "+css("--f-mono"); ctx.fillStyle=css("--contour-i"); for(let s=Math.floor(segs.length/5); s<segs.length && placed<3; s+=Math.max(1,Math.floor(segs.length/3))){ const A=toXY(segs[s][0]); ctx.fillText(String(lv),A[0]+2,A[1]-2); placed++; } }
+    }
+  }
+  // líneas de cota sobre el relieve
+  if(S.ov==="cota" && pr?.tw0_m!=null){
+    const lines=[[pr.isocero_m,css("--fz"),[6,4]],[pr.tw0_m,css("--ice"),[]],[pr.cota_copo_m,css("--snow"),[2,3]]];
+    for(const [lv,col,dash] of lines){ if(lv==null||lv>3000||lv<600) continue; ctx.strokeStyle=col; ctx.lineWidth=2; ctx.setLineDash(dash); ctx.beginPath(); for(const [a,b] of contourSegs(Z,nlat,nlon,lv)){ const A=toXY(a),B=toXY(b); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); } ctx.stroke(); ctx.setLineDash([]); }
+  }
+  // puntos de control
+  ctx.font="11px "+css("--f-body");
+  for(const p of D.core?.pois||[]){
+    const x=X(p.lon), y=Y(p.lat); const peak=p.tipo==="cima", col=p.tipo==="collado";
+    ctx.fillStyle=peak?"#ffffff":col?css("--ice"):css("--accent"); ctx.strokeStyle="#0d1417"; ctx.lineWidth=2;
+    ctx.beginPath(); if(peak){ ctx.moveTo(x,y-5); ctx.lineTo(x+4.5,y+3); ctx.lineTo(x-4.5,y+3); ctx.closePath(); } else ctx.arc(x,y,3.5,0,7); ctx.stroke(); ctx.fill();
+    if(S.names && (W>560 || peak || p.tipo==="estacion")){
+      let lab=p.nombre; if(S.ov==="temp"){ const v=ser(p.id,"temperature_2m"); if(v&&v[S.k]!=null) lab+=` ${v[S.k].toFixed(0)}°`; } else lab+=` ${p.alt_dem??p.alt_ref}`;
+      ctx.lineWidth=3; ctx.strokeStyle="rgba(13,20,23,.85)"; ctx.strokeText(lab,x+6,y+4); ctx.fillStyle=css("--ink"); ctx.fillText(lab,x+6,y+4);
+    }
+  }
+  // fronteras aproximadas por nombre de zona: no se dibujan para no inventar trazados
+  legendFor(pr);
+}
+function legendFor(pr){
+  const sw=(rgb,txt)=>`<span><i style="background:rgb(${rgb.map(Math.round).join(",")})"></i>${txt}</span>`;
+  const ln=(col,txt,dash)=>`<span><i class="ln" style="border-top-color:${col};border-top-style:${dash?"dashed":"solid"}"></i>${txt}</span>`;
+  let h="", note="";
+  if(S.ov==="relieve"||S.ov==="cota") h+=HYPSO.map(([z,c])=>sw(c,z)).join("")+"<span>m</span>";
+  if(S.ov==="cota"){ h+=ln(css("--fz"),`isocero ${n0(pr?.isocero_m)} m`,1)+ln(css("--ice"),`Tw 0 °C ${n0(pr?.tw0_m)} m`)+ln(css("--snow"),`copo ${n0(pr?.cota_copo_m)} m`,1)+"<span>blanco: por encima de la cota de copo (más intenso sobre la de acumulación)</span>"; note="Cotas del perfil de la vertiente sur (Cerdanya) a la hora elegida. Con precipitación intensa la nieve puede bajar 200–400 m más."; }
+  if(S.ov==="temp"){ h+=RAMP_T.map(([v,c])=>sw(c,v+"°")).join(""); note="Temperatura de AROME HD (malla 0,05°) reducida al relieve con −6,5 °C/km: no ve las inversiones de fondo de valle. Las etiquetas de los puntos llevan la del modelo elegido."; }
+  if(S.ov==="prec"){ h+=RAMP_P.map(([v,c])=>sw(c,v)).join("")+"<span>mm en 3 h</span>"+sw([245,248,250],"nieve probable (sobre la cota de copo)"); note="Precipitación de AROME HD en 3 h. Fase según la cota de copo del perfil."; }
+  if(S.ov==="racha"){ h+=RAMP_G.map(([v,c])=>sw(c,v)).join("")+"<span>km/h</span>"; note="Racha de AROME HD a 10 m. En collados y crestas la aceleración real puede superar la del modelo."; }
+  if(S.cont) h+=ln(css("--contour-i"),"curvas cada 100 m (gruesas cada 500 m)");
+  h+=`<span>▲ cima · ● pueblo o estación · <span style="color:var(--ice)">●</span> collado</span>`;
+  $("legend").innerHTML=h; $("map-note").textContent=(note?note+" ":"")+`Relieve: ${D.dem?.fuente||"—"}, remuestreado a ${D.dem?.step}°. ${ST("dem").replace(/<[^>]+>/g,"")}`;
+}
+document.querySelectorAll("[data-ov]").forEach(b=>b.addEventListener("click",()=>{ S.ov=b.dataset.ov; document.querySelectorAll("[data-ov]").forEach(x=>x.setAttribute("aria-pressed",x===b)); drawMap(); }));
+$("tg-names").addEventListener("click",e=>{ S.names=!S.names; e.target.setAttribute("aria-pressed",S.names); drawMap(); });
+$("tg-cont").addEventListener("click",e=>{ S.cont=!S.cont; e.target.setAttribute("aria-pressed",S.cont); drawMap(); });
+$("map").addEventListener("pointermove", e=>{ const d=D.dem; if(!d) return; const r=e.currentTarget.getBoundingClientRect(); const fx=(e.clientX-r.left)/r.width, fy=(e.clientY-r.top)/r.height;
+  const lat=d.lat_n-fy*(d.nlat-1)*d.step, lon=d.lon_w+fx*(d.nlon-1)*d.step, z=demAt(lat,lon); let near=null, nd=1e9;
+  for(const p of D.core?.pois||[]){ const dd=Math.hypot((p.lat-lat)*111,(p.lon-lon)*82); if(dd<nd){nd=dd;near=p;} }
+  const pb=$("probe"); pb.hidden=false; pb.innerHTML=`${n0(z)} m · ${lat.toFixed(3)} N ${lon.toFixed(3)} E${near&&nd<6?`<br>${esc(near.nombre)} a ${nd.toFixed(1)} km`:""}`; });
+$("map").addEventListener("pointerleave", ()=>{ $("probe").hidden=true; });
+
+/* ── corte vertical ── */
+function cutPath(){ const ids=D.core?.corte||[]; const P=ids.map(poi).filter(Boolean); const pts=[]; let dist=0;
+  for(let s=0;s<P.length-1;s++){ const a=P[s], b=P[s+1], L=Math.hypot((b.lat-a.lat)*111.2,(b.lon-a.lon)*82); const n=Math.max(2,Math.round(L/0.25));
+    for(let k=0;k<n;k++){ const f=k/n, la=a.lat+(b.lat-a.lat)*f, lo=a.lon+(b.lon-a.lon)*f; pts.push({d:dist+L*f, z:demAt(la,lo), lat:la, lon:lo}); } dist+=L; }
+  const last=P[P.length-1]; pts.push({d:dist, z:demAt(last.lat,last.lon)}); let acc=0; const marks=P.map((p,i)=>{ if(i>0){ const a=P[i-1]; acc+=Math.hypot((p.lat-a.lat)*111.2,(p.lon-a.lon)*82); } return {p, d:acc}; });
+  return {pts, marks, dist}; }
+function renderCut(){
+  if($("tab-corte").hidden||!D.dem||!D.core) return;
+  const {pts, marks, dist}=cutPath(), t=S.times[S.k], ps=profAt(t,"sur"), pn=profAt(t,"norte");
+  const W=900, H=360, P={l:44,r:12,t:16,b:34}, zmin=600, zmax=4000, X=d=>P.l+d/dist*(W-P.l-P.r), Y=z=>P.t+(1-(z-zmin)/(zmax-zmin))*(H-P.t-P.b);
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Corte vertical del relieve con cotas de nieve">`;
+  for(let z=1000;z<=zmax;z+=500) s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(z)}" y2="${Y(z)}" stroke="var(--line)" stroke-width=".6"/><text x="${P.l-4}" y="${Y(z)+3}" text-anchor="end">${z}</text>`;
+  // cotas: norte para el tramo al norte de la divisoria (Envalira–Puymorens), sur para el resto
+  const split=marks.find(m=>m.p.id==="pas_casa")?.d ?? dist/2, split2=marks.find(m=>m.p.id==="porte")?.d ?? dist/2;
+  const band=(p,x0,x1)=>{ if(!p||p.cota_copo_m==null) return ""; return `<rect x="${X(x0)}" y="${Y(Math.min(zmax,p.cota_acum_m))}" width="${X(x1)-X(x0)}" height="${Math.max(0,Y(Math.max(zmin,p.cota_copo_m))-Y(Math.min(zmax,p.cota_acum_m)))}" fill="var(--snow)" opacity=".10"/>`
+    + [[p.isocero_m,"var(--fz)","6 4"],[p.tw0_m,"var(--ice)",""],[p.cota_copo_m,"var(--snow)","2 3"]].filter(([z])=>z!=null&&z<zmax&&z>zmin).map(([z,c,da])=>`<line x1="${X(x0)}" x2="${X(x1)}" y1="${Y(z)}" y2="${Y(z)}" stroke="${c}" stroke-width="1.6" ${da?`stroke-dasharray="${da}"`:""}/>`).join(""); };
+  s+=band(ps,0,split)+band(pn,split,split2)+band(ps,split2,dist);
+  const poly=pts.filter(q=>q.z!=null).map(q=>`${X(q.d).toFixed(1)},${Y(q.z).toFixed(1)}`).join(" ");
+  s+=`<polygon points="${X(0)},${Y(zmin)} ${poly} ${X(dist)},${Y(zmin)}" fill="#5b5446" opacity=".95"/><polyline points="${poly}" fill="none" stroke="var(--contour-i)" stroke-width="1.4"/>`;
+  let lastX=-1e9, lvl=0;
+  for(const m of marks){ const z=m.p.alt_dem??m.p.alt_ref, T=ser(m.p.id,"temperature_2m")?.[S.k], pr=ser(m.p.id,"precipitation")?.[S.k], sn=ser(m.p.id,"snowfall")?.[S.k];
+    const isSnow=(sn||0)>0 || ((pr||0)>0.1 && ps?.cota_copo_m!=null && z>=ps.cota_copo_m);
+    const x=X(m.d); lvl = (x-lastX<46) ? (lvl+1)%3 : 0; lastX=x; const stem=14+lvl*26, ty=Y(z)-stem-4, right=x>W-150;
+    const lab=`${esc(m.p.nombre)} ${T!=null?T.toFixed(0)+"°":""}${(pr||0)>0.1?(isSnow?" ❄":" · lluvia"):""}`;
+    s+=`<line x1="${x}" x2="${x}" y1="${Y(z)}" y2="${Y(z)-stem}" stroke="var(--ink)" stroke-width=".7" opacity=".7"/><circle cx="${x}" cy="${Y(z)}" r="2.4" fill="var(--ink)"/><text x="${x+(right?-3:3)}" y="${ty}" text-anchor="${right?"end":"start"}" style="fill:var(--ink)" transform="rotate(-28 ${x} ${ty})">${lab}</text>`; }
+  s+=`<text x="${P.l}" y="${H-8}">0 km</text><text x="${W-P.r}" y="${H-8}" text-anchor="end">${dist.toFixed(0)} km</text></svg>`;
+  $("ch-cut").innerHTML=s+`<div class="legend"><span><i class="ln" style="border-top-color:var(--fz);border-top-style:dashed"></i>isocero</span><span><i class="ln" style="border-top-color:var(--ice)"></i>cero de bulbo húmedo</span><span><i class="ln" style="border-top-color:var(--snow);border-top-style:dashed"></i>cota de copo</span><span><i style="background:var(--snow);opacity:.3"></i>entre copo y acumulación fiable</span></div>`;
+  $("cut-note").innerHTML=`${fmtT(t)} · tramo Envalira–Puymorens con el perfil de la vertiente norte, resto con el de la sur. Temperaturas del modelo elegido a la altitud real de cada punto. ${ST("cota")}`;
+  renderCotas();
+}
+function renderCotas(){
+  const P=D.core?.perfil?.[S.pf]||[]; if(!P.length){ $("ch-cotas").innerHTML='<p class="empty">Perfil por niveles no disponible en este ciclo.</p>'; return; }
+  const T=P.map(p=>+new Date(p.t+"Z")), W=900, H=280, pad={l:44,r:150,t:10,b:26}, zmin=800, zmax=4800, x0=T[0], x1=T[T.length-1];
+  const X=t=>pad.l+(t-x0)/(x1-x0)*(W-pad.l-pad.r), Y=z=>pad.t+(1-(z-zmin)/(zmax-zmin))*(H-pad.t-pad.b);
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Isocero, cero de bulbo húmedo y cota de nieve en 72 horas">`;
+  for(let z=1000;z<=zmax;z+=500) s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(z)}" y2="${Y(z)}" stroke="var(--line)" stroke-width=".5"/><text x="${pad.l-4}" y="${Y(z)+3}" text-anchor="end">${z}</text>`;
+  for(let t=Math.ceil(x0/(12*3600e3))*12*3600e3;t<=x1;t+=12*3600e3) s+=`<text x="${X(t)}" y="${H-6}" text-anchor="middle">${fmtT(new Date(t).toISOString(),{weekday:"short",hour:"2-digit"})}</text>`;
+  const refs=["puigcerda","la_molina","font_romeu","pas_casa","envalira","tossa_alp","puigmal"].map(poi).filter(Boolean);
+  let lastY=1e9;
+  for(const r of refs){ const z=r.alt_dem??r.alt_ref; let ly=Y(z)+3; if(lastY-ly<12) ly=lastY-12; lastY=ly;
+    s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(z)}" y2="${Y(z)}" stroke="var(--contour)" stroke-width=".7" stroke-dasharray="1 3"/><text x="${W-pad.r+4}" y="${ly}" style="fill:var(--contour-i)">${esc(r.nombre.replace("Port d'",""))} ${z}</text>`; }
+  const up=P.map((p,i)=>p.cota_acum_m!=null?`${X(T[i])},${Y(Math.min(zmax,p.cota_acum_m))}`:null).filter(Boolean), dn=P.map((p,i)=>p.cota_copo_m!=null?`${X(T[i])},${Y(Math.max(zmin,p.cota_copo_m))}`:null).filter(Boolean).reverse();
+  s+=`<polygon points="${up.concat(dn).join(" ")}" fill="var(--snow)" opacity=".12"/>`;
+  const line=(k,c,da)=>`<polyline points="${P.map((p,i)=>p[k]!=null?`${X(T[i])},${Y(Math.min(zmax,Math.max(zmin,p[k])))}`:"").filter(Boolean).join(" ")}" fill="none" stroke="${c}" stroke-width="1.8" ${da?`stroke-dasharray="${da}"`:""}/>`;
+  s+=line("isocero_m","var(--fz)","6 4")+line("tw0_m","var(--ice)","")+line("cota_copo_m","var(--snow)","2 3");
+  const pm=Math.max(1,...P.map(p=>p.pr_mm||0)); P.forEach((p,i)=>{ if(p.pr_mm>0) s+=`<rect x="${X(T[i])-1.5}" y="${H-pad.b-(p.pr_mm/pm)*40}" width="3" height="${(p.pr_mm/pm)*40}" fill="var(--std)" opacity=".8"/>`; });
+  const tk=+new Date((S.times[S.k]||"")+"Z"); if(tk>=x0&&tk<=x1) s+=`<line x1="${X(tk)}" x2="${X(tk)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--accent)" stroke-width="1.2"/>`;
+  $("ch-cotas").innerHTML=s+"</svg>"+`<div class="legend"><span><i class="ln" style="border-top-color:var(--fz);border-top-style:dashed"></i>isocero</span><span><i class="ln" style="border-top-color:var(--ice)"></i>cero de bulbo húmedo</span><span><i class="ln" style="border-top-color:var(--snow);border-top-style:dashed"></i>cota de copo</span><span><i style="background:var(--snow);opacity:.3"></i>copo → acumulación fiable</span><span><i style="background:var(--std)"></i>precipitación horaria</span><span>líneas punteadas: altitud de los puntos de referencia</span></div>`;
+  $("cotas-note").textContent=`Perfil de ARPEGE por niveles de presión (925–500 hPa) en la vertiente ${S.pf==="sur"?"sur (Cerdanya)":"norte (Ariège)"}. La línea vertical es la hora elegida arriba.`;
+}
+document.querySelectorAll("[data-pf]").forEach(b=>b.addEventListener("click",()=>{ S.pf=b.dataset.pf; document.querySelectorAll("[data-pf]").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderAll(); }));
+
+/* ── puntos ── */
+function renderPoints(){
+  const c=D.core; if(!c||$("tab-puntos").hidden) return; $("pts-st").innerHTML=ST("puntos");
+  const rows=c.puntos||[], byId=Object.fromEntries(rows.map(r=>[r.id,r])); let h=""; const tw0=profAt(S.times[S.k],"sur")?.tw0_m;
+  for(const z of ZONE_ORDER){ const ps=c.pois.filter(p=>p.zona===z); if(!ps.length) continue; h+=`<tr class="zone"><td colspan="10">${z}</td></tr>`;
+    for(const p of ps){ const m=byId[p.id]?.modelos?.[S.model]||{}; const alt=p.alt_dem??p.alt_ref; const above=tw0!=null&&alt>=tw0-300;
+      const note=[m.ventisca_h?`ventisca ${m.ventisca_h} h`:"", (m.nieve72_cm||0)>=1?"nieve":"", m.racha24>=80?"viento fuerte":"", above?"sobre la cota":""].filter(Boolean).join(" · ");
+      h+=`<tr><td>${esc(p.nombre)} <span class="ev">${p.tipo}</span></td><td class="num">${n0(alt)}</td><td class="num ${m.T!=null&&m.T<=0?"snow":""}">${n1(m.T)}</td><td class="num">${n1(m.Tw)}</td><td class="num">${n0(m.tmin24)} / ${n0(m.tmax24)}</td><td class="num">${n1(m.pr24)} / ${n1(m.pr72)}</td><td class="num ${(m.nieve72_cm||0)>=1?"snow":""}">${m.nieve24_cm==null?"—":n1(m.nieve24_cm)} / ${m.nieve72_cm==null?"—":n1(m.nieve72_cm)}</td><td class="num">${n0(m.racha24)}</td><td class="num">${n0(m.viento_ahora)} ${m.dir_ahora!=null?["N","NE","E","SE","S","SW","W","NW"][Math.floor(((m.dir_ahora+22.5)%360)/45)]:""}</td><td>${esc(note)}</td></tr>`; } }
+  $("t-pts").querySelector("tbody").innerHTML=h;
+  $("pts-note").textContent=`${c.modelo_nombre?.[S.model]||S.model} · valores en la altitud real del punto (DEM). Lluvia y nieve en mm y cm; racha en km/h. «Sobre la cota»: el punto está por encima de la cota de copo actual. AROME HD no publica nieve en Open-Meteo: para la nieve usa ICON-EU o IFS.`;
+}
+
+/* ── diagnóstico ── */
+function regime(p){ if(!p?.flujo) return "—"; const f=p.flujo, v=p.viento700_kmh||0;
+  if(["N","NW"].includes(f)) return v>=36?"Norte: retención en la vertiente francesa, Andorra norte y Puymorens; föhn y sombra pluviométrica en Cerdanya":"Norte débil";
+  if(["S","SW"].includes(f)) return v>=36?"Sur: precipitación en Cadí-Moixeró y vertientes meridionales; föhn en la vertiente norte":"Sur débil";
+  if(["E","SE","NE"].includes(f)) return "Levante: humedad mediterránea hacia el Pirineo oriental (Capcir, Cerdanya, Puigmal)";
+  return v>=36?"Oeste: flujo zonal parcialmente bloqueado por el relieve":"Oeste débil"; }
+function renderDiag(){
+  const c=D.core; if(!c||$("tab-diagnostico").hidden) return;
+  $("foehn-st").innerHTML=ST("foehn"); $("inv-st").innerHTML=ST("inversion");
+  const P=c.perfil?.sur||[];
+  $("t-flow").querySelector("tbody").innerHTML=P.filter((_,i)=>i%6===0).slice(0,12).map(p=>`<tr><td>${fmtT(p.t)}</td><td class="num">${p.flujo||"—"} ${n0(p.viento700_kmh)}</td><td class="num">${p.froude??"—"}</td><td class="num">${n0(p.isocero_m)}</td><td class="num">${n0(p.tw0_m)}</td><td class="num">${n0(p.cota_copo_m)}</td><td class="num">${p.slr??"—"}</td><td style="white-space:normal;min-width:200px">${esc(regime(p))}</td></tr>`).join("")||'<tr><td colspan="8" class="empty">Perfil no disponible.</td></tr>';
+  $("foehn").innerHTML=(c.foehn||[]).map(f=>`<li>${esc(f.par)}: ${f.horas?`<b>${f.horas} h con señal de föhn</b> (primera ${fmtT(f.primeras[0]?.t)}, Δθ ${f.primeras[0]?.dtheta} K, ΔHR ${f.primeras[0]?.dhr})`:"sin señal de föhn en 72 h"}</li>`).join("")||'<li class="empty">Sin pares evaluables.</li>';
+  // inversión observada: temperatura frente a altitud
+  const O=[...(c.obs||[]).map(o=>({n:o.nombre,z:o.alt,T:o.T,e:o.edad_min})), ...(c.metar||[]).map(m=>({n:m.icao,z:m.alt,T:m.T,e:m.edad_min}))].filter(o=>o.z!=null&&o.T!=null&&o.e<=90);
+  if(O.length>=2){ const W=460,H=260,pd={l:40,r:12,t:10,b:28}, zmin=Math.floor(Math.min(...O.map(o=>o.z))/200)*200, zmax=Math.ceil(Math.max(...O.map(o=>o.z))/200)*200+200, tmin=Math.floor(Math.min(...O.map(o=>o.T)))-1, tmax=Math.ceil(Math.max(...O.map(o=>o.T)))+1;
+    const X=t=>pd.l+(t-tmin)/(tmax-tmin)*(W-pd.l-pd.r), Y=z=>pd.t+(1-(z-zmin)/(zmax-zmin))*(H-pd.t-pd.b);
+    let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Temperatura observada frente a altitud">`;
+    for(let z=zmin;z<=zmax;z+=200) s+=`<line x1="${pd.l}" x2="${W-pd.r}" y1="${Y(z)}" y2="${Y(z)}" stroke="var(--line)" stroke-width=".5"/><text x="${pd.l-4}" y="${Y(z)+3}" text-anchor="end">${z}</text>`;
+    for(let t=tmin;t<=tmax;t+=2) s+=`<text x="${X(t)}" y="${H-8}" text-anchor="middle">${t}°</text>`;
+    const inv=c.inversion_obs; if(inv){ const mz=O.reduce((a,o)=>a+o.z,0)/O.length, mt=O.reduce((a,o)=>a+o.T,0)/O.length, g=inv.gradiente_c_km/1000; s+=`<line x1="${X(mt+g*(zmin-mz))}" y1="${Y(zmin)}" x2="${X(mt+g*(zmax-mz))}" y2="${Y(zmax)}" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="5 4"/>`; }
+    s+=`<line x1="${X(O[0].T)}" y1="${Y(zmin)}" x2="${X(O[0].T-6.5*(zmax-zmin)/1000)}" y2="${Y(zmax)}" stroke="var(--muted)" stroke-width=".8" stroke-dasharray="2 4" opacity="0"/>`;
+    s+=O.map(o=>`<circle cx="${X(o.T)}" cy="${Y(o.z)}" r="4" fill="var(--ice)"/><text x="${X(o.T)+6}" y="${Y(o.z)+3}" style="fill:var(--ink)">${esc(o.n)}</text>`).join("");
+    $("ch-inv").innerHTML=s+"</svg>";
+    $("inv-note").textContent=inv?`Gradiente observado ${inv.gradiente_c_km} °C/km con ${inv.n} estaciones: ${inv.lectura}. Referencia de la atmósfera estándar: −6,5 °C/km.`:"";
+  } else $("ch-inv").innerHTML='<p class="empty">Menos de dos estaciones frescas.</p>';
+  $("t-obs").querySelector("tbody").innerHTML=[...(c.obs||[]).map(o=>`<tr><td>${esc(o.nombre)}</td><td class="ev">${esc(o.red||"")}</td><td class="num">${n0(o.alt)}</td><td class="num">${n1(o.T)}</td><td class="num">${n0(o.HR)}</td><td class="num">${n0(o.viento)}</td><td class="num">${n0(o.racha_dia)}</td><td class="num">${n1(o.lluvia_dia)}</td><td class="num">${o.edad_min} min</td></tr>`),
+    ...(c.metar||[]).map(m=>`<tr><td>${esc(m.icao)} <span class="ev">${esc(m.raw)}</span></td><td class="ev">METAR</td><td class="num">${n0(m.alt)}</td><td class="num">${n1(m.T)}</td><td class="num">—</td><td class="num">${m.viento_kt!=null?n0(m.viento_kt*1.852):"—"}</td><td class="num">${m.racha_kt!=null?n0(m.racha_kt*1.852):"—"}</td><td class="num">—</td><td class="num">${m.edad_min} min</td></tr>`)].join("")||'<tr><td colspan="9" class="empty">Sin observaciones.</td></tr>';
+  const W2=(c.avisos||[]).filter(w=>!w.error);
+  $("warns").innerHTML=W2.length?W2.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> ${esc(w.evento)} · <span class="ev">${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)} · ${fmtT(w.desde)} → ${fmtT(w.hasta)}${w.vigente?" · vigente":""}</span></li>`).join(""):`<li>Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (${/^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||""))?"AEMET CAP":"MeteoAlarm"}), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm).</li>`;
+  const A=c.aemet; let am="";
+  if(A&&A.montana&&A.montana.length){
+    am=A.montana.map(m=>`<p><b>${m.dia===0?"Hoy":"Mañana"}</b>${m.isocero_m?` · isocero ${n0(m.isocero_m)} m`:""}</p><ul class="plain">${(m.prediccion||[]).map(a=>`<li><b>${esc(a.cabecera)}:</b> ${esc(a.texto)}</li>`).join("")}${(m.atmosfera_libre||[]).filter(a=>/Viento/.test(a.cabecera)).map(a=>`<li class="ev">${esc(a.cabecera)}: ${esc(a.texto)}</li>`).join("")}</ul>`).join("");
+    am+=`<p class="src">AEMET · Pirineo catalán. Compárala con el isocero de los modelos en la pestaña Corte → Cotas.</p>`;
+  } else am='<p class="empty">Sin predicción de AEMET (falta la clave en config.env o no respondió).</p>';
+  if(A&&A.nivologico) am+=`<p class="src">${A.nivologico.fuera_de_campana?"Boletín nivológico de AEMET: fuera de campaña (se reanuda con la nieve).":esc(A.nivologico.texto.slice(0,600))}</p>`;
+  $("aemet-mt").innerHTML=am;
+  const L=c.enlaces||{}; const lab={aludes_andorra:"Estat de la neu i allaus · Andorra",aludes_meteocat:"Butlletí de perill d'allaus · Meteocat",aludes_meteofrance:"BERA · Météo-France montagne",carreteras_andorra:"Mobilitat · Andorra (Envalira)",carreteras_francia:"Inforoute 66 (Puymorens)",carreteras_cat:"Trànsit · Catalunya (Toses)"};
+  $("links").innerHTML=Object.entries(L).map(([k,u])=>`<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(lab[k]||k)}</a></li>`).join("");
+  $("srcs").innerHTML=Object.entries(c.fuentes||{}).map(([k,v])=>`<li><b>${esc(k)}</b> · <span class="ev">${esc(String(v).slice(0,140))}</span></li>`).join("");
+}
+
+/* ── metaanálisis 15 días ── */
+const metaPct = n => n == null || !Number.isFinite(Number(n)) ? "—" : Math.round(Number(n)*100)+"%";
+function renderExtended(){
+  const m=D.extended;
+  if(!m){ $("meta-st").textContent="Sin exportación de 15 días"; $("meta-note").textContent="Ejecuta pirineo.py export con acceso a Open-Meteo"; return; }
+  $("meta-st").textContent=`${esc(m.status||"UNKNOWN")} · ${esc(m.version||"")}`;
+  const st=$("meta-station").value, level=$("meta-level").value;
+  const rows=m.stations?.[st]?.[level]||{};
+  $("t-meta").querySelector("tbody").innerHTML=Object.entries(rows).sort((a,b)=>a[0].localeCompare(b[0])).map(([d,v])=>`<tr><td class="mono">${esc(d)}</td><td class="num">${metaPct(v.snow_ge5_member_fraction)}</td><td class="num">${metaPct(v.snow_ge10_member_fraction)}</td><td class="num">${metaPct(v.wet_bulb_le0_member_fraction)}</td><td class="num">${n0(v.n_independent_families)}</td><td>${esc(v.evidence_status||"UNKNOWN")}</td></tr>`).join("") || '<tr><td colspan="6">Datos insuficientes: no se asignan porcentajes.</td></tr>';
+  $("meta-note").textContent=`Captura ${fmtT(m.issued_utc)} · Celdas de referencia de pista; DEM y perfiles verticales siguen en el módulo 72 h. ${m.forecast_basis||"Sin datos"}.`;
+  $("meta-sources").innerHTML=Object.entries(m.sources||{}).map(([name,info])=>`<li><b>${esc(name)}</b> · ${esc(info.state||"UNKNOWN")}${info.error?" · "+esc(info.error):""}</li>`).join("") + `<li>Pesos por familias: ${esc(JSON.stringify(m.model_families||{}))}</li>` + `<li>Revisiones en días comunes: ${n0(m.run_revisions?.length||0)}; no equivalen a error observado</li>`;
+  $("meta-context").innerHTML=Object.entries(m.teleconnections||{}).map(([name,entry])=>`<li><b>${esc(name)}</b> · ${esc(entry.state||"UNKNOWN")}${entry.value!=null?" · "+esc(entry.value):""}${entry.valid_at?" · "+esc(entry.valid_at):""}</li>`).join("") + `<li><b>Contrarian:</b> ${esc(m.contrarian?.state||"UNCONFIRMED")}. Sin incremento automático de probabilidad de nieve.</li>`;
+}
+$("meta-station").addEventListener("change",renderExtended);
+$("meta-level").addEventListener("change",renderExtended);
+
+/* ── pestañas ── */
+const TABS=["mapa","corte","puntos","diagnostico","extendido"];
+function showTab(t){ if(!TABS.includes(t)) t="mapa"; S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); try{ localStorage.setItem("pir-tab",t); }catch(e){} renderAll(); }
+document.querySelectorAll("nav.tabs a").forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); history.replaceState(null,"","#"+a.dataset.tab); showTab(a.dataset.tab); }));
+function renderAll(){ const run=f=>{ try{ f(); }catch(e){ console.error(e); } }; run(renderHeader); run(drawMap); run(renderCut); run(renderPoints); run(renderDiag); run(renderExtended); }
+window.addEventListener("resize", ()=>{ if(S.tab==="mapa") drawMap(); });
+
+/* ── botón Actualizar y publicar (tarea en la nube) ── */
+const R={busy:false,base:null,t0:0,ctl:null,mcp:null,db:null,timer:null};
+async function setupRefresh(db){ let mcp=null; try{ mcp=await window.claude.use("mcp"); }catch(e){} if(!mcp) return; Object.assign(R,{mcp,db});
+  db.doc("app/control").onSnapshot(s=>{ R.ctl=s.exists?s.data():null; $("btn-refresh").hidden=!R.ctl?.trigger_id; },()=>{});
+  $("btn-refresh").onclick=async()=>{ if(R.busy) return; R.busy=true; R.base=D.core?.issued; R.t0=Date.now(); $("btn-refresh").disabled=true; $("refresh-st").textContent="Lanzando en la nube…";
+    try{ await R.mcp.callTool("Claude Code Remote","fire_trigger",{trigger_id:R.ctl.trigger_id}); $("refresh-st").textContent="En marcha: unos 5–10 min; la página se actualiza sola."; }
+    catch(e){ R.busy=false; $("btn-refresh").disabled=false; $("refresh-st").textContent="No se pudo lanzar: "+(e?.code||e?.message||"error"); return; }
+    clearInterval(R.timer); R.timer=setInterval(()=>{ if(D.core?.issued && D.core.issued!==R.base){ clearInterval(R.timer); R.busy=false; $("btn-refresh").disabled=false; $("refresh-st").textContent="Publicado · "+fmtT(D.core.issued); } else if(Date.now()-R.t0>15*60e3){ clearInterval(R.timer); R.busy=false; $("btn-refresh").disabled=false; $("refresh-st").textContent="Sin publicación tras 15 min."; } },15000); };
+}
+
+/* ── chat ── */
+const CHAT={sample:null,turns:[],ctl:null,busy:false,images:false};
+const RULES=`Eres el meteorólogo de montaña de guardia del observatorio «Pirineo Nowcast»: Andorra, Cerdanya (catalana y francesa), Puymorens y Capcir. Responde en español, técnico, escéptico y claro.
+Reglas:
+1. Usa SOLO el bloque DATOS y, si se adjunta, la imagen de la pantalla. No inventes observaciones ni cifras. Si falta un dato, dilo.
+2. Separa probabilidad de impacto y severidad condicional. Tus probabilidades son «estimación diagnóstica, no probabilidad oficial ni calibrada», en intervalos.
+3. Nieve: nunca derives la cota solo del isocero. Distingue cota de copo, de cuajado y de acumulación; con precipitación intensa baja 200–400 m. Relación nieve/agua según el perfil (SLR), no 10:1 fijo.
+4. Topografía explícita: barlovento/sotavento según el flujo a 700 hPa (N/NW favorece vertiente francesa, Andorra norte y Puymorens; S/SW, Cadí y vertientes sur; levante, Pirineo oriental). Föhn: más cálido y seco a sotavento.
+5. Inversión: la temperatura del modelo se ajusta a la altitud con gradiente estándar y no ve el aire frío del fondo de la Cerdanya; usa las estaciones observadas para juzgarla.
+6. Collados (Envalira, Pas de la Casa, Puymorens, Toses): el peligro puede venir más del viento y la nieve transportada que de la precipitación. Para aludes y carreteras remite a los boletines oficiales enlazados.
+7. Mandan los avisos oficiales (SMA Andorra, Meteocat/AEMET, Météo-France): nunca presentes tu estimación como aviso. La predicción de montaña de AEMET (aemet_montana) es oficial: si tu diagnóstico difiere (por ejemplo, del isocero), dilo y explica por qué.
+8. Cada observación lleva su red: AEMET es oficial; Meteociel reproduce estaciones de Météo-France y del SMA; ClimayNievePirineos y Meteoclimatic son redes no oficiales. Pondera en consecuencia.
+8. Ventanas horarias en hora local, 120–250 palabras salvo que pidan más, markdown sencillo. Cierra con: Estado 🟢/🟡/🟠/🔴 · principal riesgo · variable decisiva.`;
+function digest(){ const c=D.core; if(!c) return "{}"; const t=S.times[S.k];
+  return JSON.stringify({ahora_local:fmtT(new Date().toISOString()), ciclo:fmtT(c.issued), hora_elegida:fmtT(t), modelo_elegido:c.modelo_nombre?.[S.model], capa_mapa:S.ov,
+    perfil_sur:(c.perfil?.sur||[]).filter((_,i)=>i%3===0).slice(0,24), perfil_norte:(c.perfil?.norte||[]).filter((_,i)=>i%6===0).slice(0,12),
+    puntos:(c.puntos||[]).map(r=>({punto:poi(r.id)?.nombre, alt:poi(r.id)?.alt_dem, zona:poi(r.id)?.zona, ...(r.modelos?.[S.model]||{})})),
+    foehn:c.foehn, inversion_obs:c.inversion_obs, observacion:c.obs, metar:c.metar, avisos:c.avisos, aemet_montana:c.aemet, fuentes:c.fuentes}); }
+const md=t=>{ let h="",L=false; for(let l of esc(t).split("\n")){ l=l.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>"); if(/^\s*[-*•] /.test(l)){ if(!L){h+="<ul>";L=true;} h+="<li>"+l.replace(/^\s*[-*•] /,"")+"</li>"; continue; } if(L){h+="</ul>";L=false;} if(l.trim()) h+="<p>"+l.replace(/^#{1,4} /,"")+"</p>"; } return h+(L?"</ul>":""); };
+function renderChat(extra){ $("chat-log").innerHTML=CHAT.turns.map(t=>t.role==="user"?`<div class="msg u">${esc(t.content)}</div>`:`<div class="msg a">${md(t.content)}${t.meta?`<div class="mt">${esc(t.meta)}</div>`:""}</div>`).join("")+(extra||""); $("chat-log").scrollTop=1e9; }
+async function ask(q){ q=(q||"").trim(); if(!q||CHAT.busy) return; CHAT.busy=true; $("chat-send").disabled=true; $("chat-stop").hidden=false; $("chat-in").value="";
+  const hist=CHAT.turns.slice(-10).map(t=>({role:t.role,content:t.content})); CHAT.turns.push({role:"user",content:q});
+  const cvId=S.tab==="mapa"?"map":null; let img=null; if(CHAT.images&&$("chat-img").checked&&cvId){ try{ img=await new Promise(r=>$(cvId).toBlob(r,"image/png")); }catch(e){} }
+  renderChat(`<div class="msg a think" id="live">Pensando con los datos del ciclo${img?" y el mapa de tu pantalla":""}…</div>`);
+  const input=[{role:"user",content:RULES},...hist,{role:"user",content:`DATOS (JSON):\n${digest()}\n\nVISTA: ${S.tab}${img?" (se adjunta el mapa: relieve con curvas cada 100 m, capa "+S.ov+")":""}.\n\nPREGUNTA: ${q}`}];
+  CHAT.ctl=new AbortController(); const opts={signal:CHAT.ctl.signal,cache:false,modelTier:$("chat-deep").checked?"complex":"default",onText:({text})=>{ const el=$("live"); if(el){ el.classList.remove("think"); el.innerHTML=md(text); } }}; if(img) opts.images=img;
+  try{ const r=await CHAT.sample(input,opts); CHAT.turns.push({role:"assistant",content:r.text,meta:`ciclo ${fmtT(D.core?.issued)}${img?" · con mapa":""}`}); }
+  catch(e){ if(e?.text) CHAT.turns.push({role:"assistant",content:e.text,meta:"incompleta"}); CHAT.turns.push({role:"assistant",content:({not_granted:"No has permitido a esta página usar Claude.",rate_limited:"Demasiadas preguntas seguidas: espera un poco.",cancelled:"Detenido."})[e?.code]||`No se pudo responder (${e?.code||"error"}).`}); }
+  finally{ CHAT.busy=false; $("chat-send").disabled=false; $("chat-stop").hidden=true; try{ localStorage.setItem("pir-chat",JSON.stringify(CHAT.turns.slice(-16))); }catch(e){} renderChat(); } }
+async function setupChat(){ let sm=null; try{ sm=await window.claude.use("sample"); }catch(e){} if(!sm) return; CHAT.sample=sm; try{ CHAT.images=!!(await sm.limits())?.images; }catch(e){} $("chat-img-l").hidden=!CHAT.images;
+  try{ CHAT.turns=JSON.parse(localStorage.getItem("pir-chat")||"[]"); }catch(e){} $("btn-chat").hidden=false; }
+$("btn-chat").onclick=()=>{ const o=$("chat").hidden; $("chat").hidden=!o; $("btn-chat").setAttribute("aria-expanded",o); if(o){ renderChat(); $("chat-in").focus(); } };
+$("chat-x").onclick=()=>{ $("chat").hidden=true; $("btn-chat").setAttribute("aria-expanded","false"); };
+$("chat-clear").onclick=()=>{ if(!CHAT.busy){ CHAT.turns=[]; try{ localStorage.removeItem("pir-chat"); }catch(e){} renderChat(); } };
+$("chat-stop").onclick=()=>CHAT.ctl?.abort();
+$("chat-f").addEventListener("submit",e=>{ e.preventDefault(); ask($("chat-in").value); });
+$("chat-in").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); ask($("chat-in").value); } });
+
+{ let t=location.hash.slice(1); if(!TABS.includes(t)){ try{ t=localStorage.getItem("pir-tab")||"mapa"; }catch(e){ t="mapa"; } } S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); }
+start();
+</script>

@@ -1,0 +1,7 @@
+{
+  "enso_nino34": {"source": "NOAA/CPC", "valid_at": "AAAA-MM-DD", "value": null},
+  "nao": {"source": "NOAA/CPC", "valid_at": "AAAA-MM-DD", "value": null},
+  "ao": {"source": "NOAA/CPC", "valid_at": "AAAA-MM-DD", "value": null},
+  "stratospheric_10hpa": {"source": "ECMWF or other verifiable data", "valid_at": "AAAA-MM-DD", "value": null},
+  "north_atlantic_sst": {"source": "Verified ocean SST source", "valid_at": "AAAA-MM-DD", "value": null}
+}

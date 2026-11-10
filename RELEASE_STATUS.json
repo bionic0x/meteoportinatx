@@ -1,0 +1,13 @@
+{
+  "version": "0.3.0",
+  "release_date": "2026-11-10",
+  "based_on": "Pirineo Nowcast v0.2.0 + Portinatx Nowcast source",
+  "validated": {
+    "portinatx_selftest": 106,
+    "pirineo_selftest": 13,
+    "extension_and_integration": 12
+  },
+  "deployment": "NOT_DEPLOYED",
+  "live_provider_checks": "NOT_EXECUTED",
+  "source": "local library source"
+}
