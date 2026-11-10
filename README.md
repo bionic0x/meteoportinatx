@@ -71,3 +71,7 @@ Consulta [Arquitectura unificada](docs/ARQUITECTURA-UNIFICADA.md), [release note
 ## Estado
 
 **Código integrado para validación:** sí. **Conexión con hosting, credenciales y publicación web:** fase siguiente, no ejecutada en esta entrega.
+
+## Edición web (GitHub Pages)
+
+El workflow [`deploy.yml`](.github/workflows/deploy.yml) publica instantáneas de ambos dominios desde GitHub Actions cuando se activa Pages en **Settings → Pages → Source: GitHub Actions**. Se vuelve a ejecutar cada seis horas y ante cambios en `main`; no es un servidor de vigilancia continua. El lanzamiento y la verificación están en [`docs/DESPLIEGUE-WEB.md`](docs/DESPLIEGUE-WEB.md).
