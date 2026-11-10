@@ -104,6 +104,38 @@ class PersistentBackend(unittest.TestCase):
         self.assertEqual(len(hist),2)
         self.assertIn("extended",json.loads(gzip.decompress(hist[-1].read_bytes())))
 
+    def test_core_allowlist_rejects_future_private_fields(self):
+        core = self.fixture("portinatx")
+        core["new_unreviewed_feature"] = {"owner_quote":"PRIVATE_SENTINEL"}
+        core["official"]["unreviewed_owner_description"] = "PRIVATE_SENTINEL"
+        core["governance"]["episode"]["secret_comment"] = "PRIVATE_SENTINEL"
+        core["hazard"]["unreviewed_feature"] = {"evidence":"PRIVATE_SENTINEL"}
+        (self.app/"core.json").write_text(json.dumps(core),encoding="utf-8")
+        self.store.publish("portinatx",self.app)
+        result,_,_ = self.store.read_public("portinatx","core")
+        public=json.loads(result)
+        self.assertNotIn(b"PRIVATE_SENTINEL",result)
+        self.assertNotIn("new_unreviewed_feature",public)
+        self.assertNotIn("unreviewed_feature",public["hazard"])
+        self.assertNotIn("unreviewed_owner_description",public["official"])
+
+    def test_all_parts_have_one_shared_public_snapshot_header(self):
+        self.fixture("portinatx")
+        self.store.publish("portinatx",self.app)
+        _,_,first=self.store.read_public("portinatx","core")
+        _,_,second=self.store.read_public("portinatx","radar")
+        self.assertEqual(first["version"],second["version"])
+
+    def test_verify_chain_detects_tampered_index_but_is_not_attestation(self):
+        self.fixture("portinatx")
+        self.store.publish("portinatx", self.app)
+        check = self.store.verify_chain()
+        self.assertTrue(check["ok"])
+        self.assertFalse(check["tamper_evident"])
+        with self.store._db() as db:
+            db.execute("UPDATE cycles SET sha256=? WHERE domain=?",("0"*64,"portinatx"))
+        self.assertFalse(self.store.verify_chain()["ok"])
+
     def test_no_public_archive_or_path_traversal(self):
         self.fixture("portinatx")
         self.store.publish("portinatx",self.app)
@@ -132,6 +164,9 @@ class PersistentBackend(unittest.TestCase):
         self.assertEqual(status,200)
         self.assertEqual(headers["Access-Control-Allow-Origin"],"https://bionic0x.github.io")
         self.assertEqual(headers["X-Meteo-Freshness"],"fresh")
+        self.assertIn("X-Meteo-Freshness", headers["Access-Control-Expose-Headers"])
+        self.assertIn("X-Meteo-Snapshot", headers["Access-Control-Expose-Headers"])
+        self.assertRegex(headers["X-Meteo-Snapshot"],r"^\d{8}T\d{6}Z-[a-f0-9]{12}$")
         self.assertNotIn(b"private observation",data)
         status,headers,_=call("POST","/v1/portinatx/api/refresh","https://bionic0x.github.io")
         self.assertEqual(status,405)

@@ -29,7 +29,7 @@ from urllib.parse import urlsplit
 
 import nowcast
 
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 DOMAINS = nowcast.DOMAINS
 PARTS = nowcast.PARTS
 DEFAULT_INTERVALS = {"portinatx": 300, "pirineo": 10800}
@@ -77,53 +77,69 @@ def _utc_issue(stamp):
     return dt
 
 
-def _public_view(domain: str, part: str, original: dict) -> dict:
-    """Drop owner-authored governance and local private evidence, by design.
+def _pick(data, keys):
+    """Explicit, deny-by-default projection; new schema keys stay private."""
+    return {key: data[key] for key in keys if isinstance(data, dict) and key in data}
 
-    This is a projection, NOT a raw file server and NOT an approval of the
-    original diagnostic output as an official warning.
+
+def _public_view(domain: str, part: str, original: dict) -> dict:
+    """Public schema projection. Never copy an incoming core mapping wholesale.
+
+    Private testimony, overrides, notes, and future unreviewed fields are denied
+    by default, including nested fields in warnings, governance and channels.
     """
     if domain == "portinatx" and part == "core":
-        result = dict(original)
-        gov = result.get("governance") or {}
+        gov = original.get("governance") or {}
+        official = original.get("official") or {}
+        precaution = original.get("precaution") or {}
+        site = original.get("site") or {}
+        now = original.get("nowcast") or {}
+        outlook = original.get("outlook") or {}
+        allowed = {"cycle_id", "issued", "engine"}
+        result = _pick(original, allowed)
+        result["site"] = _pick(site, {"name", "lat", "lon"})
+        result["official"] = _pick(official, {"level_now", "level_36h", "verificado", "source", "status"})
+        # CAP/MeteoAlarm institutional event fields; no arbitrary provider fields.
+        result["official"]["all"] = [
+            _pick(w, {"nivel", "rank", "tipo", "evento", "desde", "hasta", "activo", "umbral"})
+            for w in official.get("all", []) if isinstance(w, dict)
+        ]
+        result["warning_changes"] = []
+        result["hazard"] = {
+            k: ({"estado": "UNKNOWN", "nivel": "unknown"} if k in ("runoff", "flooding")
+                else _pick(v, {"estado", "nivel", "local"}))
+            for k, v in (original.get("hazard") or {}).items()
+            if isinstance(k, str) and k in {"radar", "rayos", "lluvia_observada", "pluviometros", "viento_estaciones", "mar_boyas", "runoff", "flooding", "lluvia", "viento", "mar", "oleaje"} and isinstance(v, dict)
+        }
+        result["precaution"] = {**_pick(precaution, {"level", "transition"}),
+                                "decision": {}, "exit_conditions": []}
+        result["nowcast"] = _pick(now, {"level", "proposed", "transition"})
+        result["outlook"] = {**_pick(outlook, {"level", "proposed", "transition"}), "reasons": []}
+        coverage = original.get("coverage")
+        result["coverage"] = coverage if isinstance(coverage, (int, float)) and not isinstance(coverage, bool) else None
         result["governance"] = {
             "claims": [], "claims_count": {}, "predictions": [],
             "predictions_summary": {}, "anomalies": [], "dissent": [], "overrides": {},
-            "bias": gov.get("bias"),
-            "episode": {"phase": (gov.get("episode") or {}).get("phase", "UNKNOWN")},
+            "bias": {}, "episode": _pick(gov.get("episode") or {}, {"phase"}),
         }
-        # Preserve dashboard schema but remove owner-written narratives from
-        # decisions, channel evidence, and forecasts. Public warnings remain
-        # institutional; no owner testimony is included in the public API.
-        precaution = original.get("precaution") or {}
-        result["precaution"] = {
-            "level": precaution.get("level", "unknown"),
-            "transition": precaution.get("transition", ""),
-            "decision": {}, "exit_conditions": [],
-        }
-        nowcast = original.get("nowcast") or {}
-        result["nowcast"] = {k: nowcast.get(k) for k in ("level", "proposed", "transition")}
-        result["outlook"] = {k: (original.get("outlook") or {}).get(k) for k in ("level", "proposed", "transition")}
-        result["outlook"]["reasons"] = []
-        hazard = original.get("hazard") or {}
-        result["hazard"] = {k: {"estado": "UNKNOWN", "nivel": "unknown"}
-                            if k in ("runoff", "flooding") else
-                            {q: v.get(q) for q in ("estado", "nivel", "local")}
-                            for k, v in hazard.items() if isinstance(v, dict)}
         result["channels"] = [
-            {**{k: c.get(k) for k in ("name", "level", "kind", "confidence", "available", "local")},
+            {**_pick(c, {"name", "level", "kind", "confidence", "available", "local"}),
              "evidence": []}
-            for c in (original.get("channels") or []) if isinstance(c, dict)]
-        result["history"] = [
-            {k: v.get(k) for k in ("id", "level", "nowcast")}
-            for v in (original.get("history") or []) if isinstance(v, dict)]
+            for c in (original.get("channels") or []) if isinstance(c, dict)
+        ]
         result["sources"] = [
-            {"name": s.get("name"), "status": s.get("status"), "data_time": s.get("data_time"), "detail": ""}
-            for s in (original.get("sources") or []) if isinstance(s, dict)]
+            {**_pick(src, {"name", "status", "data_time"}), "detail": ""}
+            for src in (original.get("sources") or []) if isinstance(src, dict)
+        ]
+        result["history"] = [
+            _pick(item, {"id", "level", "nowcast"})
+            for item in (original.get("history") or []) if isinstance(item, dict)
+        ]
         return result
     if domain == "portinatx" and part == "forense":
-        # Published forensic aggregates only, never source rows or user notes.
-        return {k: v for k, v in original.items() if k in ("status", "corregido", "modelos", "info", "aprendizaje", "puntuacion", "lecciones", "dias", "nucleo", "desfase", "oleaje", "historial_aprendizaje", "pares_cols", "resumen", "n_dias")}
+        # Retain structured diagnostics only. No owner narratives by default.
+        return _pick(original, {"status", "corregido", "modelos", "info", "aprendizaje", "puntuacion", "dias", "nucleo", "desfase", "oleaje", "pares_cols", "n_dias"})
+    # Other arrays come from dedicated producer schemas, not owner-authored core.
     return original
 
 
@@ -257,6 +273,37 @@ class Store:
         age = (datetime.now(UTC) - datetime.fromisoformat(pointer["issued"].replace("Z", "+00:00"))).total_seconds() / 3600
         return raw, ("fresh" if -0.1 <= age <= AGE_HOURS[domain] else "stale"), pointer
 
+    def verify_chain(self):
+        """Detect accidental index inconsistencies (NOT an independent signature).
+
+        Everything being verified remains on the same potentially ephemeral disk.
+        A malicious operator with DB write access can recompute every row.
+        """
+        errors = []
+        counts = {d: 0 for d in DOMAINS}
+        previous = {d: "0" * 64 for d in DOMAINS}
+        last = {}
+        with self._db() as db:
+            rows = db.execute("SELECT domain,issued,sha256,previous_chain,chain_sha256 FROM cycles ORDER BY id").fetchall()
+        for domain, issued, core_hash, previous_hash, chain_hash in rows:
+            counts[domain] += 1
+            expected = _sha((previous[domain] + "\n" + domain + "\n" + issued + "\n" + core_hash).encode())
+            if previous_hash != previous[domain] or chain_hash != expected:
+                errors.append(f"{domain}: chain mismatch at index {counts[domain]}")
+            previous[domain] = chain_hash
+            last[domain] = (issued, core_hash)
+        for domain, (issued, core_hash) in last.items():
+            try:
+                raw, _, pointer = self.read_public(domain, "core")
+                if (pointer["issued"] != issued or pointer["sha256"] != core_hash or
+                        _sha(raw) != core_hash):
+                    errors.append(f"{domain}: latest snapshot/core differs from index")
+            except (OSError, ValueError, KeyError):
+                errors.append(f"{domain}: latest snapshot missing or invalid")
+        return {"ok": not errors, "cycles_checked": sum(counts.values()),
+                "by_domain": counts, "issues": errors,
+                "tamper_evident": False, "durable_storage": os.environ.get("NOWCAST_REQUIRE_DISK") == "1"}
+
     def summary(self, domain: str | None = None):
         with self._db() as db:
             if domain:
@@ -339,7 +386,7 @@ class Service:
             except (OSError,ValueError,KeyError):
                 states[d].update({"data_state":"UNKNOWN","issued":None,
                                   "interval_seconds":self.intervals[d]})
-        return {"version": VERSION, "mode": ("persistent-backend" if os.environ.get("NOWCAST_REQUIRE_DISK") == "1" else "ephemeral-preview"), "durable_state": os.environ.get("NOWCAST_REQUIRE_DISK") == "1", "domains": states}
+        return {"version":VERSION,"mode":("persistent-backend" if os.environ.get("NOWCAST_REQUIRE_DISK") == "1" else "ephemeral-preview"),"durable_state":os.environ.get("NOWCAST_REQUIRE_DISK") == "1","domains":states}
 
 
 def handler(service: Service, allowed_origins=CORS_ORIGINS):
@@ -348,7 +395,7 @@ def handler(service: Service, allowed_origins=CORS_ORIGINS):
             # Do not log raw request query strings or user IPs.
             pass
 
-        def _send(self, code, data, mime="application/json; charset=utf-8", freshness=None):
+        def _send(self, code, data, mime="application/json; charset=utf-8", freshness=None, snapshot=None):
             self.send_response(code)
             self.send_header("Content-Type",mime)
             self.send_header("Content-Length",str(len(data)))
@@ -359,9 +406,12 @@ def handler(service: Service, allowed_origins=CORS_ORIGINS):
             origin = self.headers.get("Origin")
             if origin in allowed_origins:
                 self.send_header("Access-Control-Allow-Origin",origin)
+                self.send_header("Access-Control-Expose-Headers","X-Meteo-Freshness, X-Meteo-Snapshot")
                 self.send_header("Vary","Origin")
             if freshness:
                 self.send_header("X-Meteo-Freshness",freshness)
+            if snapshot:
+                self.send_header("X-Meteo-Snapshot",snapshot)
             self.end_headers()
             self.wfile.write(data)
 
@@ -382,8 +432,8 @@ def handler(service: Service, allowed_origins=CORS_ORIGINS):
                 if part not in PARTS[domain]:
                     return self._json(404,{"error":"not_found"})
                 try:
-                    data,fresh,_=service.store.read_public(domain,part)
-                    return self._send(200,data,freshness=fresh)
+                    data,fresh,pointer=service.store.read_public(domain,part)
+                    return self._send(200,data,freshness=fresh,snapshot=pointer["version"])
                 except (OSError,KeyError,ValueError):
                     return self._json(503,{"state":"UNKNOWN","reason":"snapshot not available"})
             return self._json(404,{"error":"not_found"})
@@ -407,7 +457,7 @@ def handler(service: Service, allowed_origins=CORS_ORIGINS):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument("command",choices=("serve","once","status"),nargs="?",default="serve")
+    parser.add_argument("command",choices=("serve","once","status","verify"),nargs="?",default="serve")
     parser.add_argument("--domain",choices=(*DOMAINS,"all"),default="all")
     parser.add_argument("--port",type=int,default=int(os.environ.get("PORT","10000")))
     parser.add_argument("--root",type=Path,default=Path(os.environ.get("NOWCAST_DATA_ROOT","./backend_state")))
@@ -423,6 +473,10 @@ def main(argv=None):
                                     "pirineo":int(os.environ.get("PIRINEO_INTERVAL","10800"))})
     if args.command=="status":
         print(json.dumps(service.status(),indent=2));return 0
+    if args.command=="verify":
+        report = service.store.verify_chain()
+        print(json.dumps(report,indent=2))
+        return 0 if report["ok"] else 1
     if args.command=="once":
         targets=DOMAINS if args.domain=="all" else (args.domain,)
         failures=0

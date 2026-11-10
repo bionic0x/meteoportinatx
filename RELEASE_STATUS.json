@@ -1,17 +1,21 @@
 {
-  "release": "0.4.0",
+  "release": "0.5.1",
   "date": "2026-11-10",
   "product": "MeteoPortinatx Unified",
   "components": {
     "portinatx_core": "0.6.1",
     "pirineo_core": "0.3.0",
     "pirineo_extended": "0.3.0",
-    "unified_application": "0.4.0"
+    "unified_application": "0.5.1",
+    "public_api": "0.5.1"
   },
-  "delivery": "source_integrated",
-  "web_deployed": false,
-  "verified_live_data": false,
+  "delivery": "public_pages_and_render_free_preview",
+  "web_deployed": true,
+  "render_backend_deployed": true,
+  "live_bridge_enabled": false,
+  "forensic_state_durable": false,
+  "verified_live_data": "GitHub Actions generated validated live provider snapshots on successful deploys; Render status must be separately verified",
   "scientific_skill_calibrated": false,
   "secrets_in_repository": false,
-  "notes": "Separate observations and alerts; historical calibration is experimental; connect and deploy web in next phase."
+  "notes": "Render Free state is ephemeral and sleeping prevents guaranteed five-minute polling. Browser only uses a complete same-snapshot domain; static Pages is the complete fallback."
 }
