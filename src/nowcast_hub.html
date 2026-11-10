@@ -24,11 +24,14 @@ a:focus-visible{outline:2px solid white;outline-offset:3px}
 <a class="card" data-area="snow" href="pirineo/"><span class="arrow" aria-hidden="true">↗</span><span class="tag">Andorra · Cerdanya · Capcir</span>
 <h2>Pirineo Nowcast</h2><p>Relieve DEM, nieve por cota, perfiles verticales, föhn, inversiones y metaanálisis a 15 días.</p><span class="issued" id="pir-status" aria-live="polite">Datos: comprobando…</span></a>
 </section><footer>Estimaciones diagnósticas, no avisos oficiales. Datos ausentes o caducados se indican expresamente. Edición estática: actualización automática cada 6 h; sin avisos push ni vigilancia continua. Datos y avisos sujetos a frescura. Fuentes de previsión: <a href="https://open-meteo.com/" style="color:inherit">Open-Meteo</a> (CC BY 4.0) y organismos oficiales. · v0.4.0</footer>
-</main><script>
+</main><script src="public_config.js"></script>
+<script src="public_fetch.js"></script>
+<script>
 (async()=>{for(const [domain,id] of [['portinatx','port-status'],['pirineo','pir-status']]){
-const el=document.getElementById(id);try{const r=await fetch(domain+'/api/core.json',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
-const core=await r.json();const date=core.issued?new Date(core.issued):null;
+const el=document.getElementById(id);try{const packet=window.meteoLoadPart ? await window.meteoLoadPart(domain,'core',domain+'/api/core.json') : null;
+const r=packet?null:await fetch(domain+'/api/core.json',{cache:'no-store'});if(r&&!r.ok)throw Error('HTTP '+r.status);
+const core=packet?packet.data:await r.json();const provenance=packet?.source==='backend'?' · API en vivo':packet?.source==='snapshot-fallback'?' · respaldo estático':'';const date=core.issued?new Date(core.issued):null;
 if(!date||!Number.isFinite(date.getTime()))throw Error('fecha ausente');
-const hours=(Date.now()-date.getTime())/3600000;el.textContent='Último ciclo: '+date.toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'})+((hours>(domain==='portinatx'?4:8)?' · DATOS ANTIGUOS':''));
+const hours=(Date.now()-date.getTime())/3600000;el.textContent='Último ciclo: '+date.toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'})+((hours>(domain==='portinatx'?1:6)?' · DATOS ANTIGUOS':''))+provenance;
 }catch(e){el.textContent='Sin datos verificados · '+e.message;}}})();
 </script></body></html>

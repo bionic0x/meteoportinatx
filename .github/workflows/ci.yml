@@ -23,3 +23,6 @@ jobs:
         run: python scripts/build.py
       - name: Validate Pages workflow is separately gated
         run: test -f .github/workflows/deploy.yml
+
+      - name: Compile and lint backend service
+        run: python -m py_compile src/nowcast_backend.py

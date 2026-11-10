@@ -1,0 +1,33 @@
+# Infrastructure-as-code: requires explicit approval of Render paid Starter + disk.
+# Do NOT deploy a Free web service: its disk is ephemeral and forensics would vanish.
+services:
+  - type: web
+    name: meteoportinatx-backend
+    runtime: python
+    plan: starter
+    region: frankfurt
+    buildCommand: python -m compileall -q src
+    startCommand: python -u src/nowcast_backend.py serve
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    disk:
+      name: meteorological-state
+      mountPath: /var/data
+      sizeGB: 5
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: NOWCAST_DATA_ROOT
+        value: /var/data
+      - key: NOWCAST_REQUIRE_DISK
+        value: '1'
+      - key: PORTINATX_HOME
+        value: /var/data/portinatx
+      - key: PIRINEO_HOME
+        value: /var/data/portinatx/pirineo
+      - key: PIRINEO_EXTENDED
+        value: '1'
+      - key: PORTINATX_INTERVAL
+        value: '300'
+      - key: PIRINEO_INTERVAL
+        value: '10800'

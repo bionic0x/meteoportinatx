@@ -75,3 +75,9 @@ Consulta [Arquitectura unificada](docs/ARQUITECTURA-UNIFICADA.md), [release note
 ## Edición web (GitHub Pages)
 
 El workflow [`deploy.yml`](.github/workflows/deploy.yml) publica instantáneas de ambos dominios desde GitHub Actions cuando se activa Pages en **Settings → Pages → Source: GitHub Actions**. Se vuelve a ejecutar cada seis horas y ante cambios en `main`; no es un servidor de vigilancia continua. El lanzamiento y la verificación están en [`docs/DESPLIEGUE-WEB.md`](docs/DESPLIEGUE-WEB.md).
+
+## Backend persistente (fase 0.5.0 — preparada, NO desplegada)
+
+`src/nowcast_backend.py` añade colectores independientes (~5 min Portinatx, ~3 h Pirineo; sin promesa SLA), un servicio HTTP público de solo lectura, un índice forense SQLite con cadena SHA-256 y una proyección sanitaria de los JSON públicos que elimina notas de propietario, overrides y evidencias privadas. Los datos completos de origen y archivos congelados siguen exclusivamente en un disco privado. Una caída del backend no convierte UNKNOWN en calma ni elimina el último snapshot.
+
+La infraestructura está definida en `render.yaml` (Render Starter + disco de **5 GB**, **de pago**). **No está activada ni contratada**. GitHub Pages conserva instantáneas cada seis horas y solo preferirá la API cuando se configure una variable pública `METEO_BACKEND_URL` con la URL real del proveedor. Ver [guía de despliegue del backend](docs/BACKEND-PERSISTENTE.md). No insertar claves personales en GitHub ni en variables de frontend.

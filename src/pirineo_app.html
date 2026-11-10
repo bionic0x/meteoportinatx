@@ -209,6 +209,8 @@ a{color:var(--ice)}
   <p class="src">Responde Claude con los datos publicados. Estimación diagnóstica, no aviso oficial.</p>
 </aside>
 
+<script src="../public_config.js"></script>
+<script src="../public_fetch.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -237,7 +239,7 @@ async function start(){
 async function loadLocal(){
   let changed=false;
   for (const p of ["core","dem","grid","series","extended"]) {
-    try { const r=await fetch(`api/${p}.json`,{cache:"no-store"}); if(r.ok){ D[p]=await r.json(); changed=true; } }catch(e){}
+    try { const item=window.meteoLoadPart ? await window.meteoLoadPart("pirineo",p,`api/${p}.json`) : null; const r=item ? null : await fetch(`api/${p}.json`,{cache:"no-store"}); if(item || r.ok){ D[p]=item ? item.data : await r.json(); changed=true; D.remote=item?.source||"local"; } }catch(e){}
   }
   if (changed){ S.Z=null; renderAll(); }
 }

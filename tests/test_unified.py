@@ -73,6 +73,19 @@ class Integration(unittest.TestCase):
         self.assertFalse((target / "pirineo" / "api" / "mar.json").exists())
         self.assertNotIn("SECRET", "".join(str(p) for p in target.rglob("*")))
 
+    def test_pages_backend_configuration_is_public_and_validated(self):
+        self.seed()
+        with patch.dict("os.environ", {"METEO_BACKEND_URL": "https://meteo-backend.example"}):
+            target = self.root / "site-live"
+            site_builder.build_site(self.p_home, self.m_home, target)
+        self.assertIn("https://meteo-backend.example", (target / "public_config.js").read_text())
+        self.assertTrue((target / "public_fetch.js").is_file())
+        self.assertIn("public_fetch.js", (target / "pirineo" / "index.html").read_text())
+        self.assertIn("public_fetch.js", (target / "portinatx" / "index.html").read_text())
+        with patch.dict("os.environ", {"METEO_BACKEND_URL": "https://x.example;alert(1)"}):
+            with self.assertRaisesRegex(ValueError, "HTTPS origin"):
+                site_builder.build_site(self.p_home, self.m_home, self.root / "site-bad")
+
     def test_no_partial_publish_if_second_domain_invalid(self):
         self.seed()
         target = self.root / "site"
