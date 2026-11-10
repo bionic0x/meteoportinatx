@@ -12,6 +12,7 @@ from contextlib import contextmanager
 import gzip
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -38,6 +39,18 @@ UTC = timezone.utc
 CORS_ORIGINS = frozenset(("https://bionic0x.github.io", "http://localhost:8789", "http://127.0.0.1:8789"))
 SAFE_DOMAIN = re.compile(r"^(portinatx|pirineo)$")
 SAFE_PART = re.compile(r"^[a-z][a-z0-9_]{0,35}$")
+# Contract of `portinatx_degen.local_hazard_state` / `build_app`.
+# Output a missing provider as UNKNOWN; never drop a rain signal or infer calm.
+PUBLIC_HAZARD_CHANNELS = (
+    "lluvia_pluviometros", "lluvia_metar_aemet", "radar", "rayos",
+    "viento", "mar", "runoff", "flooding",
+)
+PUBLIC_LEVELS = frozenset(("quiet", "watch", "alert", "alarm", "unknown", "—"))
+PUBLIC_WARNING_KINDS = frozenset(("INICIAL", "ESCALADA", "DESCENSO"))
+PUBLIC_BIAS_NUMBERS = frozenset((
+    "n", "n_detect_mismatch", "n_marshall_palmer", "n_tropical",
+    "ratio_marshall_palmer", "ratio_tropical",
+))
 
 
 def iso_utc(dt=None):
@@ -82,6 +95,62 @@ def _pick(data, keys):
     return {key: data[key] for key in keys if isinstance(data, dict) and key in data}
 
 
+def _public_hazard(original):
+    """Project every engine-emitted local hazard, including absent/unknown rain."""
+    hazard = original if isinstance(original, dict) else {}
+    result = {}
+    for key in PUBLIC_HAZARD_CHANNELS:
+        if key in ("runoff", "flooding"):
+            # These are owner-entered/manual observations, never public evidence.
+            result[key] = {"estado": "UNKNOWN", "nivel": "unknown"}
+            continue
+        value = hazard.get(key)
+        if not isinstance(value, dict):
+            result[key] = {"estado": "UNKNOWN", "nivel": "unknown"}
+            continue
+        state = value.get("estado")
+        level = value.get("nivel")
+        if state not in ("OBSERVED", "UNKNOWN") or level not in PUBLIC_LEVELS:
+            result[key] = {"estado": "UNKNOWN", "nivel": "unknown"}
+            continue
+        result[key] = {"estado": state, "nivel": level if state == "OBSERVED" else "unknown"}
+        if state == "OBSERVED" and isinstance(value.get("local"), bool):
+            result[key]["local"] = value["local"]
+    return result
+
+
+def _public_warning_changes(original, official):
+    """Only structured warning transitions and CAP/MeteoAlarm-matched events."""
+    if not isinstance(official, dict) or official.get("verificado") is not True:
+        return []
+    institutional = {
+        (w.get("nivel"), w.get("tipo"), w.get("evento"), w.get("desde"), w.get("hasta"))
+        for w in (official.get("all") or []) if isinstance(w, dict)
+    }
+    result = []
+    for change in original if isinstance(original, list) else []:
+        if not isinstance(change, dict):
+            continue
+        kind = change.get("kind")
+        if kind == "NUEVO":
+            signature = tuple(change.get(k) for k in ("nivel", "tipo", "evento", "onset", "expires"))
+            if signature in institutional:
+                result.append(_pick(change, {"kind", "nivel", "tipo", "evento", "onset", "expires"}))
+        elif kind in PUBLIC_WARNING_KINDS:
+            if change.get("de") in PUBLIC_LEVELS and change.get("a") in PUBLIC_LEVELS:
+                result.append(_pick(change, {"kind", "de", "a"}))
+    return result
+
+
+def _public_bias(original):
+    """No station IDs, owner notes, arbitrary flags or free-text metadata."""
+    if not isinstance(original, dict):
+        return {}
+    return {k: v for k in PUBLIC_BIAS_NUMBERS
+            if (v := original.get(k)) is not None and isinstance(v, (int, float))
+            and not isinstance(v, bool) and math.isfinite(v) and v >= 0}
+
+
 def _public_view(domain: str, part: str, original: dict) -> dict:
     """Public schema projection. Never copy an incoming core mapping wholesale.
 
@@ -104,13 +173,8 @@ def _public_view(domain: str, part: str, original: dict) -> dict:
             _pick(w, {"nivel", "rank", "tipo", "evento", "desde", "hasta", "activo", "umbral"})
             for w in official.get("all", []) if isinstance(w, dict)
         ]
-        result["warning_changes"] = []
-        result["hazard"] = {
-            k: ({"estado": "UNKNOWN", "nivel": "unknown"} if k in ("runoff", "flooding")
-                else _pick(v, {"estado", "nivel", "local"}))
-            for k, v in (original.get("hazard") or {}).items()
-            if isinstance(k, str) and k in {"radar", "rayos", "lluvia_observada", "pluviometros", "viento_estaciones", "mar_boyas", "runoff", "flooding", "lluvia", "viento", "mar", "oleaje"} and isinstance(v, dict)
-        }
+        result["warning_changes"] = _public_warning_changes(original.get("warning_changes"), official)
+        result["hazard"] = _public_hazard(original.get("hazard"))
         result["precaution"] = {**_pick(precaution, {"level", "transition"}),
                                 "decision": {}, "exit_conditions": []}
         result["nowcast"] = _pick(now, {"level", "proposed", "transition"})
@@ -120,7 +184,8 @@ def _public_view(domain: str, part: str, original: dict) -> dict:
         result["governance"] = {
             "claims": [], "claims_count": {}, "predictions": [],
             "predictions_summary": {}, "anomalies": [], "dissent": [], "overrides": {},
-            "bias": {}, "episode": _pick(gov.get("episode") or {}, {"phase"}),
+            "bias": _public_bias(gov.get("bias")),
+            "episode": _pick(gov.get("episode") or {}, {"phase"}),
         }
         result["channels"] = [
             {**_pick(c, {"name", "level", "kind", "confidence", "available", "local"}),

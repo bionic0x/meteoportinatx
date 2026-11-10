@@ -8,11 +8,13 @@ import threading
 import unittest
 from datetime import datetime, timezone
 from http.server import ThreadingHTTPServer
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 import nowcast_backend as backend
+import portinatx_degen as producer
 
 
 class PersistentBackend(unittest.TestCase):
@@ -118,6 +120,80 @@ class PersistentBackend(unittest.TestCase):
         self.assertNotIn("new_unreviewed_feature",public)
         self.assertNotIn("unreviewed_feature",public["hazard"])
         self.assertNotIn("unreviewed_owner_description",public["official"])
+
+    def test_real_build_app_hazard_contract_preserves_all_rain_channels(self):
+        # Derive the *actual* core schema using the production engine, not an
+        # authored JSON fixture whose channel names can drift unnoticed.
+        engine_channels = {
+            name: producer.Channel(name, level=2, available=True, local=True)
+            for name in ("lluvia_pluviometros", "lluvia_metar_aemet", "radar", "rayos", "viento", "mar")
+        }
+        hazard = producer.local_hazard_state(engine_channels, {})
+        snap = {
+            "cycle_id": "NWC-real-producer", "issued_utc": backend.iso_utc(),
+            "engine": producer.VERSION,
+            "official_warning": {"level_now": "alert", "level_36h": "alert", "verificado": True},
+            "warning_changes": [], "observed_local_hazard": hazard,
+            "operational_precaution": {"level": "watch", "transition": "UP"},
+            "nowcast": {"level": "alert", "proposed": "alert", "transition": "UP"},
+            "level": "alert", "proposed": "alert", "transition": "UP", "reasons": [],
+            "coverage": 1.0,
+            "governance": {"claims": [], "claims_count": {}, "overrides": {},
+                           "predictions": {"summary": {}},
+                           "bias_radar_gauge": {}, "episode": {"phase": "ACTIVE"}},
+            "channels": [], "sources": [], "_srcs": {},
+        }
+        with patch.object(producer, "HOME", self.root / "private_engine_home"):
+            real_core = producer.build_app(snap, {})["core"]
+        public = backend._public_view("portinatx", "core", real_core)
+        self.assertEqual(set(public["hazard"]), set(real_core["hazard"]))
+        for name in engine_channels:
+            self.assertEqual(public["hazard"][name]["estado"], "OBSERVED", name)
+            self.assertEqual(public["hazard"][name]["nivel"], "alert", name)
+            self.assertTrue(public["hazard"][name]["local"], name)
+        for name in ("runoff", "flooding"):
+            self.assertEqual(public["hazard"][name]["estado"], "UNKNOWN")
+        # A missing provider is visible as UNKNOWN instead of silently absent.
+        del real_core["hazard"]["lluvia_pluviometros"]
+        missing = backend._public_view("portinatx", "core", real_core)
+        self.assertEqual(missing["hazard"]["lluvia_pluviometros"]["estado"], "UNKNOWN")
+
+    def test_warning_changes_are_only_verified_institutional_events(self):
+        core = self.fixture("portinatx")
+        core["official"].update({"verificado": True, "level_now": "alert", "all": [
+            {"nivel": "naranja", "tipo": "lluvia", "evento": "Lluvia intensa",
+             "desde": "2026-11-10T12:00:00Z", "hasta": "2026-11-10T18:00:00Z",
+             "owner_note": "PRIVATE_SENTINEL"},
+        ]})
+        core["warning_changes"] = [
+            {"kind": "NUEVO", "nivel": "naranja", "tipo": "lluvia", "evento": "Lluvia intensa",
+             "onset": "2026-11-10T12:00:00Z", "expires": "2026-11-10T18:00:00Z",
+             "owner_note": "PRIVATE_SENTINEL"},
+            {"kind": "NUEVO", "nivel": "rojo", "tipo": "propietario", "evento": "PRIVATE_SENTINEL",
+             "onset": "2026-11-10T12:00:00Z", "expires": "2026-11-10T18:00:00Z"},
+            {"kind": "ESCALADA", "de": "watch", "a": "alert", "private": "PRIVATE_SENTINEL"},
+        ]
+        result = backend._public_view("portinatx", "core", core)
+        self.assertEqual([e["kind"] for e in result["warning_changes"]], ["NUEVO", "ESCALADA"])
+        self.assertEqual(result["warning_changes"][0]["evento"], "Lluvia intensa")
+        self.assertNotIn("PRIVATE_SENTINEL",json.dumps(result))
+        core["official"]["verificado"] = False
+        self.assertEqual(backend._public_view("portinatx", "core", core)["warning_changes"], [])
+
+    def test_bias_numeric_diagnostics_without_owner_text(self):
+        core = self.fixture("portinatx")
+        core["governance"]["bias"] = {
+            "n": 9, "n_detect_mismatch": 2, "ratio_marshall_palmer": 1.35,
+            "n_marshall_palmer": 5, "ratio_tropical": 0.9,
+            "flag": "PRIVATE_SENTINEL", "note": "PRIVATE_SENTINEL",
+            "station": "PRIVATE_SENTINEL", "n_extra": 10000,
+        }
+        public = backend._public_view("portinatx", "core", core)
+        self.assertEqual(public["governance"]["bias"]["ratio_marshall_palmer"], 1.35)
+        self.assertEqual(public["governance"]["bias"]["n_detect_mismatch"], 2)
+        self.assertNotIn("flag", public["governance"]["bias"])
+        self.assertNotIn("station", public["governance"]["bias"])
+        self.assertNotIn("PRIVATE_SENTINEL", json.dumps(public))
 
     def test_all_parts_have_one_shared_public_snapshot_header(self):
         self.fixture("portinatx")
