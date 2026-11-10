@@ -1,0 +1,80 @@
+# P0 — Forecast Ledger / archivo de verificación prospectiva
+
+**Estado:** prototipo local aislado (no desplegado, no integrado en alertas). Implementación de la prioridad [#7](https://github.com/bionic0x/meteoportinatx/issues/7), a partir de [investigación Agency Agents #6](https://github.com/bionic0x/meteoportinatx/pull/6). **No implica que MeteoPortinatx tenga habilidad predictiva demostrada.**
+
+## 1. Propósito y alcance
+
+Congelar un pronóstico **antes** de que comience su ventana de validez, guardar después la observación, y documentar exactamente qué parejas se pueden comparar. Se evita la ilusión de un backtest generado con datos posteriores. **No se modifica** la regla institucional, el motor de alerta, los datos públicos ni los conectores CNP.
+
+`src/forecast_ledger.py` es Python 3.10+ sin paquetes externos, ni acceso a Internet. Opera sobre un directorio **privado gestionado por el usuario**; no usar Render Free para archivado. Los registros se crean por escritura temporal `fsync` y hard link atómico que nunca sustituye un registro anterior. Su identificador deriva de una clave canónica (modelo, sitio, emisión y ventana). Si la misma identidad intenta ingresar una predicción cambiada, se **rechaza**. No es un reloj seguro ni un sistema de notarización: quien controla el disco puede borrar o reemplazar toda la evidencia.
+
+## 2. Esquema de datos y límites
+
+**Pronóstico:** `event_id`, `domain` (`portinatx`/`pirineo`), `site_id`, lat/lon, `issued_at`, `provider_run_at`, `valid_from`, `valid_to`, `provider`, `model`, `family`, `variable`, `unit`, `mode` (`amount` o `threshold`), `prediction`, `source_id`, `source_license`. Opcionales: `threshold`, `probability_raw` (solo umbrales), `baseline`, y hashes SHA-256 de configuración, datos o commit.
+
+La hora real de captura local es `captured_at`. **PROSPECTIVE** exige `issued_at` anterior a la validez y `captured_at < valid_from`. Cualquier carga después se etiqueta **HINDCAST**, incluso si el archivo afirma que el pronóstico fue emitido antes. No existe una opción para forzar `PROSPECTIVE`.
+
+**Observación:** ventana `observed_from`, `observed_to`, identificación de estación, coordenadas, valor en unidad canónica, `source_type` (`instrument` o `community`), `qc` (`INSTRUMENT_QC_PASS`, `UNKNOWN`, `REJECTED`), fuente y licencia. El valor es una declaración del importador, **no una validación externa**. Un reporte `community` no puede declararse `INSTRUMENT_QC_PASS`. No se admiten campos imprevistos, nombres personales, comentarios ni enlaces con credenciales. Conservamos solo identificadores técnicos.
+
+Variables iniciales: precipitación (`mm`), nieve (`cm`), temperatura (`C`), racha (`m/s`) y altura significativa de ola (`m`). **No se convierte nieve producida en natural**, no se mezclan periodos de acumulación y no se extrapola una estación remota a un punto cercano sin control geográfico.
+
+## 3. Pareo conservador y scoring
+
+Se exige simultáneamente: mismo episodio, dominio, sitio, variable y unidad; coincidencia **exacta** entre ventana de pronóstico y ventana observada; distancia geodésica no superior al radio declarado (`3 km` por defecto); una única observación instrumental marcada QC PASS. Si hay más de una medida QC PASS, el par se excluye como ambiguo hasta definir una regla explícita; nunca se elige arbitrariamente el máximo.
+
+Otros motivos se informan: pronóstico HINDCAST/tardío, ventana futura, observación inexistente, observación fuera de radio o QC desconocido, ausencia de ventana idéntica y múltiples estaciones candidatas. **Ausencia ≠ 0.** Importaciones externas se reconstruyen, pero no se puntúan como prospectivas sin atestación externa.
+
+- `amount`: `MAE`, sesgo con signo (`pronóstico - observado`), `n_pairs`, episodios independientes.
+- `threshold`: matriz `TP/FP/FN/TN`, `CSI`, `POD`, `FAR`; `None` cuando un denominador no existe. Si hay probabilidad original, Brier explícitamente **raw/uncalibrated**, no `P(alerta)` calibrada.
+- Comparativa: solo contra una predicción `baseline=true` emparejada con **la misma** observación y umbral. `mean_loss_reduction` es descriptivo, no inferencia ni victoria científica.
+- Toda salida declara `verification_status=EXPLORATORY_UNCALIBRATED` y `meteorological_skill_verified=false`.
+
+## 4. Ejecución local
+
+```bash
+# Directorio privado **fuera del repositorio**; no usar /tmp ni Render Free.
+export METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger"
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" add-forecast --json /ruta/forecast.json
+# Cuando la ventana ya haya concluido y haya un instrumento con QC conocido:
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" add-observation --json /ruta/instrument-observation.json
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" verify
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" score --max-distance-km 3
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" export --out "$HOME/meteoportinatx-private/backup-20261111.json"
+
+# En otra máquina: verifica el archivo pero **no eleva** automáticamente
+# los pronósticos importados a pruebas de predicción prospectiva.
+python3 src/forecast_ledger.py --root "$HOME/meteoportinatx-restore" import --bundle "$HOME/meteoportinatx-private/backup-20261111.json"
+```
+
+Los ficheros JSON deben contener exactamente los campos enumerados. Por ejemplo, un pronóstico de lluvia para una hora futura en UTC:
+
+```json
+{
+  "event_id": "episode-20261111-demo", "domain": "portinatx", "site_id": "portinatx",
+  "lat": 39.1136, "lon": 1.5180, "valid_from": "2026-11-12T11:00:00Z",
+  "valid_to": "2026-11-12T12:00:00Z", "issued_at": "2026-11-11T08:00:00Z",
+  "provider_run_at": "2026-11-11T06:00:00Z", "provider": "example",
+  "model": "synthetic-v0", "family": "synthetic", "variable": "precipitation_mm",
+  "unit": "mm", "mode": "amount", "prediction": 5.0, "source_id": "example-demo",
+  "source_license": "SYNTHETIC", "baseline": false
+}
+```
+
+Este ejemplo es **sintético**, no una predicción meteorológica real. Para conservar carácter prospectivo la captura debe ocurrir antes de `valid_from`, y el emisor/modelo ha de estar documentado. Los valores pueden fallar si se ejecuta fuera de la ventana ilustrativa.
+
+## 5. 90 días de investigación y criterios para integrar un conector
+
+1. **Semana 1–2:** comprobar el contrato de fuentes, unidad, periodo, coordenadas, licencia y captura anterior al inicio. No copiar datos personales ni contenido de foro al ledger.
+2. **Semanas 2–12:** un conector supervisado congela automáticamente cada pronóstico emitido *antes* del suceso; almacenamiento externo de coste cero previamente verificado, con exportaciones y pruebas de restauración. **El conector aún no existe**: la ejecución actual es manual.
+3. **Tras 90 días:** estratificar por familia/estación/horizonte/régimen; calcular denominadores, fracción `UNKNOWN`, casos excluidos; comparar baselines y estimar intervalos bloqueados por episodio si el número independiente lo permite. No declarar mejora por 20 pares sintéticos.
+4. **Gates:** procedencia y licencias verificadas; instrumentación activa; controles de desconexión; datos persistentes con restore validado; skill fuera de muestra; reporte de falsas alarmas y fallos críticos.
+
+**Fuera de alcance deliberadamente:** scraping de ClimayNievePirineos/foros sin permiso, entrenamiento automático de pesos, pronósticos oficiales, publicación pública del archivo de mediciones, ingesta de usuarios y ejecución de alertas. En caso de conflicto entre una descripción del modelo y una medición no comparable, salida `UNKNOWN/NO_COMPARABLE`.
+
+## 6. Reality Checker — evaluación de esta entrega
+
+- **Software:** pruebas de estado, temporalidad, paridad espacial/temporal, privacidad de esquema, fallos de integridad, export/import y baseline; matriz CI por verificar en esta PR.
+- **Persistencia real:** **NEEDS WORK**; no existe un almacén externo duradero ni respaldo automatizado. El export JSON requiere copia independiente y verificación de recuperación.
+- **Integridad forense:** **NOT ATTESTED**; hashes sin firma externa no detectan eliminación/reemplazo de todo el archivo.
+- **Precisión meteorológica:** **NOT MEASURED**; todas las pruebas son sintéticas.
+- **Estado operativo:** **EXPERIMENTAL / NO DEPLOY**.
