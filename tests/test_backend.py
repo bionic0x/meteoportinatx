@@ -6,6 +6,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timezone
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -61,7 +62,10 @@ class PersistentBackend(unittest.TestCase):
         self.assertNotIn("SECRET_API_KEY",data.decode())
         self.assertEqual(public["hazard"]["runoff"]["estado"],"UNKNOWN")
         self.assertEqual(public["precaution"]["level"],"watch")
-        self.assertEqual(pointer["sha256"],backend._sha(data))
+        self.assertEqual(pointer["hash_scope"], "public-package-v1")
+        manifest = self.store.public / "portinatx" / pointer["version"] / "manifest.json"
+        self.assertEqual(pointer["sha256"], backend._sha(manifest.read_bytes()))
+        self.assertEqual(json.loads(manifest.read_bytes())["parts"]["core"], backend._sha(data))
 
     def test_fail_closed_missing_part_keeps_previous_snapshot(self):
         self.fixture("pirineo")
@@ -132,6 +136,7 @@ class PersistentBackend(unittest.TestCase):
         self.assertEqual(status,200)
         self.assertEqual(headers["Access-Control-Allow-Origin"],"https://bionic0x.github.io")
         self.assertEqual(headers["X-Meteo-Freshness"],"fresh")
+        self.assertIn("X-Meteo-Freshness", headers["Access-Control-Expose-Headers"])
         self.assertNotIn(b"private observation",data)
         status,headers,_=call("POST","/v1/portinatx/api/refresh","https://bionic0x.github.io")
         self.assertEqual(status,405)
@@ -144,6 +149,48 @@ class PersistentBackend(unittest.TestCase):
         self.assertEqual(status,503)
         status,_,_=call("GET","/v1/forensics/summary")
         self.assertEqual(status,200)
+
+    def test_same_issue_conflicts_rejected_and_identical_retry_idempotent(self):
+        self.fixture("pirineo")
+        first = self.store.publish("pirineo", self.app)
+        self.assertEqual(self.store.publish("pirineo", self.app), first)
+        for part in ("series", "core"):
+            path = self.app / (part + ".json")
+            original = path.read_text()
+            data = json.loads(original)
+            data["changed"] = True
+            path.write_text(json.dumps(data))
+            with self.assertRaisesRegex(ValueError, "conflicting content"):
+                self.store.publish("pirineo", self.app)
+            path.write_text(original)
+            self.assertEqual(self.store.read_public("pirineo", "core")[2]["sha256"], first["sha256"])
+        self.assertEqual(self.store.summary()["cycle_count_in_window"], 1)
+
+    def test_pointer_failure_can_retry_after_restart(self):
+        self.fixture("pirineo")
+        original = backend._write_atomic
+        def fail_pointer(path, data):
+            if path.name == "CURRENT.json":
+                raise OSError("simulated interrupted publication")
+            return original(path, data)
+        with patch.object(backend, "_write_atomic", side_effect=fail_pointer):
+            with self.assertRaises(OSError):
+                self.store.publish("pirineo", self.app)
+        reopened = backend.Store(self.store.root)
+        published = reopened.publish("pirineo", self.app)
+        self.assertEqual(reopened.summary()["cycle_count_in_window"], 1)
+        self.assertEqual(reopened.read_public("pirineo", "core")[2]["sha256"], published["sha256"])
+
+    def test_manifest_covers_non_core_and_canonical_key_order(self):
+        self.fixture("pirineo")
+        first = self.store.publish("pirineo", self.app)
+        path = self.app / "core.json"
+        core = json.loads(path.read_text())
+        path.write_text(json.dumps(dict(reversed(list(core.items())))))
+        self.assertEqual(self.store.publish("pirineo", self.app)["sha256"], first["sha256"])
+        manifest = json.loads((self.store.public / "pirineo" /
+            self.store.read_public("pirineo", "core")[2]["version"] / "manifest.json").read_text())
+        self.assertEqual(set(manifest["parts"]), set(backend.PARTS["pirineo"]))
 
     def test_failure_tracking_redacts_exception_strings(self):
         service=backend.Service(self.store.root,runner=lambda d:(_ for _ in ()).throw(RuntimeError("secret token")))

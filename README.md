@@ -4,6 +4,24 @@
 
 > Estimación diagnóstica, no aviso oficial ni probabilidad calibrada. En Ibiza mandan AEMET y Protección Civil; en el Pirineo, AEMET/Meteocat, SMA, Météo-France y los boletines oficiales de aludes.
 
+## Zonas y módulos compartidos
+
+Portinatx y Pirineo son dos perfiles del mismo proyecto. El nuevo comando `zone`
+permite crear perfiles por coordenadas, seleccionar módulos y descargar paquetes
+con datos, diagnósticos diarios, ensembles, cobertura y hashes. También verifica e
+instala paquetes, conserva un histórico por zona y genera informes HTML sin conexión.
+Pirineo excluye el módulo marino. Todo está incluido en el `.pyz`.
+
+```bash
+python3 src/nowcast.py zone plan portinatx
+python3 src/nowcast.py zone plan pirineo
+python3 src/nowcast.py zone --help
+```
+
+Consulta [zonas modulares y estado de la paridad](docs/ZONAS-MODULARES.md).
+La adquisición y el diagnóstico básico son comunes; la migración completa de
+radar, avisos, forense e interfaces regionales al núcleo compartido sigue pendiente.
+
 ## Inicio rápido
 
 Requiere Python **3.10+**, biblioteca estándar y conexión a Internet para el ciclo real.

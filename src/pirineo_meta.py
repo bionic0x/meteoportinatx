@@ -11,7 +11,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from hashlib import sha256
-from math import atan, exp, log, sqrt
+from weather_core import wet_bulb_c, complete_day as _complete_day
 from pathlib import Path
 import json
 import re
@@ -58,19 +58,6 @@ def _as_float(x):
         return z
     except (ValueError, TypeError):
         return None
-
-
-def _saturation(t):
-    return 6.112 * exp(17.62 * t / (243.12 + t))
-
-
-def wet_bulb_c(t, dew):
-    """Aproximación Stull; diagnóstica, no equivalente a perfil de bulbo húmedo."""
-    if t is None or dew is None:
-        return None
-    rh = max(1.0, min(100.0, 100 * _saturation(dew) / _saturation(t)))
-    return (t * atan(.151977 * sqrt(rh + 8.313659)) + atan(t + rh)
-            - atan(rh - 1.676331) + .00391838 * rh ** 1.5 * atan(.023101 * rh) - 4.686035)
 
 
 def _get_json(url):
@@ -144,9 +131,9 @@ def parse_deterministic(payload, model, pts=None):
             temp = [_as_float(data["temperature_2m"][i]) for i in idx]
             dew = [_as_float(data["dew_point_2m"][i]) for i in idx]
             wet = [wet_bulb_c(t, td) for t, td in zip(temp, dew)]
-            day[valid] = {"snow_cm": round(sum(max(0,x) for x in snow if x is not None),1) if any(x is not None for x in snow) else None,
-                          "precip_mm": round(sum(max(0,x) for x in pr if x is not None),1) if any(x is not None for x in pr) else None,
-                          "tw_min_c": round(min(x for x in wet if x is not None),1) if any(x is not None for x in wet) else None,
+            day[valid] = {"snow_cm": round(sum(max(0,x) for x in snow if x is not None),1) if _complete_day(times, valid, idx) and all(x is not None and x >= 0 for x in snow) else None,
+                          "precip_mm": round(sum(max(0,x) for x in pr if x is not None),1) if _complete_day(times, valid, idx) and all(x is not None and x >= 0 for x in pr) else None,
+                          "tw_min_c": round(min(x for x in wet if x is not None),1) if _complete_day(times, valid, idx) and all(x is not None for x in wet) else None,
                           "method": "single run; no uncertainty estimate"}
         out[point["id"]] = day
     return out
@@ -197,22 +184,24 @@ def daily_member(members, times):
         days[stamp[:10]].append(k)
     out = {}
     for day, idx in days.items():
-        if len(idx) < 8:
-            continue
+        complete = _complete_day(times, day, idx)
         res = []
         for mid, v in members.items():
             pr = [_as_float(v["precipitation"][i]) for i in idx]
             snow = [_as_float(v["snowfall"][i]) for i in idx]
-            has_snow = any(x is not None for x in snow)
             tw = [wet_bulb_c(_as_float(v["temperature_2m"][i]), _as_float(v["dew_point_2m"][i])) for i in idx]
-            precip = sum(x for x in pr if x is not None and x >= 0)
-            cm = sum(x for x in snow if x is not None and x >= 0) if has_snow else None
-            # Temperatura húmeda favorable solo si hay precipitación y ambos campos son reales.
-            solid = sum(max(0, pr[k] or 0) for k, t in enumerate(tw) if t is not None and t <= .5)
-            measurable = len([x for x in pr if x is not None]) >= len(idx) * .75
-            res.append({"mid": mid, "snow_cm": cm, "precip_mm": precip,
-                        "phase_solid_mm": solid, "tw_min": min((x for x in tw if x is not None), default=None),
-                        "measurable": measurable})
+            coverage = {"expected": 24, "complete_time_axis": complete,
+                        "precipitation": sum(x is not None and x >= 0 for x in pr),
+                        "snowfall": sum(x is not None and x >= 0 for x in snow),
+                        "wet_bulb": sum(x is not None for x in tw)}
+            valid = lambda key: complete and coverage[key] == 24
+            res.append({"mid": mid,
+                        "snow_cm": sum(snow) if valid("snowfall") else None,
+                        "precip_mm": sum(pr) if valid("precipitation") else None,
+                        "phase_solid_mm": sum(pr[k] for k, t in enumerate(tw) if t <= .5)
+                            if valid("precipitation") and valid("wet_bulb") else None,
+                        "tw_min": min(tw) if valid("wet_bulb") else None,
+                        "measurable": valid("precipitation"), "coverage": coverage})
         if res:
             out[day] = res
     return out
@@ -235,19 +224,20 @@ def family_summaries(parsed, model):
         days = daily_member(value["members"], value["time"])
         ans[point] = {}
         for day, members in days.items():
-            measurable = [m for m in members if m["measurable"]]
-            n = len(measurable)
+            n = len(members)
             if n < 10:
                 continue
-            snowvals = [m["snow_cm"] for m in measurable if m["snow_cm"] is not None]
-            phase = [m for m in measurable if m["tw_min"] is not None]
+            snowvals = [m["snow_cm"] for m in members if m["snow_cm"] is not None]
+            rainvals = [m["precip_mm"] for m in members if m["precip_mm"] is not None]
+            phase = [m["tw_min"] for m in members if m["tw_min"] is not None]
             ans[point][day] = {"n_members": n,
-                               "snow_cm": percentiles(snowvals),
-                               "precip_mm": percentiles([m["precip_mm"] for m in measurable]),
-                               "snow_ge5_fraction": round(sum(m["snow_cm"] >= 5 for m in measurable if m["snow_cm"] is not None) / len(snowvals), 3) if len(snowvals) >= 10 else None,
-                               "snow_ge10_fraction": round(sum(m["snow_cm"] >= 10 for m in measurable if m["snow_cm"] is not None) / len(snowvals), 3) if len(snowvals) >= 10 else None,
-                               "wet_bulb_le0_fraction": round(sum(m["tw_min"] <= 0 for m in phase) / len(phase), 3) if len(phase) >= 10 else None,
-                               "basis": "raw-member-fraction; uncalibrated; not forecast probability"}
+                               "valid_members": {"snowfall": len(snowvals), "precipitation": len(rainvals), "wet_bulb": len(phase)},
+                               "snow_cm": percentiles(snowvals if len(snowvals) >= 10 else []),
+                               "precip_mm": percentiles(rainvals if len(rainvals) >= 10 else []),
+                               "snow_ge5_fraction": round(sum(x >= 5 for x in snowvals) / len(snowvals), 3) if len(snowvals) >= 10 else None,
+                               "snow_ge10_fraction": round(sum(x >= 10 for x in snowvals) / len(snowvals), 3) if len(snowvals) >= 10 else None,
+                               "wet_bulb_le0_fraction": round(sum(x <= 0 for x in phase) / len(phase), 3) if len(phase) >= 10 else None,
+                               "basis": "complete UTC day; raw-member-fraction; uncalibrated; not forecast probability"}
     return ans
 
 
@@ -300,12 +290,22 @@ def combine(families_data, verified_skill=None):
                     available = {f: d[key] for f, d in votes.items() if d[key] is not None}
                     norm = sum(w[f] for f in available)
                     return round(sum(w[f] * x for f, x in available.items()) / norm, 3) if norm else None
-                out[day] = {"snow_ge5_member_fraction": blend("snow_ge5_fraction"),
-                            "snow_ge10_member_fraction": blend("snow_ge10_fraction"),
-                            "wet_bulb_le0_member_fraction": blend("wet_bulb_le0_fraction"),
-                            "n_independent_families": len(votes),
-                            "families": sorted(votes),
-                            "evidence_status": "multi-family" if len(votes) >= 2 else ("single-family" if votes else "unknown")}
+                metrics = {"snow_ge5_member_fraction": "snow_ge5_fraction",
+                           "snow_ge10_member_fraction": "snow_ge10_fraction",
+                           "wet_bulb_le0_member_fraction": "wet_bulb_le0_fraction"}
+                support = {}
+                label = lambda n: "multi-family" if n >= 2 else ("single-family" if n else "unknown")
+                for key, source in metrics.items():
+                    names = sorted(f for f, row in votes.items() if row[source] is not None)
+                    norm = sum(w[f] for f in names)
+                    support[key] = {"families": names, "n_families": len(names),
+                                    "evidence_status": label(len(names)),
+                                    "effective_weights": {f: w[f] / norm for f in names}}
+                common = sorted(set.intersection(*(set(v["families"]) for v in support.values())))
+                out[day] = {**{key: blend(source) for key, source in metrics.items()},
+                            "metric_support": support, "support_scope": "common-to-all-metrics",
+                            "n_independent_families": len(common), "families": common,
+                            "evidence_status": label(len(common))}
             result[station][level] = out
     return result, w
 

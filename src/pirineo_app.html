@@ -187,7 +187,7 @@ a{color:var(--ice)}
         <label>Estación <select id="meta-station" aria-label="Estación del pronóstico extendido"><option value="masella">Masella</option><option value="la_molina">La Molina</option><option value="font_romeu">Font-Romeu</option><option value="les_angles">Les Angles</option><option value="formigueres">Formiguères</option><option value="porte">Porté-Puymorens</option></select></label>
         <label>Cota <select id="meta-level" aria-label="Nivel de pista"><option value="base">Base de pistas</option><option value="upper">Cota alta</option></select></label>
       </div>
-      <div class="tbl"><table id="t-meta"><thead><tr><th>Fecha</th><th class="num">Fracción nieve ≥5 cm</th><th class="num">Fracción nieve ≥10 cm</th><th class="num">Tw min ≤0 °C</th><th class="num">Familias</th><th>Calidad de evidencia</th></tr></thead><tbody></tbody></table></div>
+      <div class="tbl"><table id="t-meta"><thead><tr><th>Fecha</th><th class="num">Fracción nieve ≥5 cm</th><th class="num">Fracción nieve ≥10 cm</th><th class="num">Tw min ≤0 °C</th><th class="num">Familias nieve ≥5 cm</th><th>Calidad de evidencia</th></tr></thead><tbody></tbody></table></div>
       <p class="src" id="meta-note"></p>
     </section>
     <section class="grid2">
@@ -512,9 +512,9 @@ function renderExtended(){
   $("meta-st").textContent=`${esc(m.status||"UNKNOWN")} · ${esc(m.version||"")}`;
   const st=$("meta-station").value, level=$("meta-level").value;
   const rows=m.stations?.[st]?.[level]||{};
-  $("t-meta").querySelector("tbody").innerHTML=Object.entries(rows).sort((a,b)=>a[0].localeCompare(b[0])).map(([d,v])=>`<tr><td class="mono">${esc(d)}</td><td class="num">${metaPct(v.snow_ge5_member_fraction)}</td><td class="num">${metaPct(v.snow_ge10_member_fraction)}</td><td class="num">${metaPct(v.wet_bulb_le0_member_fraction)}</td><td class="num">${n0(v.n_independent_families)}</td><td>${esc(v.evidence_status||"UNKNOWN")}</td></tr>`).join("") || '<tr><td colspan="6">Datos insuficientes: no se asignan porcentajes.</td></tr>';
+  $("t-meta").querySelector("tbody").innerHTML=Object.entries(rows).sort((a,b)=>a[0].localeCompare(b[0])).map(([d,v])=>`<tr><td class="mono">${esc(d)}</td><td class="num">${metaPct(v.snow_ge5_member_fraction)}</td><td class="num">${metaPct(v.snow_ge10_member_fraction)}</td><td class="num">${metaPct(v.wet_bulb_le0_member_fraction)}</td><td class="num">${n0(v.metric_support?.snow_ge5_member_fraction?.n_families ?? v.n_independent_families)}</td><td>${esc(v.metric_support?.snow_ge5_member_fraction?.evidence_status || v.evidence_status || "UNKNOWN")}</td></tr>`).join("") || '<tr><td colspan="6">Datos insuficientes: no se asignan porcentajes.</td></tr>';
   $("meta-note").textContent=`Captura ${fmtT(m.issued_utc)} · Celdas de referencia de pista; DEM y perfiles verticales siguen en el módulo 72 h. ${m.forecast_basis||"Sin datos"}.`;
-  $("meta-sources").innerHTML=Object.entries(m.sources||{}).map(([name,info])=>`<li><b>${esc(name)}</b> · ${esc(info.state||"UNKNOWN")}${info.error?" · "+esc(info.error):""}</li>`).join("") + `<li>Pesos por familias: ${esc(JSON.stringify(m.model_families||{}))}</li>` + `<li>Revisiones en días comunes: ${n0(m.run_revisions?.length||0)}; no equivalen a error observado</li>`;
+  $("meta-sources").innerHTML=Object.entries(m.sources||{}).map(([name,info])=>`<li><b>${esc(name)}</b> · ${esc(info.state||"UNKNOWN")}${info.error?" · "+esc(info.error):""}</li>`).join("") + `<li>Pesos por familias institucionales: ${esc(JSON.stringify(m.model_families||{}))}</li>` + `<li>Revisiones en días comunes: ${n0(m.run_revisions?.length||0)}; no equivalen a error observado</li>`;
   $("meta-context").innerHTML=Object.entries(m.teleconnections||{}).map(([name,entry])=>`<li><b>${esc(name)}</b> · ${esc(entry.state||"UNKNOWN")}${entry.value!=null?" · "+esc(entry.value):""}${entry.valid_at?" · "+esc(entry.valid_at):""}</li>`).join("") + `<li><b>Contrarian:</b> ${esc(m.contrarian?.state||"UNCONFIRMED")}. Sin incremento automático de probabilidad de nieve.</li>`;
 }
 $("meta-station").addEventListener("change",renderExtended);

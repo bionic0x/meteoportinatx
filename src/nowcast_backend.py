@@ -204,54 +204,72 @@ class Store:
             if not usable:
                 raise ValueError("no valid mountain point forecasts")
         projected = {part: json.dumps(_public_view(domain, part, parsed[part]), ensure_ascii=False,
-                                      separators=(",", ":"), allow_nan=False).encode("utf-8")
+                                      sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
                      for part in PARTS[domain]}
-        core_hash = _sha(projected["core"])
-        # Keep complete private mountain forecasts immutable for honest replay;
-        # coastline already persists its full frozen cycles independently.
-        if domain == "pirineo":
-            payload = {p: parsed[p] for p in ("core", "series", "extended")}
-            raw = gzip.compress(json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8"),
-                                mtime=0)
-            stamp = _utc_issue(issued).strftime("%Y%m%dT%H%M%SZ")
-            _write_atomic(self.root / "private_history" / "pirineo" / (stamp + "-" + _sha(raw)[:12] + ".json.gz"), raw)
+        # Identity covers every public part, independent of dictionary insertion order.
+        manifest = {"schema": 1, "parts": {p: _sha(raw) for p, raw in sorted(projected.items())}}
+        manifest_raw = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+        package_hash = _sha(manifest_raw)
         with self._write_lock:
-            # Unique numbered immutable generations; readers use CURRENT pointer.
-            # No transient half-written JSON can leak through the public API.
             domain_root = self.public / domain
             domain_root.mkdir(exist_ok=True)
-            version = _utc_issue(issued).strftime("%Y%m%dT%H%M%SZ") + "-" + core_hash[:12]
-            tmp = Path(tempfile.mkdtemp(prefix=".staging-", dir=domain_root))
+            version = _utc_issue(issued).strftime("%Y%m%dT%H%M%SZ") + "-" + package_hash
             destination = domain_root / version
-            try:
-                for name, payload in projected.items():
-                    (tmp / f"{name}.json").write_bytes(payload)
-                if not destination.exists():
-                    tmp.replace(destination)
-                else:
-                    shutil.rmtree(tmp)
-            finally:
-                if tmp.exists():
-                    shutil.rmtree(tmp)
+            # Reject changed content under an existing issue. No silent revisions.
+            # Legacy core-only hashes remain readable; republishing them requires
+            # a new issue because full-package identity was not recorded then.
             with self._db() as db:
                 db.execute("BEGIN IMMEDIATE")
-                prev = db.execute("SELECT chain_sha256 FROM cycles WHERE domain=? ORDER BY id DESC LIMIT 1", (domain,)).fetchone()
-                chain_prev = prev[0] if prev else "0" * 64
-                chain = _sha((chain_prev + "\n" + domain + "\n" + issued + "\n" + core_hash).encode())
-                db.execute("INSERT OR IGNORE INTO cycles(domain,issued,recorded_at,sha256,previous_chain,chain_sha256,source_count,status) "
-                           "VALUES(?,?,?,?,?,?,?,?)", (domain,issued,iso_utc(),core_hash,chain_prev,chain,usable,"PUBLISHED"))
-            _write_atomic(domain_root / "CURRENT.json", json.dumps({"version":version,"issued":issued,"sha256":core_hash},separators=(",", ":")).encode())
-            versions = sorted((p for p in domain_root.iterdir() if p.is_dir() and not p.name.startswith(".")),reverse=True)
-            for stale in versions[12:]:
-                shutil.rmtree(stale)
-        return {"domain": domain, "issued": issued, "sha256": core_hash, "source_count": usable}
+                existing = db.execute("SELECT sha256 FROM cycles WHERE domain=? AND issued=?",
+                                      (domain, issued)).fetchone()
+                if existing and existing[0] != package_hash:
+                    raise ValueError("conflicting content for existing issued; use a new emission")
+                if destination.exists():
+                    if any((destination / (p + ".json")).read_bytes() != raw
+                           for p, raw in projected.items()):
+                        raise ValueError("published generation integrity mismatch")
+                    if (destination / "manifest.json").read_bytes() != manifest_raw:
+                        raise ValueError("published manifest integrity mismatch")
+                else:
+                    tmp = Path(tempfile.mkdtemp(prefix=".staging-", dir=domain_root))
+                    try:
+                        for name, raw in projected.items():
+                            (tmp / f"{name}.json").write_bytes(raw)
+                        (tmp / "manifest.json").write_bytes(manifest_raw)
+                        tmp.replace(destination)
+                    finally:
+                        if tmp.exists():
+                            shutil.rmtree(tmp)
+                if domain == "pirineo":
+                    payload = {p: parsed[p] for p in ("core", "series", "extended")}
+                    raw = gzip.compress(json.dumps(payload, ensure_ascii=False, sort_keys=True,
+                                        separators=(",", ":"), allow_nan=False).encode(), mtime=0)
+                    _write_atomic(self.root / "private_history" / domain / (version + "-" + _sha(raw) + ".json.gz"), raw)
+                if not existing:
+                    prev = db.execute("SELECT chain_sha256 FROM cycles WHERE domain=? ORDER BY id DESC LIMIT 1", (domain,)).fetchone()
+                    chain_prev = prev[0] if prev else "0" * 64
+                    chain = _sha((chain_prev + "\n" + domain + "\n" + issued + "\n" + package_hash).encode())
+                    db.execute("INSERT INTO cycles(domain,issued,recorded_at,sha256,previous_chain,chain_sha256,source_count,status) "
+                               "VALUES(?,?,?,?,?,?,?,?)", (domain,issued,iso_utc(),package_hash,chain_prev,chain,usable,"PUBLISHED"))
+            # Commit index before switching readers. If pointer write fails, the
+            # previous snapshot remains valid; retrying the identical cycle repairs
+            # the pointer without duplicating the audit chain.
+            _write_atomic(domain_root / "CURRENT.json", json.dumps(
+                {"version":version,"issued":issued,"sha256":package_hash,"hash_scope":"public-package-v1"},
+                separators=(",", ":")).encode())
+            versions = sorted((p for p in domain_root.iterdir() if p.is_dir() and not p.name.startswith(".")), reverse=True)
+            keep = {destination, *versions[:12]}
+            for stale in versions:
+                if stale not in keep:
+                    shutil.rmtree(stale)
+        return {"domain": domain, "issued": issued, "sha256": package_hash, "source_count": usable}
 
     def read_public(self, domain: str, part: str):
         if domain not in DOMAINS or part not in PARTS[domain] or not SAFE_PART.fullmatch(part):
             raise KeyError("invalid domain or part")
         pointer = json.loads((self.public / domain / "CURRENT.json").read_text())
         version = pointer["version"]
-        if not re.fullmatch(r"\d{8}T\d{6}Z-[a-f0-9]{12}", version):
+        if not re.fullmatch(r"\d{8}T\d{6}Z-(?:[a-f0-9]{12}|[a-f0-9]{64})", version):
             raise ValueError("invalid snapshot reference")
         raw = (self.public / domain / version / (part + ".json")).read_bytes()
         age = (datetime.now(UTC) - datetime.fromisoformat(pointer["issued"].replace("Z", "+00:00"))).total_seconds() / 3600
@@ -359,6 +377,7 @@ def handler(service: Service, allowed_origins=CORS_ORIGINS):
             origin = self.headers.get("Origin")
             if origin in allowed_origins:
                 self.send_header("Access-Control-Allow-Origin",origin)
+                self.send_header("Access-Control-Expose-Headers","X-Meteo-Freshness")
                 self.send_header("Vary","Origin")
             if freshness:
                 self.send_header("X-Meteo-Freshness",freshness)

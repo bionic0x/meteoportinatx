@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
@@ -16,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 DIST = ROOT / "dist"
 SOURCES = ("__main__.py", "nowcast.py", "nowcast_hub.html", "portinatx_degen.py",
-           "portinatx_app.html", "pirineo.py", "pirineo_app.html", "pirineo_meta.py")
+           "portinatx_app.html", "pirineo.py", "pirineo_app.html", "pirineo_meta.py", "zone_engine.py", "weather_core.py", "zone_packages.py", "zone_report.py")
 
 
 def main() -> int:
@@ -36,6 +37,13 @@ def main() -> int:
                 (DIST / f.name).chmod(0o755)
     # zipapp smoke test verifies imports and that the entry point works.
     subprocess.run([sys.executable, str(DIST / "MeteoPortinatx.pyz"), "status"], check=True, cwd=ROOT)
+    # Regenerate distributable profiles from the packaged engine, not stale copies.
+    catalog = json.loads(subprocess.check_output(
+        [sys.executable, str(DIST / "MeteoPortinatx.pyz"), "zone", "list"], cwd=ROOT))
+    profiles = DIST / "zones"
+    profiles.mkdir(exist_ok=True)
+    for name, profile in catalog["zones"].items():
+        (profiles / (name + ".json")).write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding="utf-8")
     print("Packaged", DIST / "MeteoPortinatx.pyz")
     if "--native" in sys.argv:
         sep = ";" if sys.platform.startswith("win") else ":"
