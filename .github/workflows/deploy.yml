@@ -1,0 +1,90 @@
+name: Publish unified meteorological website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/deploy.yml'
+      - 'README.md'
+  workflow_dispatch:
+  schedule:
+    # Static snapshot only; NOT continuous five-minute convective surveillance.
+    - cron: '23 */6 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: meteoportinatx-github-pages
+  cancel-in-progress: false
+
+jobs:
+  export-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      PYTHONUNBUFFERED: '1'
+      PORTINATX_HOME: ${{ runner.temp }}/portinatx_state
+      PIRINEO_HOME: ${{ runner.temp }}/pirineo_state
+      PIRINEO_EXTENDED: '1'
+      AEMET_API_KEY: ${{ secrets.AEMET_API_KEY }}
+      # No household telemetry, owner notes, local state, or secrets are uploaded.
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate meteorological safety and integration
+        run: python src/nowcast.py selftest
+      - name: Restore only the non-sensitive terrain DEM cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/pirineo_state/cache/dem.json
+          key: pirineo-dem-terrain-v1-${{ hashFiles('src/pirineo.py') }}
+      - name: Acquire real meteorological data for both domains
+        run: python -u src/nowcast.py export
+      - name: Fail closed on missing or stale data and stage static website
+        run: python scripts/build_site.py --max-age-hours 4
+      - name: Prohibit state/credentials and validate static output
+        run: |
+          test -f site/index.html
+          test -f site/portinatx/api/core.json
+          test -f site/pirineo/api/core.json
+          test -f site/pirineo/api/extended.json
+          test -z "$(find site -type f \( -name 'config.env' -o -name 'state.json' -o -name '*.jsonl' -o -name '*.pem' -o -name '.env*' \) -print -quit)"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          cores = {}
+          for domain in ('portinatx', 'pirineo'):
+              core = json.loads((Path('site') / domain / 'api/core.json').read_text())
+              assert core.get('issued'), domain
+              cores[domain] = core
+          assert any(source.get('status') == 'ok' for source in cores['portinatx'].get('sources', [])), 'No usable coastal source'
+          assert cores['pirineo'].get('puntos'), 'No usable mountain forecast points'
+          # Never publish user-authored reports from a local persistent state.
+          governance = cores['portinatx'].get('governance') or {}
+          for field in ('dissent', 'anomalies', 'overrides'):
+              assert not governance.get(field), 'Private owner governance would be public: ' + field
+          assert not any(c.get('root') == 'owner' for c in governance.get('claims', [])), 'Owner evidence would be public'
+          print('Two evidence-backed domains; private state excluded')
+          PY
+      - name: Configure GitHub Pages (requires Settings → Pages → GitHub Actions)
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

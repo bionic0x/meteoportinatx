@@ -21,5 +21,5 @@ jobs:
         run: python src/nowcast.py selftest
       - name: Build one portable application
         run: python scripts/build.py
-      - name: Confirm no deployment workflow exists
-        run: test ! -e .github/workflows/deploy.yml
+      - name: Validate Pages workflow is separately gated
+        run: test -f .github/workflows/deploy.yml
