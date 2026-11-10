@@ -19,3 +19,11 @@ site/
 dist/
 build/
 .DS_Store
+
+# Packaged output and runtime data across both domains
+*.pyz
+*.spec
+state.json
+cycles/
+*.jsonl
+site.previous/

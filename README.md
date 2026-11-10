@@ -1,71 +1,73 @@
-# Pirineo Nowcast 0.3.0 · Meta-ensamble y forense
+# MeteoPortinatx Unified · 0.4.0
 
-**Fecha de entrega:** 10 de noviembre de 2026. **Base:** Pirineo Nowcast 0.2.0 y MeteoPortinatx Nowcast 0.6.1 (código fuente recuperado del proyecto). **Estado:** compilado y probado con datos sintéticos, no desplegado en el sitio preexistente. Las llamadas de modelos reales deberán ejecutarse en un entorno con acceso a Internet.
+**Un solo desarrollo, dos observatorios.** Válido para **Portinatx (Ibiza)** y **Pirineo (Andorra, Cerdanya, Capcir)**. Unifica la CLI, las vistas web, el empaquetado, las pruebas y la gestión de releases, sin mezclar las reglas de aviso de cada territorio.
 
-## Qué aporta esta actualización
+> Estimación diagnóstica, no aviso oficial ni probabilidad calibrada. En Ibiza mandan AEMET y Protección Civil; en el Pirineo, AEMET/Meteocat, SMA, Météo-France y los boletines oficiales de aludes.
 
-- Mantiene el motor original de **0–72 h**: relieve Terrarium/DEM, altitud real en los puntos de control, perfiles atmosféricos, isocero y cero de bulbo húmedo, cotas de copo/cuajado/acumulación, Kuchera, Froude, föhn, inversión y avisos oficiales.
-- Añade **`src/pirineo_meta.py`**, horizonte de **15 días** en 6 estaciones y dos cotas por estación: Masella, La Molina, Font-Romeu, Les Angles, Formiguères y Porté-Puymorens.
-- Interroga **ECMWF ENS, NCEP GEFS e ICON-EPS** con miembros reales. Informa fracciones de miembros con ≥5 cm y ≥10 cm de nieve nueva y condiciones de bulbo húmedo, sin denominarlas probabilidades calibradas.
-- Contrasta por separado las salidas **ECMWF IFS, GFS, ICON-EU, AROME HD y ECMWF AIFS**. Las predicciones deterministas no cuentan como miembros independientes ni sustituyen la incertidumbre del ensemble. Los modelos de corto alcance pueden no cubrir los 15 días.
-- Pondera inicialmente **cada familia operativa por igual**, nunca cada miembro por igual entre instituciones. Solo modifica ponderaciones si existe un replay con **al menos 30 fechas verificadas por familia**.
-- Conserva las previsiones emitidas en archivos `META-<UTC>-<sha>.json` inmutables y compara exclusivamente las mismas fechas válidas entre ciclos. Detecta señales contrarian solo tras **revisión coincidente en dos familias independientes**; la señal es de vigilancia, no de alerta oficial.
-- Integra ENSO, NAO, AO, estratosfera y SST del Atlántico únicamente como **contexto verificable y fechado**. No aumenta los porcentajes de nieve por analogías históricas.
-- Añade a la interfaz una pestaña **«15 días · metaanálisis»**, con estado de cada fuente, acceso por estación/cota y advertencia sobre incertidumbre.
+## Inicio rápido
 
-## Ejecutar
-
-Desde la raíz del proyecto, con Python 3.10 o superior:
+Requiere Python **3.10+**, biblioteca estándar y conexión a Internet para el ciclo real.
 
 ```bash
-python3 src/pirineo_meta.py selftest
-python3 src/pirineo.py selftest
-python3 src/portinatx_degen.py selftest
+# Ver ambos observatorios en un único servidor LOCAL; inicia dos recolectores.
+python3 src/nowcast.py serve --port 8787 --portinatx-interval 300 --pirineo-interval 10800 --open
+# Navegador: http://localhost:8787/
 
-# Necesita Internet; conserva el estado entre ejecuciones.
-export PORTINATX_HOME="$PWD/estado-portinatx"
-export PIRINEO_HOME="$PWD/estado-pirineo"
-python3 src/pirineo.py export
+# Ejecutar una exportación de ambos dominios, sin interfaz
+python3 src/nowcast.py export
+# Solo uno de ellos
+python3 src/nowcast.py export --domain pirineo
 
-# Prepara una copia navegable. La publicación en el hosting requiere una acción adicional.
-python3 scripts/build_site.py
-python3 -m http.server 8789 --directory site
+# Estado sin conexiones externas
+python3 src/nowcast.py status
+# 106+13 tests internos + pruebas del metaanálisis y test de integración
+python3 src/nowcast.py selftest
+
+# Genera un paquete único con el motor y ambas interfaces; sin desplegar
+python3 scripts/build.py
+python3 dist/MeteoPortinatx.pyz serve
 ```
 
-`estado-pirineo/app/{core,dem,grid,series,extended}.json` queda listo para ser servido como `site/api/*.json`. Se reevalúan los modelos extendidos cada 3 h y se admite caché de respaldo hasta 6 h, marcada. Si el proveedor no responde, la salida indica `UNKNOWN` en lugar de fabricar predicciones.
+El portal ofrece `/portinatx/` y `/pirineo/`. En el servidor local Portinatx admite «Actualizar ahora» y Pirineo también. El servidor permanece en **127.0.0.1** y rechaza intentos de refresh desde otro origen.
 
-`PIRINEO_EXTENDED=0` permite desactivar la nueva capa sin tocar el motor original. El `src/pirineo_meta.py` también admite `export --home <directorio>`, que genera exclusivamente `app/extended.json` sin construir el DEM ni la salida del resto del motor.
+## Web estática para despliegue posterior
 
-## Inyectar teleconexiones verificadas
+Primero deben existir los JSON exportados en los dos dominios. El generador valida JSON, inventario y **frescura del `core.issued` (24 h por defecto)**. Si falta un elemento, **no modifica `site/`**.
 
-De forma opcional, crear `estado-pirineo/teleconnections.json` con objetos `{ "source": "fuente verificable", "valid_at": "2026-11-10", "value":  ... }` para las claves `enso_nino34`, `nao`, `ao`, `stratospheric_10hpa` y `north_atlantic_sst`. El motor clasifica entradas desconocidas, anticuadas o posteriores al ciclo; en todos los casos `used_in_local_probability=false`. **No hay un proveedor automático de estos índices en esta entrega.**
+```bash
+python3 src/nowcast.py export
+python3 scripts/build_site.py
+python3 -m http.server 8789 --directory site
+# sitio: /, /portinatx/, /pirineo/
+```
 
-## Datos históricos para calibración
+`site/` es un artefacto local que se ignora en Git. El despliegue web y la conexión con el colector remoto quedan **expresamente pendientes**; no hay workflow de deploy activo. Si un proveedor no responde, sus datos deben aparecer como `UNKNOWN` o error; no como 0 mm/0 cm.
 
-El motor acepta `estado-pirineo/replay/cases.jsonl`. Una línea es una previsión emitida en fecha `issued_at` y un evento observado en `valid_at`, con `observed_at`, `family`, `fraction` (0–1) y `observation` (0 o 1). Se rechazan plazos fuera de 24–360 h, predicciones posteriores al tiempo válido y observaciones no publicadas al ejecutar la calibración. La puntuación es Brier por **fecha válida**, para evitar dar demasiado peso a días con muchos registros.
+## Arquitectura
 
-La calibración por resultados históricos **no está activada sin datos de verificación reales**. Nunca se usan tres inviernos El Niño como estimador numérico de probabilidades locales. Para ensayos históricos exhaustivos, utilizar los modelos previos de Open-Meteo `Previous Runs` (hasta 7 días) y `Single Runs` (corridas completas archivadas), más observaciones o ERA5 claramente rotulada como referencia reanalizada. No mezclar reanálisis y observación instrumental como si fueran equivalentes.
+| Archivo | Papel |
+|---|---|
+| `src/nowcast.py` | CLI y servidor común, estado de cada dominio, exportación dual |
+| `src/nowcast_hub.html` | Portada con enlace a ambos observatorios y frescura del ciclo |
+| `src/portinatx_degen.py` | Núcleo costero 0.6.1 con radar, avisos, modelo/IA, mar y forense |
+| `src/portinatx_app.html` | Vista Portinatx: 3 ejes de aviso, radar, mar, modelos, forense |
+| `src/pirineo.py` | Dominio montaña 0.3.0, DEM, nieve, perfiles, föhn, inversión |
+| `src/pirineo_meta.py` | Horizonte 15 días, familias ENS/GEFS/ICON-EPS, contrarian, verificaciones |
+| `src/pirineo_app.html` | Vista Pirineo: relieve, cotas, cortes, nieve, 15 días |
+| `scripts/build_site.py` | Prepublicación web atómica, obligatoriamente dual |
+| `scripts/build.py` | `.pyz` portable con ambos observatorios; PyInstaller opcional |
+| `docs/FORENSE-PUBLICO.md` | Síntesis de anomalías y correcciones verificables sin datos domésticos privados |
 
-## Limitaciones que se muestran en la aplicación
+Los historiales viven fuera del repositorio, en `PORTINATX_HOME` (por defecto `./portinatx_state`) y `PIRINEO_HOME` (por defecto `<PORTINATX_HOME>/pirineo`). `config.env`, `state.json`, `cycles/`, claves, cachés y `site/` están excluidos de Git.
 
-1. Los 15 días **no** disponen aquí de cotas derivadas de perfiles verticales independientes por miembro: la cota fiable del perfil sigue siendo la del motor 0–72 h. El índice de bulbo húmedo extendido es **puntual**, referido a una altitud, y no es una cota nivológica.
-2. Los centímetros modelizados son **nieve nueva**, no espesor conservado ni número de kilómetros abiertos.
-3. La operación de cañones necesita bulbo húmedo, duración y datos de infraestructura; el algoritmo no predice apertura de remontes.
-4. Las coordenadas son referencias por estación, y las elevaciones base/cima son aproximadas. La resolución real de GFS/ENS no captura todas las inversiones, sombra orográfica o transporte por viento.
-5. Los tiempos de captura no se atribuyen falsamente a la hora de inicialización del modelo: `model_run_init=UNVERIFIED` hasta que un proveedor exponga el metadato.
-6. No se ha validado la accesibilidad online de los endpoints durante la construcción de esta release; las pruebas realizadas son locales, sobre fixtures sintéticos.
-7. No se han modificado ni rebajado los avisos oficiales (AEMET, SMA, Meteocat, Météo-France) ni sus jerarquías de seguridad.
+## Modelo y límites científicos
 
-## Estructura
+Portinatx conserva los **tres ejes**: aviso oficial, peligro observado y precaución propia. La corrección por régimen (ej. DANA 17–20 octubre) es experimental y no altera la precaución. Las comparaciones de oleaje solo se hacen **modelo/boya espacialmente apareados**; no se aplica factor universal.
 
-- `src/portinatx_degen.py`: motor original MeteoPortinatx (reconstruido del archivo de proyecto, lógica conservada).
-- `src/pirineo.py`: motor de montaña v0.3.0 con nueva salida `extended`.
-- `src/pirineo_meta.py`: fusión, captura, escenarios, teleconexiones y replay.
-- `src/pirineo_app.html`: web con la nueva pestaña.
-- `scripts/build_site.py`: copia HTML y JSON para hosting estático.
-- `tests/`: pruebas de integración y motor extendido.
-- `docs/RELEASE-NOTES.md`: alcance, evidencias de pruebas y criterios para publicar.
+En el Pirineo, el 0–72 h usa **DEM Terrarium**, perfiles verticales, bulbo húmedo, tres cotas de nieve, relación nieve/agua tipo Kuchera, inversión y föhn. El 3–15 d añade datos de ensembles **ECMWF/GEFS/ICON** por familia, sin contar miembros como modelos independientes; deterministas IFS/GFS/AROME/AIFS se muestran por separado. ENSO, NAO/AO, vórtice y Atlántico son hipótesis contextuales verificadas, no multiplicadores de nieve. La calibración histórica necesita casos independientes; los valores no son probabilidades oficiales ni predicción de pistas abiertas.
 
-## Publicación
+Consulta [Arquitectura unificada](docs/ARQUITECTURA-UNIFICADA.md), [release notes](docs/RELEASE-NOTES.md) y [síntesis forense pública](docs/FORENSE-PUBLICO.md). Los documentos históricos originales se conservan en la entrega local, no en el repositorio público.
 
-Esta carpeta es un **candidato de release**. Para cambiar el sitio existente hace falta una conexión de escritura con el hosting o repositorio que lo alimenta; disponer de una URL de lectura no permite desplegar. El paquete no ejecuta cambios remotos por su cuenta.
+## Estado
+
+**Código integrado para validación:** sí. **Conexión con hosting, credenciales y publicación web:** fase siguiente, no ejecutada en esta entrega.

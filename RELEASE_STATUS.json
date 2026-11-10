@@ -1,13 +1,17 @@
 {
-  "version": "0.3.0",
-  "release_date": "2026-11-10",
-  "based_on": "Pirineo Nowcast v0.2.0 + Portinatx Nowcast source",
-  "validated": {
-    "portinatx_selftest": 106,
-    "pirineo_selftest": 13,
-    "extension_and_integration": 12
+  "release": "0.4.0",
+  "date": "2026-11-10",
+  "product": "MeteoPortinatx Unified",
+  "components": {
+    "portinatx_core": "0.6.1",
+    "pirineo_core": "0.3.0",
+    "pirineo_extended": "0.3.0",
+    "unified_application": "0.4.0"
   },
-  "deployment": "NOT_DEPLOYED",
-  "live_provider_checks": "NOT_EXECUTED",
-  "source": "local library source"
+  "delivery": "source_integrated",
+  "web_deployed": false,
+  "verified_live_data": false,
+  "scientific_skill_calibrated": false,
+  "secrets_in_repository": false,
+  "notes": "Separate observations and alerts; historical calibration is experimental; connect and deploy web in next phase."
 }
