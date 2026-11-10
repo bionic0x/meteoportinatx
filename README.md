@@ -1,4 +1,4 @@
-# MeteoPortinatx Unified · 0.4.0
+# MeteoPortinatx Unified · 0.5.0
 
 **Un solo desarrollo, dos observatorios.** Válido para **Portinatx (Ibiza)** y **Pirineo (Andorra, Cerdanya, Capcir)**. Unifica la CLI, las vistas web, el empaquetado, las pruebas y la gestión de releases, sin mezclar las reglas de aviso de cada territorio.
 
@@ -76,8 +76,12 @@ Consulta [Arquitectura unificada](docs/ARQUITECTURA-UNIFICADA.md), [release note
 
 El workflow [`deploy.yml`](.github/workflows/deploy.yml) publica instantáneas de ambos dominios desde GitHub Actions cuando se activa Pages en **Settings → Pages → Source: GitHub Actions**. Se vuelve a ejecutar cada seis horas y ante cambios en `main`; no es un servidor de vigilancia continua. El lanzamiento y la verificación están en [`docs/DESPLIEGUE-WEB.md`](docs/DESPLIEGUE-WEB.md).
 
-## Backend persistente (fase 0.5.0 — preparada, NO desplegada)
+## Backend 0.5.0 — Render Free (vista previa experimental)
 
 `src/nowcast_backend.py` añade colectores independientes (~5 min Portinatx, ~3 h Pirineo; sin promesa SLA), un servicio HTTP público de solo lectura, un índice forense SQLite con cadena SHA-256 y una proyección sanitaria de los JSON públicos que elimina notas de propietario, overrides y evidencias privadas. Los datos completos de origen y archivos congelados siguen exclusivamente en un disco privado. Una caída del backend no convierte UNKNOWN en calma ni elimina el último snapshot.
 
-La infraestructura está definida en `render.yaml` (Render Starter + disco de **5 GB**, **de pago**). **No está activada ni contratada**. GitHub Pages conserva instantáneas cada seis horas y solo preferirá la API cuando se configure una variable pública `METEO_BACKEND_URL` con la URL real del proveedor. Ver [guía de despliegue del backend](docs/BACKEND-PERSISTENTE.md). No insertar claves personales en GitHub ni en variables de frontend.
+**Opción exclusivamente gratuita:** `render.yaml` define una vista previa Python en **Render Free**, sin disco ni base de datos de pago. La API /v1/ responde mientras el servicio está activo, y declara `mode: ephemeral-preview` y `durable_state: false`. El archivo `state.json`, SQLite y ciclos almacenados en Render **desaparecen al dormir, reiniciar o redesplegar**. Nunca se debe presentar ese archivo como histórico forense persistente. Render Free duerme tras 15 minutos sin tráfico, por lo que no garantiza una cadencia de cinco minutos; Render puede limitar el tráfico saliente y el cómputo.
+
+GitHub Pages conserva las exportaciones independientes cada seis horas, con sello horario y comprobaciones de frescura. La integración `METEO_BACKEND_URL` es opcional: solo debe activarse tras probar el API de Render y conserva fallback a las instantáneas de Pages. Para aprendizaje forense duradero sin gasto se necesita un almacén externo gratuito verificado y respaldado; no se incorpora uno no comprobado.
+
+El servicio gratuito tampoco garantiza coste total cero si el workspace tiene método de pago y excede los cupos de ancho de banda o minutos de compilación de Render. Comprueba los límites de gasto en Billing antes de uso intensivo. Consulta [plan gratuito y limitaciones](https://render.com/docs/free) y [guía del backend](docs/BACKEND-PERSISTENTE.md).
