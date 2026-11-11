@@ -288,28 +288,43 @@ def snow_frac(t: float | None, td: float | None, z_m: float = 1500) -> float:
     return max(0.0, min(1.0, (SNOW_TW_C + SNOW_RAMP_HALF_C - tw) / (2 * SNOW_RAMP_HALF_C)))
 
 
+GRID_VARS = ("temperature_2m", "dew_point_2m", "precipitation", "snowfall",
+             "wind_speed_10m", "wind_gusts_10m", "freezing_level_height")
+GRID_SUMS = ("precipitation", "snowfall")
+GRID_STEP_H = 3
+
+
 def src_grid_om() -> dict:
+    """Malla oriental en bloques completos de tres horas; None no equivale a 0."""
     las = [round(42.30 + 0.05 * i, 2) for i in range(8)]
     los = [round(1.45 + 0.05 * j, 2) for j in range(16)]
     pts = [(a, b) for a in las for b in los]
-    q = {"hourly": "temperature_2m,precipitation,snowfall,wind_gusts_10m,freezing_level_height", "models": OM_MODELS[0],
-         "forecast_hours": 48, "timezone": "UTC", "latitude": ",".join(f"{a:.2f}" for a, _ in pts),
+    q = {"hourly": ",".join(GRID_VARS), "models": OM_MODELS[0],
+         "forecast_hours": 48, "timezone": "UTC",
+         "latitude": ",".join(f"{a:.2f}" for a, _ in pts),
          "longitude": ",".join(f"{b:.2f}" for _, b in pts)}
     res = pd.get_json("https://api.open-meteo.com/v1/forecast?" + urllib.parse.urlencode(q), timeout=60)
     res = res if isinstance(res, list) else [res]
+    if len(res) != len(pts):
+        raise ValueError(f"Open-Meteo devolvió {len(res)} celdas; se esperaban {len(pts)}")
     tt = res[0]["hourly"]["time"]
-    k3 = list(range(0, len(tt), 3))
+    if any(r.get("hourly", {}).get("time") != tt for r in res):
+        raise ValueError("Rejilla con horas desalineadas")
+    k3 = list(range(0, len(tt) - GRID_STEP_H + 1, GRID_STEP_H))
     fields = {}
-    for v in ("temperature_2m", "precipitation", "snowfall", "wind_gusts_10m", "freezing_level_height"):
+    for v in GRID_VARS:
         fields[v] = []
         for k in k3:
-            if v in ("precipitation", "snowfall"):
-                blk = lambda r: r["hourly"][v][k:k + 3]
-                fields[v].append([None if len(blk(r)) < 3 or any(x is None for x in blk(r)) else round(sum(blk(r)), 1)
-                                  for r in res])                         # un hueco no es 0 mm
+            if v in GRID_SUMS:
+                def sumblock(r):
+                    v3 = r["hourly"][v][k:k + GRID_STEP_H]
+                    return None if len(v3) != GRID_STEP_H or any(x is None for x in v3) else round(sum(v3), 1)
+                fields[v].append([sumblock(r) for r in res])
             else:
                 fields[v].append([r["hourly"][v][k] for r in res])
     return {"modelo": OM_MODELS[0], "lats": las, "lons": los, "time": [tt[k] for k in k3],
+            "paso_h": GRID_STEP_H,
+            "acumulado": {"campos": list(GRID_SUMS), "semantica": "suma de las horas k..k+2 (acumulado de la hora precedente): cubre (t_k-1 h, t_k+2 h]"},
             "elev": [r.get("elevation") for r in res], "fields": fields}
 
 

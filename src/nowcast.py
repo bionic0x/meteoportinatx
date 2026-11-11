@@ -30,7 +30,8 @@ PARTS = {
 PAGES = {"/": "nowcast_hub.html", "/index.html": "nowcast_hub.html",
          "/portinatx/": "portinatx_app.html", "/portinatx/index.html": "portinatx_app.html",
          "/pirineo/": "pirineo_app.html", "/pirineo/index.html": "pirineo_app.html",
-         "/decidir/": "decision_app.html", "/decidir/index.html": "decision_app.html"}
+         "/decidir/": "decision_app.html", "/decidir/index.html": "decision_app.html",
+         "/pirineo/ruta/": "pirineo_ruta.html", "/pirineo/ruta/index.html": "pirineo_ruta.html"}
 
 
 def home(domain: str) -> Path:
@@ -160,6 +161,8 @@ def server_handler(workers: dict[str, Collector]):
             if path == "/public_fetch.js":
                 return self.send_bytes(200, coastal.resource_bytes("public_fetch.js"),
                                        "text/javascript; charset=utf-8")
+            if path == "/pirineo/ruta/route_engine.js":
+                return self.send_bytes(200, coastal.resource_bytes("route_engine.js"), "text/javascript; charset=utf-8")
             if path == "/public_config.js":
                 # Loopback is a local server, not a remote production backend.
                 return self.send_bytes(200, b"window.METEO_BACKEND_URL=\"\";\n",
