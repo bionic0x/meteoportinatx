@@ -125,13 +125,13 @@ nav.tabs{scrollbar-width:thin}
   </div>
   <div class="tab" id="tab-satelite" hidden>
     <section class="card"><h2>Satélite / radar · cobertura externa</h2>
-      <div class="pov-unknown">NOT_INTEGRATED · no hay raster de satélite/radar georreferenciado y fechado para Pirineos 0.6.1. Ausencia de imágenes NO significa ausencia de lluvia o tormentas.</div>
+      <div class="pov-unknown">NOT_INTEGRATED EN ESTA CONSOLA · no se ingieren imágenes propias de satélite ni radar. La herramienta local de paquetes de zona puede descargar teselas de radar para puntos del Pirineo, con cobertura sin verificar. Ausencia de imágenes NO significa ausencia de lluvia o tormentas.</div>
       <p class="src">Visores oficiales; consulta la hora y el producto en el sitio original. No alimentan el diagnóstico local.</p>
       <ul class="plain">
         <li><a href="https://view.eumetsat.int/" target="_blank" rel="noopener noreferrer">EUMETView · satélite EUMETSAT</a></li>
         <li><a href="https://www.aemet.es/es/eltiempo/observacion/radar/" target="_blank" rel="noopener noreferrer">AEMET · radar de precipitación</a></li>
         <li><a href="https://es.meteocat.gencat.cat/radar?lang=es" target="_blank" rel="noopener noreferrer">Meteocat · radar de Catalunya</a></li>
-      </ul><p class="src">El radar de Ibiza no es válido para el Pirineo. Integrar imágenes de estas zonas exige georreferenciación, timestamps, permisos y verificación de ecos orográficos.</p></section>
+      </ul><p class="src">El radar de Ibiza no es válido para el Pirineo. En una instalación local, <code>python3 src/nowcast.py zone fetch pirineo --output captura.zip</code> y <code>python3 src/nowcast.py zone report --pack captura.zip --output informe.html</code> generan un informe con las teselas disponibles. No las incorporan a esta consola. La hora de una composición RainViewer no garantiza la de cada medición subyacente; cobertura local y ecos orográficos requieren validación.</p></section>
   </div>
   <div class="tab" id="tab-atmosfera" hidden>
     <section class="card"><h2>Termodinámica y viento · punto de control</h2>
@@ -254,7 +254,7 @@ nav.tabs{scrollbar-width:thin}
   </div>
   <div class="tab" id="tab-gobernanza" hidden>
     <section class="card"><h2>Trazabilidad de fuentes y edad</h2>
-      <div class="tbl"><table><thead><tr><th>Fuente</th><th>Estado</th><th class="num">Edad caché</th><th>Motivo / procedencia</th></tr></thead><tbody id="pov-source-rows"></tbody></table></div><div id="pov-governance"></div></section>
+      <div class="tbl"><table><thead><tr><th>Fuente</th><th>Estado</th><th class="num">Edad consulta / caché</th><th>Motivo / procedencia</th></tr></thead><tbody id="pov-source-rows"></tbody></table></div><div id="pov-governance"></div></section>
   </div>
   <div class="tab" id="tab-laboratorio" hidden>
     <section class="card"><h2>Laboratorio · escenario local de rachas</h2>
@@ -561,7 +561,7 @@ function renderDiag(){
   $("t-flow").querySelector("tbody").innerHTML=P.filter((_,i)=>i%6===0).slice(0,12).map(p=>`<tr><td>${fmtT(p.t)}</td><td class="num">${p.flujo||"—"} ${n0(p.viento700_kmh)}</td><td class="num">${p.froude??"—"}</td><td class="num">${n0(p.isocero_m)}</td><td class="num">${n0(p.tw0_m)}</td><td class="num">${n0(p.cota_copo_m)}</td><td class="num">${p.slr??"—"}</td><td style="white-space:normal;min-width:200px">${esc(regime(p))}</td></tr>`).join("")||'<tr><td colspan="8" class="empty">Perfil no disponible.</td></tr>';
   $("foehn").innerHTML=(c.foehn||[]).map(f=>`<li>${esc(f.par)}: ${f.estado==="UNKNOWN"?`<b>UNKNOWN</b> · ${esc(f.motivo||"sin datos")}`:f.horas?`<b>${f.horas} h con señal de föhn</b> (primera ${fmtT(f.primeras[0]?.t)}, Δθ ${f.primeras[0]?.dtheta} K, ΔHR ${f.primeras[0]?.dhr})`:"sin señal de föhn en 72 h"}</li>`).join("")||'<li class="empty">Sin pares evaluables.</li>';
   // inversión observada: temperatura frente a altitud
-  const O=[...(c.obs||[]).map(o=>({n:o.nombre,z:o.alt,T:o.T,e:o.edad_min})), ...(c.metar||[]).map(m=>({n:m.icao,z:m.alt,T:m.T,e:m.edad_min}))].filter(o=>o.z!=null&&o.T!=null&&o.e<=90);
+  const O=[...(c.obs||[]).map(o=>({n:o.nombre,z:o.alt,T:o.T,e:window.PirineoObservatory.liveAge(o,c.issued)})), ...(c.metar||[]).map(m=>({n:m.icao,z:m.alt,T:m.T,e:window.PirineoObservatory.liveAge(m,c.issued)}))].filter(o=>o.z!=null&&o.T!=null&&o.e!=null&&o.e<=90);
   if(O.length>=2){ const W=460,H=260,pd={l:40,r:12,t:10,b:28}, zmin=Math.floor(Math.min(...O.map(o=>o.z))/200)*200, zmax=Math.ceil(Math.max(...O.map(o=>o.z))/200)*200+200, tmin=Math.floor(Math.min(...O.map(o=>o.T)))-1, tmax=Math.ceil(Math.max(...O.map(o=>o.T)))+1;
     const X=t=>pd.l+(t-tmin)/(tmax-tmin)*(W-pd.l-pd.r), Y=z=>pd.t+(1-(z-zmin)/(zmax-zmin))*(H-pd.t-pd.b);
     let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Temperatura observada frente a altitud">`;
@@ -572,12 +572,12 @@ function renderDiag(){
     s+=O.map(o=>`<circle cx="${X(o.T)}" cy="${Y(o.z)}" r="4" fill="var(--ice)"/><text x="${X(o.T)+6}" y="${Y(o.z)+3}" style="fill:var(--ink)">${esc(o.n)}</text>`).join("");
     $("ch-inv").innerHTML=s+"</svg>";
     $("inv-note").textContent=inv?`Gradiente observado ${inv.gradiente_c_km} °C/km con ${inv.n} estaciones: ${inv.lectura}. Referencia de la atmósfera estándar: −6,5 °C/km.`:"";
-  } else $("ch-inv").innerHTML='<p class="empty">Menos de dos estaciones frescas.</p>';
-  $("t-obs").querySelector("tbody").innerHTML=[...(c.obs||[]).map(o=>`<tr><td>${esc(o.nombre)}</td><td class="ev">${esc(o.red||"")}</td><td class="num">${n0(o.alt)}</td><td class="num">${n1(o.T)}</td><td class="num">${n0(o.HR)}</td><td class="num">${n0(o.viento)}</td><td class="num">${n0(o.racha_dia)}</td><td class="num">${n1(o.lluvia_dia)}</td><td class="num">${o.edad_min} min</td></tr>`),
-    ...(c.metar||[]).map(m=>`<tr><td>${esc(m.icao)} <span class="ev">${esc(m.raw)}</span></td><td class="ev">METAR</td><td class="num">${n0(m.alt)}</td><td class="num">${n1(m.T)}</td><td class="num">—</td><td class="num">${m.viento_kt!=null?n0(m.viento_kt*1.852):"—"}</td><td class="num">${m.racha_kt!=null?n0(m.racha_kt*1.852):"—"}</td><td class="num">—</td><td class="num">${m.edad_min} min</td></tr>`)].join("")||'<tr><td colspan="9" class="empty">Sin observaciones.</td></tr>';
+  } else { $("ch-inv").innerHTML='<p class="empty">Menos de dos estaciones frescas.</p>'; $("inv-note").textContent=""; }
+  $("t-obs").querySelector("tbody").innerHTML=[...(c.obs||[]).map(o=>`<tr><td>${esc(o.nombre)}</td><td class="ev">${esc(o.red||"")}</td><td class="num">${n0(o.alt)}</td><td class="num">${n1(o.T)}</td><td class="num">${n0(o.HR)}</td><td class="num">${n0(o.viento)}</td><td class="num">${n0(o.racha_dia)}</td><td class="num">${n1(o.lluvia_dia)}</td><td class="num">${n0(window.PirineoObservatory.liveAge(o,c.issued))} min</td></tr>`),
+    ...(c.metar||[]).map(m=>`<tr><td>${esc(m.icao)} <span class="ev">${esc(m.raw)}</span></td><td class="ev">METAR</td><td class="num">${n0(m.alt)}</td><td class="num">${n1(m.T)}</td><td class="num">—</td><td class="num">${m.viento_kt!=null?n0(m.viento_kt*1.852):"—"}</td><td class="num">${m.racha_kt!=null?n0(m.racha_kt*1.852):"—"}</td><td class="num">—</td><td class="num">${n0(window.PirineoObservatory.liveAge(m,c.issued))} min</td></tr>`)].join("")||'<tr><td colspan="9" class="empty">Sin observaciones.</td></tr>';
   const W2=(c.avisos||[]).filter(w=>!w.error);
-  const warnCoverageOk = /^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||"")) || (/^(ok|caché)/.test(String((c.fuentes||{}).avisos||"")) && !(c.avisos||[]).some(w=>w.error));
-  $("warns").innerHTML=W2.length?W2.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> ${esc(w.evento)} · <span class="ev">${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)} · ${fmtT(w.desde)} → ${fmtT(w.hasta)}${w.vigente?" · vigente":""}</span></li>`).join(""):(!warnCoverageOk?'<li class="empty">UNKNOWN · avisos institucionales no verificados; comprueba AEMET, MeteoAlarm y las fuentes oficiales.</li>':`<li>Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (${/^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||""))?"AEMET CAP":"MeteoAlarm"}), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm), con cobertura condicionada.</li>`);
+  const warnCoverageOk = window.PirineoObservatory.derive(c,D.series,D.extended).officialOk;
+  $("warns").innerHTML=W2.length?W2.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> ${esc(w.evento)} · <span class="ev">${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)} · ${fmtT(w.desde)} → ${fmtT(w.hasta)}${w.vigente&&Date.parse(w.desde)<=Date.now()&&Date.now()<=Date.parse(w.hasta)?" · vigente":""}</span></li>`).join(""):(!warnCoverageOk?'<li class="empty">UNKNOWN · avisos institucionales no verificados; comprueba AEMET, MeteoAlarm y las fuentes oficiales.</li>':`<li>Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (${/^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||""))?"AEMET CAP":"MeteoAlarm"}), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm), con cobertura condicionada.</li>`);
   const A=c.aemet; let am="";
   if(A&&A.montana&&A.montana.length){
     am=A.montana.map(m=>`<p><b>${m.dia===0?"Hoy":"Mañana"}</b>${m.isocero_m?` · isocero ${n0(m.isocero_m)} m`:""}</p><ul class="plain">${(m.prediccion||[]).map(a=>`<li><b>${esc(a.cabecera)}:</b> ${esc(a.texto)}</li>`).join("")}${(m.atmosfera_libre||[]).filter(a=>/Viento/.test(a.cabecera)).map(a=>`<li class="ev">${esc(a.cabecera)}: ${esc(a.texto)}</li>`).join("")}</ul>`).join("");
@@ -612,6 +612,7 @@ $("meta-level").addEventListener("change",renderExtended);
 const TABS=["vigilancia","satelite","atmosfera","mapa","corte","diagnostico","puntos","modelos","extendido","forense","gobernanza","laboratorio"];
 function showTab(t){ if(!TABS.includes(t)) t="vigilancia"; S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); try{ localStorage.setItem("pir-tab",t); }catch(e){} renderAll(); }
 document.querySelectorAll("nav.tabs a").forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); history.replaceState(null,"","#"+a.dataset.tab); showTab(a.dataset.tab); }));
+setInterval(()=>{ if(D.core){ try{renderDiag();}catch(e){console.error(e);} try{window.PirineoObservatory?.render({core:D.core,series:D.series,extended:D.extended,model:S.model,k:S.k});}catch(e){console.error(e);} } },60000);
 function renderAll(){ const run=f=>{ try{ f(); }catch(e){ console.error(e); } }; run(renderHeader); run(drawMap); run(renderCut); run(renderPoints); run(renderDiag); run(renderExtended); run(()=>window.PirineoObservatory?.render({core:D.core,series:D.series,extended:D.extended,model:S.model,k:S.k})); }
 window.addEventListener("resize", ()=>{ if(S.tab==="mapa") drawMap(); });
 
