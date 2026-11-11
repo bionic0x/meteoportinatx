@@ -38,7 +38,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import portinatx_degen as pd  # noqa: E402
 import pirineo_meta as meta  # noqa: E402
 import knowledge_base as kb  # noqa: E402
-import meteo_france_obs as mf  # noqa: E402
+import mf_obs  # noqa: E402  (verificación: archivo horario oficial de Météo-France)
+import meteo_france_obs as mf  # noqa: E402  (tiempo real: API DPObs, clave del propietario)
 
 VERSION = "0.6.1"
 UTC = timezone.utc
@@ -652,6 +653,61 @@ def src_aemet_obs() -> list[dict]:
     return out
 
 
+# Meteocat XEMA vía datos abiertos de la Generalitat (Socrata, sin clave). Coordenadas y altitudes de la tabla
+# oficial de metadatos (yqwd-vj5e). Datos semihorarios con ~1 h de retraso. Licencia: propiedad de Meteocat;
+# su aviso legal permite reutilizar sin alterar ni desnaturalizar, citando la fuente y la fecha de actualización.
+XEMA_URL = "https://analisi.transparenciacatalunya.cat/resource/nzvn-apee.json"
+XEMA_STATIONS = {
+    "YA": ("Puigcerdà (Meteocat)", 42.44013, 1.93482, 1214), "DP": ("Das - Aeròdrom (Meteocat)", 42.38603, 1.86639, 1096),
+    "Z3": ("Malniu (Meteocat)", 42.46605, 1.77850, 2229), "ZD": ("La Tosa d'Alp (Meteocat)", 42.32213, 1.89716, 2478),
+    "Z9": ("Cadí Nord (Meteocat)", 42.29265, 1.71498, 2145), "DG": ("Núria (Meteocat)", 42.39848, 2.15517, 1971),
+    "ZC": ("Ulldeter (Meteocat)", 42.42102, 2.24593, 2413), "CD": ("La Seu d'Urgell - Bellestar (Meteocat)", 42.37083, 1.43279, 849)}
+XEMA_VARS = {"32": "T", "33": "HR", "34": "P", "35": "pr", "30": "v10", "46": "v2", "50": "g10", "56": "g2"}
+XEMA_ATTRIBUTION = "Meteocat XEMA (Servei Meteorològic de Catalunya), dades obertes de la Generalitat de Catalunya"
+
+
+def src_xema(now=None, fetch=None) -> list[dict]:
+    """Últimas observaciones semihorarias de la XEMA en Cerdanya y alta montaña. Hora = inicio del periodo
+    (UTC), lo que hace la edad conservadora. Lluvia y racha del día local solo con ese día cubierto."""
+    now = now or pd.now_utc()
+    since = (now - timedelta(hours=26)).strftime("%Y-%m-%dT%H:%M:%S")
+    codes = ",".join(f"'{c}'" for c in XEMA_STATIONS)
+    varis = ",".join(f"'{v}'" for v in XEMA_VARS)
+    q = {"$where": f"codi_estacio in({codes}) AND codi_variable in({varis}) AND data_lectura > '{since}'",
+         "$order": "data_lectura ASC", "$limit": "20000"}
+    rows = (fetch or pd.get_json)(XEMA_URL + "?" + urllib.parse.urlencode(q))
+    by = {}
+    for r in rows or []:
+        c, var, val = r.get("codi_estacio"), XEMA_VARS.get(str(r.get("codi_variable"))), r.get("valor_lectura")
+        t = pd.parse_time(str(r.get("data_lectura", ""))[:19] + "Z") if r.get("data_lectura") else None
+        try:
+            x = float(val)
+        except (TypeError, ValueError):
+            continue
+        if c in XEMA_STATIONS and var and t and math.isfinite(x):
+            by.setdefault(c, []).append((t, var, x))
+    out = []
+    for c, recs in by.items():
+        name, la, lo, alt = XEMA_STATIONS[c]
+        tl = max(t for t, _, _ in recs)
+        last = {var: x for t, var, x in sorted(recs) if t == tl}
+        day = tl.astimezone(MADRID).date()
+        today = [(t, var, x) for t, var, x in recs if t.astimezone(MADRID).date() == day]
+        rain_slots = {t for t, var, _ in today if var == "pr"}
+        midnight = datetime.combine(day, datetime.min.time(), MADRID).astimezone(UTC)
+        expected = int((tl - midnight).total_seconds() // 1800) + 1
+        gusts = [x for _, var, x in today if var in ("g10", "g2")]
+        wind = last.get("v10", last.get("v2"))
+        out.append({"id": f"xema-{c}", "red": "Meteocat XEMA", "nombre": name, "lat": la, "lon": lo, "alt": alt,
+                    "t": tl.isoformat(), "edad_min": round((now - tl).total_seconds() / 60),
+                    "T": last.get("T"), "HR": last.get("HR"), "P": last.get("P"),
+                    "viento": _r(wind * 3.6, 0) if wind is not None else None,
+                    "racha_dia": _r(max(gusts) * 3.6, 0) if gusts else None,
+                    "lluvia_dia": (_r(sum(x for _, var, x in today if var == "pr"), 1)
+                                   if len(rain_slots) >= expected else None)})   # día incompleto → UNKNOWN, no 0
+    return out
+
+
 def src_aemet_cap() -> list[dict]:
     """Avisos CAP oficiales de AEMET para las zonas pirenaicas (hasta D+2)."""
     if not os.environ.get("AEMET_API_KEY"):
@@ -732,15 +788,66 @@ class CommunityPermissionError(RuntimeError):
     """#9: acceso automático a una red comunitaria sin autorización verificada."""
 
 
-CNP_PERMISSION_ENV = "CNP_PERMISSION_VERIFIED"
+CNP_PERMISSION_ENV = "CNP_PERMISSION_VERIFIED"      # solo uso local privado, nunca en compilaciones públicas
+PUBLIC_BUILD_ENV = "METEO_PUBLIC_BUILD"            # Pages y Render: "1"
+PERMISSION_FIELDS = {"fuente", "otorgado_por", "fecha_autorizacion", "valido_desde", "valido_hasta",
+                     "ambito", "atribucion", "intervalo_min_minutos", "referencia"}
+
+
+def permissions_dir() -> Path:
+    return Path(os.environ.get("METEO_PERMISSIONS_DIR") or (Path(__file__).resolve().parents[1] / "permisos"))
+
+
+def source_permission(source: str = "climaynievepirineos", now=None, public: bool | None = None) -> dict:
+    """#9: el permiso es un fichero `permisos/<fuente>.json`. Se activa solo dentro de su periodo de validez
+    y, en compilaciones públicas, solo si el ámbito incluye «publico». Cualquier defecto → inactivo."""
+    now = now or pd.now_utc()
+    public = (os.environ.get(PUBLIC_BUILD_ENV) == "1") if public is None else public
+    off = lambda why: {"activo": False, "motivo": why, "atribucion": None, "intervalo_min": None, "valido_hasta": None}
+    f = permissions_dir() / ("cnp.json" if source == "climaynievepirineos" else f"{source}.json")
+    if not f.is_file():
+        if not public and os.environ.get(CNP_PERMISSION_ENV) == "1":
+            return {"activo": True, "motivo": "override local (uso privado, sin publicar)", "atribucion": None,
+                    "intervalo_min": 30, "valido_hasta": None}
+        return off("sin autorización registrada (permisos/cnp.json)")
+    try:
+        rec = json.loads(f.read_text(encoding="utf-8"))
+        if not isinstance(rec, dict) or set(rec) - PERMISSION_FIELDS:
+            return off("registro de permiso con campos no reconocidos")
+        if rec.get("fuente") != source:
+            return off("el registro no corresponde a esta fuente")
+        for k in ("otorgado_por", "atribucion", "referencia"):
+            if not isinstance(rec.get(k), str) or not rec[k].strip():
+                return off(f"falta {k} en el registro de permiso")
+        datetime.fromisoformat(rec["fecha_autorizacion"])
+        start = datetime.fromisoformat(rec["valido_desde"]).date()
+        end = datetime.fromisoformat(rec["valido_hasta"]).date() if rec.get("valido_hasta") else None
+        scope = rec.get("ambito")
+        if not isinstance(scope, list) or not scope or set(scope) - {"privado", "publico"}:
+            return off("ámbito inválido (privado/publico)")
+        interval = rec.get("intervalo_min_minutos")
+        if not isinstance(interval, int) or isinstance(interval, bool) or interval < 10:
+            return off("intervalo_min_minutos inválido (entero ≥10)")
+    except (OSError, ValueError, TypeError, KeyError):
+        return off("registro de permiso ilegible o con fechas inválidas")
+    today = now.date()
+    if today < start:
+        return off(f"permiso aún no vigente (desde {start.isoformat()})")
+    if end is not None and today > end:
+        return off(f"permiso caducado el {end.isoformat()}")
+    if public and "publico" not in scope:
+        return off("el permiso no cubre la publicación (ámbito solo privado)")
+    return {"activo": True, "motivo": f"autorizado por {rec['otorgado_por']} ({'/'.join(scope)})",
+            "atribucion": rec["atribucion"], "intervalo_min": interval,
+            "valido_hasta": end.isoformat() if end else None}
 
 
 def src_cnp() -> list[dict]:
-    """ClimayNievePirineos. #9: NO se consulta automáticamente salvo que el propietario haya verificado
-    permiso, cadencia y atribución con sus responsables y lo declare con CNP_PERMISSION_VERIFIED=1.
-    Sin eso: PERMISSION_UNKNOWN, ninguna petición. Las observaciones manuales van por episode_evidence."""
-    if os.environ.get(CNP_PERMISSION_ENV) != "1":
-        raise CommunityPermissionError("PERMISSION_UNKNOWN")
+    """ClimayNievePirineos. #9: solo con un permiso vigente en `permisos/cnp.json` (o, en uso local privado,
+    CNP_PERMISSION_VERIFIED=1). Sin él: ninguna petición. Las observaciones manuales van por episode_evidence."""
+    perm = source_permission()
+    if not perm["activo"]:
+        raise CommunityPermissionError(perm["motivo"])
     out, now = [], pd.now_utc()
     for sid, (name, la, lo) in CNP_STATIONS.items():
         try:
@@ -980,6 +1087,7 @@ def build(dem: dict | None = None) -> dict:
             srcs["puntos"] += f" → respaldo MET Norway falló: {type(exc).__name__}"
     prof = {k: profile_diag(v) for k, v in (prof_raw or {}).items()}
     obs, metar, warns, aemet_txt = [], [], [], None
+    atribuciones: list[str] = []
     for name, fn in (("meteoclimatic", lambda: src_meteoclimatic(dem)), ("metar", src_metar), ("avisos", src_warnings)):
         try:
             val = fn()
@@ -992,18 +1100,20 @@ def build(dem: dict | None = None) -> dict:
                 warns = val
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}"
-    extra = (("aemet_obs", 30, src_aemet_obs), ("meteo_france_obs", 45, mf.fetch_observations),
+    extra = (("aemet_obs", 30, src_aemet_obs), ("xema", 30, src_xema), ("meteo_france_obs", 45, mf.fetch_observations),
              ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
              ("aemet_cap", 30, src_aemet_cap), ("aemet_texto", 120, src_aemet_text))
+    cnp_perm = source_permission()
     for name, ttl, fn in extra:
-        if name == "cnp" and os.environ.get(CNP_PERMISSION_ENV) != "1":
-            # #9: sin permiso verificado, ni consulta ni copia en caché de consultas anteriores
-            srcs[name] = (f"PERMISSION_UNKNOWN: acceso automático desactivado hasta verificar permiso de uso "
-                          f"({CNP_PERMISSION_ENV}=1); ver issue #9")
-            continue
+        if name == "cnp":
+            if not cnp_perm["activo"]:
+                # #9: sin permiso vigente, ni consulta ni copia en caché de consultas anteriores
+                srcs[name] = f"PERMISSION_UNKNOWN: {cnp_perm['motivo']}"
+                continue
+            ttl = max(ttl, cnp_perm["intervalo_min"] or ttl)        # cadencia acordada
         try:
             val, st = _cached(name, ttl, fn, max_age_min=180)
-            srcs[name] = st if name not in ("aemet_obs", "meteo_france_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
+            srcs[name] = st if name not in ("aemet_obs", "xema", "meteo_france_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
         except PermissionError:
             srcs[name] = ("sin clave METEOFRANCE_API_KEY" if name == "meteo_france_obs"
                           else "sin clave AEMET_API_KEY")
@@ -1011,8 +1121,17 @@ def build(dem: dict | None = None) -> dict:
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}: {str(exc)[:100]}"
             continue
-        if name in ("aemet_obs", "meteo_france_obs", "cnp", "meteociel"):
+        if name in ("aemet_obs", "xema", "meteo_france_obs", "cnp", "meteociel"):
             obs += val
+            if name == "xema" and val:
+                newest = max(pd.parse_time(o["t"]) for o in val)
+                atribuciones.append(f"{XEMA_ATTRIBUTION}; dades fins a {newest.astimezone(MADRID):%d/%m/%Y %H:%M} (hora local)")
+            if name == "meteo_france_obs" and val:
+                newest = max(pd.parse_time(o["t"]) for o in val)
+                atribuciones.append(f"Météo-France, données d'observation (API DPObs, Licence Ouverte Etalab); "
+                                    f"données jusqu'à {newest:%d/%m/%Y %H:%M} UTC")
+            if name == "cnp" and val and cnp_perm["atribucion"]:
+                atribuciones.append(cnp_perm["atribucion"])
         elif name == "aemet_cap":
             warns = [w for w in warns if w.get("pais") != "spain"] + val     # AEMET sustituye a MeteoAlarm en España
             srcs["avisos"] += " · España: AEMET CAP"
@@ -1025,12 +1144,26 @@ def build(dem: dict | None = None) -> dict:
     # distinto de "ok" es UNKNOWN; nunca altera el diagnóstico físico ni los avisos.
     resumen = summarize_points(points["puntos"], pois, prof) if points else []   # #8: cotas por vertiente
     bundle = kb.context_bundle(Path(os.environ.get("METEO_SIDECAR_DIR") or (HOME / "sidecar")), "pirineo", pd.now_utc())
+    # Verificación con el archivo horario oficial de Météo-France (diario, no tiempo real; no entra en «obs»)
+    verificacion_mf = {"estado": "UNKNOWN", "nota": "archivo diario de Météo-France no disponible"}
+    try:
+        mf_st, st = _cached("meteo_france_base", 360, lambda: mf_obs.fetch(BOX), max_age_min=60 * 30)
+        verificacion_mf = mf_obs.summary(mf_st, pd.now_utc())
+        srcs["meteo_france_base"] = f"{st} · {len(mf_st)} estaciones (archivo diario, no tiempo real)"
+        atribuciones.append(mf_obs.ATTRIBUTION)
+        if os.environ.get("METEO_LEDGER"):
+            import ledger_shadow
+            verificacion_mf["ledger"] = ledger_shadow.record_observations(mf_obs.ledger_observations(mf_st))
+    except Exception as exc:
+        srcs["meteo_france_base"] = f"error: {type(exc).__name__}"
     contexto = {"nota": "contexto, no observación ni aviso; UNKNOWN si el estado no es ok",
                 "sidecars": {n: {k: v for k, v in b.items() if k != "data"} for n, b in bundle.items()},
                 "notas_lluvia_24h": kb.pirineo_precip_notes(bundle.get("climatologia_era5land_pirineo"), resumen, pd.now_utc())}
     core = {"issued": pd.now_utc().isoformat(), "engine": VERSION, "box": BOX, "pois": pois, "corte": CORTE,
             "contexto": contexto, "fuentes": srcs,
-            "fuentes_edad_min": {k: round(v) for k, v in SOURCE_AGE_MIN.items()}, "modelo_puntos": points["fuente"] if points else None,
+            "fuentes_edad_min": {k: round(v) for k, v in SOURCE_AGE_MIN.items()},
+            "atribuciones": atribuciones, "verificacion_mf": verificacion_mf,
+            "permiso_cnp": {k: cnp_perm[k] for k in ("activo", "motivo", "valido_hasta")}, "modelo_puntos": points["fuente"] if points else None,
             "modelos": points["modelos"] if points else [], "modelo_nombre": MODEL_NAME,
             "puntos": resumen,
             "series": points["puntos"] if points else {}, "perfil": prof,

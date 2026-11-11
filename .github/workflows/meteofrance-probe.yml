@@ -1,0 +1,25 @@
+name: Météo-France probe
+
+# Comprueba la clave METEOFRANCE_API_KEY contra la API DPObs: imprime solo estado y recuentos por estación,
+# nunca la clave. Se ejecuta a mano desde una rama de confianza.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      METEOFRANCE_API_KEY: ${{ secrets.METEOFRANCE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Query DPObs for the Pirineo stations
+        run: |
+          set -o pipefail
+          python scripts/probe_meteofrance.py | tee -a "$GITHUB_STEP_SUMMARY"

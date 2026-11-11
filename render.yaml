@@ -21,6 +21,8 @@ services:
         value: /tmp/meteoportinatx/portinatx
       - key: PIRINEO_HOME
         value: /tmp/meteoportinatx/portinatx/pirineo
+      - key: METEO_PUBLIC_BUILD
+        value: '1'
       - key: PIRINEO_EXTENDED
         value: '1'
       - key: PORTINATX_INTERVAL

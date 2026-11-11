@@ -1,3 +1,9 @@
+# Sin publicar — vigilancia de la clave de Météo-France
+
+- `credential-expiry.yml` vigila también `METEOFRANCE_KEY_EXPIRES` si se registra (opcional; los tokens del portal tienen la caducidad que se elija al generarlos).
+- `meteofrance-probe.yml` y `scripts/probe_meteofrance.py` prueban `METEOFRANCE_API_KEY` contra DPObs con el conector `src/meteo_france_obs.py` (#38): código HTTP del catálogo y recuentos por estación, nunca la clave.
+- Atribución de Météo-France con la hora del último dato cuando sus observaciones se usan.
+
 # Sin publicar — lote de issues #7 #8 #9 #10 #11 #18 #20 #21 #23
 
 - **#20/#21** Rayos en familia eléctrica propia: no confirman ni son confirmados por la lluvia para `alarm`; su nivel sigue visible. Escala 39/40/42/45 dBZ con 1 y 2 frames fuertes.
