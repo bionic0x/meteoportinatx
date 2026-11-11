@@ -70,6 +70,7 @@ class Integration(unittest.TestCase):
         self.assertTrue((target / "pirineo" / "ruta" / "index.html").is_file())
         self.assertTrue((target / "pirineo" / "ruta" / "route_engine.js").is_file())
         self.assertTrue((target / "pirineo" / "pirineo_observatory.js").is_file())
+        self.assertTrue((target / "pirineo" / "pirineo_atmos.js").is_file())
         self.assertFalse((target / "portinatx" / "ruta").exists())
         self.assertTrue((target / "index.html").is_file())
         self.assertTrue((target / "decidir" / "index.html").is_file())
