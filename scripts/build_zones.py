@@ -40,7 +40,7 @@ def stage_zones(target,*,getter=fetch_json,application=None):
                 days=computed[point['id']].get('forecast',{})
                 if not any(row['values'].get('temperature_2m') is not None for row in days.values()):
                     entry=next(e for e in manifest['entries'] if e['point']==point['id'] and e['module']=='forecast')
-                    detail={k:entry.get(k) for k in ('status','error','http_status','coverage')}
+                    detail={k:entry.get(k) for k in ('status','error','http_status','network_reason','coverage')}
                     raise ValueError(name+': no complete daily temperature forecast for '+point['id']+'; '+json.dumps(detail))
             document=render_report(pack)
             navigation='<nav><a href="../../">Observatorios</a> · <a href="zone.zip" download>Descargar datos de esta zona</a> · <a href="zone.json" download>Perfil editable</a> · <a href="../../downloads/">Modelar mi zona</a></nav>'

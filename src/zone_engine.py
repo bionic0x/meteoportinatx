@@ -10,6 +10,8 @@ import math
 from pathlib import Path
 import re
 import tempfile
+import time
+from email.utils import parsedate_to_datetime
 import urllib.parse
 import urllib.request
 import zipfile
@@ -101,8 +103,30 @@ def request_url(module, point, profile=None):
 
 def fetch_json(url):
     req = urllib.request.Request(url, headers={'User-Agent': 'MeteoPortinatx-Zones/1.0'})
-    with urllib.request.urlopen(req, timeout=30) as response:
-        raw = response.read(25_000_001)
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                raw = response.read(25_000_001)
+            break
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
+            delay=3*(attempt+1)
+            if isinstance(exc,urllib.error.HTTPError):
+                if exc.code not in (408,429,500,502,503,504):
+                    raise
+                retry_after=exc.headers.get('Retry-After') if exc.headers else None
+                if retry_after:
+                    try:
+                        delay=max(delay,float(retry_after))
+                    except ValueError:
+                        try:
+                            delay=max(delay,(parsedate_to_datetime(retry_after)-datetime.now(timezone.utc)).total_seconds())
+                        except (ValueError,TypeError,OverflowError):
+                            raise exc
+            # Do not retry earlier than requested by the service. Long delays
+            # leave this source unavailable for the current capture.
+            if attempt==2 or not math.isfinite(delay) or delay>60:
+                raise
+            time.sleep(delay)
     if len(raw) > 25_000_000:
         raise ValueError('provider response too large')
     if urllib.parse.urlsplit(url).hostname == 'feeds.meteoalarm.org':
@@ -248,6 +272,8 @@ def collect(profile, output, *, getter=fetch_json):
                         entry['error'] = type(exc).__name__
                         if isinstance(exc, urllib.error.HTTPError):
                             entry['http_status'] = exc.code
+                        elif isinstance(exc,urllib.error.URLError):
+                            entry['network_reason'] = type(exc.reason).__name__
                     manifest['entries'].append(entry)
             count = sum(e['status'] == 'AVAILABLE' for e in manifest['entries'])
             manifest['status'] = 'AVAILABLE' if count == len(manifest['entries']) else ('PARTIAL' if count else 'UNKNOWN')
