@@ -87,7 +87,9 @@ function render(profile, packet){
  }else axis('operational','unknown','Estimación no disponible','No es un nivel de seguridad ni un pronóstico calibrado.');
  const list=$('signals');list.replaceChildren();
  const details=x.observed.length?x.observed.map(z=>[z.label,z.value]):
-   x.forecast?[['Nieve 24 h (modelo)',fmt(x.forecast.snow24,'cm')],['Precipitación 24 h (modelo)',fmt(x.forecast.pr24,'mm')],['Racha 24 h (modelo)',fmt(x.forecast.gust24,'km/h')],['Temperatura (modelo)',fmt(x.forecast.temp,'°C')]]:
+   x.forecast?[['Cota de copo (vertiente '+(x.forecast.side||'—')+')',x.forecast.snowLevel===null?'—':fmt(x.forecast.snowLevel,'m')+(x.forecast.aboveSnowLevel===true?' · el punto está por encima':x.forecast.aboveSnowLevel===false?' · el punto está por debajo':'')],
+     ...(x.forecast.freezingRain?[['Fase en el fondo','⚠ capa cálida sobre aire bajo cero: riesgo de lluvia engelante']]:[]),
+     ['Nieve 24 h (modelo)',fmt(x.forecast.snow24,'cm')],['Precipitación 24 h (modelo)',fmt(x.forecast.pr24,'mm')],['Racha 24 h (modelo)',fmt(x.forecast.gust24,'km/h')],['Temperatura (modelo)',fmt(x.forecast.temp,'°C')]]:
    [['Datos disponibles','UNKNOWN']];
  details.forEach(([name,value])=>{const li=document.createElement('li'),s=document.createElement('span'),v=document.createElement('em');s.textContent=name;v.textContent=value;li.append(s,v);list.appendChild(li)});
  set('guidance',x.guidance);set('qualification',x.available?'Diagnóstico del último ciclo; el estado de cada sensor debe revisarse en su fuente.':'Datos obsoletos o ausentes: consultar boletines oficiales vigentes.');

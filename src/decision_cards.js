@@ -42,9 +42,14 @@
     }
     const active = Array.isArray(v.all) ? v.all.filter(w => w && w.activo === true) : [];
     const names = active.map(w => typeof w.evento === 'string' ? w.evento.trim() : '').filter(Boolean).slice(0, 2);
+    // #18: si el eje oficial no se apoya en AEMET CAP, decirlo en la propia tarjeta
+    const SOURCE_NOTE = {SOLO_METEOALARM: 'Fuente: solo MeteoAlarm (sin CAP directo de AEMET).',
+                         NINGUNA: 'Sin fuente oficial disponible en este ciclo.'};
+    const note = SOURCE_NOTE[v.fuente_oficial] || '';
+    const detail = names.length ? names.join(' · ') : 'Situación del último ciclo verificado; comprobar AEMET.';
     return {kind: v.level_now === 'quiet' ? 'neutral' : 'official',
             title: `Aviso oficial interpretado: ${v.level_now}`,
-            detail: names.length ? names.join(' · ') : 'Situación del último ciclo verificado; comprobar AEMET.'};
+            detail: note ? `${note} ${detail}` : detail};
   }
   function mountainOfficial(core) {
     const provider = core && core.fuentes && core.fuentes.avisos;
@@ -77,7 +82,13 @@
     const m = item.modelos[modelId];
     const readable = {meteofrance_arome_france_hd: 'AROME HD', icon_eu: 'ICON-EU', ecmwf_ifs: 'ECMWF IFS', metno: 'MET Norway'};
     const label = readable[modelId] || (core.modelo_nombre && typeof core.modelo_nombre === 'object' && core.modelo_nombre[modelId]) || modelId;
+    // #8 / Pirineo 0.6.1: cota de la vertiente del punto y riesgo de engelante; sin dato, null (no «debajo»)
+    const c = item.cotas && typeof item.cotas === 'object' ? item.cotas : {};
+    const above = c.estado === 'OK' && typeof c.sobre_cota_copo === 'boolean' ? c.sobre_cota_copo : null;
     return {id, place: places[id] || id, model: String(label).slice(0, 65),
+            snowLevel: finite(c.cota_copo_m) && c.estado === 'OK' ? c.cota_copo_m : null,
+            side: c.vertiente === 'norte' || c.vertiente === 'sur' || c.vertiente === 'divisoria' ? c.vertiente : null,
+            aboveSnowLevel: above, freezingRain: c.riesgo_engelante === true,
             snow24: finite(m.nieve24_cm) && m.nieve24_cm >= 0 ? m.nieve24_cm : null,
             gust24: finite(m.racha24) && m.racha24 >= 0 ? m.racha24 : null,
             temp: finite(m.T) ? m.T : null,
