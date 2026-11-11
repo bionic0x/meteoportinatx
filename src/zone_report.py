@@ -1,0 +1,118 @@
+"""One offline, escaped HTML report for every regional profile."""
+from datetime import datetime, timezone
+from html import escape
+import json
+from pathlib import Path
+
+from zone_packages import read_pack, analysis
+
+LABELS = {'forecast':'Previsión', 'ensemble':'Ensembles', 'terrain':'Elevación', 'marine':'Mar'}
+
+
+def text(value):
+    return escape(str(value), quote=True)
+
+
+def point_name(pid):
+    return text(pid.replace('_', ' ').title())
+
+
+def stamp(value):
+    return datetime.fromisoformat(value.replace('Z','+00:00')).astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M UTC')
+
+
+def value(x, unit=None):
+    if x is None:
+        return '<span class="missing">Sin datos suficientes</span>'
+    suffix = text(unit) if unit else 'unidad no verificada'
+    return f'{x:.2f} {suffix}'
+
+
+def render_report(path):
+    pack = read_pack(path)
+    profile, manifest = pack['profile'], pack['manifest']
+    computed = analysis(pack)
+    entries = {(e['point'],e['module']):e for e in manifest['entries']}
+    blocks = []
+    for point in profile['points']:
+        pid = point['id']
+        rows = [f'<section class="point" data-point="{text(pid)}"><h2>{point_name(pid)}</h2><p>{point["latitude"]:.4f}, {point["longitude"]:.4f}</p>']
+        rows.append('<h3>Fuentes y cobertura</h3><ul>')
+        for module in profile['modules']:
+            entry = entries[(pid,module)]
+            state = 'Descargado' if entry['status'] == 'AVAILABLE' else 'No disponible'
+            coverage = ''
+            payload = pack['data'].get((pid,module))
+            if payload and 'hourly' in payload:
+                from weather_core import number
+                arrays = [v for k,v in payload['hourly'].items() if k != 'time']
+                total = sum(len(v) for v in arrays)
+                valid = sum(number(x) for v in arrays for x in v)
+                coverage = f' · valores presentes {valid}/{total} (consultar cobertura por variable)'
+            rows.append(f'<li><b>{LABELS[module]}</b>: {state}{coverage} · consulta {text(stamp(entry["retrieved_at"]))} · <a rel="noreferrer" href="{text(entry["url"])}">Fuente</a></li>')
+            if payload and module == 'terrain':
+                rows.append(f'<li>Elevación puntual: {value(payload["elevation"][0],"m")}; no representa un DEM regional.</li>')
+        rows.append('</ul>')
+        daily = computed[pid].get('forecast', {})
+        if 'forecast' in profile['modules']:
+            rows.append('<h3>Previsión diaria · UTC</h3><div class="table"><table><caption>Totales y extremos; los huecos no cuentan como cero</caption><thead><tr><th>Día</th><th>Lluvia total</th><th>Nieve nueva</th><th>Racha máxima</th><th>Temperatura mínima</th><th>Bulbo húmedo mínimo</th></tr></thead><tbody>')
+            for day, row in sorted(daily.items()):
+                cells = []
+                for field in ('precipitation','snowfall','wind_gusts_10m','temperature_2m','wet_bulb_min_c'):
+                    coverage_key = 'wet_bulb' if field == 'wet_bulb_min_c' else field
+                    unit = '°C' if field == 'wet_bulb_min_c' else row['units'].get(field)
+                    count = row['coverage'][coverage_key]['valid']
+                    cells.append(f'<td>{value(row["values"][field],unit)}<small>{count}/24 horas</small></td>')
+                rows.append(f'<tr><th scope="row">{text(day)}</th>{"".join(cells)}</tr>')
+            rows.append('</tbody></table></div>')
+            if not daily:
+                rows.append('<p class="missing">No hay previsión disponible.</p>')
+        if 'ensemble' in profile['modules']:
+            rows.append('<h3>Escenarios por familias</h3><p>Fracciones de miembros sin calibrar, no probabilidades verificadas. Cada familia institucional pesa lo mismo cuando aporta datos suficientes.</p>')
+            ens = computed[pid].get('ensemble', {})
+            rows.append('<div class="table"><table><thead><tr><th>Día</th><th>Evento</th><th>Fracción</th><th>Familias con datos</th><th>Miembros válidos / presentes</th></tr></thead><tbody>')
+            for day,row in sorted(ens.items()):
+                for metric,title in [('rain_ge10','Lluvia ≥10 mm'),('snow_ge5','Nieve ≥5 cm')]:
+                    m = row['metrics'][metric]
+                    fraction = f'{m["fraction"]*100:.1f}%' if m['fraction'] is not None else 'Sin datos suficientes'
+                    counts = '; '.join(f'{f}: {r["members_valid"]}/{r["members_present"]}' for f,r in m['families'].items())
+                    rows.append(f'<tr><th scope="row">{text(day)}</th><td>{title}</td><td>{fraction}</td><td>{m["n_families"]}</td><td>{text(counts)}</td></tr>')
+            rows.append('</tbody></table></div>')
+            if not ens:
+                rows.append('<p class="missing">No hay ensemble disponible.</p>')
+        if 'marine' in profile['modules']:
+            rows.append('<h3>Mar</h3><p>Predicción puntual; no estima rebase, rompiente ni seguridad de navegación.</p><div class="table"><table><thead><tr><th>Día</th><th>Altura máxima</th><th>Periodo máximo</th><th>Dirección media circular</th></tr></thead><tbody>')
+            marine = computed[pid].get('marine',{})
+            for day,row in sorted(marine.items()):
+                cells = ''.join(f'<td>{value(row["values"][field],row["units"].get(field))}</td>' for field in ('wave_height','wave_period','wave_direction'))
+                rows.append(f'<tr><th scope="row">{text(day)}</th>{cells}</tr>')
+            rows.append('</tbody></table></div>')
+            if not marine:
+                rows.append('<p class="missing">No hay datos marinos disponibles.</p>')
+        rows.append('</section>')
+        blocks.append(''.join(rows))
+    options = ''.join(f'<option value="{text(p["id"])}">{point_name(p["id"])}</option>' for p in profile['points'])
+    generated = datetime.now(timezone.utc).isoformat()
+    state = {'AVAILABLE':'Paquete descargado','PARTIAL':'Paquete parcial','UNKNOWN':'Fuentes no disponibles'}[manifest['status']]
+    return f'''<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{text(profile['name'])} · Observatorio de zona</title>
+<style>
+:root{{font-family:system-ui,sans-serif;color:#172b3a;background:#f4f7f8}}body{{margin:0}}main{{max-width:1200px;margin:auto;padding:24px}}header,section{{background:white;border:1px solid #d2dce2;border-radius:12px;padding:24px;margin:0 0 20px}}h1{{margin:.3em 0}}h2{{color:#145166}}p,li{{line-height:1.6}}.eyebrow{{font-weight:650;color:#145166}}.notice{{border-left:4px solid #ab6500;padding:10px 16px;background:#fff6e5}}select{{font:inherit;padding:10px;max-width:100%;margin-bottom:20px}}table{{border-collapse:collapse;width:100%;font-size:.95rem}}th,td{{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #d2dce2}}caption{{text-align:left;padding:10px 0}}.table{{overflow-x:auto}}small{{display:block;color:#4e5e67;margin-top:5px}}.missing{{color:#7a4900}}a{{color:#075c83}}code{{overflow-wrap:anywhere}}[hidden]{{display:none}}@media(max-width:600px){{main{{padding:10px}}header,section{{padding:16px}}th,td{{padding:8px}}}}@media print{{select,label{{display:none}}.point[hidden]{{display:block}}}}
+</style></head><body><main>
+<header><p class="eyebrow">MeteoPortinatx · Observatorio de zona</p><h1>{text(profile['name'])}</h1>
+<p>{state} · Captura {text(stamp(manifest['created_at']))}</p>
+<p class="notice">Instantánea sin conexión: no se actualiza al abrirla. Descargado no significa vigente ni completo. Sin avisos oficiales u observaciones integrados en este paquete.</p>
+<p>Informe calculado {text(stamp(generated))}. Diagnóstico sin calibración local; consulte fuentes oficiales para decisiones de seguridad.</p>
+<details><summary>Procedencia y límites</summary><p>Paquete <code>{pack['sha256']}</code>. Integridad comprobada; los hashes no acreditan la identidad del autor ni la exactitud meteorológica.</p><p>Las cifras diarias requieren cobertura completa de 24 horas UTC. Los escenarios requieren al menos diez miembros completos por familia y unidades verificadas. No se aplican umbrales de aviso de otra zona.</p></details></header>
+<label for="point-filter">Punto de consulta</label> <select id="point-filter"><option value="all">Todos los puntos</option>{options}</select>
+{''.join(blocks)}
+<script>document.getElementById('point-filter').addEventListener('change',function(){{document.querySelectorAll('.point').forEach(section=>{{section.hidden=this.value!=='all'&&section.dataset.point!==this.value;}});}});</script>
+</main></body></html>'''
+
+
+def write_report(pack_path, output):
+    document = render_report(pack_path)
+    with Path(output).open('x',encoding='utf-8') as f:
+        f.write(document)
+    return str(output)
