@@ -78,6 +78,8 @@ jobs:
           test -f site/portinatx/api/core.json
           test -f site/pirineo/api/core.json
           test -f site/pirineo/api/extended.json
+          test -f site/pirineo/ruta/index.html
+          test -f site/pirineo/ruta/route_engine.js
           test -z "$(find site -type f \( -name 'config.env' -o -name 'state.json' -o -name '*.jsonl' -o -name '*.pem' -o -name '.env*' \) -print -quit)"
           python - <<'PY'
           import json
@@ -89,6 +91,10 @@ jobs:
               cores[domain] = core
           assert any(source.get('status') == 'ok' for source in cores['portinatx'].get('sources', [])), 'No usable coastal source'
           assert cores['pirineo'].get('puntos'), 'No usable mountain forecast points'
+          grid = json.loads((Path('site') / 'pirineo' / 'api/grid.json').read_text())
+          needed = ('temperature_2m', 'dew_point_2m', 'precipitation', 'wind_speed_10m', 'wind_gusts_10m', 'freezing_level_height')
+          if not all(grid.get('fields', {}).get(v) for v in needed) or not grid.get('elev'):
+              print('::warning::Pirineo route grid incomplete; route planner will fail closed')
           # Never publish user-authored reports from a local persistent state.
           governance = cores['portinatx'].get('governance') or {}
           for field in ('dissent', 'anomalies', 'overrides'):

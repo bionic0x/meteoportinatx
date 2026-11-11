@@ -55,6 +55,7 @@ El portal local es http://localhost:8787/, con `/portinatx/` y `/pirineo/`; incl
 | `src/nowcast.py` | Orquestador y servidor local unificados |
 | `src/nowcast_backend.py` | Colectores Render, API de lectura, snapshots y auditoría temporal |
 | `src/public_fetch.js` | Carga atómica por dominio; fallback estático completo |
+| `src/route_engine.js`, `src/pirineo_ruta.html` | Planificador GPX privado en navegador (`docs/RUTAS-PIRINEO.md`) |
 | `scripts/build_site.py` | Validación de datos y generación atómica de sitio |
 | `scripts/integrity.py` | Generación y comprobación de SHA256SUMS, verificado en CI |
 | `tests/` | Pruebas sintéticas Python + prueba JS del puente y sus fallos |
