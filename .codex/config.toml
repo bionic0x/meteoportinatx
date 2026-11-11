@@ -29,3 +29,39 @@ config_file = "agents/interfaz.toml"
 [agents.seguridad]
 description = "Seguridad y credenciales"
 config_file = "agents/seguridad.toml"
+
+[agents.nexus_assurance]
+description = "Coherencia, límites y contraste de evidencia"
+config_file = "nexus/strategic-assurance-lead.toml"
+
+[agents.nexus_coordinacion]
+description = "Coordina responsables, tareas y entregas"
+config_file = "nexus/agents-orchestrator.toml"
+
+[agents.nexus_arquitectura_ux]
+description = "Arquitectura de información y experiencia"
+config_file = "nexus/ux-architect.toml"
+
+[agents.nexus_investigacion_ux]
+description = "Evidencias y revisión de flujos"
+config_file = "nexus/ux-researcher.toml"
+
+[agents.nexus_diseno_ui]
+description = "Interfaz, jerarquía y accesibilidad"
+config_file = "nexus/ui-designer.toml"
+
+[agents.nexus_marca]
+description = "Coherencia de identidad y voz"
+config_file = "nexus/brand-guardian.toml"
+
+[agents.nexus_grafico]
+description = "Lenguaje gráfico y diseño de marca"
+config_file = "nexus/brand-designer.toml"
+
+[agents.nexus_frontend]
+description = "Implementación frontend acotada"
+config_file = "nexus/frontend-developer.toml"
+
+[agents.nexus_verificacion]
+description = "Validación independiente y revisión crítica"
+config_file = "nexus/reality-checker.toml"
