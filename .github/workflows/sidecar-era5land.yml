@@ -1,0 +1,37 @@
+name: Generate ERA5-Land climatology sidecar (manual)
+
+# Manual only. Needs the repository secret CDSAPI_KEY (a personal CDS token) and the ERA5-Land licence accepted
+# in the CDS profile. Produces an artifact; it does NOT change the website or commit anything.
+# After reviewing the artifact, commit it as data/sidecar/climatologia_era5land_pirineo.json.
+on:
+  workflow_dispatch:
+    inputs:
+      period:
+        description: 'Reference period YYYY-YYYY'
+        default: '1991-2020'
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      CDSAPI_URL: https://cds.climate.copernicus.eu/api
+      CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install cdsapi
+      - name: Probe real format first (aborts if accumulation cannot be determined)
+        run: python scripts/sidecar_era5land_pirineo.py --probe --cache-dir sidecar_cache/era5land
+      - name: Generate
+        run: python -u scripts/sidecar_era5land_pirineo.py --out sidecar_out --period "${{ inputs.period }}" --cache-dir sidecar_cache/era5land
+      - uses: actions/upload-artifact@v4
+        with:
+          name: climatologia_era5land_pirineo
+          path: sidecar_out/climatologia_era5land_pirineo.json
+          if-no-files-found: error

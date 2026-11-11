@@ -95,6 +95,11 @@ METEOALERTA_ANNEX1: dict | None = None
 _V, _U = "VERIFIED", "UNVERIFIED"
 SOURCE_CATALOG: tuple[dict[str, Any], ...] = (
     # id, proveedor, producto, dominio, rol, integración, nombre de sidecar, licencia, licencia verificada, existencia verificada, nota
+    {"id": "era5land_pirineo", "provider": "Copernicus CDS", "product": "ERA5-Land timeseries (Pirineo)",
+     "domain": "pirineo", "role": "prior", "integration": "sidecar", "sidecar": "climatologia_era5land_pirineo",
+     "licence": "licencia CDS por verificar antes de redistribuir", "licence_status": _U,
+     "exists_status": _V, "live_tested": False,
+     "note": "Generador experimental, solo datos sintéticos verificados; petición real al CDS sin validar."},
     {"id": "era5land", "provider": "Copernicus CDS", "product": "ERA5-Land", "domain": "both", "role": "prior",
      "integration": "sidecar", "sidecar": "climatologia_era5land", "licence": "CC-BY 4.0", "licence_status": _V,
      "exists_status": _V, "live_tested": False,
@@ -144,6 +149,7 @@ SOURCE_CATALOG: tuple[dict[str, Any], ...] = (
 KNOWN_SIDECARS: dict[str, dict[str, Any]] = {
     "climatologia_era5land": {"domain": "portinatx", "max_age_h": 24 * 45},
     "climatologia_cerra": {"domain": "pirineo", "max_age_h": 24 * 45},
+    "climatologia_era5land_pirineo": {"domain": "pirineo", "max_age_h": 24 * 366},
     "sst_cmems": {"domain": "portinatx", "max_age_h": 48},
     "nieve_hrsi": {"domain": "pirineo", "max_age_h": 24 * 7},
     "verificacion_scores": {"domain": "portinatx", "max_age_h": 24 * 10},
@@ -277,6 +283,39 @@ def percentile_rank(value: float | None, table: dict | None) -> dict[str, Any]:
             return {"rank": round(q0 + frac * (q1 - q0), 4), "band": bands[i]}
     return bad
 
+
+def pirineo_precip_notes(entry: dict[str, Any] | None, rows: list[dict], now: datetime | None = None,
+                         min_rank: float = 0.90) -> list[dict[str, Any]]:
+    """Sitúa el pronóstico de lluvia a 24 h de cada punto respecto a la climatología de días húmedos (ERA5-Land).
+
+    `entry` = resultado de read_sidecar/context_bundle de `climatologia_era5land_pirineo`; `rows` = salida de
+    `pirineo.summarize_points`. Solo informa de puntos en p90 o por encima. Es un PRONÓSTICO de modelo comparado con una
+    climatología de reanálisis (ventana móvil de 24 h frente a días UTC): indicio de rareza, no aviso ni observación.
+    """
+    if not isinstance(entry, dict) or entry.get("state") != "ok":
+        return []
+    points = (entry.get("data") or {}).get("points")
+    if not isinstance(points, dict):
+        return []
+    month = str(((now or datetime.now(timezone.utc)).astimezone(timezone.utc)).month)
+    notes: list[dict[str, Any]] = []
+    for row in rows or []:
+        pid = row.get("id")
+        months = (points.get(pid) or {}).get("months") if isinstance(pid, str) else None
+        table = ((months or {}).get(month) or {}).get("precip_24h_mm")
+        best: tuple[float, str] | None = None
+        for model, d in (row.get("modelos") or {}).items():
+            v = d.get("pr24") if isinstance(d, dict) else None
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and (best is None or v > best[0]):
+                best = (float(v), model)
+        if best is None:
+            continue
+        pr = percentile_rank(best[0], table)
+        if pr["rank"] is None or pr["rank"] < min_rank:
+            continue
+        notes.append({"id": pid, "modelo": best[1], "pr24_mm": best[0], "mes": int(month),
+                      "banda": pr["band"], "rank": pr["rank"]})
+    return sorted(notes, key=lambda n: -n["rank"])
 
 def catalog_summary() -> dict[str, Any]:
     """Resumen para publicar en el snapshot (sin secretos)."""

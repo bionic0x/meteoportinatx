@@ -1,3 +1,7 @@
+## Pirineo — Sidecar climatológico ERA5-Land (experimental)
+
+Se incorpora generador manual con pruebas sintéticas y notas informativas de lluvia a 24 h. Sin descargas reales, sin credenciales provisionadas, sin impacto en alertas ni Render Free. Pendiente validar el formato del CDS y los términos de redistribución.
+
 # Sin publicar — motor del Pirineo 0.6.1 (paridad con el costero y física de montaña)
 
 `src/pirineo.py` y `src/pirineo_meta.py` pasan de 0.3.0 a 0.6.1. El número alinea el motor de montaña con las garantías del núcleo costero 0.6.1; no indica calibración.
