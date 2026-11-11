@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 
 import portinatx_degen as coastal
 import pirineo as mountain
+import ledger_shadow
 
 VERSION = "0.6.0"
 DOMAINS = ("portinatx", "pirineo")
@@ -49,10 +50,16 @@ def load_mountain_config() -> None:
 
 def export(domain: str) -> dict:
     """Runs the existing engine once. No manufactured fair-weather values on failure."""
+    shadow = {"estado": "DESACTIVADO"}
     if domain == "portinatx":
         coastal.load_config_env()
         state = coastal.load_state()
         snapshot = coastal.cycle(state)
+        # #7: registro en sombra opcional (METEO_LEDGER). No toca alertas; un fallo se ignora.
+        shadow = ledger_shadow.record(snapshot.get("_srcs") or {}, coastal.parse_time(snapshot["issued_utc"]),
+                                      coastal.SITE, {n: coastal.CFG["portus_coords"][n]
+                                                     for n in coastal.CFG["portus_buoys"].values()
+                                                     if n in coastal.CFG["portus_coords"]})
         coastal.persist(snapshot, state)  # append-only evidence, unchanged safety gates
         output = coastal.write_app(coastal.build_app(snapshot, state))
         issued = snapshot.get("issued_utc")
@@ -63,7 +70,10 @@ def export(domain: str) -> dict:
         issued = parts.get("core", {}).get("issued")
     else:
         raise ValueError(f"Unknown domain: {domain}")
-    return {"domain": domain, "issued": issued, "dir": str(output)}
+    result = {"domain": domain, "issued": issued, "dir": str(output)}
+    if domain == "portinatx" and shadow.get("estado") != "DESACTIVADO":
+        result["ledger_sombra"] = shadow
+    return result
 
 
 def read_data(domain: str, part: str) -> bytes:
