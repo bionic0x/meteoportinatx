@@ -70,6 +70,10 @@ def build_site(port_home: Path, pir_home: Path, target: Path, max_age_h: float =
             shutil.copy2(ROOT / "src" / page, dest / "index.html")
             for name in required:
                 shutil.copy2(home / "app" / f"{name}.json", dest / "api" / f"{name}.json")
+            if domain == "pirineo":
+                (dest / "ruta").mkdir()
+                shutil.copy2(ROOT / "src" / "pirineo_ruta.html", dest / "ruta" / "index.html")
+                shutil.copy2(ROOT / "src" / "route_engine.js", dest / "ruta" / "route_engine.js")
         (staging / "manifest.json").write_text(json.dumps({"schema": 1, "release": "0.6.0",
            "generated_at": datetime.now(timezone.utc).isoformat(), "domains": reports},
            ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
