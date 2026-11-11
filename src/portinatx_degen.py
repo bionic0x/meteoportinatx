@@ -240,6 +240,10 @@ CFG: dict[str, Any] = {
     "zr": {"marshall_palmer": (200.0, 1.6), "tropical": (250.0, 1.2)},
     "qpe_radius_km": 3.0,
     "radar_alert_dbz": 45.0, "radar_alert_km": 15.0, "radar_alert_qpe": 20.0,
+    # #17: UNA relación Z–R decide el umbral de QPE; la otra solo se muestra como diagnóstico.
+    # Marshall–Palmer es la coherente con 45 dBZ ≈ 24 mm/h ≥ radar_alert_qpe; con la «tropical»
+    # el umbral saltaba ya hacia 40 dBZ.
+    "radar_threshold_zr": "marshall_palmer",
     # Meteoclimatic (feed XML regional). Coordenadas de núcleo urbano (aprox.), no de la estación.
     "mc_feed": "https://www.meteoclimatic.net/feed/xml/ESIBA",
     "mc_stations": {
@@ -1717,7 +1721,7 @@ def ch_radar(src: SourceResult | None) -> Channel:
     last3 = fr[-3:]
     n_strong = sum(1 for f in last3 if f.get("max_dbz_15km", 0) >= CFG["radar_alert_dbz"])
     def _qhi(f):
-        return max((f.get("qpe_site_mmh") or {}).values(), default=0.0)
+        return (f.get("qpe_site_mmh") or {}).get(CFG["radar_threshold_zr"], 0.0)
     n_qpe = sum(1 for f in last3 if _qhi(f) >= CFG["radar_alert_qpe"])
     if n_strong >= 2 or n_qpe >= 2:
         lvl = max(lvl, 2)
@@ -1739,7 +1743,8 @@ def ch_radar(src: SourceResult | None) -> Channel:
         span = (parse_time(fr[-1]["time"]) - parse_time(fr[0]["time"])).total_seconds() / 60
         ch.evidence.append("QPE radar en el punto (estimación, no medida): " + " · ".join(
             f"{k} {now_q.get(k, 0):.1f} mm/h, {acc[k]:.0f} mm/{span:.0f} min" for k in CFG["zr"])
-            + " — el radar compuesto puede infraestimar lluvia cálida; sin pluviómetro no se elige relación")
+            + f" — umbral de alerta evaluado solo con {CFG['radar_threshold_zr']}; las demás son diagnóstico "
+              "(el radar compuesto puede infraestimar lluvia cálida)")
     ch.level = lvl
     ch.metrics.update({"nearest_km": near, "cover30": cov[30], "site_dbz": last.get("site_max_dbz", 0),
                        "qpe_now": dict(now_q), "qpe_acc": {k: round(v, 1) for k, v in acc.items()},
@@ -2183,10 +2188,16 @@ def fuse(channels: list[Channel], hr_gate: bool = False) -> dict:
     oth = [c for c in channels if c.kind in ("model", "ensemble") and c.available]
     obs_max = max((c.level for c in obs), default=0)
     mod_max = min(2, max((c.level for c in oth), default=0))
-    level = max(inst, obs_max, mod_max)
+    # #17: ninguna observación aislada da 'alarm' por sí sola; techo 'alert'. El rojo solo llega
+    # por confirmación independiente (abajo), por el gate HR o por el suelo del aviso oficial.
+    obs_cap = min(2, obs_max)
+    level = max(inst, obs_cap, mod_max)
     reasons = []
     if inst:
         reasons.append(f"suelo institucional = {LEVELS[inst]}")
+    if obs_max > obs_cap and level < 3:
+        solo = max(obs, key=lambda c: c.level)
+        reasons.append(f"{solo.name} llega a alarm por sí solo: techo alert sin confirmación independiente")
     # 'alarm' por confirmación: observación en alert + otro canal independiente en alert
     # (el aviso es suelo, no confirmación; tampoco se confirman canales del mismo grupo)
     # La confirmación debe ser OBSERVACIONAL: un modelo no confirma una observación
