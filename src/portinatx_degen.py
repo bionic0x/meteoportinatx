@@ -297,6 +297,15 @@ CFG: dict[str, Any] = {
     "rain_3h": (30.0, 50.0, 80.0),
     "pws_stale_min": 30,
     "min_obs_channels": 2,
+    # Frescura (#16): edad máxima del dato más reciente de cada canal, en minutos (de partida, sin
+    # calibrar). Sin hora de dato, o más viejo que el límite → UNKNOWN (available=False), nunca 0.
+    # El eje oficial (aviso_aemet*) no pasa por aquí: se consulta cada ciclo y caduca con el CAP.
+    "channel_max_age_min": {"lluvia_observada": 90, "pluviometros": 45, "escorrentia_torrentes": 120,
+                            "frente_racha": 150, "radar": 30, "rayos": 20, "viento_estaciones": 60,
+                            "mar_boyas": 120, "modelo": 360, "ensemble_ecmwf": 720, "mar_bahia": 360,
+                            "trayectoria_nucleo": 720},
+    # Familias de fenómeno que deben tener ≥1 canal observado vivo para declarar cobertura suficiente.
+    "required_families": ("lluvia",),
     # Distancia (km) de estaciones puntuales a Portinatx: más allá de local_obs_km son precursoras,
     # no medida local (DANA 18/10: el frente de racha de LEIB/puerto se debilitó hacia el norte).
     "station_km": {"B908X": 4.5, "B954": 29.0, "LEIB": 29.0, "ISANTJ159": 6.0},
@@ -457,6 +466,7 @@ class Channel:
     group: str = ""                    # canales del mismo grupo NO se confirman entre sí
     local: bool = False                # señal observada cerca del punto (abre el gate rojo de modelo)
     metrics: dict = field(default_factory=dict)   # cifras para gobernanza (sin texto)
+    data_time: str | None = None       # hora (ISO) del dato más reciente usado; None = no verificable
 
     def __post_init__(self):
         self.group = self.group or self.name
@@ -1524,6 +1534,7 @@ def ch_rain_obs(sources: dict[str, SourceResult]) -> Channel:
             if not rec:
                 continue
             got = True
+            _mark_time(ch, rec[-1].t)
             last1 = rec[-1].R1
             acc3 = sum(p.R1 for p in rec if p.t > rec[-1].t - timedelta(hours=3))
             acc12 = sum(p.R1 for p in rec if p.t > rec[-1].t - timedelta(hours=12))
@@ -1548,6 +1559,7 @@ def ch_rain_obs(sources: dict[str, SourceResult]) -> Channel:
             rr = None
         if rr is not None:
             got = True
+            _mark_time(ch, pts[-1].t)
             ch.level = max(ch.level, level_from(rr, CFG["rain_1h"]))
             ch.evidence.append(f"{CFG['wu_station']}: {rr:.1f} mm/h instantáneo, "
                                f"hoy {w.payload.get('precip_total')} mm")
@@ -1555,8 +1567,11 @@ def ch_rain_obs(sources: dict[str, SourceResult]) -> Channel:
     if m and m.status == "ok":
         for icao in ("LEIB",):
             raw = (m.payload["raw"].get(icao) or [])[-1:]
+            ser = (m.payload.get("series") or {}).get(icao) or []
             for line in raw:
                 got = True
+                if ser:
+                    _mark_time(ch, ser[-1].t)
                 if "+TSRA" in line or "+RA" in line:
                     ch.level = max(ch.level, 2)
                 elif "TS" in line.split(" ", 1)[-1] or "RA" in line.split(" ", 1)[-1]:
@@ -1602,6 +1617,7 @@ def ch_runoff(sources: dict[str, SourceResult], rain: Channel) -> Channel:
         return ch
     acc = sum(p.R1 for p in pts)
     i1 = pts[-1].R1
+    _mark_time(ch, pts[-1].t)
     wet = acc >= CFG["runoff_antecedent_mm"]
     lvl = level_from(i1, (15.0, 30.0, 50.0))
     if wet:
@@ -1630,6 +1646,8 @@ def ch_gustfront(sources: dict[str, SourceResult]) -> Channel:
             if sname == "metar" and st not in ("LEIB",):
                 continue
             got = True
+            if pts:
+                _mark_time(ch, pts[-1].t)
             v = gust_front(pts, window_min=window)
             lvl = rank[v["level"]]
             dkm = CFG["station_km"].get(st)
@@ -1661,8 +1679,16 @@ def ch_radar(src: SourceResult | None) -> Channel:
         ch.available = False
         ch.evidence.append(f"radar no disponible ({src.status if src else '—'})")
         return ch
-    fr = [f for f in src.payload["frames"] if not f["dup"]] or src.payload["frames"]
+    frames = src.payload["frames"]
+    fr = [f for f in frames if not f["dup"]] or frames
+    # Imágenes idénticas en todos los frames: con cielo despejado es normal (teselas vacías);
+    # con ecos presentes, el mismo campo durante toda la ventana indica radar congelado.
+    if len(frames) >= 2 and all(f["dup"] for f in frames[1:]) and frames[-1]["cover"].get(60, 0) > 0:
+        ch.available = False
+        ch.evidence.append(f"radar congelado: {len(frames)} frames con la misma imagen con ecos → UNKNOWN")
+        return ch
     last = fr[-1]
+    _mark_time(ch, last.get("time"))
     cov = last["cover"]
     near = last["nearest_km"]
     ch.evidence.append(f"cobertura de ecos: {cov[10]:.0%} ≤10 km · {cov[30]:.0%} ≤30 km · {cov[60]:.0%} ≤60 km; "
@@ -1726,6 +1752,7 @@ def ch_lightning(src: SourceResult | None) -> Channel:
         ch.available = False
         ch.evidence.append(f"rayos no disponibles ({src.status if src else '—'})")
         return ch
+    _mark_time(ch, src.data_time)
     fl = [(parse_time(t), d) for t, d in src.payload["flashes"]]
     n30 = sum(1 for _, d in fl if d <= 30)
     n60 = sum(1 for _, d in fl if d <= 60)
@@ -1777,22 +1804,35 @@ def ch_models(src: SourceResult | None) -> list[Channel]:
             chans.append(c)
             continue
         pt0 = per_pt[0]
-        p1_pt = max((x or 0) for x in pt0["pr"])
-        p12_pt = _rolling_max(pt0["pr"], 12)
-        p1_nb = max(max((x or 0) for x in p["pr"]) for p in per_pt if p["pr"])
-        p12_nb = max(_rolling_max(p["pr"], 12) for p in per_pt if p["pr"])
-        gust = max((x or 0) for x in pt0["gust"]) if pt0["gust"] else None
-        cape = max((x or 0) for x in pt0["cape"]) if pt0["cape"] else None
-        i_peak = max(range(len(pt0["pr"])), key=lambda i: pt0["pr"][i] or 0)
+        if all(x is None for x in pt0["pr"]):
+            c.available = False
+            c.evidence.append("precipitación sin valores (todo None): UNKNOWN, no 0 mm")
+            chans.append(c)
+            continue
+        _mark_time(c, src.data_time)
+        p1_pt = _vmax(pt0["pr"])
+        p12_pt = _window_max(pt0["pr"], 12)
+        nb = [p["pr"] for p in per_pt if p["pr"] and any(x is not None for x in p["pr"])]
+        p1_nb = max(_vmax(v) for v in nb)
+        w12 = [w for w in (_window_max(v, 12) for v in nb) if w is not None]
+        p12_nb = max(w12) if w12 else None
+        gust = _vmax(pt0["gust"] or [])
+        cape = _vmax(pt0["cape"] or [])
+        n_gap = sum(x is None for x in pt0["pr"])
+        if n_gap:
+            c.evidence.append(f"{n_gap} horas sin valor: no se cuentan como 0 mm; acumulados solo en ventanas completas")
+        i_peak = max(range(len(pt0["pr"])), key=lambda i: pt0["pr"][i] if pt0["pr"][i] is not None else -1)
         t_peak = pt0["time"][i_peak] if pt0["time"] else "?"
         # nivel: punto pesa entero; vecindad un escalón menos (error de posición)
-        lvl = max(level_from(p1_pt, CFG["rain_1h"]), level_from(p12_pt, CFG["rain_12h"]),
-                  max(0, max(level_from(p1_nb, CFG["rain_1h"]), level_from(p12_nb, CFG["rain_12h"])) - 1),
+        lvl = max(level_from(p1_pt, CFG["rain_1h"]),
+                  level_from(p12_pt, CFG["rain_12h"]) if p12_pt is not None else 0,
+                  max(0, max(level_from(p1_nb, CFG["rain_1h"]),
+                             level_from(p12_nb, CFG["rain_12h"]) if p12_nb is not None else 0) - 1),
                   level_from(gust, CFG["gust_model"]))
         c.level = min(lvl, 2)                       # un determinista nunca da 'alarm'
         c.group = "nwp_hr" if m in CFG["gate_models"] else "nwp_global"
-        c.evidence.append(f"punto: máx {p1_pt:.1f} mm/1h, {p12_pt:.0f} mm/12h (pico {t_peak}Z) · "
-                          f"vecindad ±17 km: {p1_nb:.1f} mm/1h, {p12_nb:.0f} mm/12h · "
+        c.evidence.append(f"punto: máx {p1_pt:.1f} mm/1h, {_n(p12_pt)} mm/12h (pico {t_peak}Z) · "
+                          f"vecindad ±17 km: {p1_nb:.1f} mm/1h, {_n(p12_nb)} mm/12h · "
                           f"racha {_n(gust)} km/h · CAPE {_n(cape)} J/kg")
         chans.append(c)
     return chans
@@ -1802,12 +1842,19 @@ def _n(x):
     return "—" if x is None else f"{x:.0f}"
 
 
-def ch_trajectory(tracks: dict | None) -> tuple[Channel, bool]:
+def _vmax(vals: list) -> float | None:
+    """Máximo de los valores presentes; None si no hay ninguno (un hueco no es 0)."""
+    v = [x for x in vals if isinstance(x, (int, float)) and not math.isnan(x)]
+    return max(v) if v else None
+
+
+def ch_trajectory(tracks: dict | None, data_time: str | None = None) -> tuple[Channel, bool]:
     c = Channel("trayectoria_nucleo", kind="model", confidence="media", group="nwp_hr")
     if not tracks:
         c.available = False
         c.evidence.append("rejilla de modelos no disponible")
         return c, False
+    _mark_time(c, data_time)
     gate = False
     for m, t in tracks.items():
         if t["max_lat"] is None:
@@ -1833,6 +1880,7 @@ def ch_ensemble(src: SourceResult | None) -> Channel:
         c.available = False
         c.evidence.append(f"ensemble no disponible ({src.status if src else '—'})")
         return c
+    _mark_time(c, src.data_time)
     mem = src.payload["members"]
     # solo miembros con ventanas completas; si quedan <10, el canal no opina
     w24 = [_window_max(m, 24) for m in mem]
@@ -1876,13 +1924,18 @@ def ch_sea(src: SourceResult | None) -> Channel:
         c.evidence.append(f"oleaje no disponible ({src.status if src else '—'})")
         return c
     h = src.payload
+    if not any(x is not None for x in h.get("wave_height") or []):
+        c.available = False
+        c.evidence.append("oleaje sin valores (todo None): UNKNOWN, no 0 m")
+        return c
+    _mark_time(c, src.data_time)
     best, best_t, best_dir = 0.0, "", None
     for t, hs, d in zip(h.get("time", []), h.get("wave_height", []), h.get("wave_direction", [])):
         if hs is None or d is None:
             continue
         if in_sector(d, CFG["bay_open_sector"]) and hs > best:
             best, best_t, best_dir = hs, t, d
-    allmax = max((x or 0) for x in h.get("wave_height", [0]) or [0])
+    allmax = _vmax(h.get("wave_height") or [])
     c.level = min(2, level_from(best, CFG["wave_hs"]))
     c.evidence.append(f"Hs máx entrando por el sector abierto {CFG['bay_open_sector']}: {best:.1f} m "
                       f"({best_t}Z, {_n(best_dir)}°) · Hs máx cualquier dirección {allmax:.1f} m")
@@ -1917,6 +1970,7 @@ def ch_gauges(src: SourceResult | None, state: dict) -> Channel:
                                "no se usa como lluvia de hoy")
             continue
         fresh += 1
+        _mark_time(ch, t)
         daily.setdefault(g["id"], {})[day] = g["lluvia_dia"]
         for k in list(daily[g["id"]]):
             if k < (t.astimezone(MADRID).date() - timedelta(days=3)).isoformat():
@@ -1979,6 +2033,7 @@ def ch_sea_obs(src: SourceResult | None) -> Channel:
             continue
         got = True
         last = ser[-1]
+        _mark_time(ch, last["t"])
         age = (now_utc() - parse_time(last["t"])).total_seconds() / 60
         trend = last["hm0"] - ser[-4]["hm0"] if len(ser) >= 4 else None
         d = last.get("dmd")
@@ -2010,6 +2065,7 @@ def ch_wind_obs(src: SourceResult | None) -> Channel:
         got = True
         gmax = max((r.get("vv_mx") or r.get("vv_md") or 0) for r in recent) * 3.6
         last = recent[-1]
+        _mark_time(ch, last["t"])
         # Puertos de Ibiza/Formentera y la boya del canal están a ≥25 km: precursores, no Portinatx.
         ch.level = max(ch.level, min(level_from(gmax, CFG["gust_model"]), CFG["far_obs_cap"]))
         ch.evidence.append(f"{name}: racha máx 1 h {gmax:.0f} km/h; último {(last.get('vv_md') or 0) * 3.6:.0f} km/h "
@@ -2072,6 +2128,52 @@ def precaution_hold(manual: dict) -> str | None:
 
 
 # ════════════════════════════════════════════════════════════════════════
+# FRESCURA (#16): un dato viejo, vacío o sin hora no es una observación
+# ════════════════════════════════════════════════════════════════════════
+def channel_age_limit(name: str) -> float | None:
+    lim = CFG["channel_max_age_min"]
+    if name in lim:
+        return lim[name]
+    return lim["modelo"] if name.startswith("modelo") else None
+
+
+def _mark_time(ch: Channel, t) -> None:
+    """Registra en el canal la hora del dato más reciente realmente usado."""
+    tt = parse_time(t) if isinstance(t, str) else t
+    if tt is None:
+        return
+    cur = parse_time(ch.data_time) if ch.data_time else None
+    if cur is None or tt > cur:
+        ch.data_time = tt.isoformat()
+
+
+def apply_freshness(channels: list[Channel], now: datetime | None = None) -> None:
+    """Pasa a UNKNOWN (available=False, nivel 0, sin señal local) todo canal vivo cuyo dato más
+    reciente no tiene hora, supera su edad máxima o viene del futuro. Ausencia de dato ≠ calma."""
+    now = now or now_utc()
+    for c in channels:
+        if c.kind == "institutional" or not c.available:
+            continue
+        lim = channel_age_limit(c.name)
+        t = parse_time(c.data_time) if c.data_time else None
+        why = None
+        if lim is None:
+            why = "canal sin edad máxima declarada en CFG"
+        elif t is None:
+            why = "sin hora de dato verificable"
+        else:
+            age = (now - t).total_seconds() / 60
+            c.metrics["age_min"] = round(age)
+            if age > lim:
+                why = f"dato de hace {age:.0f} min > límite {lim:.0f} min"
+            elif age < -10:
+                why = f"dato fechado {-age:.0f} min en el futuro"
+        if why:
+            c.available, c.level, c.local = False, 0, False
+            c.evidence.insert(0, f"STALE → UNKNOWN: {why}; no se usa como observación")
+
+
+# ════════════════════════════════════════════════════════════════════════
 # FUSIÓN + HISTÉRESIS
 # ════════════════════════════════════════════════════════════════════════
 def fuse(channels: list[Channel], hr_gate: bool = False) -> dict:
@@ -2114,15 +2216,25 @@ def fuse(channels: list[Channel], hr_gate: bool = False) -> dict:
     top = sorted([c for c in channels if c.available], key=lambda c: -c.level)[:3]
     reasons += [f"{c.name}={LEVELS[c.level]}" for c in top if c.level]
     missing = [c.name for c in channels if not c.available]
-    # Ausencia de datos ≠ tranquilidad: con <2 canales observados vivos se declara
-    # cobertura insuficiente y la histéresis no desescala.
+    # Ausencia de datos ≠ tranquilidad: con <2 canales observados vivos, o con una familia de
+    # fenómeno obligatoria (lluvia) sin ningún canal observado vivo, se declara cobertura
+    # insuficiente y la histéresis no desescala. Viento y mar vivos no dicen nada de la lluvia.
     n_obs_total = sum(1 for c in channels if c.kind == "obs")
-    insufficient = len(obs) < CFG["min_obs_channels"]
-    if insufficient:
+    families = {f: ("OK" if any(HAZARD_FAMILY.get(c.name) == f for c in obs) else "UNKNOWN")
+                for f in CFG["required_families"]}
+    blind = [f for f, st in families.items() if st == "UNKNOWN"]
+    insufficient = len(obs) < CFG["min_obs_channels"] or bool(blind)
+    if len(obs) < CFG["min_obs_channels"]:
         reasons.append(f"⚠ COBERTURA INSUFICIENTE: {len(obs)}/{n_obs_total} canales observados — "
                        f"un 'quiet' aquí no significa calma")
+    for f in blind:
+        reasons.append(f"⚠ COBERTURA INSUFICIENTE: familia {f} sin ningún canal observado vivo — "
+                       f"{f} UNKNOWN, un 'quiet' aquí no significa calma")
+    cov = f"{len(obs)}/{n_obs_total} canales observados activos"
+    if blind:
+        cov += " · sin dato: " + ", ".join(blind)
     return {"proposed": LEVELS[level], "reasons": reasons, "missing": missing, "insufficient": insufficient,
-            "obs_coverage": f"{len(obs)}/{n_obs_total} canales observados activos"}
+            "families": families, "obs_coverage": cov}
 
 
 def apply_hysteresis(proposed: str, state: dict, key: str = "level", *,
@@ -2320,7 +2432,8 @@ def deescalation_decision(current: str, proposed: str, *, gauges: Channel | None
     if manual_hold:
         conds.append(("LOCAL_HAZARD_OBSERVED", "PENDING_EVIDENCE", manual_hold))
     if insufficient:
-        conds.append(("COVERAGE", "PENDING_EVIDENCE", "menos de 2 canales observados vivos"))
+        conds.append(("COVERAGE", "PENDING_EVIDENCE",
+                      "cobertura insuficiente: menos de 2 canales observados vivos o familia lluvia sin dato"))
     if radar is not None and radar.metrics.get("coverage_gap"):
         conds.append(("RADAR_COVERAGE_GAP", "PENDING_EVIDENCE", "radar mudo con lluvia medida cerca"))
     if dissent and pro == 0:
@@ -2626,19 +2739,22 @@ def cycle(state: dict) -> dict:
     rain = ch_rain_obs(srcs)
     g = srcs.get("model_grid")
     tracks = update_run_tracks(state, g.payload) if g and g.status == "ok" else None
-    traj, hr_gate = ch_trajectory(tracks)
+    traj, hr_gate = ch_trajectory(tracks, g.data_time if g else None)
     gauges = ch_gauges(srcs.get("meteoclimatic"), state)
     archived = update_ledgers(state, srcs)                       # archivo propio de observaciones (forense)
     radar = ch_radar(srcs.get("radar"))
     light = ch_lightning(srcs.get("rayos_mtg_li"))
     wind = ch_wind_obs(srcs.get("portus"))
     sea_obs = ch_sea_obs(srcs.get("portus"))
-    radar_coverage_check(radar, gauges, rain)
-    sea_model_check(sea_obs, srcs.get("marine"), srcs.get("portus"))                     # F7: radar mudo con lluvia medida
-    observed = [rain, gauges, ch_runoff(srcs, rain), ch_gustfront(srcs), radar, light, wind, sea_obs]
-    manual = manual_obs(state, issued)
+    runoff, gustfront = ch_runoff(srcs, rain), ch_gustfront(srcs)
     forecast = [traj, *ch_models(srcs.get("openmeteo_det")), ch_ensemble(srcs.get("openmeteo_ens")),
                 ch_sea(srcs.get("marine"))]
+    # #16: lo caducado o sin hora pasa a UNKNOWN antes de cualquier comprobación o fusión
+    apply_freshness([rain, gauges, runoff, gustfront, radar, light, wind, sea_obs, *forecast], issued)
+    radar_coverage_check(radar, gauges, rain)
+    sea_model_check(sea_obs, srcs.get("marine"), srcs.get("portus"))                     # F7: radar mudo con lluvia medida
+    observed = [rain, gauges, runoff, gustfront, radar, light, wind, sea_obs]
+    manual = manual_obs(state, issued)
     inst_all = ch_institutional(srcs["aemet_cap"], srcs.get("meteoalarm"))
     inst_now = ch_institutional(srcs["aemet_cap"], srcs.get("meteoalarm"), active_only=True)
     cid = f"NWC-{issued:%Y%m%dT%H%M%SZ}"
@@ -2685,7 +2801,8 @@ def cycle(state: dict) -> dict:
     bias = update_bias(state, issued, radar, gauges)
     exit_cond = [f"aviso oficial vigente ≤ {LEVELS[max(0, LEVELS.index(now_lvl) - 1)]}",
                  "sin peligro local observado ≥ nivel actual en 3 ciclos seguidos",
-                 f"≥{CFG['min_obs_channels']} canales observados vivos (ahora {fz_now['obs_coverage']})",
+                 f"≥{CFG['min_obs_channels']} canales observados vivos y ≥1 por familia "
+                 f"{'/'.join(CFG['required_families'])} (ahora {fz_now['obs_coverage']})",
                  f"sin escorrentía/anegamiento observados en las últimas {CFG['manual_obs_ttl_h']} h",
                  "pluviómetro vecino fresco que no contradiga la bajada desde alert/alarm (retador)",
                  "sin disenso abierto (para bajar a quiet) ni anomalías sin revisar"]
@@ -4183,7 +4300,8 @@ def build_app(snap: dict, state: dict) -> dict[str, dict]:
                        "overrides": gv["overrides"], "predictions": state.get("predictions", [])[-30:],
                        "predictions_summary": gv["predictions"]["summary"], "bias": gv["bias_radar_gauge"],
                        "episode": gv["episode"]},
-        "channels": [{k: c[k] for k in ("name", "level", "kind", "confidence", "evidence", "available", "local")}
+        "channels": [{**{k: c[k] for k in ("name", "level", "kind", "confidence", "evidence", "available", "local")},
+                      "data_time": c.get("data_time"), "age_min": (c.get("metrics") or {}).get("age_min")}
                      for c in snap["channels"]],
         "sources": snap["sources"],
         "history": hist,
