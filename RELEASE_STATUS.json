@@ -1,17 +1,28 @@
 {
-  "release": "0.4.0",
-  "date": "2026-11-10",
+  "release": "0.6.0",
+  "date": "2026-11-11",
   "product": "MeteoPortinatx Unified",
   "components": {
     "portinatx_core": "0.6.1",
     "pirineo_core": "0.3.0",
     "pirineo_extended": "0.3.0",
-    "unified_application": "0.4.0"
+    "unified_application": "0.6.0",
+    "public_api": "0.6.0",
+    "regional_engine": "0.6.0"
   },
-  "delivery": "source_integrated",
+  "delivery": "source_release_pending_deployment_verification",
   "web_deployed": false,
-  "verified_live_data": false,
+  "render_backend_deployed": false,
+  "live_bridge_enabled": false,
+  "forensic_state_durable": false,
+  "verified_live_data": "Regional adapters validated with fixtures; live provider access blocked in the development environment. Verify Actions and Pages separately.",
   "scientific_skill_calibrated": false,
   "secrets_in_repository": false,
-  "notes": "Separate observations and alerts; historical calibration is experimental; connect and deploy web in next phase."
+  "notes": "Shared regional radar, Meteoalarm warnings, METAR observations and daily forensic verification. Pirineo excludes marine. Pages updates every six hours, not continuous surveillance. Forensic measurements stay local; VERIFIED is a human declaration. Render Free has no durable forensic state. This metadata describes readiness at source commit, not a live deployment guarantee.",
+  "previous_release_deployment": {
+    "release": "0.5.1",
+    "web_deployed": true,
+    "render_backend_deployed": true,
+    "basis": "metadata inherited from origin/main; not reverified here"
+  }
 }

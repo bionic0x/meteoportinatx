@@ -23,7 +23,7 @@ Desde la raíz del repositorio:
 # Inspeccionar perfiles y módulos disponibles, sin red.
 python3 src/nowcast.py zone list
 
-# Consultar exactamente qué peticiones se realizarán.
+# Consultar peticiones iniciales y fuentes seleccionadas.
 python3 src/nowcast.py zone plan portinatx
 python3 src/nowcast.py zone plan pirineo
 
@@ -89,11 +89,11 @@ El nuevo flujo comparte adquisición, empaquetado y diagnóstico básico. Las do
 
 | Capacidad que debe extraerse al núcleo común | Trabajo pendiente |
 |---|---|
-| Radar, satélite, observaciones y avisos oficiales | Adaptadores configurables por país/región, cobertura y autorización del proveedor |
+| Satélite y cobertura geográfica exacta | Radar, METAR y avisos por áreas implementados; pendientes satélite, polígonos oficiales y otras redes locales |
 | DEM regional, perfiles verticales y diagnóstico de relieve | Descarga regional acotada, caché, procedencia y parametrización de puntos, transectos y exposiciones |
-| Forense, replay y calibración | Registro y evaluación por zona, variable y episodio, conservando separación de ajuste y test |
+| Calibración y replay físico | Archivo y evaluación forense diaria implementados; pendientes correcciones aprendidas, simulación física e inferencia fuera de muestra |
 | Metaanálisis extendido y diagnóstico marino | Eliminar estaciones/boyas/ventanas fijas; conservar soporte por variable y verificación temporal/espacial |
-| Interfaz común y selector de descargas | Informe HTML común implementado; pendiente integrar descargas y observatorios heredados en una aplicación interactiva |
+| Configurador gráfico | Informe común y descargas web implementados; pendiente edición visual del perfil |
 | Instalación/importación de packs | Verificación, archivo por zona, historial e informe implementados; pendiente caché incremental de proveedores y gestión multiusuario |
 
 Esta matriz sustituye la prioridad anterior de tratar Pirineo únicamente como expansión posterior: las capacidades compartidas deben desarrollarse y probarse sobre ambas zonas.
@@ -111,3 +111,70 @@ Un fallo al escribir CURRENT deja el índice registrado y el puntero anterior; r
 Se verifican ambos perfiles, exclusión del mar en Pirineo, perfiles personalizados, hashes, instalación, histórico, comparación y fallos de proveedor con pruebas offline. Chromium comprueba el backend entre orígenes y el informe común en móvil, incluidos filtro de puntos y valores ausentes. En este navegador gestionado se sirve el HTML por HTTP local porque la política bloquea `file://`; la vista no necesita servicios ni recursos externos.
 
 La consulta real a `api.open-meteo.com` sigue recibiendo `CONNECT 403` en este entorno. Por ello, las descargas de proveedores no están verificadas en vivo. No se cambiaron las reglas de red ni la configuración publicada. Antes de habilitar uso real hay que permitir los dominios necesarios, comprobar respuestas y revisar cuotas, atribución y términos de uso.
+
+## Radar, avisos y observaciones compartidos (0.6.0)
+
+Las plantillas de ambas zonas seleccionan ahora `radar`, `warnings` y `observations`. No hacen falta claves para estos adaptadores públicos; disponibilidad, cuota, cobertura y condiciones dependen del proveedor. Las peticiones idénticas se reutilizan dentro de cada descarga, incluidos metadatos y teselas de radar.
+
+- `radar`: hasta tres imágenes recientes de RainViewer, teselas de 256 px a zoom 7 alrededor de cada punto. Se guardan imagen, hash, fecha y posición del punto para verlas sin red. Se rechazan imágenes de más de dos horas; se marcan antiguas desde 20 minutos. Cobertura no verificada, sin conversión a lluvia local ni aviso. No es una animación continua; una imagen transparente no demuestra tiempo seco. Atribución: [RainViewer](https://www.rainviewer.com/), revisar sus condiciones antes de redistribuir o ampliar uso.
+- `warnings`: boletines Atom oficiales distribuidos por [Meteoalarm](https://meteoalarm.org/), filtrados por nombres de áreas configurados, inicio y vencimiento. Se muestra frescura del boletín y países fallidos. No hay resolución geográfica por polígonos ni garantía de exhaustividad. Un boletín sin coincidencias no acredita ausencia de avisos. Conservar atribución a Meteoalarm y al organismo emisor y revisar condiciones nacionales.
+- `observations`: METAR de [Aviation Weather Center](https://aviationweather.gov/) de estaciones elegidas, hasta 100 km, últimas 24 horas, marcadas antiguas desde dos horas. Viento de nudos a km/h; campos ausentes permanecen nulos. La distancia y altitud pueden impedir representatividad local. No se usan automáticamente como verdad diaria para entrenar o verificar nieve/lluvia.
+
+Los datos de previsión/elevación/ensemble/mar proceden de [Open-Meteo](https://open-meteo.com/), con atribución CC BY 4.0 y condiciones de uso de la API. Los ZIP contienen respuestas normalizadas para los tres adaptadores nuevos; las respuestas de modelo conservan su estructura y unidades.
+
+En un perfil personalizado, además de añadir los módulos deseados, configura por ejemplo:
+
+```json
+"sources": {
+  "metar": ["LESU", "LFMP"],
+  "warning_feeds": [
+    {"country": "spain", "areas": ["pirineo de girona", "pirineo de lleida"]},
+    {"country": "france", "areas": ["pyrénées-orientales", "ariège"]},
+    {"country": "andorra", "areas": ["andorra"]}
+  ]
+}
+```
+
+Revisar los nombres reales de las áreas del proveedor para cada territorio. Los informes muestran el alcance configurado y los fallos. Las estaciones de la plantilla son referencias cercanas, no instrumentación de cada ladera. `plan` enumera las peticiones iniciales; el radar añade teselas a partir de metadatos y avisos consulta todos los países configurados.
+
+## Forense: del archivo a la evaluación
+
+1. Descargar y archivar paquetes **antes** del episodio. Conservarlos con `zone install`; el hash identifica el contenido, pero no certifica fecha ni autoría frente a manipulación.
+2. Revisar independientemente las medidas y preparar un JSON de observaciones como el ejemplo inferior. La declaración `VERIFIED` es responsabilidad del revisor; las pistas comunitarias de `episode_evidence` siguen sin verificar y no entran automáticamente en este flujo.
+3. Ejecutar la evaluación y revisar pares, exclusiones, soporte, distancias, tiempos y fuentes. Se elige la última captura elegible anterior al día; una captura posterior o con un módulo recogido después del inicio queda excluida. No se escoge retrospectivamente el pronóstico que mejor coincide.
+4. Conservar JSON, HTML, medidas originales y paquetes. El informe del paquete permite revisar radar, avisos y observaciones disponibles en la captura. Este replay es una reconstrucción de evidencia archivada, no una simulación física ni recuperación de datos que no se archivaron.
+
+```bash
+python3 MeteoPortinatx.pyz zone forensic \
+  --forecasts archivo-antes-1.zip archivo-antes-2.zip \
+  --observations medidas-revisadas.json \
+  --output evaluacion.json --html evaluacion.html --max-distance-km 1
+```
+
+Ejemplo **ficticio** de formato, no una observación real:
+
+```json
+[
+  {
+    "event": "episodio_ejemplo", "point": "masella",
+    "variable": "precipitation", "value": 20, "unit": "mm", "aggregation": "sum",
+    "start": "2026-11-11T00:00:00Z", "end": "2026-11-12T00:00:00Z",
+    "observed_at": "2026-11-12T01:00:00Z",
+    "latitude": 42.35, "longitude": 1.9,
+    "source_url": "https://example.org/medida-revisada", "source_id": "instrumento_ejemplo",
+    "review_status": "VERIFIED", "baseline": 30
+  }
+]
+```
+
+Se exige un día exacto UTC completo y medida posterior al cierre. Variables: `precipitation` mm/sum, `snowfall` cm/sum, `temperature_2m` °C/min, `wind_gusts_10m` km/h/max; solo en perfiles con mar, `wave_height` m/max, `wave_period` s/max y `wave_direction` °/circular_mean. Los valores ausentes o con unidades no verificadas no puntúan. Coordenadas dentro de 1 km por defecto (configurable hasta 20); esto no verifica altitud, exposición ni calidad instrumental. El indicador `collection_lead_hours` se refiere a la captura, no a una inicialización de modelo autenticada.
+
+Resultados: sesgo, MAE, RMSE, diferencia de MAE con la referencia opcional `baseline` sobre pares comunes, Brier para lluvia ≥10 mm y nieve ≥5 cm cuando hay ensembles válidos. Los errores de dirección son circulares. Cada episodio pesa igual, con número de pares y episodios visible; el usuario debe verificar independencia de las etiquetas. Duplicados idénticos se deduplican y contradictorios se rechazan. Sin intervalos de confianza, calibración aprendida ni prueba de generalización: esos pasos requieren más episodios independientes y una separación temporal de ajuste/prueba.
+
+Los archivos forenses **no se publican automáticamente**. Pages solo recoge perfiles predefinidos y datos públicos obtenidos durante su ejecución. No importa el estado local ni observaciones privadas.
+
+## Publicación y red
+
+El workflow de Pages construye el programa, valida ambos dominios, recoge módulos regionales y publica `/zones/portinatx/`, `/zones/pirineo/` y `/downloads/`. Exige al menos un día de temperatura completo por punto. Los fallos complementarios no bloquean la previsión: quedan visibles como no disponibles. Una nueva ejecución falla antes de subir el sitio si falta previsión básica; la versión desplegada anterior permanece. La programación es cada seis horas: radar, METAR y avisos pueden envejecer mucho antes de la próxima actualización. Consultar las fuentes originales para situación actual.
+
+Dominios adicionales necesarios para verificar desde un entorno restringido: `api.open-meteo.com`, `ensemble-api.open-meteo.com`, `marine-api.open-meteo.com`, `api.rainviewer.com`, `tilecache.rainviewer.com`, `feeds.meteoalarm.org`, `aviationweather.gov`. La comprobación de despliegues requiere `api.github.com`, `bionic0x.github.io` y, para Render, su dominio de servicio y la API pertinente. No se modificó la configuración publicada del entorno.

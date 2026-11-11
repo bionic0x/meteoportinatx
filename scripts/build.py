@@ -16,8 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 DIST = ROOT / "dist"
-SOURCES = ("__main__.py", "nowcast.py", "nowcast_hub.html", "portinatx_degen.py",
-           "portinatx_app.html", "pirineo.py", "pirineo_app.html", "pirineo_meta.py", "zone_engine.py", "weather_core.py", "zone_packages.py", "zone_report.py")
+SOURCES = ("__main__.py", "nowcast.py", "nowcast_hub.html", "public_fetch.js", "portinatx_degen.py",
+           "portinatx_app.html", "pirineo.py", "pirineo_app.html", "pirineo_meta.py", "zone_engine.py", "weather_core.py", "zone_packages.py", "zone_report.py", "zone_sources.py", "zone_forensics.py", "episode_evidence.py")
 
 
 def main() -> int:
@@ -49,7 +49,7 @@ def main() -> int:
         sep = ";" if sys.platform.startswith("win") else ":"
         args = [sys.executable, "-m", "PyInstaller", "--onefile", "--name", "MeteoPortinatx",
                 "--distpath", str(DIST), "--workpath", str(ROOT / "build"), "--specpath", str(ROOT / "build")]
-        for page in ("nowcast_hub.html", "portinatx_app.html", "pirineo_app.html"):
+        for page in ("nowcast_hub.html", "portinatx_app.html", "pirineo_app.html", "public_fetch.js"):
             args.extend(("--add-data", f"{SRC / page}{sep}."))
         args.append(str(SRC / "nowcast.py"))
         subprocess.run(args, check=True)

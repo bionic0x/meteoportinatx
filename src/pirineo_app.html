@@ -236,13 +236,27 @@ async function start(){
     if (location.protocol.startsWith("http")) setInterval(loadLocal, 60000);
   }
 }
+let localLoadInFlight = false;
 async function loadLocal(){
-  let changed=false;
-  for (const p of ["core","dem","grid","series","extended"]) {
-    try { const item=window.meteoLoadPart ? await window.meteoLoadPart("pirineo",p,`api/${p}.json`) : null; const r=item ? null : await fetch(`api/${p}.json`,{cache:"no-store"}); if(item || r.ok){ D[p]=item ? item.data : await r.json(); changed=true; D.remote=item?.source||"local"; } }catch(e){}
-  }
-  if (changed){ S.Z=null; renderAll(); }
+  if (localLoadInFlight) return;
+  localLoadInFlight = true;
+  try {
+    const names = ["core","dem","grid","series","extended"];
+    const packet = window.meteoLoadDomain
+      ? await window.meteoLoadDomain("pirineo", names, "api/")
+      : {parts: Object.fromEntries(await Promise.all(names.map(async part => {
+          const r = await fetch(`api/${part}.json`, {cache:"no-store"});
+          if (!r.ok) throw Error(`HTTP ${r.status}`);
+          return [part,await r.json()];
+        }))), source: "local"};
+    Object.assign(D, packet.parts);
+    D.remote = packet.source;
+    S.Z = null;
+    renderAll();
+  } catch (e) { /* Keep previous coherent domain on failure. */ }
+  finally { localLoadInFlight = false; }
 }
+
 async function setupLocalRefresh(){
   try{const r=await fetch("api/status",{cache:"no-store"});if(!r.ok)return;}catch(e){return;}
   const b=$("btn-refresh"); b.hidden=false;b.textContent="Actualizar ahora";

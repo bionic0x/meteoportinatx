@@ -30,7 +30,7 @@ class BrowserFetch(unittest.TestCase):
         class Page(BaseHTTPRequestHandler):
             def log_message(self, *args): pass
             def do_GET(self):
-                body = b'{"snapshot":true}' if self.path == '/snapshot.json' else b'<html></html>'
+                body = b'{"snapshot":true}' if self.path == '/static/core.json' else b'<html></html>'
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json' if self.path.endswith('.json') else 'text/html')
                 self.end_headers()
@@ -52,7 +52,7 @@ const {chromium} = require('playwright');
  await page.goto(process.argv[2]);
  await page.addScriptTag({path:process.argv[4]});
  await page.evaluate(base=>window.METEO_BACKEND_URL=base,process.argv[3]);
- const result=await page.evaluate(()=>window.meteoLoadPart('portinatx','core','/snapshot.json'));
+ const result=await page.evaluate(()=>window.meteoLoadPart('portinatx','core','/static/core.json'));
  if(result.source !== process.argv[5]) throw Error(JSON.stringify(result));
  console.log(result.source);
  } finally {await browser.close();}

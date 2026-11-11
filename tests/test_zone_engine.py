@@ -19,9 +19,10 @@ class Zones(unittest.TestCase):
             profile['modules'] = [m for m in z.MODULES if m != 'marine' or profile['setting'] != 'inland']
             z.validate(profile)
             for module in profile['modules']:
-                url = z.request_url(module, profile['points'][0])
+                url = z.request_url(module, profile['points'][0],profile)
                 self.assertEqual(urlsplit(url).hostname, z.MODULES[module]['host'])
-                self.assertIn('latitude=', url)
+                if module not in ('radar','warnings','observations'):
+                    self.assertIn('latitude=', url)
 
     def test_invalid_profiles_fail_before_any_network_or_output(self):
         for change in [{'id': '../escape'}, {'modules': ['https://evil.invalid']},
