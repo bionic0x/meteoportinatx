@@ -42,6 +42,10 @@ La consola pirenaica integra AEMET, Meteocat XEMA y Météo-France DPObs. Una pu
 
 El manual describe la intensidad de la tabla general como **máximo diario**, no como intensidad actual. El parser de páginas individuales conserva el campo `intensidad_mmh`, cuya semántica necesita verificación antes de tratarlo como instantáneo. El manual de 2014 también describe posibles subestimaciones de lluvia y viento; son advertencias orientativas que dependen de la estación, no factores de corrección universales.
 
+## Sensores y háptica del teléfono (experimental)
+
+La ruta `/dispositivo/` ofrece vibración opcional al subir la señal del ciclo o perderse un diagnóstico y muestra sensores compatibles con el navegador. Barómetro, termómetro e higrómetro requieren un puente nativo externo que no se incluye. Las mediciones se mantienen en el dispositivo y caducan; activar altitud requiere permiso de geolocalización. Solo funciona con la página abierta y visible: **no es una alerta push ni vigilancia continua**. La ausencia de vibración no significa ausencia de peligro. [Contrato y límites](docs/DISPOSITIVO-SENSORES.md).
+
 ## En marcha en tu equipo
 
 Requiere Python 3.10 o superior y biblioteca estándar. Algunas fuentes necesitan credenciales opcionales, que deben mantenerse fuera de Git.
