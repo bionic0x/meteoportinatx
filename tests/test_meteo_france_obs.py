@@ -49,6 +49,16 @@ class MFranceObservations(unittest.TestCase):
         self.assertIsNone(mf.measurement(row("2026-11-11T15:00:00"),STA,NOW))
         self.assertIsNone(mf.measurement(row("2026-11-11T15:00:00Z","66001002"),STA,NOW))
 
+    def test_api_key_header_not_bearer(self):
+        with mock.patch.dict("os.environ",{"METEOFRANCE_API_KEY":"TEST-JWT-ONLY"}):
+            with mock.patch.object(mf.pd,"http_get",return_value=b"fake csv") as request:
+                mf._request("/liste-stations",{"format":"csv"})
+                kwargs=request.call_args.kwargs
+                self.assertEqual(kwargs["headers"].get("apikey"),"TEST-JWT-ONLY")
+                self.assertNotIn("Authorization",kwargs["headers"])
+                self.assertNotIn("TEST-JWT-ONLY",request.call_args.args[0])
+                self.assertEqual(kwargs["retries"],0)
+
     def test_missing_secret_fails_before_http(self):
         with mock.patch.dict("os.environ",{},clear=True):
             with mock.patch.object(mf.pd,"http_get") as request:
@@ -60,34 +70,6 @@ class MFranceObservations(unittest.TestCase):
             with mock.patch.object(mf,"_request",return_value="Id_station;nom;latitude;longitude\n") as request:
                 with self.assertRaises(ValueError):mf.fetch_observations(NOW)
                 self.assertEqual(request.call_count,1)
-
-class Credential(unittest.TestCase):
-    def test_api_key_goes_in_apikey_header_first(self):
-        with mock.patch.dict("os.environ",{"METEOFRANCE_API_KEY":"TEST-ONLY"}):
-            with mock.patch.object(mf.pd,"http_get",return_value=b"ok") as get:
-                self.assertEqual(mf._request("/liste-stations",{"format":"csv"}),"ok")
-        headers=get.call_args.kwargs["headers"]
-        self.assertEqual(headers.get("apikey"),"TEST-ONLY")
-        self.assertNotIn("Authorization",headers)
-        self.assertNotIn("TEST-ONLY",get.call_args.args[0])
-
-    def test_bearer_only_after_a_401(self):
-        calls=[]
-        def get(url,headers,**kw):
-            calls.append(headers)
-            if "apikey" in headers:
-                raise RuntimeError(f"GET falló ({url}): HTTP Error 401: Unauthorized")
-            return b"ok"
-        with mock.patch.dict("os.environ",{"METEOFRANCE_API_KEY":"TEST-ONLY"}):
-            with mock.patch.object(mf.pd,"http_get",side_effect=get):
-                self.assertEqual(mf._request("/liste-stations"),"ok")
-        self.assertEqual(calls[1].get("Authorization"),"Bearer TEST-ONLY")
-
-    def test_outage_is_not_retried_with_another_credential(self):
-        with mock.patch.dict("os.environ",{"METEOFRANCE_API_KEY":"TEST-ONLY"}):
-            with mock.patch.object(mf.pd,"http_get",side_effect=RuntimeError("HTTP Error 503")) as get:
-                with self.assertRaises(RuntimeError):mf._request("/liste-stations")
-        self.assertEqual(get.call_count,1)
 
 if __name__=="__main__":
     unittest.main()
