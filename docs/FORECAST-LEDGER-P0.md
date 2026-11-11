@@ -100,3 +100,19 @@ export METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger"
 python3 src/nowcast.py export --domain portinatx
 python3 src/forecast_ledger.py --root "$METEO_LEDGER" verify
 ```
+
+## 8. Ciclo supervisado en equipo persistente (Linux, opcional)
+
+`scripts/forensic_cycle.py` ejecuta una captura de Portinatx y verifica el ledger privado. Un bloqueo impide dos ejecuciones simultáneas de este comando; no impide que otro proceso use `nowcast.py` directamente. El proceso exige `METEO_LEDGER` como ruta absoluta fuera del repositorio, protege el directorio con modo 700 y escribe `cycle-health.json` de forma atómica con recuentos, fecha y estado `OK`, `NO_DATA`, `DEGRADED` o `ERROR`. No guarda la salida ni los mensajes de error de proveedores, que podrían incluir credenciales. `OK` solo certifica que el ciclo y la comprobación local terminaron, **no** que la predicción sea buena, que las observaciones tengan QC o que las copias funcionen. La ausencia de datos no se considera éxito. La ejecución tiene límite de 20 minutos; un bloqueo activo devuelve código 75.
+
+En un Linux de tu propiedad que permanezca encendido, con el repositorio ya instalado y datos/configuración privados del motor, ejecuta primero manualmente:
+
+```bash
+export METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger"
+python3 /RUTA/ABSOLUTA/meteoportinatx/scripts/forensic_cycle.py
+cat "$METEO_LEDGER/cycle-health.json"
+```
+
+Para la programación se proporcionan `scripts/systemd/meteo-forensic.service` y `.timer`: copia ambos a `~/.config/systemd/user/`, sustituye `/PATH/TO` por rutas absolutas reales en el servicio y ejecuta `systemctl --user daemon-reload`, `systemctl --user enable --now meteo-forensic.timer` y `systemctl --user list-timers meteo-forensic.timer`. Inspecciona `systemctl --user status meteo-forensic.service` y `journalctl --user -u meteo-forensic.service`. El servicio corre al inicio y cada hora mientras el equipo y el servicio de usuario estén activos. El temporizador puede recuperar una ejecución perdida al volver, **no recrea retrospectivamente predicciones ni observaciones de las horas sin servicio**. Comprueba la configuración del servicio de usuario del sistema: puede detenerse al cerrar sesión. No pongas claves en estos ficheros; el motor carga su configuración local privada.
+
+Este mecanismo **no se ha instalado en ningún equipo** ni crea alojamiento duradero. Render Free tiene almacenamiento efímero y no es adecuado para este archivo; GitHub Pages/Actions no son un ledger privado persistente. Una copia de seguridad independiente y una restauración comprobada siguen siendo imprescindibles. Un fallo o ausencia del equipo no genera capturas; vigila la edad de `cycle-health.json` y el temporizador desde fuera del proceso. La disponibilidad de datos y el estado de QC conservan las limitaciones de la sección 7.
