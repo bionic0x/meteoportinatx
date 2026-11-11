@@ -193,7 +193,12 @@ def _public_view(domain: str, part: str, original: dict) -> dict:
             for c in (original.get("channels") or []) if isinstance(c, dict)
         ]
         result["sources"] = [
-            {**_pick(src, {"name", "status", "data_time"}), "detail": ""}
+            {**_pick(src, {"name", "status", "data_time", "freshness", "age_min", "limit_min"}),
+             # Only predefined metric families and finite state labels may be public.
+             "metrics_freshness": {k: v for k, v in (src.get("metrics_freshness") or {}).items()
+                                   if k in ("wave", "wind", "sea_level")
+                                   and v in ("FRESH", "STALE", "UNKNOWN")},
+             "detail": ""}
             for src in (original.get("sources") or []) if isinstance(src, dict)
         ]
         result["history"] = [
