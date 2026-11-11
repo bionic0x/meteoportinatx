@@ -107,6 +107,10 @@ e15fc9e6869d24b457b2c586f7aea124f1167391128385e1be63aa813f970650  docs/ux-review
 e15fc9e6869d24b457b2c586f7aea124f1167391128385e1be63aa813f970650  docs/ux-review/img/px-esqui-ruta-m-resultado.png
 9a7dfc883b96d84ce6a55172911ae2d6fd2a0469a1a30ad1f52ecb62951182f3  docs/ux-review/img/px-meteo-m-full.png
 701d2e14072cc24a93f2af70fe824fa792280c93f1d9cdef45b48a89a2a24598  docs/ux-review/img/px-residencia-m-full.png
+f5d7379dcd8313c23f878dc8ee40915939e622cd21455533e4153ae64b2d72d4  docs/ux-review/img/px-visitante-decidir-m-fold1.png
+380070eeaa007c8c1e605added1474dbaabc124ddb879487983e61fd493b654a  docs/ux-review/img/px-visitante-decidir-m-fold2.png
+28b13590f2b36fd1b07068a73e111c34068d6a3e7cbb936ac0062b30ae6af58c  docs/ux-review/img/px-visitante-decidir-m-fold3.png
+6eafcb64a3db6ab1273498dfeb97afb2e8adda54c1150e40c1aa336d3dafa4e7  docs/ux-review/img/px-visitante-hub-m.png
 bef31c7587ab21a9bf1d8699acf81c313109b419503fa16359c129bceab00577  docs/ux-review/img/ui-decidir-1440.png
 bf59280dbc8813991d6e4b40c9863fabe4f24009672166a75b4c90ed87cacc6f  docs/ux-review/img/ui-decidir-390.png
 02540bd5030f9e92978d21c385ce73da51fe0bb969abce877d16a99d08609eab  docs/ux-review/img/ui-decidir-768.png
