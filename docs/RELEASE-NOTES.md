@@ -1,3 +1,13 @@
+# Sin publicar — lote de issues #7 #8 #9 #10 #11 #18 #20 #21 #23
+
+- **#20/#21** Rayos en familia eléctrica propia: no confirman ni son confirmados por la lluvia para `alarm`; su nivel sigue visible. Escala 39/40/42/45 dBZ con 1 y 2 frames fuertes.
+- **#8** Radio real de la vecindad de modelos (30,2 km, no «±17 km»). Oleaje modelo/boya solo emparejado por boya y hora (±30 min), si no `NO_COMPARABLE`. Cotas del Pirineo por vertiente norte/sur de cada punto.
+- **#18/#23** `scripts/check_backend_parity.py` y workflow `backend-parity.yml` (falla si Render no sirve la versión de `RELEASE_STATUS.json`). Presencia de `AEMET_API_KEY` informada sin revelar el valor. Fuente del eje oficial (`AEMET_CAP+METEOALARM`, `SOLO_METEOALARM`, `NINGUNA`) en `core`, API y vistas.
+- **#10** `src/radar_motion.py`: vector de movimiento de ecos, ETA 0–120 min con rango y `MOTION_UNKNOWN`. Sustituye a la «velocidad de acercamiento».
+- **#7** `src/ledger_shadow.py`: registro en sombra opcional (`METEO_LEDGER`) de pronósticos congelados antes de su ventana. Observaciones PORTUS con `qc=UNKNOWN`, por lo que todavía no se puntúan.
+- **#9** Sin acceso automático a ClimayNievePirineos salvo `CNP_PERMISSION_VERIFIED=1`.
+- **#11** La vista de decisión muestra la fuente oficial y la cota de la vertiente. Protocolo de evaluación con usuarios en `docs/EVALUACION-USUARIOS-P1.md` (sin sesiones realizadas).
+
 ## Pirineo — Sidecar climatológico ERA5-Land (experimental)
 
 Se incorpora generador manual con pruebas sintéticas y notas informativas de lluvia a 24 h. Sin descargas reales, sin credenciales provisionadas, sin impacto en alertas ni Render Free. Pendiente validar el formato del CDS y los términos de redistribución.

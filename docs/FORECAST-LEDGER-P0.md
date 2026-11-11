@@ -78,3 +78,25 @@ Este ejemplo es **sintético**, no una predicción meteorológica real. Para con
 - **Integridad forense:** **NOT ATTESTED**; hashes sin firma externa no detectan eliminación/reemplazo de todo el archivo.
 - **Precisión meteorológica:** **NOT MEASURED**; todas las pruebas son sintéticas.
 - **Estado operativo:** **EXPERIMENTAL / NO DEPLOY**.
+
+## 7. Registro en sombra desde el ciclo (#7, opcional)
+
+`src/ledger_shadow.py` conecta el ciclo de Portinatx con este ledger **solo si** `METEO_LEDGER` apunta a un directorio privado fuera del repositorio (dentro del repositorio se rechaza). No modifica niveles, avisos ni datos públicos; cualquier fallo se ignora y queda en el resultado de `export` (`ledger_sombra`).
+
+- **Pronósticos congelados antes de su ventana**, una vez por hora UTC (los ciclos de 5 min no multiplican registros):
+  - precipitación horaria (mm) de cada modelo determinista en el punto de Portinatx, próximas 1–6 h;
+  - Hs (m) del modelo de oleaje **en la posición de cada boya** PORTUS (#8), próximas 1–6 h, y su referencia de persistencia (`baseline=true`, última Hs medida).
+- **Observaciones** de las boyas para horas ya cerradas (primera muestra de la hora). Los valores ausentes nunca se congelan como 0.
+- El `event_id` usa el día de la ventana, para que pronóstico y observación compartan identidad.
+
+**Límites (gate de #7 aún abierto):**
+- PORTUS no aporta aquí un control de calidad, así que las observaciones entran con `qc=UNKNOWN` y el ledger las excluye (`NO_QC_PASS_INSTRUMENT_WITHIN_RADIUS`) hasta que el propietario defina un criterio de QC verificado.
+- La precipitación en el sitio no tiene pluviómetro instrumental a ≤3 km: queda congelada sin pareja posible.
+- `provider_run_at` es el instante de descarga (cota superior), no la hora real del run.
+- El almacén duradero, las copias y la prueba de restauración siguen siendo responsabilidad del operador.
+
+```bash
+export METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger"
+python3 src/nowcast.py export --domain portinatx
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" verify
+```

@@ -84,6 +84,16 @@ POIS = [
     ("toses", "Collada de Toses", 42.3335, 1.9865, "collado", "Cerdanya", 1800),
     ("puigmal", "Puigmal", 42.3833, 2.1167, "cima", "Cerdanya", 2913),
 ]
+# #8: vertiente de cada punto para elegir el perfil de cotas (norte = Ariège/Aude; sur = Segre).
+# Los collados en la divisoria usan el perfil más desfavorable (la cota más baja de los dos).
+VERTIENTE_ZONA = {"Andorra": "sur", "Cerdanya": "sur", "Cerdagne": "sur", "Puymorens": "norte", "Capcir": "norte"}
+VERTIENTE_PUNTO = {"pas_casa": "norte", "carlit": "norte", "envalira": "divisoria", "col_puymorens": "divisoria"}
+
+
+def vertiente(poi: dict) -> str | None:
+    return VERTIENTE_PUNTO.get(poi.get("id")) or VERTIENTE_ZONA.get(poi.get("zona"))
+
+
 # Pares barlovento/sotavento para el föhn (norte de la divisoria / sur de la divisoria)
 FOEHN_PAIRS = [("porte", "puigcerda", "Puymorens → Cerdanya"), ("pas_casa", "encamp", "Envalira → valle de Andorra"),
                ("les_angles", "font_romeu", "Capcir → Cerdagne")]
@@ -717,7 +727,19 @@ def parse_cnp_table(page: str, now: datetime) -> dict | None:
             "intensidad_mmh": float(rate[0]) if rate else None}
 
 
+class CommunityPermissionError(RuntimeError):
+    """#9: acceso automático a una red comunitaria sin autorización verificada."""
+
+
+CNP_PERMISSION_ENV = "CNP_PERMISSION_VERIFIED"
+
+
 def src_cnp() -> list[dict]:
+    """ClimayNievePirineos. #9: NO se consulta automáticamente salvo que el propietario haya verificado
+    permiso, cadencia y atribución con sus responsables y lo declare con CNP_PERMISSION_VERIFIED=1.
+    Sin eso: PERMISSION_UNKNOWN, ninguna petición. Las observaciones manuales van por episode_evidence."""
+    if os.environ.get(CNP_PERMISSION_ENV) != "1":
+        raise CommunityPermissionError("PERMISSION_UNKNOWN")
     out, now = [], pd.now_utc()
     for sid, (name, la, lo) in CNP_STATIONS.items():
         try:
@@ -813,16 +835,44 @@ def src_meteociel() -> list[dict]:
 
 
 # ───────────────────────────────── ensamblado ─────────────────────────────────
-def summarize_points(points: dict, pois: list[dict], prof: list[dict]) -> list[dict]:
+def _profile_now(prof: list[dict], now) -> dict | None:
+    best = None
+    for p in prof or []:
+        t = pd.parse_time(p["t"] + "Z") if isinstance(p.get("t"), str) and len(p["t"]) <= 16 else pd.parse_time(p.get("t"))
+        if t and abs((t - now).total_seconds()) <= NOW_TOLERANCE_MIN * 60:
+            if best is None or abs((t - now).total_seconds()) < best[0]:
+                best = (abs((t - now).total_seconds()), p)
+    return best[1] if best else None
+
+
+def point_snow_levels(poi: dict, prof: dict, now) -> dict:
+    """Cotas de la hora actual con el perfil de la vertiente del punto, y su posición respecto a ellas."""
+    side = vertiente(poi)
+    cand = {k: _profile_now(prof.get(k), now) for k in (("norte", "sur") if side == "divisoria" else (side,))
+            if k}
+    cand = {k: v for k, v in cand.items() if v}
+    alt = poi.get("alt_dem") or poi.get("alt_ref")
+    if not cand:
+        return {"vertiente": side, "perfil": None, "estado": "UNKNOWN", "cota_copo_m": None, "sobre_cota_copo": None}
+    # en la divisoria, la cota más baja (más desfavorable para nieve y hielo)
+    k, pr = min(cand.items(), key=lambda kv: kv[1].get("cota_copo_m") if kv[1].get("cota_copo_m") is not None else 1e9)
+    copo = pr.get("cota_copo_m")
+    return {"vertiente": side, "perfil": k, "estado": "OK" if copo is not None else "UNKNOWN",
+            "tw0_m": pr.get("tw0_m"), "cota_copo_m": copo, "cota_acum_m": pr.get("cota_acum_m"),
+            "capa_calida": pr.get("capa_calida"), "riesgo_engelante": pr.get("riesgo_engelante"),
+            "sobre_cota_copo": (alt >= copo) if (alt is not None and copo is not None) else None}
+
+
+def summarize_points(points: dict, pois: list[dict], prof) -> list[dict]:
     now = pd.now_utc()
-    pmap = {p["t"]: p for p in prof}
+    prof = prof if isinstance(prof, dict) else {"sur": prof or []}      # compatibilidad: lista = perfil sur
     out = []
     for p in pois:
         P = points.get(p["id"])
         if not P:
             continue
         tt = [pd.parse_time(t + "Z") for t in P["time"]]
-        row = {"id": p["id"], "modelos": {}}
+        row = {"id": p["id"], "modelos": {}, "vertiente": vertiente(p), "cotas": point_snow_levels(p, prof, now)}
         for m, d in P["m"].items():
             coverage = {}
             def win(var, a, b, f=sum):
@@ -944,6 +994,11 @@ def build(dem: dict | None = None) -> dict:
     extra = (("aemet_obs", 30, src_aemet_obs), ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
              ("aemet_cap", 30, src_aemet_cap), ("aemet_texto", 120, src_aemet_text))
     for name, ttl, fn in extra:
+        if name == "cnp" and os.environ.get(CNP_PERMISSION_ENV) != "1":
+            # #9: sin permiso verificado, ni consulta ni copia en caché de consultas anteriores
+            srcs[name] = (f"PERMISSION_UNKNOWN: acceso automático desactivado hasta verificar permiso de uso "
+                          f"({CNP_PERMISSION_ENV}=1); ver issue #9")
+            continue
         try:
             val, st = _cached(name, ttl, fn, max_age_min=180)
             srcs[name] = st if name not in ("aemet_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
@@ -965,7 +1020,7 @@ def build(dem: dict | None = None) -> dict:
                       "T": m["T"], "edad_min": m["edad_min"]} for m in metar]
     # Contexto climatológico/nieve de un sidecar opcional: solo estado y procedencia (sin valores). Cualquier estado
     # distinto de "ok" es UNKNOWN; nunca altera el diagnóstico físico ni los avisos.
-    resumen = summarize_points(points["puntos"], pois, prof.get("sur", [])) if points else []
+    resumen = summarize_points(points["puntos"], pois, prof) if points else []   # #8: cotas por vertiente
     bundle = kb.context_bundle(Path(os.environ.get("METEO_SIDECAR_DIR") or (HOME / "sidecar")), "pirineo", pd.now_utc())
     contexto = {"nota": "contexto, no observación ni aviso; UNKNOWN si el estado no es ok",
                 "sidecars": {n: {k: v for k, v in b.items() if k != "data"} for n, b in bundle.items()},

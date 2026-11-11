@@ -734,6 +734,8 @@ function renderAxes(){
   const list = (o.all||[]).filter(w => !w.hasta || new Date(w.hasta) > now).slice(0, 10);
   $("off-list").innerHTML = list.length ? list.map(w => `<li class="warn">${pill(NIVEL_LV[w.nivel]||"unknown", w.nivel)}<span><b>${esc(w.evento.replace(/^Aviso de /,"").replace(/ de nivel \w+$/,""))}</b>${w.tipo==="costero"&&!/coster/i.test(w.evento)?" · costero":""}${w.activo?' · <b style="color:var(--x)">activo</b>':""}${w.umbral?" — "+esc(w.umbral):""}</span><span class="when">${fmtDT(w.desde)} → ${fmtDT(w.hasta)}</span></li>`).join("") : '<li class="empty">Sin avisos en las próximas 36 h.</li>';
   $("off-src").textContent = "Fuente: CAP de AEMET vía MeteoAlarm (una sola raíz).";
+  if (o.fuente_oficial && o.fuente_oficial !== "AEMET_CAP+METEOALARM")
+    $("off-src").innerHTML = `<b>⚠ ${esc(o.fuente_oficial_nota || o.fuente_oficial)}</b> · ` + esc($("off-src").textContent);
   // peligro local
   const hz = c.hazard || {}; let top = -1;
   const names = {lluvia_pluviometros:"Lluvia (pluviómetros)",lluvia_metar_aemet:"Lluvia (METAR/AEMET)",radar:"Radar",rayos:"Rayos",viento:"Viento",mar:"Mar",runoff:"Escorrentía",flooding:"Anegamiento"};

@@ -99,4 +99,19 @@ test('H1: missing rain coverage cannot look like an operational quiet verdict',(
   assert.equal(p.operational,null);assert.match(p.heading,/lluvia insuficiente/i);
   assert.equal(p.official.kind,'official');
 });
+test('#18: official card says when AEMET CAP is missing',()=>{
+  const x=base();x.official.fuente_oficial='SOLO_METEOALARM';
+  assert.match(M.project('casa',x,'snapshot','font_romeu',NOW).official.detail,/solo MeteoAlarm/);
+  const y=base();y.official.fuente_oficial='AEMET_CAP+METEOALARM';
+  assert.doesNotMatch(M.project('casa',y,'snapshot','font_romeu',NOW).official.detail,/MeteoAlarm/);
+});
+test('#8: point reports its slope snow level and freezing-rain risk; unknown stays null',()=>{
+  const x=mountain();
+  x.puntos[0].cotas={estado:'OK',vertiente:'sur',cota_copo_m:1500,sobre_cota_copo:true,riesgo_engelante:true};
+  const f=M.project('esqui',x,'snapshot','font_romeu',NOW).forecast;
+  assert.equal(f.snowLevel,1500);assert.equal(f.side,'sur');assert.equal(f.aboveSnowLevel,true);assert.equal(f.freezingRain,true);
+  x.puntos[0].cotas={estado:'UNKNOWN',vertiente:'sur',cota_copo_m:null,sobre_cota_copo:null};
+  const g=M.project('esqui',x,'snapshot','font_romeu',NOW).forecast;
+  assert.equal(g.snowLevel,null);assert.equal(g.aboveSnowLevel,null);assert.equal(g.freezingRain,false);
+});
 console.log(`PASS ${n} decision tests`);

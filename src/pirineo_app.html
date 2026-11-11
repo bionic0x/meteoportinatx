@@ -470,13 +470,15 @@ document.querySelectorAll("[data-pf]").forEach(b=>b.addEventListener("click",()=
 /* ── puntos ── */
 function renderPoints(){
   const c=D.core; if(!c||$("tab-puntos").hidden) return; $("pts-st").innerHTML=ST("puntos");
-  const rows=c.puntos||[], byId=Object.fromEntries(rows.map(r=>[r.id,r])); let h=""; const tw0=profAt(S.times[S.k],"sur")?.tw0_m;
+  const rows=c.puntos||[], byId=Object.fromEntries(rows.map(r=>[r.id,r])); let h="";
+  // #8: cota de la vertiente de cada punto (norte/sur); en la divisoria, la más baja de las dos
+  const copoAt=v=>{ const t=S.times[S.k]; const sides=v==="divisoria"?["norte","sur"]:[v||"sur"]; const cs=sides.map(sd=>profAt(t,sd)?.cota_copo_m).filter(x=>x!=null); return cs.length?Math.min(...cs):null; };
   for(const z of ZONE_ORDER){ const ps=c.pois.filter(p=>p.zona===z); if(!ps.length) continue; h+=`<tr class="zone"><td colspan="10">${z}</td></tr>`;
-    for(const p of ps){ const m=byId[p.id]?.modelos?.[S.model]||{}; const alt=p.alt_dem??p.alt_ref; const above=tw0!=null&&alt>=tw0-300;
+    for(const p of ps){ const m=byId[p.id]?.modelos?.[S.model]||{}; const alt=p.alt_dem??p.alt_ref; const copo=copoAt(byId[p.id]?.vertiente); const above=copo!=null&&alt>=copo;
       const note=[m.ventisca_h?`ventisca ${m.ventisca_h} h`:"", (m.nieve72_cm||0)>=1?"nieve":"", m.racha24>=80?"viento fuerte":"", above?"sobre la cota":""].filter(Boolean).join(" · ");
       h+=`<tr><td>${esc(p.nombre)} <span class="ev">${p.tipo}</span></td><td class="num">${n0(alt)}</td><td class="num ${m.T!=null&&m.T<=0?"snow":""}">${n1(m.T)}</td><td class="num">${n1(m.Tw)}</td><td class="num">${n0(m.tmin24)} / ${n0(m.tmax24)}</td><td class="num">${n1(m.pr24)} / ${n1(m.pr72)}</td><td class="num ${(m.nieve72_cm||0)>=1?"snow":""}">${m.nieve24_cm==null?"—":n1(m.nieve24_cm)} / ${m.nieve72_cm==null?"—":n1(m.nieve72_cm)}</td><td class="num">${n0(m.racha24)}</td><td class="num">${n0(m.viento_ahora)} ${m.dir_ahora!=null?["N","NE","E","SE","S","SW","W","NW"][Math.floor(((m.dir_ahora+22.5)%360)/45)]:""}</td><td>${esc(note)}</td></tr>`; } }
   $("t-pts").querySelector("tbody").innerHTML=h;
-  $("pts-note").textContent=`${c.modelo_nombre?.[S.model]||S.model} · valores en la altitud real del punto (DEM). Lluvia y nieve en mm y cm; racha en km/h. «Sobre la cota»: el punto está por encima de la cota de copo actual. AROME HD no publica nieve en Open-Meteo: para la nieve usa ICON-EU o IFS.`;
+  $("pts-note").textContent=`${c.modelo_nombre?.[S.model]||S.model} · valores en la altitud real del punto (DEM). Lluvia y nieve en mm y cm; racha en km/h. «Sobre la cota»: el punto está por encima de la cota de copo actual de su vertiente (perfil norte o sur; en los collados de la divisoria, la más baja). AROME HD no publica nieve en Open-Meteo: para la nieve usa ICON-EU o IFS.`;
 }
 
 /* ── diagnóstico ── */

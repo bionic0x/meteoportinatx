@@ -54,6 +54,15 @@ jobs:
         with:
           path: ${{ github.workspace }}/portinatx_state/pirineo/cache/dem.json
           key: pirineo-dem-terrain-v1-${{ hashFiles('src/pirineo.py') }}
+      - name: Report credential presence without revealing values
+        run: |
+          # Solo presencia/ausencia; nunca se imprime el valor.
+          if [ -n "${AEMET_API_KEY}" ]; then
+            echo "AEMET_API_KEY: presente" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::AEMET_API_KEY ausente: el eje oficial publicado dependerá solo de MeteoAlarm"
+            echo "AEMET_API_KEY: AUSENTE (eje oficial solo MeteoAlarm)" >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Acquire real meteorological data for both domains
         run: python -u src/nowcast.py export
       - name: Fail closed on missing or stale data and stage static website

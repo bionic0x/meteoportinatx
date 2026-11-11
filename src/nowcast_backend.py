@@ -167,7 +167,8 @@ def _public_view(domain: str, part: str, original: dict) -> dict:
         allowed = {"cycle_id", "issued", "engine"}
         result = _pick(original, allowed)
         result["site"] = _pick(site, {"name", "lat", "lon"})
-        result["official"] = _pick(official, {"level_now", "level_36h", "verificado", "source", "status"})
+        result["official"] = _pick(official, {"level_now", "level_36h", "verificado", "source", "status",
+                                              "fuente_oficial", "fuente_oficial_nota"})
         # CAP/MeteoAlarm institutional event fields; no arbitrary provider fields.
         result["official"]["all"] = [
             _pick(w, {"nivel", "rank", "tipo", "evento", "desde", "hasta", "activo", "umbral"})

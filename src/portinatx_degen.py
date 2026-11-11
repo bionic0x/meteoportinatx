@@ -78,7 +78,7 @@ Detectores
   · Escorrentía/anegamiento observados a mano (--obs runoff=observed): validez
     6 h; mientras duren, la precaución operativa no desescala.
   · Ensemble: control + miembros identificados por nombre, ventanas completas,
-    en el punto y en la vecindad (±17 km) por separado; <10 miembros → no opina.
+    en el punto y en la vecindad (radio real calculado, hasta ~30 km) por separado; <10 miembros → no opina.
   · Núcleo convectivo: rejilla 0,15° por run (hora de inicio vía meta.json),
     distancia a Portinatx, desplazamiento entre runs y runs centrados seguidos.
   · Escorrentía: B908X es un proxy fuera de la cuenca; techo 'watch' salvo
@@ -138,6 +138,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone, tzinfo
 from pathlib import Path
 from typing import Any, Callable
+
+import radar_motion  # noqa: E402  (#10: advección de ecos, stdlib)
 
 VERSION = "0.6.1"
 UTC = timezone.utc
@@ -213,7 +215,7 @@ CFG: dict[str, Any] = {
     "aemet_zone": "645301",
     "emma_id": "ES113",                     # misma zona en MeteoAlarm (verificado 17/10/2026)
     "wu_station": "ISANTJ159",
-    # Vecindad para modelos: punto + 4 desplazamientos (~15–17 km). El error de
+    # Vecindad para modelos: punto + 6 desplazamientos (13–30 km; radio real en neighborhood_km). El error de
     # posición de la convección a +24/48 h es de ese orden: se mira el máximo.
     "neighborhood": [(0.0, 0.0), (0.15, 0.0), (-0.15, 0.0), (0.0, 0.2), (0.0, -0.2),
                      (0.0, 0.35), (-0.15, 0.25)],      # +2 al E/SE: la DANA descargó al E del máximo modelizado
@@ -1115,9 +1117,15 @@ def update_run_tracks(state: dict, grid: dict) -> dict:
 
 def src_marine() -> SourceResult:
     lat, lon = CFG["marine_point"]
+    # #8: el mismo modelo también en la posición de cada boya, para comparar misma boya y misma hora.
+    buoys = [n for n in CFG["portus_buoys"].values() if n in CFG["portus_coords"]]
     res = _om_multi("https://marine-api.open-meteo.com/v1/marine", {
-        "hourly": "wave_height,wave_direction,wave_period", "forecast_hours": 72}, [(lat, lon)])
+        "hourly": "wave_height,wave_direction,wave_period", "forecast_hours": 72, "past_hours": 6},
+        [(lat, lon)] + [CFG["portus_coords"][n] for n in buoys])
     h = res[0].get("hourly", {})
+    h["_buoys"] = {n: {"time": (r.get("hourly") or {}).get("time", []),
+                       "wave_height": (r.get("hourly") or {}).get("wave_height", [])}
+                   for n, r in zip(buoys, res[1:])}
     return SourceResult(name="marine", status="ok", kind="model", data_time=now_utc().isoformat(),
                         detail="oleaje Open-Meteo Marine", payload=h)
 
@@ -1391,6 +1399,13 @@ def radar_frame_metrics(tiles: dict[tuple[int, int], bytes], z: int, palette: di
             "max_dbz_30km": max30, "max_dbz_15km": max15, "site_max_dbz": site_max,
             "qpe_site_mmh": {k: (v / nsite if nsite else 0.0) for k, v in qpe.items()},
             "max_class_30km": cls, "colors": colors}
+
+
+def radar_geom() -> dict:
+    """Geometría de la rejilla de radar guardada en cada frame (fila 0 = norte)."""
+    rg = CFG["radar_grid"]
+    return {"lat_n": SITE["lat"] + rg["dlat"], "lon_w": SITE["lon"] - rg["dlon"], "step": rg["step"],
+            "nlat": int(round(2 * rg["dlat"] / rg["step"])) + 1, "nlon": int(round(2 * rg["dlon"] / rg["step"])) + 1}
 
 
 def radar_grid(tiles: dict[tuple[int, int], bytes], z: int) -> str:
@@ -1759,12 +1774,25 @@ def ch_radar(src: SourceResult | None) -> Channel:
     near = last["nearest_km"]
     ch.evidence.append(f"cobertura de ecos: {cov[10]:.0%} ≤10 km · {cov[30]:.0%} ≤30 km · {cov[60]:.0%} ≤60 km; "
                        f"eco más cercano {('—' if near is None else f'{near:.0f} km')}")
-    # acercamiento: pendiente de la distancia mínima
-    ds = [(parse_time(f["time"]), f["nearest_km"]) for f in fr if f["nearest_km"] is not None]
-    closing = None
-    if len(ds) >= 2 and (ds[-1][0] - ds[0][0]).total_seconds() > 0:
-        closing = (ds[0][1] - ds[-1][1]) / ((ds[-1][0] - ds[0][0]).total_seconds() / 3600)
-        ch.evidence.append(f"velocidad de acercamiento del eco más cercano: {closing:+.0f} km/h")
+    # #10: movimiento por advección de la rejilla (no la pendiente de la distancia al eco más cercano,
+    # que confundía crecimiento con desplazamiento). Sin base suficiente → MOTION_UNKNOWN.
+    motion = radar_motion.estimate_motion(frames, radar_geom(), now_utc())
+    if motion["estado"] == "OK":
+        last_grid = radar_motion.decode(fr[-1].get("grid") or "", radar_geom()["nlat"], radar_geom()["nlon"])
+        motion["eta"] = (radar_motion.eta_to_site(last_grid, radar_geom(), (SITE["lat"], SITE["lon"]), motion)
+                         if last_grid else {"estado": "MOTION_UNKNOWN", "eta_min": None})
+        e = motion["eta"]
+        eta_txt = (f"eco ≥{e['umbral_dbz']} dBZ a ≤{radar_motion.SITE_RADIUS_KM:.0f} km en ~{e['eta_min']} min "
+                   f"({e['eta_rango_min'][0]}–{e['eta_rango_min'][1]})" if e["estado"] == "OK" else
+                   "eco ya sobre el sitio" if e["estado"] == "EN_CURSO" else
+                   f"sin eco ≥{radar_motion.ETA_DBZ} dBZ en trayectoria a {radar_motion.HORIZON_MIN:.0f} min"
+                   if e["estado"] == "SIN_ECO_EN_TRAYECTORIA" else "ETA desconocida")
+        ch.evidence.append(f"movimiento de ecos: {motion['velocidad_kmh']:.0f} ± {motion['incertidumbre_kmh']:.0f} km/h "
+                           f"hacia {motion['hacia_deg'] if motion['hacia_deg'] is not None else '—'}° "
+                           f"({motion['pares']} pares) · {eta_txt} — extrapolación, no aviso")
+    else:
+        ch.evidence.append(f"movimiento de ecos: MOTION_UNKNOWN ({motion['motivo']})")
+    ch.metrics["motion"] = motion
     # Cobertura/proximidad solo da 'watch'. 'alert'/'alarm' exigen paleta calibrada Y
     # persistencia: ecos fuertes en ≥2 de los 3 últimos frames (un frame aislado no basta).
     lvl = 1 if (cov[60] > 0.05 or (near is not None and near <= 60)) else 0
@@ -1899,7 +1927,7 @@ def ch_models(src: SourceResult | None) -> list[Channel]:
         c.level = min(lvl, 2)                       # un determinista nunca da 'alarm'
         c.group = "nwp_hr" if m in CFG["gate_models"] else "nwp_global"
         c.evidence.append(f"punto: máx {p1_pt:.1f} mm/1h, {_n(p12_pt)} mm/12h (pico {t_peak}Z) · "
-                          f"vecindad ±17 km: {p1_nb:.1f} mm/1h, {_n(p12_nb)} mm/12h · "
+                          f"vecindad ≤{neighborhood_km():.0f} km: {p1_nb:.1f} mm/1h, {_n(p12_nb)} mm/12h · "
                           f"racha {_n(gust)} km/h · CAPE {_n(cape)} J/kg")
         chans.append(c)
     return chans
@@ -1967,7 +1995,7 @@ def ch_ensemble(src: SourceResult | None) -> Channel:
     p24_any = sum(any((_window_max(pt[i], 24) or 0) >= 50 for pt in pp) for i in range(nn)) / nn
     p12_any = sum(any((_window_max(pt[i], 12) or 0) >= 100 for pt in pp) for i in range(nn)) / nn
     mem = [mem[i] for i in ok]
-    c.evidence.append(f"vecindad ±17 km (algún punto): P(24h≥50)={p24_any:.0%} · P(12h≥100)={p12_any:.0%} "
+    c.evidence.append(f"vecindad ≤{neighborhood_km():.0f} km (algún punto): P(24h≥50)={p24_any:.0%} · P(12h≥100)={p12_any:.0%} "
                       f"— no equivale a probabilidad en Portinatx")
     tot = sorted(sum(x or 0 for x in m) for m in mem)
     med, p90 = tot[n // 2], tot[min(n - 1, int(0.9 * n))]
@@ -2163,6 +2191,20 @@ def manual_obs(state: dict, now: datetime) -> dict:
     return out
 
 
+def official_source_label(cap: SourceResult | None, alarm: SourceResult | None) -> dict:
+    """#18: qué fuente oficial sostiene el eje 1, dicho de forma visible y no solo en la tabla de fuentes."""
+    cap_ok, ma_ok = bool(cap and cap.status == "ok"), bool(alarm and alarm.status == "ok")
+    why = f"AEMET CAP {cap.status if cap else 'no consultado'}"
+    if cap_ok and ma_ok:
+        return {"fuente_oficial": "AEMET_CAP+METEOALARM", "fuente_oficial_nota": "AEMET CAP y MeteoAlarm disponibles"}
+    if cap_ok:
+        return {"fuente_oficial": "AEMET_CAP", "fuente_oficial_nota": "solo AEMET CAP (MeteoAlarm no disponible)"}
+    if ma_ok:
+        return {"fuente_oficial": "SOLO_METEOALARM",
+                "fuente_oficial_nota": f"eje oficial solo con MeteoAlarm ({why}): sin respaldo directo de AEMET"}
+    return {"fuente_oficial": "NINGUNA", "fuente_oficial_nota": f"sin fuente oficial ({why}, MeteoAlarm no disponible)"}
+
+
 def official_state(inst_now: Channel, inst_all: Channel, warnings: list[dict]) -> dict:
     act = [w for w in warnings if w.get("activo_ahora")]
     top = max(act, key=lambda w: w["rank"]) if act else None
@@ -2207,6 +2249,12 @@ def precaution_hold(manual: dict) -> str | None:
 # ════════════════════════════════════════════════════════════════════════
 # FRESCURA (#16): un dato viejo, vacío o sin hora no es una observación
 # ════════════════════════════════════════════════════════════════════════
+def neighborhood_km() -> float:
+    """Radio real de la vecindad de modelos: distancia haversine máxima desde el sitio (#8)."""
+    return max(haversine_km(SITE["lat"], SITE["lon"], SITE["lat"] + a, SITE["lon"] + b)
+               for a, b in CFG["neighborhood"])
+
+
 def channel_age_limit(name: str) -> float | None:
     lim = CFG["channel_max_age_min"]
     if name in lim:
@@ -2374,8 +2422,11 @@ CHANNEL_ROOT = {
     "mar_bahia": "nwp", "manual": "owner"}
 
 
+# #20: familia = peligro físico. La confirmación independiente de 'alarm' exige dos observaciones
+# del MISMO peligro. Los rayos son peligro eléctrico: no confirman lluvia/inundación ni son
+# confirmados por ella. Su intensidad se muestra en su canal y en el eje observado sin rebajarse.
 HAZARD_FAMILY = {"lluvia_observada": "lluvia", "pluviometros": "lluvia", "radar": "lluvia",
-                 "escorrentia_torrentes": "lluvia", "rayos": "lluvia", "frente_racha": "viento",
+                 "escorrentia_torrentes": "lluvia", "rayos": "electrica", "frente_racha": "viento",
                  "viento_estaciones": "viento", "mar_boyas": "mar"}
 
 
@@ -2452,25 +2503,43 @@ def build_claims(issued: datetime, channels: list[Channel], warnings: list[dict]
     return out
 
 
-def sea_model_check(sea_obs: Channel, marine: SourceResult | None, portus: SourceResult | None) -> None:
-    """DANA 18–19/10: el oleaje modelizado (1,7 m) quedó muy por debajo de las boyas (3,5–4,1 m).
-    Si la boya NE más alta supera 1,5× el máximo del modelo, se marca: manda la observación."""
-    if not (sea_obs.available and marine and marine.status == "ok"
-            and portus and portus.status == "ok"):
+SEA_PAIR_TOL_MIN = 30          # #8: tolerancia entre la hora de la boya y la hora del modelo emparejado
+
+
+def sea_model_check(sea_obs: Channel, marine: SourceResult | None, portus: SourceResult | None,
+                    now: datetime | None = None) -> None:
+    """Modelo frente a boya SOLO emparejados: misma boya (modelo en su posición) y misma hora (±30 min).
+    Sin pareja válida → NO_COMPARABLE; nunca máximo de 72 h frente a la última lectura."""
+    now = now or now_utc()
+    sea_obs.metrics["sea_model_pairing"] = "NO_COMPARABLE"
+    if not (marine and marine.status == "ok" and portus and portus.status == "ok"):
         return
-    mod = max((x or 0) for x in marine.payload.get("wave_height") or [0])
-    obs = 0.0
+    buoys = (marine.payload or {}).get("_buoys") or {}
+    pairs = []
     for name in CFG["portus_buoys"].values():
-        ser = [r for r in portus.payload["stations"].get(name, [])
-               if r.get("hm0") is not None
-               and observation_recency(r.get("t"), CFG["channel_max_age_min"]["mar_boyas"]
-                                       )["freshness"] == "FRESH"]
-        if ser and ser[-1].get("dmd") is not None and in_sector(ser[-1]["dmd"], (330.0, 100.0)):
-            obs = max(obs, ser[-1]["hm0"])
-    sea_obs.metrics.update({"buoy_hs_ne": obs, "model_hs_max": mod})
-    if mod and obs > 1.5 * mod:
-        sea_obs.evidence.insert(0, f"⚠ el oleaje modelizado (máx {mod:.1f} m) infraestima: boyas del NE con {obs:.1f} m "
-                                   "— manda la observación y el aviso costero")
+        rows = [r for r in (portus.payload.get("stations") or {}).get(name, []) if r.get("hm0") is not None
+                and observation_recency(r.get("t"), CFG["channel_max_age_min"]["mar_boyas"], now)["freshness"] == "FRESH"]
+        mod = buoys.get(name)
+        if not rows or not mod:
+            continue
+        last, t_obs = rows[-1], parse_time(rows[-1]["t"])
+        cand = []
+        for tm, hs in zip(mod.get("time") or [], mod.get("wave_height") or []):
+            tt = parse_time(tm if ("+" in tm[10:] or tm.endswith("Z")) else tm + "Z") if isinstance(tm, str) else None
+            if tt and hs is not None and abs((tt - t_obs).total_seconds()) <= SEA_PAIR_TOL_MIN * 60:
+                cand.append((abs((tt - t_obs).total_seconds()), hs))
+        if cand:
+            pairs.append({"boya": name, "t": last["t"], "obs_hs": last["hm0"], "mod_hs": min(cand)[1]})
+    if not pairs:
+        sea_obs.evidence.append("oleaje modelo/boya: NO_COMPARABLE (sin modelo en la misma boya y hora ±30 min)")
+        return
+    sea_obs.metrics.update({"sea_model_pairing": "PAIRED", "sea_model_pairs": pairs})
+    under = [p for p in pairs if p["mod_hs"] > 0.1 and p["obs_hs"] > 1.5 * p["mod_hs"]]
+    if under:
+        w = max(under, key=lambda p: p["obs_hs"] / p["mod_hs"])
+        sea_obs.evidence.insert(0, f"⚠ el modelo infraestima el oleaje en {w['boya']}: boya {w['obs_hs']:.1f} m frente a "
+                                   f"modelo {w['mod_hs']:.1f} m a la misma hora — manda la observación y el aviso costero")
+
 
 
 def radar_coverage_check(radar: Channel, gauges: Channel, rain: Channel) -> None:
@@ -2863,6 +2932,7 @@ def cycle(state: dict) -> dict:
     if MANUAL_FLOOR:
         warns.append(MANUAL_FLOOR)
     official = official_state(inst_now, inst_all, warns)
+    official.update(official_source_label(srcs.get("aemet_cap"), srcs.get("meteoalarm")))
     changes = detect_warning_changes(state, warns, issued)          # F1: un cambio de aviso no puede pasar callado
     notified = notify(changes, cid)
     # ── EJE 2: PELIGRO LOCAL OBSERVADO ──
@@ -4464,6 +4534,11 @@ def build_app(snap: dict, state: dict) -> dict[str, dict]:
                           "nlon": int(round(2 * rg["dlon"] / rg["step"])) + 1,
                           "encoding": "base64 uint8: 0 sin eco, 1 eco sin tabular, ≥2 dBZ"},
              "metrics_radius_km": CFG["radar_radius_km"], "frames": [], "status": srcs["radar"].status if "radar" in srcs else "—"}
+    rch = next((c for c in snap["channels"] if c.get("name") == "radar"), None)
+    radar["motion"] = ((rch or {}).get("metrics") or {}).get("motion") or {"estado": "MOTION_UNKNOWN",
+                                                                            "motivo": "canal de radar sin datos"}
+    if ok("radar"):
+        radar["window_skill"] = radar_motion.window_skill(srcs["radar"].payload["frames"], radar_geom())
     if ok("radar"):
         for f in srcs["radar"].payload["frames"][-rg["frames"]:]:
             radar["frames"].append({"time": f["time"], "dup": f["dup"], "grid": f.get("grid"),

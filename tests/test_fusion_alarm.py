@@ -45,9 +45,28 @@ class IsolatedObservationCap(unittest.TestCase):
                 self.assertEqual(f["proposed"], "alert")
 
     def test_independent_local_confirmation_still_reaches_alarm(self):
-        f = d.fuse([INST0, C("rayos", 3, "obs", local=True),
+        f = d.fuse([INST0, C("radar", 3, "obs", local=True),
                     C("pluviometros", 2, "obs", group="pluviometros", local=True)])
         self.assertEqual(f["proposed"], "alarm")
+
+    def test_lightning_and_rain_are_different_hazards_and_do_not_confirm_each_other(self):
+        for lead, support in ((C("rayos", 3, "obs", local=True),
+                               C("pluviometros", 2, "obs", group="pluviometros", local=True)),
+                              (C("pluviometros", 3, "obs", group="pluviometros", local=True),
+                               C("rayos", 2, "obs", local=True))):
+            with self.subTest(lead=lead.name):
+                f = d.fuse([INST0, lead, support, C("radar", 0, "obs")])
+                self.assertEqual(f["proposed"], "alert")
+
+    def test_electrical_hazard_is_not_hidden(self):
+        light = d.ch_lightning(lightning([(5, 10.0)] * 60))
+        self.assertEqual(light.level, 3)
+        hz = d.local_hazard_state({"rayos": light}, {})
+        self.assertEqual(hz["rayos"]["nivel"], "alarm")
+
+    def test_manual_es_alert_and_flooding_holds_are_preserved(self):
+        self.assertIn("ES-Alert", d.precaution_hold({"es_alert": {"value": "active", "edad_h": 0.5}}))
+        self.assertIn("flooding", d.precaution_hold({"flooding": {"value": "observed", "edad_h": 0.2}}))
 
     def test_same_family_but_same_root_does_not_confirm(self):
         f = d.fuse([INST0, C("lluvia_observada", 3, "obs", local=True),
@@ -87,6 +106,20 @@ class LightningChannel(unittest.TestCase):
 class RadarZR(unittest.TestCase):
     def test_threshold_uses_one_declared_relation(self):
         self.assertIn(d.CFG["radar_threshold_zr"], d.CFG["zr"])
+
+    def test_dbz_ladder_with_one_and_two_strong_frames(self):
+        def frames(dbz, n_strong):
+            src = radar_frames(dbz)
+            for i, f in enumerate(src.payload["frames"]):
+                if i < 3 - n_strong:                       # frames débiles al principio de la ventana
+                    f.update(max_dbz_15km=20, max_dbz_30km=20, site_max_dbz=20,
+                             qpe_site_mmh={"marshall_palmer": 0.6, "tropical": 0.9})
+            return src
+        for dbz in (39, 40, 42, 45):
+            for n in (1, 2):
+                with self.subTest(dbz=dbz, strong_frames=n):
+                    expected = 2 if (dbz >= 45 and n >= 2) else 1
+                    self.assertEqual(d.ch_radar(frames(dbz, n)).level, expected)
 
     def test_42_dbz_persistent_is_not_alert(self):
         ch = d.ch_radar(radar_frames(42))

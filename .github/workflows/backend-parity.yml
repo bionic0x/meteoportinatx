@@ -1,0 +1,30 @@
+name: Backend deployment parity
+
+# #18/#23: falla si Render Free sirve otra versión que la declarada en RELEASE_STATUS.json.
+# Separado de Pages a propósito: un backend desactualizado no debe bloquear la web estática.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'RELEASE_STATUS.json'
+      - 'src/nowcast_backend.py'
+  schedule:
+    - cron: '41 7 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      METEO_BACKEND_URL: ${{ vars.METEO_BACKEND_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compare /healthz version with RELEASE_STATUS public_api
+        run: python scripts/check_backend_parity.py
