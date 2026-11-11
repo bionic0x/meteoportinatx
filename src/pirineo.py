@@ -1075,14 +1075,24 @@ def compact_series(series: dict) -> dict:
         m_out = {}
         for m, d in P["m"].items():
             row = {}
-            for k in ("temperature_2m", "precipitation", "snowfall", "wind_gusts_10m", "relative_humidity_2m"):
+            for k in ("temperature_2m", "dew_point_2m", "relative_humidity_2m",
+                      "cloud_cover", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m",
+                      "freezing_level_height", "precipitation", "snowfall"):
                 v = d.get(k)
                 if not v or all(x is None for x in v):
                     continue
                 if k in ("precipitation", "snowfall"):
-                    row[k] = [None if all(x is None for x in v[i:i + 3]) else round(sum(x or 0 for x in v[i:i + 3]), 1) for i in idx]
+                    # Incomplete interval = UNKNOWN, not a zero-filled precipitation total.
+                    def complete_block(i):
+                        block = v[i:i + 3]
+                        if len(block) != 3 or any(not isinstance(x, (int, float)) or isinstance(x, bool)
+                                                  or not math.isfinite(x) or x < 0 for x in block):
+                            return None
+                        return round(sum(block), 1)
+                    row[k] = [complete_block(i) for i in idx]
                 else:
-                    row[k] = [None if v[i] is None else round(v[i], 1) for i in idx]
+                    row[k] = [round(v[i], 1) if i < len(v) and isinstance(v[i], (int, float))
+                              and not isinstance(v[i], bool) and math.isfinite(v[i]) else None for i in idx]
             m_out[m] = row
         out[pid] = {"time": [tt[i] for i in idx], "m": m_out}
     return out

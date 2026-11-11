@@ -82,6 +82,7 @@ jobs:
           test -f site/pirineo/api/extended.json
           test -f site/pirineo/ruta/index.html
           test -f site/pirineo/ruta/route_engine.js
+          test -f site/pirineo/pirineo_observatory.js
           test -z "$(find site -type f \( -name 'config.env' -o -name 'state.json' -o -name '*.jsonl' -o -name '*.pem' -o -name '.env*' \) -print -quit)"
           python - <<'PY'
           import json
