@@ -1,8 +1,27 @@
-# MeteoPortinatx Unified · 0.5.1
+# MeteoPortinatx Unified · 0.6.0
 
-Un solo desarrollo con dos dominios separados: **Portinatx (Ibiza)** y **Pirineo (Andorra, Cerdanya y Capcir)**. El núcleo costero sigue en 0.6.1, el motor pirenaico y su metaanálisis en 0.3.0; la aplicación, API y web usan la versión de integración **0.5.1**.
+Radar, avisos Meteoalarm, observaciones METAR y evaluación forense comparten motor para Portinatx y Pirineo. Pirineo excluye mar. [Perfiles, descargas y guía forense](docs/ZONAS-MODULARES.md).
+
+Un solo desarrollo con dos dominios separados: **Portinatx (Ibiza)** y **Pirineo (Andorra, Cerdanya y Capcir)**. El núcleo costero sigue en 0.6.1, el motor pirenaico y su metaanálisis en 0.3.0; la aplicación, API y web usan la versión de integración **0.6.0**.
 
 > Diagnósticos experimentales: **no sustituyen avisos oficiales** (AEMET / protección civil / Meteocat / SMA / Météo-France). Ausencia de una fuente ≠ calma. El aprendizaje forense no altera los avisos oficiales.
+
+## Zonas y módulos compartidos
+
+Portinatx y Pirineo son dos perfiles del mismo proyecto. El nuevo comando `zone`
+permite crear perfiles por coordenadas, seleccionar módulos y descargar paquetes
+con datos, diagnósticos diarios, ensembles, cobertura y hashes. También verifica e
+instala paquetes, conserva un histórico por zona y genera informes HTML sin conexión.
+Pirineo excluye el módulo marino. Todo está incluido en el `.pyz`.
+
+```bash
+python3 src/nowcast.py zone plan portinatx
+python3 src/nowcast.py zone plan pirineo
+python3 src/nowcast.py zone --help
+```
+
+Consulta [zonas modulares y estado de la paridad](docs/ZONAS-MODULARES.md).
+La adquisición, diagnóstico diario, radar, avisos, observaciones e informes forenses son comunes. Las interfaces territoriales conservan sus algoritmos especializados; su paridad completa sigue pendiente.
 
 ## Sitio y backend
 
@@ -72,11 +91,7 @@ python3 src/nowcast.py zone report --pack captura.zip --output informe.html
 python3 src/nowcast.py evidence pirineo evidencias.json --as-of 2026-11-11T00:00:00+00:00
 ```
 
-Los paquetes declaran por variable datos presentes, unidades y procedencia. La nueva lectura de
-radar, avisos, estaciones y forense es **solo metadatos de investigación sin autenticar**:
-`PRESENT_UNVERIFIED` no es una alerta oficial ni prueba científica. Falta conectar proveedores
-reales, validar frescura y calidad instrumental, integrarlo con el ledger prospectivo y realizar
-la paridad completa de las interfaces locales. Ver [zonas modulares](docs/ZONAS-MODULARES.md).
+Los paquetes declaran por variable datos presentes, unidades y procedencia. Los adaptadores de radar, avisos y METAR realizan adquisición pública; su acceso en vivo no se ha podido verificar en este entorno. El comando independiente `evidence` conserva el contrato de metadatos sin autenticar: `PRESENT_UNVERIFIED` no es una alerta oficial ni prueba científica. La evaluación `zone forensic` revisa días archivados; `ledger` mantiene el registro prospectivo P0 con su esquema estricto. Ver [zonas modulares](docs/ZONAS-MODULARES.md).
 
 ## Decision P0 — vistas por perfil (preparación MeteoPortinatx 0.6)
 

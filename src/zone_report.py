@@ -6,7 +6,7 @@ from pathlib import Path
 
 from zone_packages import read_pack, analysis
 
-LABELS = {'forecast':'Previsión', 'ensemble':'Ensembles', 'terrain':'Elevación', 'marine':'Mar'}
+LABELS = {'forecast':'Previsión', 'ensemble':'Ensembles', 'terrain':'Elevación', 'marine':'Mar', 'radar':'Radar', 'warnings':'Avisos oficiales', 'observations':'Observaciones'}
 
 
 def text(value):
@@ -26,6 +26,41 @@ def value(x, unit=None):
         return '<span class="missing">Sin datos suficientes</span>'
     suffix = text(unit) if unit else 'unidad no verificada'
     return f'{x:.2f} {suffix}'
+
+
+def source_sections(pack, pid):
+    rows = []
+    modules = pack['profile']['modules']
+    if 'observations' in modules:
+        rows.append('<h3>Observaciones cercanas · METAR</h3><p>Hasta 100 km del punto. La altitud y exposición pueden diferir; no sustituyen una estación local. Frescura calculada en la captura.</p>')
+        obs = pack['data'].get((pid,'observations'),{}).get('records',[])
+        if not obs:
+            rows.append('<p class="missing">Sin observaciones utilizables.</p>')
+        for r in obs:
+            rows.append(f'<p><b>{text(r["station"])}</b> · {text(stamp(r["observed_at"]))} · {r["distance_km"]:.1f} km · {text(r["freshness"])}<br>Temperatura {value(r.get("temperature_c"),"°C")} · viento {value(r.get("wind_kmh"),"km/h")} · racha {value(r.get("gust_kmh"),"km/h")}</p>')
+    if 'warnings' in modules:
+        rows.append('<h3>Avisos oficiales · Meteoalarm</h3><p>Selección por nombres de áreas del perfil, no por polígonos. Sin coincidencias no equivale a ausencia de avisos. Consulte el organismo emisor.</p>')
+        data=pack['data'].get((pid,'warnings'),{})
+        if not data:
+            rows.append('<p class="missing">Fuente de avisos no disponible.</p>')
+        for feed in data.get('feeds',[]):
+            rows.append(f'<p>{text(feed["country"])} · estado del boletín en la captura: {text(feed["feed_state"])} · actualizado {text(feed["feed_updated"])} · áreas: {text(", ".join(feed["areas"]))}</p>')
+        if data.get('failed_feeds'):
+            rows.append(f'<p class="missing">Cobertura parcial: fallaron {text(", ".join(data["failed_feeds"]))}.</p>')
+        for r in data.get('records',[]):
+            rows.append(f'<p><b>{text(r["event"])}</b> · {text(r["area"])} · severidad {text(r["severity"])} · certeza {text(r["certainty"])}<br>{text(stamp(r["onset"]))} — {text(stamp(r["expires"]))}</p>')
+        if data and not data.get('records'):
+            rows.append('<p>No se encontraron coincidencias en los boletines descargados.</p>')
+    if 'radar' in modules:
+        rows.append('<h3>Radar · RainViewer</h3><p>Últimas imágenes disponibles al descargar. La cruz marca el punto. Cobertura sin verificar: una imagen vacía o transparente no demuestra ausencia de lluvia. Sin estimación local calibrada de intensidad.</p><div class="frames">')
+        frames=pack['data'].get((pid,'radar'),{}).get('frames',[])
+        for f in frames:
+            x,y=f['point_pixel']
+            rows.append(f'<figure><div class="tile"><img width="256" height="256" alt="Eco radar; punto señalado con una cruz" src="data:image/png;base64,{f["png_base64"]}"><span aria-hidden="true" style="left:{x/256*100:.3f}%;top:{y/256*100:.3f}%">+</span></div><figcaption>{text(stamp(f["observed_at"]))}<br>{text(f["freshness"])} en la captura</figcaption></figure>')
+        if not frames:
+            rows.append('<p class="missing">Sin imágenes de radar utilizables.</p>')
+        rows.append('</div>')
+    return ''.join(rows)
 
 
 def render_report(path):
@@ -89,6 +124,7 @@ def render_report(path):
             rows.append('</tbody></table></div>')
             if not marine:
                 rows.append('<p class="missing">No hay datos marinos disponibles.</p>')
+        rows.append(source_sections(pack,pid))
         rows.append('</section>')
         blocks.append(''.join(rows))
     options = ''.join(f'<option value="{text(p["id"])}">{point_name(p["id"])}</option>' for p in profile['points'])
@@ -98,11 +134,11 @@ def render_report(path):
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{text(profile['name'])} · Observatorio de zona</title>
 <style>
-:root{{font-family:system-ui,sans-serif;color:#172b3a;background:#f4f7f8}}body{{margin:0}}main{{max-width:1200px;margin:auto;padding:24px}}header,section{{background:white;border:1px solid #d2dce2;border-radius:12px;padding:24px;margin:0 0 20px}}h1{{margin:.3em 0}}h2{{color:#145166}}p,li{{line-height:1.6}}.eyebrow{{font-weight:650;color:#145166}}.notice{{border-left:4px solid #ab6500;padding:10px 16px;background:#fff6e5}}select{{font:inherit;padding:10px;max-width:100%;margin-bottom:20px}}table{{border-collapse:collapse;width:100%;font-size:.95rem}}th,td{{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #d2dce2}}caption{{text-align:left;padding:10px 0}}.table{{overflow-x:auto}}small{{display:block;color:#4e5e67;margin-top:5px}}.missing{{color:#7a4900}}a{{color:#075c83}}code{{overflow-wrap:anywhere}}[hidden]{{display:none}}@media(max-width:600px){{main{{padding:10px}}header,section{{padding:16px}}th,td{{padding:8px}}}}@media print{{select,label{{display:none}}.point[hidden]{{display:block}}}}
+:root{{font-family:system-ui,sans-serif;color:#172b3a;background:#f4f7f8}}body{{margin:0}}main{{max-width:1200px;margin:auto;padding:24px}}header,section{{background:white;border:1px solid #d2dce2;border-radius:12px;padding:24px;margin:0 0 20px}}h1{{margin:.3em 0}}h2{{color:#145166}}p,li{{line-height:1.6}}.eyebrow{{font-weight:650;color:#145166}}.notice{{border-left:4px solid #ab6500;padding:10px 16px;background:#fff6e5}}select{{font:inherit;padding:10px;max-width:100%;margin-bottom:20px}}table{{border-collapse:collapse;width:100%;font-size:.95rem}}th,td{{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #d2dce2}}caption{{text-align:left;padding:10px 0}}.table{{overflow-x:auto}}.frames{{display:flex;flex-wrap:wrap;gap:16px}}figure{{margin:0;max-width:100%}}.tile{{position:relative;width:256px;max-width:100%;background:#d2dce2}}.tile img{{display:block;width:100%;height:auto}}.tile span{{position:absolute;transform:translate(-50%,-50%);font-weight:bold;color:#000;background:white;line-height:1}}figcaption{{font-size:.85rem}}small{{display:block;color:#4e5e67;margin-top:5px}}.missing{{color:#7a4900}}a{{color:#075c83}}code{{overflow-wrap:anywhere}}[hidden]{{display:none}}@media(max-width:600px){{main{{padding:10px}}header,section{{padding:16px}}th,td{{padding:8px}}}}@media print{{select,label{{display:none}}.point[hidden]{{display:block}}}}
 </style></head><body><main>
 <header><p class="eyebrow">MeteoPortinatx · Observatorio de zona</p><h1>{text(profile['name'])}</h1>
 <p>{state} · Captura {text(stamp(manifest['created_at']))}</p>
-<p class="notice">Instantánea sin conexión: no se actualiza al abrirla. Descargado no significa vigente ni completo. Sin avisos oficiales u observaciones integrados en este paquete.</p>
+<p class="notice">Instantánea sin conexión: no se actualiza al abrirla. Descargado no significa vigente ni completo. Cada fuente muestra su cobertura y fecha; consulte su vigencia antes de usarla.</p>
 <p>Informe calculado {text(stamp(generated))}. Diagnóstico sin calibración local; consulte fuentes oficiales para decisiones de seguridad.</p>
 <details><summary>Procedencia y límites</summary><p>Paquete <code>{pack['sha256']}</code>. Integridad comprobada; los hashes no acreditan la identidad del autor ni la exactitud meteorológica.</p><p>Las cifras diarias requieren cobertura completa de 24 horas UTC. Los escenarios requieren al menos diez miembros completos por familia y unidades verificadas. No se aplican umbrales de aviso de otra zona.</p></details></header>
 <label for="point-filter">Punto de consulta</label> <select id="point-filter"><option value="all">Todos los puntos</option>{options}</select>

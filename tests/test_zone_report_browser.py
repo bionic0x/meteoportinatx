@@ -5,6 +5,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1]/'src'),str(Path(__file__).resolve().parent)]
 import zone_engine
@@ -24,6 +26,18 @@ class ZoneReportBrowser(unittest.TestCase):
             profile['name'] = 'DEMOSTRACIÓN SINTÉTICA'
             zone_engine.collect(profile,root/'pack.zip',getter=lambda url:provider(url,partial_snow=True))
             zone_report.write_report(root/'pack.zip',root/'report.html')
+            class Handler(BaseHTTPRequestHandler):
+                def log_message(self,*args): pass
+                def do_GET(self):
+                    body = (root/'report.html').read_bytes()
+                    self.send_response(200)
+                    self.send_header('Content-Type','text/html; charset=utf-8')
+                    self.end_headers()
+                    self.wfile.write(body)
+            server = ThreadingHTTPServer(('127.0.0.1',0),Handler)
+            thread = threading.Thread(target=server.serve_forever,daemon=True)
+            thread.start()
+            self.addCleanup(lambda:(server.shutdown(),server.server_close(),thread.join(1)))
             code = r'''
 const {chromium}=require('playwright');
 (async()=>{
@@ -46,6 +60,6 @@ const {chromium}=require('playwright');
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
 '''
-            result = subprocess.run(['node','-e',code,shutil.which('chromium'),(root/'report.html').as_uri()],
+            result = subprocess.run(['node','-e',code,shutil.which('chromium'),f'http://127.0.0.1:{server.server_port}/'],
                                     capture_output=True,text=True,timeout=30)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)

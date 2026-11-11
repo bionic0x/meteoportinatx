@@ -18,7 +18,7 @@
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const freshness = needsSnapshot && response.headers.get('X-Meteo-Freshness');
       const snapshot = needsSnapshot && response.headers.get('X-Meteo-Snapshot');
-      if (needsSnapshot && (freshness !== 'fresh' || !/^\d{8}T\d{6}Z-[a-f0-9]{12}$/.test(snapshot || ''))) {
+      if (needsSnapshot && (freshness !== 'fresh' || !/^\d{8}T\d{6}Z-(?:[a-f0-9]{12}|[a-f0-9]{64})$/.test(snapshot || ''))) {
         throw new Error('backend stale or snapshot header not exposed');
       }
       return {part, data:await response.json(), snapshot};
