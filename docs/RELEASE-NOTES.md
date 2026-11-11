@@ -1,3 +1,7 @@
+# Sin publicar — sensores y háptica del teléfono
+
+- Vista experimental `/dispositivo/`, sensores optativos y vibración por transición del ciclo. No sustituye avisos oficiales ni funciona como alerta en segundo plano. Ver `docs/DISPOSITIVO-SENSORES.md`.
+
 # Sin publicar — vigilancia de la clave de Météo-France
 
 - `credential-expiry.yml` vigila también `METEOFRANCE_KEY_EXPIRES` si se registra (opcional; los tokens del portal tienen la caducidad que se elija al generarlos).
