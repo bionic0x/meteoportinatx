@@ -1,13 +1,12 @@
 """Check that the mountain selector is visible only for mountain profiles."""
 import os
-import shutil
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-NODE = shutil.which('node')
-CHROME = shutil.which('google-chrome') or shutil.which('chromium') or shutil.which('chromium-browser')
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from browser_support import NODE, ROOT, require_browser  # noqa: E402
 JS = r'''
 const {chromium} = require('playwright');
 const fs = require('node:fs');
@@ -44,11 +43,8 @@ const [chrome, file] = process.argv.slice(1);
 '''
 
 class DecisionLocationBrowser(unittest.TestCase):
-    @unittest.skipUnless(NODE and CHROME, 'Node and Chromium required')
     def test_selector_visibility_tracks_domain(self):
-        check = subprocess.run([NODE, '-e', "require.resolve('playwright')"], cwd=ROOT, capture_output=True)
-        if check.returncode:
-            self.skipTest('Playwright not installed')
-        proc = subprocess.run([NODE, '-e', JS, CHROME, str(ROOT / 'src/decision_app.html')],
+        chrome = require_browser(self)
+        proc = subprocess.run([NODE, '-e', JS, chrome, str(ROOT / 'src/decision_app.html')],
                               cwd=ROOT, capture_output=True, text=True, timeout=40, env=os.environ.copy())
         self.assertEqual(proc.returncode, 0, proc.stderr)

@@ -12,7 +12,6 @@ import os
 import subprocess
 import sys
 import threading
-import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path

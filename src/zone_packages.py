@@ -1,5 +1,5 @@
 """Verify, retain and compare regional packs without extracting ZIP members."""
-from datetime import datetime, timezone
+from datetime import datetime
 import hashlib
 import io
 import json

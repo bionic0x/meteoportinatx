@@ -1,6 +1,5 @@
 """Shared zone report: real offline browser interaction, optional dependencies."""
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,14 +11,12 @@ sys.path[:0] = [str(Path(__file__).resolve().parents[1]/'src'),str(Path(__file__
 import zone_engine
 import zone_report
 from zone_fixtures import provider
+from browser_support import NODE, ROOT, require_browser
 
 
 class ZoneReportBrowser(unittest.TestCase):
     def test_filter_mobile_layout_and_no_marine_in_mountains(self):
-        if not shutil.which('node') or not shutil.which('chromium'):
-            self.skipTest('Node and Chromium required')
-        if subprocess.run(['node','-e',"require('playwright')"],capture_output=True).returncode:
-            self.skipTest('Playwright Node module required')
+        chrome = require_browser(self)
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             profile = zone_engine.load_profile('pirineo')
@@ -60,6 +57,6 @@ const {chromium}=require('playwright');
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
 '''
-            result = subprocess.run(['node','-e',code,shutil.which('chromium'),f'http://127.0.0.1:{server.server_port}/'],
-                                    capture_output=True,text=True,timeout=30)
+            result = subprocess.run([NODE,'-e',code,chrome,f'http://127.0.0.1:{server.server_port}/'],
+                                    cwd=ROOT,capture_output=True,text=True,timeout=30)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)

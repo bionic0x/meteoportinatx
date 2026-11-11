@@ -3,8 +3,6 @@
 Datos 100 % sintéticos (generados aquí). No prueban el CDS real ni su formato.
 """
 import importlib.util
-import io
-import json
 import os
 import sys
 import tempfile
