@@ -34,6 +34,8 @@ Ambos perfiles comparten adquisición modular, diagnósticos, indicadores de cob
 - **Paquetes de zona:** prepara, verifica e instala capturas con datos, diagnósticos, cobertura y hashes; también puedes generar informes HTML sin conexión. [Guía de zonas](docs/ZONAS-MODULARES.md).
 - **Contexto climatológico:** el proyecto incluye conocimiento con procedencia y herramientas experimentales para sidecars, sin confundir contexto con una observación o una alerta. [Catálogo de fuentes](docs/CATALOGO-FUENTES.md).
 
+En **Atmósfera · Pirineo**, el perfil detallado compara puntos representativos de las vertientes norte y sur: perfiles térmicos, hodógrafa, cizalladura e indicadores por hora. Son campos modelizados; los niveles bajo terreno se excluyen y los campos no disponibles se muestran como `UNKNOWN`. Los índices experimentales no están calibrados en Pirineos.
+
 ## Fuentes y confianza
 
 La consola pirenaica integra AEMET, Meteocat XEMA y Météo-France DPObs. Una publicación del 11 de noviembre de 2026 incluyó observaciones de las tres redes y del archivo horario francés; la disponibilidad posterior depende de los proveedores, las credenciales y la frescura de cada medición. Los visores de radar y satélite pirenaicos son externos: comprueba su cobertura y antigüedad. En RainViewer, la hora del mosaico no garantiza la hora de cada radar.
