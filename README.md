@@ -78,3 +78,8 @@ radar, avisos, estaciones y forense es **solo metadatos de investigación sin au
 reales, validar frescura y calidad instrumental, integrarlo con el ledger prospectivo y realizar
 la paridad completa de las interfaces locales. Ver [zonas modulares](docs/ZONAS-MODULARES.md).
 
+## Decision P0 — vistas por perfil (preparación MeteoPortinatx 0.6)
+
+La ruta `/decidir/` propone cinco lecturas rápidas sobre **los mismos `core.json`**: casa junto a torrente, barca/amarre, segunda residencia, esquí/montaña y análisis meteorológico. Presenta avisos institucionales, mediciones y estimaciones por separado, con fecha/origen visible y `UNKNOWN` cuando el ciclo es antiguo. Cada caso enlaza a la consola científica completa. **No cambia umbrales, modelos, forense, fuentes ni proveedores.**
+
+En GitHub Pages se publica desde `src/decision_app.html` y `src/decision_cards.js`; el servidor local también los sirve en `/decidir/`. La interfaz no guarda perfiles ni hace recomendaciones de evacuación/navegación. Leer [contrato de producto, frescura y pruebas](docs/DECISION-P0.md). `METEO_BACKEND_URL` continúa siendo opcional y la cadencia de Pages (6 h) **no permite ofrecer un nowcast continuo**.
