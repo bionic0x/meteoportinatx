@@ -1,3 +1,12 @@
+# Sin publicar — cobertura por familia y frescura uniforme (#16)
+
+- `fuse()` exige al menos un canal observado vivo de la familia lluvia: con solo viento y mar vivos declara cobertura insuficiente, marca lluvia `UNKNOWN` y no desescala.
+- Cada canal registra la hora de su dato más reciente (`data_time`). Sin hora, más viejo que `CFG["channel_max_age_min"]` o fechado en el futuro, pasa a `UNKNOWN` antes de la fusión. El eje oficial no cambia.
+- Radar con la misma imagen con ecos en todos los frames → congelado, `UNKNOWN`. Frames vacíos idénticos (cielo despejado) siguen siendo válidos.
+- Modelos y oleaje con todos los valores `None` → `UNKNOWN`; los huecos ya no se cuentan como 0 mm.
+- `core.json`, la API pública y la vista de Portinatx muestran la edad del dato de cada canal.
+- Límites de edad de partida, sin calibrar; revisar con el archivo de pronósticos (#7).
+
 # Release 0.5.1 — correcciones de integración y seguridad
 
 - Reparada lectura de `X-Meteo-Freshness` mediante `Access-Control-Expose-Headers`.
@@ -39,3 +48,12 @@ Fecha: 10 de noviembre de 2026.
 - La versión está preparada para desplegarse **después** de conectar un proveedor de hosting y el proceso de recolección persistente.
 
 Véase [Arquitectura unificada](ARQUITECTURA-UNIFICADA.md) para decisiones y limitaciones.
+
+## 0.6.0 — Núcleo regional compartido (11 noviembre 2026)
+
+- Portinatx y Pirineo comparten paquetes configurables, previsión, ensembles, radar RainViewer, avisos Meteoalarm por áreas y observaciones METAR cercanas. Pirineo excluye mar.
+- Informe HTML sin conexión, archivo por hash, comparación de consultas y descargas de aplicación/perfiles/paquetes desde Pages. Las interfaces territoriales especializadas siguen disponibles.
+- Verificación forense local de pronósticos congelados frente a medidas revisadas: puertas temporales y espaciales, unidades y ventanas compatibles, duplicados, errores por episodio, referencia común y Brier. JSON y HTML con trazabilidad y exclusiones; sin recalibración automática.
+- Cobertura completa requerida para acumulados diarios y soporte por métrica; paquetes públicos del backend identificados por manifiesto completo, conservando proyección de privacidad y carga web de una misma instantánea.
+- El despliegue exige previsión útil en cada punto; las fuentes complementarias fallidas se muestran como desconocidas. No se publican datos de pruebas ni observaciones forenses privadas.
+- Validación local con respuestas de prueba y navegador real. Los proveedores en vivo no se han verificado desde el entorno de desarrollo por restricciones de red. La ejecución de Actions y el despliegue de Pages se verifican por separado; Render requiere su propio despliegue.

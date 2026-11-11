@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 import portinatx_degen as coastal
 import pirineo as mountain
 
-VERSION = "0.5.1"
+VERSION = "0.6.0"
 DOMAINS = ("portinatx", "pirineo")
 PARTS = {
     "portinatx": frozenset(("core", "radar", "series", "atmos", "sat", "mar", "modx", "forense")),
@@ -240,6 +240,9 @@ def main(argv=None):
     if argv and argv[0] == "zone":
         import zone_engine
         return zone_engine.main(argv[1:])
+    if argv and argv[0] == "ledger":
+        import forecast_ledger
+        return forecast_ledger.main(argv[1:])
     if argv and argv[0] == "evidence":
         import zone_evidence
         return zone_evidence.main(argv[1:])
@@ -249,6 +252,7 @@ def main(argv=None):
     x.add_argument("--domain", choices=(*DOMAINS, "all"), default="all")
     sub.add_parser("zone", help="perfiles, packs y diagnósticos compartidos de zona")
     sub.add_parser("evidence", help="metadatos de radar, avisos, estaciones y forense; no alertas")
+    sub.add_parser("ledger", help="registro prospectivo de pronósticos y medidas; ledger --help")
     sub.add_parser("selftest")
     sub.add_parser("status")
     s = sub.add_parser("serve", help="servidor local con dos colectores independientes")

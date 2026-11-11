@@ -1,10 +1,26 @@
 from urllib.parse import urlsplit
+from datetime import datetime,timezone,timedelta
+import base64,struct,zlib
 import zone_engine as z
 from weather_core import ENSEMBLE_FAMILIES
 
 
 def provider(url, *, rain=1, partial_snow=False):
     host = urlsplit(url).hostname
+    now=datetime.now(timezone.utc)
+    if host=='api.rainviewer.com':
+        return {'host':'https://tilecache.rainviewer.com','radar':{'past':[{'path':'/v2/radar/123','time':int(now.timestamp())}]}}
+    if host=='tilecache.rainviewer.com':
+        def chunk(kind,raw): return struct.pack('>I',len(raw))+kind+raw+struct.pack('>I',zlib.crc32(kind+raw))
+        png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',256,256,8,6,0,0,0))+chunk(b'IDAT',zlib.compress((b'\x00'+bytes([0,0,0,0])*256)*256))+chunk(b'IEND',b'')
+        return {'png_base64':base64.b64encode(png).decode()}
+    if host=='aviationweather.gov':
+        stations=[('LEIB',39.1153,1.5214),('LESU',42.35,1.90),('LFMP',42.5,2.04)]
+        return [{'icaoId':sid,'lat':lat,'lon':lon,'obsTime':int(now.timestamp()),'temp':4,'dewp':2,'wspd':5,'wgst':None,'wdir':180,'altim':1012,'elev':1000} for sid,lat,lon in stations]
+    if host=='feeds.meteoalarm.org':
+        area='Ibiza; Pirineo de Girona; Pyrénées-Orientales; Andorra'
+        return {'xml':f'<feed xmlns="http://www.w3.org/2005/Atom" xmlns:cap="urn:oasis:names:tc:emergency:cap:1.2"><updated>{now.isoformat()}</updated><entry><id>fixture</id><title>SYNTHETIC WARNING</title><cap:areaDesc>{area}</cap:areaDesc><cap:event>Test</cap:event><cap:severity>Moderate</cap:severity><cap:onset>{(now-timedelta(hours=1)).isoformat()}</cap:onset><cap:expires>{(now+timedelta(hours=1)).isoformat()}</cap:expires></entry></feed>'}
+
     if '/elevation?' in url:
         return {'elevation':[1600.0]}
     h = {'time':[f'2026-11-11T{k:02d}:00' for k in range(24)]}

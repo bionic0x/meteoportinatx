@@ -53,20 +53,24 @@ class RainCoverageH1(unittest.TestCase):
 
     def test_old_radar_source_status_ok_is_unknown(self):
         t = (m.now_utc() - timedelta(hours=2)).isoformat()
-        r = m.ch_radar(m.SourceResult("radar", "ok", payload={"frames": [{"time": t, "dup": False}]}))
+        r = m.Channel("radar", 1, "obs", data_time=t)
+        m.apply_freshness([r])
         self.assertFalse(r.available)
-        self.assertTrue(any("obsoleto" in x for x in r.evidence))
+        self.assertTrue(any("STALE" in x for x in r.evidence))
 
     def test_future_radar_is_unknown(self):
         t = (m.now_utc() + timedelta(hours=1)).isoformat()
-        r = m.ch_radar(m.SourceResult("radar", "ok", payload={"frames": [{"time": t, "dup": False}]}))
+        r = m.Channel("radar", 1, "obs", data_time=t)
+        m.apply_freshness([r])
         self.assertFalse(r.available)
 
     def test_stale_aemet_is_not_a_quiet_observation(self):
         old = m.now_utc() - timedelta(hours=4)
         a = m.SourceResult("aemet_obs", "ok", payload={
             "series": {"B908X": [m.Point(t=old, R1=0.0)]}, "prec_mode": "hourly"})
-        self.assertFalse(m.ch_rain_obs({"aemet_obs": a}).available)
+        r = m.ch_rain_obs({"aemet_obs": a})
+        m.apply_freshness([r])
+        self.assertFalse(r.available)
 
     def test_recent_aemet_dry_measurement_is_valid(self):
         t = m.now_utc() - timedelta(minutes=25)
@@ -79,19 +83,25 @@ class RainCoverageH1(unittest.TestCase):
     def test_stale_metar_not_alive(self):
         t = (m.now_utc() - timedelta(hours=4)).isoformat()
         a = m.SourceResult("metar", "ok", payload={"raw": {"LEIB": ["LEIB CAVOK"]},
-            "meta": {"LEIB": {"last": t}}})
-        self.assertFalse(m.ch_rain_obs({"metar": a}).available)
+            "series": {"LEIB": [m.Point(t=m.parse_time(t))]}})
+        r = m.ch_rain_obs({"metar": a})
+        m.apply_freshness([r])
+        self.assertFalse(r.available)
 
     def test_recent_metar_alive(self):
         t = (m.now_utc() - timedelta(minutes=20)).isoformat()
         a = m.SourceResult("metar", "ok", payload={"raw": {"LEIB": ["LEIB CAVOK"]},
-            "meta": {"LEIB": {"last": t}}})
-        self.assertTrue(m.ch_rain_obs({"metar": a}).available)
+            "series": {"LEIB": [m.Point(t=m.parse_time(t))]}})
+        r = m.ch_rain_obs({"metar": a})
+        m.apply_freshness([r])
+        self.assertTrue(r.available)
 
     def test_no_timestamp_cannot_be_fresh(self):
-        self.assertFalse(m.observation_is_fresh(None, 90))
-        self.assertFalse(m.observation_is_fresh("", 90))
-        self.assertTrue(m.observation_is_fresh(m.now_utc().isoformat(), 90))
+        missing = m.Channel("radar", 1, "obs", data_time="")
+        recent = m.Channel("radar", 1, "obs", data_time=m.now_utc().isoformat())
+        m.apply_freshness([missing, recent])
+        self.assertFalse(missing.available)
+        self.assertTrue(recent.available)
 
 
 if __name__ == "__main__":

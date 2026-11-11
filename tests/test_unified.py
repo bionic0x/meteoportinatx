@@ -70,7 +70,7 @@ class Integration(unittest.TestCase):
         self.assertTrue((target / "index.html").is_file())
         self.assertTrue((target / "decidir" / "index.html").is_file())
         self.assertTrue((target / "decision_cards.js").is_file())
-        self.assertEqual(json.loads((target / "manifest.json").read_text())["release"], "0.5.1")
+        self.assertEqual(json.loads((target / "manifest.json").read_text())["release"], "0.6.0")
         self.assertFalse((target / "portinatx" / "api" / "extended.json").exists())
         self.assertFalse((target / "pirineo" / "api" / "mar.json").exists())
         self.assertNotIn("SECRET", "".join(str(p) for p in target.rglob("*")))

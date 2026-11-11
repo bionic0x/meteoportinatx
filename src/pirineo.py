@@ -715,9 +715,18 @@ def summarize_points(points: dict, pois: list[dict], prof: list[dict]) -> list[d
         tt = [pd.parse_time(t + "Z") for t in P["time"]]
         row = {"id": p["id"], "modelos": {}}
         for m, d in P["m"].items():
+            coverage = {}
             def win(var, a, b, f=sum):
-                v = [x for t, x in zip(tt, d.get(var) or []) if t and x is not None and now + timedelta(hours=a) <= t < now + timedelta(hours=b)]
-                return _r(f(v), 1) if v else None
+                pairs = [(t, x) for t, x in zip(tt, d.get(var) or [])
+                         if t and now + timedelta(hours=a) <= t < now + timedelta(hours=b)]
+                valid = [(t, x) for t, x in pairs if isinstance(x, (int, float))
+                         and not isinstance(x, bool) and math.isfinite(x)
+                         and (f is not sum or x >= 0)]
+                stamps = [t for t, _ in pairs]
+                complete = (len(pairs) == b - a and len(valid) == len(pairs)
+                            and all(y - x == timedelta(hours=1) for x, y in zip(stamps, stamps[1:])))
+                coverage[f"{var}:{a}-{b}h"] = {"valid": len(valid), "expected": b - a, "complete": complete}
+                return _r(f([x for _, x in valid]), 1) if complete else None
             k0 = min(range(len(tt)), key=lambda i: abs((tt[i] - now).total_seconds())) if tt else None
             T = (d.get("temperature_2m") or [None])[k0] if k0 is not None else None
             Td = (d.get("dew_point_2m") or [None])[k0] if k0 is not None else None
@@ -729,7 +738,7 @@ def summarize_points(points: dict, pois: list[dict], prof: list[dict]) -> list[d
                                  "racha24": win("wind_gusts_10m", 0, 24, max), "viento_ahora": (d.get("wind_speed_10m") or [None])[k0] if k0 is not None else None,
                                  "dir_ahora": (d.get("wind_direction_10m") or [None])[k0] if k0 is not None else None,
                                  "tmin24": win("temperature_2m", 0, 24, min), "tmax24": win("temperature_2m", 0, 24, max),
-                                 "nieve_suelo": (d.get("snow_depth") or [None])[k0] if k0 is not None and d.get("snow_depth") else None}
+                                 "coverage": coverage, "nieve_suelo": (d.get("snow_depth") or [None])[k0] if k0 is not None and d.get("snow_depth") else None}
             if p["tipo"] == "collado" or p["id"] in ("pas_casa", "grau_roig"):
                 vent = []
                 for k, t in enumerate(P["time"]):

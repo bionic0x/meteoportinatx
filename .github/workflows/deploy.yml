@@ -46,7 +46,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Validate meteorological safety and integration
-        run: python src/nowcast.py selftest
+        run: python scripts/build.py
       - name: Restore only the non-sensitive terrain DEM cache
         uses: actions/cache@v4
         with:
@@ -56,9 +56,14 @@ jobs:
         run: python -u src/nowcast.py export
       - name: Fail closed on missing or stale data and stage static website
         run: python scripts/build_site.py --max-age-hours 4
+      - name: Acquire shared regional modules and stage reports and downloads
+        run: python scripts/build_zones.py
       - name: Prohibit state/credentials and validate static output
         run: |
           test -f site/index.html
+          test -f site/zones/portinatx/index.html
+          test -f site/zones/pirineo/index.html
+          test -f site/downloads/MeteoPortinatx.pyz
           test -f site/decidir/index.html
           test -f site/decision_cards.js
           test -f site/portinatx/api/core.json

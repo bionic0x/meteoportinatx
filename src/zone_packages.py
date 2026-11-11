@@ -68,7 +68,7 @@ def read_pack(path):
                     raise ValueError('unexpected or duplicate point/module')
                 seen.add(key)
                 _stamp(entry.get('retrieved_at'))
-                if entry.get('url') != request_url(module, points[point]):
+                if entry.get('url') != request_url(module, points[point],profile):
                     raise ValueError('provider request differs from selected profile')
                 state = entry.get('status')
                 if state == 'UNKNOWN':

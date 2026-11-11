@@ -30,6 +30,63 @@ def fixture(model='ecmwf_ifs025_ensemble', n=12, days=15, cold=True):
 
 
 class MetaTests(unittest.TestCase):
+    def test_partial_snow_is_unknown_but_complete_zero_is_zero(self):
+        model = 'ecmwf_ifs025_ensemble'
+        for snow, expected in [([0] + [None]*23, None), ([0]*24, 0),
+                               ([0]*23 + [float('nan')], None)]:
+            sample = fixture(days=1)
+            for row in sample:
+                for key in row['hourly']:
+                    if key.startswith('snowfall'):
+                        row['hourly'][key] = snow
+            summary = pm.family_summaries(pm.parse_ensemble(sample, model), model)
+            day = summary['masella:upper']['2026-11-10']
+            self.assertEqual(day['snow_ge5_fraction'], expected)
+            self.assertEqual(day['snow_cm']['p50'], expected)
+            self.assertIsNotNone(day['precip_mm']['p50'])
+
+    def test_partial_or_duplicate_day_does_not_form_total(self):
+        model = 'ecmwf_ifs025_ensemble'
+        for duplicate in [False, True]:
+            sample = fixture(days=1)
+            for row in sample:
+                h = row['hourly']
+                if duplicate:
+                    h['time'][-1] = h['time'][-2]
+                else:
+                    for key in h:
+                        h[key] = h[key][:12]
+            day = pm.family_summaries(pm.parse_ensemble(sample, model), model)['masella:upper']['2026-11-10']
+            self.assertIsNone(day['snow_ge5_fraction'])
+            self.assertIsNone(day['precip_mm']['p50'])
+
+    def test_family_support_is_specific_to_metric(self):
+        a = pm.family_summaries(pm.parse_ensemble(fixture(days=1), 'ecmwf_ifs025_ensemble'), 'ecmwf_ifs025_ensemble')
+        b = pm.family_summaries(pm.parse_ensemble(fixture(days=1, model='ncep_gefs_seamless'), 'ncep_gefs_seamless'), 'ncep_gefs_seamless')
+        for days in b.values():
+            for row in days.values():
+                row['snow_ge5_fraction'] = row['snow_ge10_fraction'] = None
+        result, _ = pm.combine({'ecmwf_ifs025_ensemble': a, 'ncep_gefs_seamless': b})
+        day = result['masella']['upper']['2026-11-10']
+        self.assertEqual(day['metric_support']['snow_ge5_member_fraction']['families'], ['ecmwf'])
+        self.assertEqual(day['metric_support']['wet_bulb_le0_member_fraction']['n_families'], 2)
+        self.assertEqual(day['n_independent_families'], 1)
+
+    def test_short_range_incomplete_accumulation_is_unknown(self):
+        import pirineo
+        from unittest.mock import patch
+        start = datetime(2026, 11, 11, tzinfo=UTC)
+        times = [(start + timedelta(hours=k)).strftime('%Y-%m-%dT%H:%M') for k in range(24)]
+        fields = {'temperature_2m':[4]*24, 'dew_point_2m':[2]*24, 'snowfall':[0]+[None]*23,
+                  'precipitation':[1]*24, 'wind_speed_10m':[10]*24, 'wind_direction_10m':[0]*24}
+        point = {'id':'p','alt_dem':1000,'alt_ref':1000,'tipo':'pueblo'}
+        with patch.object(pirineo.pd, 'now_utc', return_value=start):
+            row = pirineo.summarize_points({'p':{'time':times,'m':{'m':fields}}}, [point], [])[0]['modelos']['m']
+        self.assertIsNone(row['nieve24_cm'])
+        self.assertIsNone(row['pr72'])
+        self.assertEqual(row['pr24'],24)
+        self.assertFalse(row['coverage']['snowfall:0-24h']['complete'])
+
     def test_url_families_and_reject_unknown(self):
         d = parse_qs(urlsplit(pm.build_url('ecmwf_ifs025_ensemble')).query)
         self.assertEqual(int(d['forecast_days'][0]), 15)
