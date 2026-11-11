@@ -991,7 +991,7 @@ function renderGov(){
 function renderChannels(){
   const c=S.core; if(!c) return;
   $("channels").innerHTML=c.channels.map(ch=>{const lv=ch.available?LV[ch.level]:"unknown";
-    return `<details><summary>${pill(lv, ch.available?LV_ES[lv]:"Sin dato")} <b>${esc(ch.name)}</b> <span class="ev">${esc(ch.kind)} · confianza ${esc(ch.confidence)}${ch.local?" · señal local":""}</span></summary><ul class="plain" style="margin:6px 0 4px 12px">${ch.evidence.map(e=>`<li style="font-size:.8rem">${esc(e)}</li>`).join("")}</ul></details>`;}).join("");
+    return `<details><summary>${pill(lv, ch.available?LV_ES[lv]:"Sin dato")} <b>${esc(ch.name)}</b> <span class="ev">${esc(ch.kind)} · confianza ${esc(ch.confidence)}${ch.local?" · señal local":""} · ${ch.age_min!=null?`dato de hace ${esc(ch.age_min)} min`:"edad del dato desconocida"}</span></summary><ul class="plain" style="margin:6px 0 4px 12px">${ch.evidence.map(e=>`<li style="font-size:.8rem">${esc(e)}</li>`).join("")}</ul></details>`;}).join("");
 }
 function renderSources(){
   const c=S.core; if(!c) return;
@@ -1492,7 +1492,7 @@ function chatDigest(){
     d.precaucion_motor = {nivel:c.nowcast?.level, propuesto:c.nowcast?.proposed, transicion:c.nowcast?.transition, razones:(c.nowcast?.reasons||[]).slice(0,6),
       condiciones_abiertas:(c.precaution?.decision?.open_conditions||[]).map(x=>x.code)};
     d.peligro_observado = c.hazard;
-    d.canales = (c.channels||[]).map(ch=>({canal:ch.name, nivel:LV[ch.level], disponible:ch.available, evidencia:(ch.evidence||[]).slice(0,4).map(e=>String(e).slice(0,170))}));
+    d.canales = (c.channels||[]).map(ch=>({canal:ch.name, nivel:LV[ch.level], disponible:ch.available, edad_min:ch.age_min ?? null, evidencia:(ch.evidence||[]).slice(0,4).map(e=>String(e).slice(0,170))}));
     const pl=(c.channels||[]).find(ch=>ch.name==="pluviometros")?.metrics?.stations||[];
     d.pluviometros = pl.map(g=>({estacion:g.nombre, km:Math.round(g.dist_km), hoy_mm:g.total, mm_h:r1(g.rate), ayer_mas_hoy_mm:g.ante_mm, suelo_saturado:g.wet, hora:fmtT(g.t)}));
     d.historial_precaucion = (c.history||[]).slice(-12).map(h=>`${fmtT(h.id.replace(/^NWC-(\d{4})(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)Z$/,"$1-$2-$3T$4:$5:$6Z"))} ${h.nowcast}`);

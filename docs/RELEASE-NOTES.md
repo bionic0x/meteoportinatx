@@ -1,3 +1,12 @@
+# Sin publicar — cobertura por familia y frescura uniforme (#16)
+
+- `fuse()` exige al menos un canal observado vivo de la familia lluvia: con solo viento y mar vivos declara cobertura insuficiente, marca lluvia `UNKNOWN` y no desescala.
+- Cada canal registra la hora de su dato más reciente (`data_time`). Sin hora, más viejo que `CFG["channel_max_age_min"]` o fechado en el futuro, pasa a `UNKNOWN` antes de la fusión. El eje oficial no cambia.
+- Radar con la misma imagen con ecos en todos los frames → congelado, `UNKNOWN`. Frames vacíos idénticos (cielo despejado) siguen siendo válidos.
+- Modelos y oleaje con todos los valores `None` → `UNKNOWN`; los huecos ya no se cuentan como 0 mm.
+- `core.json`, la API pública y la vista de Portinatx muestran la edad del dato de cada canal.
+- Límites de edad de partida, sin calibrar; revisar con el archivo de pronósticos (#7).
+
 # Release 0.5.1 — correcciones de integración y seguridad
 
 - Reparada lectura de `X-Meteo-Freshness` mediante `Access-Control-Expose-Headers`.

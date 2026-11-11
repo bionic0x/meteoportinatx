@@ -188,7 +188,7 @@ def _public_view(domain: str, part: str, original: dict) -> dict:
             "episode": _pick(gov.get("episode") or {}, {"phase"}),
         }
         result["channels"] = [
-            {**_pick(c, {"name", "level", "kind", "confidence", "available", "local"}),
+            {**_pick(c, {"name", "level", "kind", "confidence", "available", "local", "data_time", "age_min"}),
              "evidence": []}
             for c in (original.get("channels") or []) if isinstance(c, dict)
         ]
