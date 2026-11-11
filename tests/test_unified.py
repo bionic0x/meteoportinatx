@@ -68,6 +68,8 @@ class Integration(unittest.TestCase):
         self.assertTrue((target / "portinatx" / "api" / "mar.json").exists())
         self.assertTrue((target / "pirineo" / "api" / "extended.json").exists())
         self.assertTrue((target / "index.html").is_file())
+        self.assertTrue((target / "decidir" / "index.html").is_file())
+        self.assertTrue((target / "decision_cards.js").is_file())
         self.assertEqual(json.loads((target / "manifest.json").read_text())["release"], "0.6.0")
         self.assertFalse((target / "portinatx" / "api" / "extended.json").exists())
         self.assertFalse((target / "pirineo" / "api" / "mar.json").exists())
@@ -140,6 +142,12 @@ class Integration(unittest.TestCase):
         self.addCleanup(srv.shutdown)
         conn = http.client.HTTPConnection("localhost", port, timeout=4)
         self.addCleanup(conn.close)
+        conn.request("GET", "/decidir/")
+        r = conn.getresponse(); self.assertEqual(r.status, 200)
+        self.assertIn(b"decision_cards.js", r.read())
+        conn.request("GET", "/decision_cards.js")
+        r = conn.getresponse(); self.assertEqual(r.status, 200)
+        self.assertIn(b"MeteoDecision", r.read())
         conn.request("GET", "/public_fetch.js")
         r = conn.getresponse(); self.assertEqual(r.status, 200)
         self.assertIn(b"meteoLoadDomain", r.read())
@@ -167,6 +175,7 @@ class Integration(unittest.TestCase):
         self.assertIn('href="../"', (SRC / "pirineo_app.html").read_text())
         self.assertIn('href="../"', (SRC / "portinatx_app.html").read_text())
         self.assertIn("api/refresh", (SRC / "pirineo_app.html").read_text())
+        self.assertIn("decidir/", (SRC / "nowcast_hub.html").read_text())
 
 
 if __name__ == "__main__":

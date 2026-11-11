@@ -29,7 +29,8 @@ PARTS = {
 }
 PAGES = {"/": "nowcast_hub.html", "/index.html": "nowcast_hub.html",
          "/portinatx/": "portinatx_app.html", "/portinatx/index.html": "portinatx_app.html",
-         "/pirineo/": "pirineo_app.html", "/pirineo/index.html": "pirineo_app.html"}
+         "/pirineo/": "pirineo_app.html", "/pirineo/index.html": "pirineo_app.html",
+         "/decidir/": "decision_app.html", "/decidir/index.html": "decision_app.html"}
 
 
 def home(domain: str) -> Path:
@@ -153,6 +154,9 @@ def server_handler(workers: dict[str, Collector]):
                     return self.send_bytes(200, page_for(path), "text/html; charset=utf-8")
                 except (OSError, KeyError):
                     return self.send_error(404)
+            if path == "/decision_cards.js":
+                return self.send_bytes(200, coastal.resource_bytes("decision_cards.js"),
+                                       "text/javascript; charset=utf-8")
             if path == "/public_fetch.js":
                 return self.send_bytes(200, coastal.resource_bytes("public_fetch.js"),
                                        "text/javascript; charset=utf-8")
@@ -236,11 +240,19 @@ def main(argv=None):
     if argv and argv[0] == "zone":
         import zone_engine
         return zone_engine.main(argv[1:])
+    if argv and argv[0] == "ledger":
+        import forecast_ledger
+        return forecast_ledger.main(argv[1:])
+    if argv and argv[0] == "evidence":
+        import zone_evidence
+        return zone_evidence.main(argv[1:])
     cli = argparse.ArgumentParser(description="MeteoPortinatx Unified · Portinatx + Pirineo")
     sub = cli.add_subparsers(dest="command", required=False)
     x = sub.add_parser("export", help="actualiza uno o ambos dominios")
     x.add_argument("--domain", choices=(*DOMAINS, "all"), default="all")
-    sub.add_parser("zone", help="perfiles y descarga modular por zona; zone --help")
+    sub.add_parser("zone", help="perfiles, packs y diagnósticos compartidos de zona")
+    sub.add_parser("evidence", help="metadatos de radar, avisos, estaciones y forense; no alertas")
+    sub.add_parser("ledger", help="registro prospectivo de pronósticos y medidas; ledger --help")
     sub.add_parser("selftest")
     sub.add_parser("status")
     s = sub.add_parser("serve", help="servidor local con dos colectores independientes")

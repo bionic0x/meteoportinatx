@@ -47,6 +47,7 @@ def stage_zones(target,*,getter=fetch_json,application=None):
             summary[name]={'status':manifest['status'],'created_at':manifest['created_at'],'sha256':parsed['sha256']}
         shutil.copyfile(application,downloads/'MeteoPortinatx.pyz')
         shutil.copyfile(ROOT/'docs/ZONAS-MODULARES.md',downloads/'guia.md')
+        shutil.copyfile(ROOT/'docs/FORECAST-LEDGER-P0.md',downloads/'FORECAST-LEDGER-P0.md')
         (downloads/'index.html').write_text('''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Modelar mi zona · MeteoPortinatx</title><style>body{font:17px/1.6 system-ui;max-width:850px;margin:32px auto;padding:16px;color:#172b3a;background:#f4f7f8}pre{overflow:auto;background:white;padding:16px}a{color:#075c83}</style></head><body>
 <a href="../">Observatorios</a><h1>Modelar mi zona</h1><p>Descarga el motor común y selecciona únicamente los datos que necesitas. Requiere Python 3.10 o posterior; sin bibliotecas externas. Las descargas de datos necesitan conexión y respetar las condiciones de cada proveedor.</p>
 <p><a href="MeteoPortinatx.pyz" download>Descargar MeteoPortinatx.pyz</a> · <a href="guia.md">Guía completa y flujo forense</a></p><p>Plantillas: <a href="../zones/portinatx/zone.json" download>Portinatx</a> · <a href="../zones/pirineo/zone.json" download>Pirineo (sin mar)</a></p>
@@ -62,6 +63,8 @@ python3 MeteoPortinatx.pyz zone report --pack mi-zona.zip --output mi-zona.html<
         except BaseException:
             shutil.rmtree(target/'zones')
             raise
+        index=target/'index.html'
+        index.write_text(index.read_text(encoding='utf-8').replace('id="shared-zones" hidden','id="shared-zones"'),encoding='utf-8')
         return summary
 
 

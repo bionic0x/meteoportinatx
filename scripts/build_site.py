@@ -60,6 +60,9 @@ def build_site(port_home: Path, pir_home: Path, target: Path, max_age_h: float =
     try:
         shutil.copy2(ROOT / "src" / "nowcast_hub.html", staging / "index.html")
         shutil.copy2(ROOT / "src" / "public_fetch.js", staging / "public_fetch.js")
+        shutil.copy2(ROOT / "src" / "decision_cards.js", staging / "decision_cards.js")
+        (staging / "decidir").mkdir()
+        shutil.copy2(ROOT / "src" / "decision_app.html", staging / "decidir" / "index.html")
         (staging / "public_config.js").write_text("window.METEO_BACKEND_URL=" + json.dumps(api_base) + ";\n", encoding="utf-8")
         for domain, (home, required, page) in specs.items():
             dest = staging / domain

@@ -178,3 +178,12 @@ Los archivos forenses **no se publican automáticamente**. Pages solo recoge per
 El workflow de Pages construye el programa, valida ambos dominios, recoge módulos regionales y publica `/zones/portinatx/`, `/zones/pirineo/` y `/downloads/`. Exige al menos un día de temperatura completo por punto. Los fallos complementarios no bloquean la previsión: quedan visibles como no disponibles. Una nueva ejecución falla antes de subir el sitio si falta previsión básica; la versión desplegada anterior permanece. La programación es cada seis horas: radar, METAR y avisos pueden envejecer mucho antes de la próxima actualización. Consultar las fuentes originales para situación actual.
 
 Dominios adicionales necesarios para verificar desde un entorno restringido: `api.open-meteo.com`, `ensemble-api.open-meteo.com`, `marine-api.open-meteo.com`, `api.rainviewer.com`, `tilecache.rainviewer.com`, `feeds.meteoalarm.org`, `aviationweather.gov`. La comprobación de despliegues requiere `api.github.com`, `bionic0x.github.io` y, para Render, su dominio de servicio y la API pertinente. No se modificó la configuración publicada del entorno.
+
+
+## Compatibilidad con las incorporaciones de main
+
+Se conserva `nowcast.py evidence PERFIL evidencias.json --as-of FECHA`: normaliza metadatos offline `schema:1, items:[]` con clases radar/warning/station/forensic. La presencia espacial y temporal queda como `PRESENT_UNVERIFIED`; no autentica la fuente ni autoriza avisos. Las estaciones y evidencias forenses exigen las declaraciones `qc=PASS` y `source_type=instrument`; el contrato mantiene separación respecto a los adaptadores públicos y medidas revisadas del evaluador.
+
+El paquete portable también incluye el [Forecast Ledger P0](FORECAST-LEDGER-P0.md), accesible como `python3 MeteoPortinatx.pyz ledger --root /ruta/privada ...`. Conserva su captura prospectiva, importaciones externas no certificadas, integridad, pareo y métricas por umbral. Su esquema requiere emisión, inicialización del proveedor, procedencia y licencia explícitas: no se rellenan esos campos inventando datos desde un ZIP. `zone forensic` ofrece evaluación diaria y contexto archivado de zonas personalizadas; el ledger ofrece registro prospectivo con su contrato P0. No se cruzan ni convierten automáticamente entre sí. Ambos evitan entrenamiento o cambio de avisos a partir de evidencias comunitarias no verificadas.
+
+Las vistas `/decidir/` y sus cinco perfiles de uso se conservan. Las descargas e informes regionales amplían la web sin sustituir sus fuentes ni reglas.

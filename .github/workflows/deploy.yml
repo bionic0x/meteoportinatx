@@ -64,6 +64,8 @@ jobs:
           test -f site/zones/portinatx/index.html
           test -f site/zones/pirineo/index.html
           test -f site/downloads/MeteoPortinatx.pyz
+          test -f site/decidir/index.html
+          test -f site/decision_cards.js
           test -f site/portinatx/api/core.json
           test -f site/pirineo/api/core.json
           test -f site/pirineo/api/extended.json

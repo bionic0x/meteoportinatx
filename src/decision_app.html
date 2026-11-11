@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Decidir · MeteoPortinatx</title>
+<style>
+:root{color-scheme:dark;--bg:#0b151b;--surface:#13232a;--surface2:#192e36;--line:#314854;--ink:#eaf2f3;--muted:#abc0c9;--sea:#f49b7d;--mount:#88c9df;--green:#b4e0c0;--amber:#ffd49a;--alert:#ffa6a6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+button,select{font:inherit;color:inherit}a{color:inherit}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--mount);outline-offset:3px}
+.wrap{max-width:1170px;margin:auto;padding:20px clamp(16px,4vw,48px) 48px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:4px 0 20px}
+.brand{text-decoration:none;font-weight:800;letter-spacing:.02em}.brand span{color:var(--sea)}.toplinks{display:flex;gap:16px;font-size:.84rem;color:var(--muted)}
+.eyebrow{color:var(--mount);font-size:.72rem;font-weight:800;letter-spacing:.17em;text-transform:uppercase}
+h1{font-size:clamp(2rem,5vw,3.8rem);letter-spacing:-.055em;line-height:1.12;margin:12px 0}h2,h3{line-height:1.25;letter-spacing:-.02em}.lede{max-width:65ch;color:var(--muted);font-size:1.04rem}
+.modes{display:flex;gap:6px;flex-wrap:wrap;margin-top:28px}.modes>*{padding:9px 16px;border:1px solid var(--line);border-radius:8px;text-decoration:none;font-size:.9rem}.modes .active{background:var(--surface2);border-color:#729aaa;font-weight:800}
+.selector{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0}.profile{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:10px 16px;cursor:pointer}.profile[aria-pressed=true]{background:var(--ink);color:var(--bg);font-weight:800;border-color:var(--ink)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:clamp(20px,3vw,34px)}
+.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,1fr);gap:32px}.question{font-size:clamp(1.75rem,3.4vw,2.6rem);line-height:1.18;letter-spacing:-.045em;margin:10px 0 16px}.answer{font-size:1.05rem;font-weight:700;max-width:54ch}.facts{margin:0;display:grid;gap:10px}.facts div{border-bottom:1px solid var(--line);padding-bottom:8px}.facts dt{font-size:.78rem;color:var(--muted)}.facts dd{margin:3px 0 0;font-size:.9rem;overflow-wrap:anywhere}
+.tag{display:inline-flex;gap:5px;align-items:center;padding:4px 9px;border-radius:999px;font-size:.75rem;border:1px solid var(--line);font-weight:750}.tag.recent{color:var(--green);border-color:#34624d}.tag.stale,.tag.unknown{color:var(--amber);border-color:#6d5b39}
+.work{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}.axis{min-height:200px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}.axis h3{font-size:.81rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}.signal{font-size:1.14rem;font-weight:750;margin:0 0 9px;overflow-wrap:anywhere}.axis .extra{font-size:.86rem;color:var(--muted);margin:0}.axis[data-status=unknown]{border-style:dashed}.axis[data-status=official]{border-left:3px solid var(--amber)}
+.evidence{margin-top:20px;border-top:1px solid var(--line);padding-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:28px}.evidence h3{margin:0 0 8px;font-size:1rem}.evidence ul{margin:0;padding:0;list-style:none;display:grid;gap:9px}.evidence li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:6px 0;font-size:.88rem}.evidence li em{font-style:normal;color:var(--muted);text-align:right}.label-est{color:var(--amber);font-weight:750}.steps{font-size:.93rem;color:var(--ink);max-width:58ch}
+.ctrls{margin:16px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}.ctrls select{background:var(--surface2);border:1px solid var(--line);padding:8px 12px;border-radius:8px;max-width:100%}.subtle{color:var(--muted);font-size:.82rem}
+.links{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 0}.action{display:inline-block;text-decoration:none;border:1px solid #618a9b;border-radius:9px;padding:11px 16px;font-weight:750;background:#1e3945}.action.secondary{border-color:var(--line);background:var(--surface)}.update{border-radius:9px;background:none;border:1px solid var(--line);padding:9px 13px;cursor:pointer}.update:disabled{opacity:.6}
+.notice{margin-top:23px;padding:15px 19px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:.84rem;line-height:1.6}
+@media(max-width:780px){.hero,.work,.evidence{grid-template-columns:1fr}.hero{gap:18px}.axis{min-height:0}.toplinks{gap:9px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body><div class="wrap">
+<header class="top"><a class="brand" href="../">METEO<span>PORTINATX</span></a><nav class="toplinks" aria-label="Exploración"><a href="../">Observatorios</a><a href="../portinatx/">Ibiza</a><a href="../pirineo/">Pirineo</a></nav></header>
+<main>
+<section aria-labelledby="page-title"><p class="eyebrow">Interfaz de decisión · Fase P0</p><h1 id="page-title">La información relevante.<br>Sin buscarla entre 60 gráficos.</h1>
+<p class="lede">Selecciona para qué consultas el tiempo. Cada vista distingue aviso oficial, medición y estimación. Una instantánea antigua nunca se interpreta como ausencia de peligro.</p>
+<div class="modes" aria-label="Niveles de profundidad"><span class="active" aria-current="page">01 · Decidir</span><a id="follow" href="../portinatx/#vigilancia">02 · Seguir datos</a><a id="investigate" href="../portinatx/#forense">03 · Investigar</a></div></section>
+<nav class="selector" id="profiles" aria-label="Elige tu perfil"></nav>
+<section class="panel" aria-live="polite" aria-atomic="true" aria-labelledby="question">
+<div class="hero"><div><span id="freshness" class="tag unknown">Comprobando datos</span><h2 class="question" id="question">Selecciona tu situación</h2><p id="answer" class="answer">Buscando la última información disponible…</p></div>
+<dl class="facts"><div><dt>Última captura</dt><dd id="issued">—</dd></div><div><dt>Origen del dato</dt><dd id="provenance">—</dd></div><div><dt>Zona o punto</dt><dd id="location">—</dd></div><div><dt>Estado del servicio</dt><dd id="service-note">Consulta bajo demanda, no vigilancia continua</dd></div></dl></div>
+<div class="ctrls" id="place-controls" hidden><label for="place">Punto de referencia</label><select id="place"></select><span class="subtle">Ubicaciones del motor; no es la dirección personal de una vivienda.</span></div>
+<div class="work" aria-label="Separación de fuentes">
+<article class="axis" id="official-card" data-status="unknown"><h3>01 · Avisos institucionales</h3><p class="signal" id="official-title">Sin verificar</p><p class="extra" id="official-detail">Consulta el organismo oficial</p></article>
+<article class="axis" id="observed-card" data-status="unknown"><h3 id="observed-label">02 · Peligro observado</h3><p class="signal" id="observed-title">Sin datos</p><p class="extra" id="observed-detail">Solo mediciones disponibles y recientes</p></article>
+<article class="axis" id="operational-card" data-status="unknown"><h3 id="operational-label">03 · Precaución / estimación</h3><p class="signal" id="operational-title">Sin calcular</p><p class="extra" id="operational-detail">No es una instrucción de emergencia</p></article>
+</div>
+<div class="evidence"><section><h3>Señales consultadas</h3><ul id="signals"><li>Sin datos comprobados</li></ul></section><section><h3>Cómo interpretarlo</h3><p class="steps" id="guidance">Los avisos oficiales prevalecen. No usar datos desactualizados para decidir.</p><p class="subtle" id="qualification">Las fracciones de ensemble no son probabilidades calibradas.</p></section></div>
+<div class="links"><a class="action" id="deep-link" href="../portinatx/">Ver el observatorio completo</a><a class="action secondary" id="official-link" href="https://www.aemet.es/" rel="noopener noreferrer" target="_blank">Consultar avisos oficiales</a><button class="update" id="reload" type="button">Volver a consultar</button></div>
+</section>
+<p class="notice"><strong>Límites de seguridad.</strong> Esta pantalla no conoce las condiciones de una vivienda, embarcación, carretera, pista o itinerario ni envía alertas push. Render Free puede suspenderse; GitHub Pages ofrece instantáneas de periodicidad aproximada de seis horas. La ausencia de dato no significa calma. Ante riesgo, prevalecen protección civil, servicios de emergencia y organismos meteorológicos oficiales. Ninguna probabilidad o modelo aquí está acreditado como predicción calibrada.</p>
+</main></div>
+<script src="../public_config.js"></script><script src="../public_fetch.js"></script><script src="../decision_cards.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id); const M=window.MeteoDecision;
+const urls={portinatx:'../portinatx/api/core.json',pirineo:'../pirineo/api/core.json'};
+const pages={portinatx:'../portinatx/',pirineo:'../pirineo/'};
+const official={portinatx:'https://www.aemet.es/',pirineo:'https://meteofrance.com/meteo-montagne'};
+const cache={};let current='casa', seq=0;
+const fmt=(n,unit)=>Number.isFinite(n)?`${new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(n)} ${unit}`:'UNKNOWN';
+function set(id,value){$(id).textContent=String(value??'—');}
+function axis(id,status,title,detail){$(id+'-card').dataset.status=status||'unknown';set(id+'-title',title);set(id+'-detail',detail);}
+function render(profile, packet){
+ const kind=M.profiles[profile],place=$('place').value||'font_romeu';
+ const x=M.project(profile,packet?.data,packet?.source||'sin datos',place);
+ set('question',x.question);set('answer',x.heading);
+ $('freshness').className='tag '+x.state;
+ set('freshness', x.state==='recent'?'Ciclo reciente':x.state==='stale'?'Datos antiguos':'Datos no verificables');
+ set('issued',x.issued?new Date(x.issued).toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}):'Desconocida');
+ const sourceName={'backend':'API de Render (no necesariamente continua)','snapshot':'Instantánea GitHub Pages','snapshot-fallback':'Respaldo GitHub Pages','local':'Archivo local'};
+ set('provenance',sourceName[x.source]||'Fuente no confirmada');
+ set('location',kind.domain==='portinatx'?'Portinatx · Ibiza':M.places[place]||'Pirineo');
+ set('service-note',x.available?`Edad del ciclo: ${x.ageMin} min. Los sensores pueden tener otra edad.`:'No se dispone de un ciclo reciente');
+ $('place-controls').hidden=kind.domain!=='pirineo';
+ axis('official',x.official.kind,x.official.title,x.official.detail);
+ $('observed-label').textContent=kind.domain==='portinatx'?'02 · Peligro observado':'02 · Observación en montaña';
+ $('operational-label').textContent=kind.domain==='portinatx'?'03 · Precaución calculada':'03 · Previsión de un modelo';
+ const usable=x.observed.filter(s=>s.kind!=='unknown');
+ if(kind.domain==='portinatx'&&x.available){axis('observed',usable.length?'observed':'unknown',
+   usable.length?`${usable.length} de ${x.observed.length} canales disponibles`:'Sin observación local utilizable',
+   'Mide señales diferentes; niveles internos, no avisos AEMET.');}
+ else axis('observed','unknown','Sin observación instrumental detallada',kind.domain==='pirineo'?'Consultar estaciones y fuentes de medida en el observatorio.':'No usar datos antiguos como situación actual.');
+ if(x.operational&&x.available)axis('operational','estimated',x.operational.title,x.operational.detail);
+ else if(kind.domain==='pirineo'&&x.forecast&&x.available){const f=x.forecast;
+   axis('operational','estimated',f.snow24===null?'Nieve: dato no disponible':`Nieve 24 h: ${fmt(f.snow24,'cm')}`,
+     `Modelo ${f.model}; racha 24 h ${fmt(f.gust24,'km/h')}; NO es observación.`);
+ }else axis('operational','unknown','Estimación no disponible','No es un nivel de seguridad ni un pronóstico calibrado.');
+ const list=$('signals');list.replaceChildren();
+ const details=x.observed.length?x.observed.map(z=>[z.label,z.value]):
+   x.forecast?[['Nieve 24 h (modelo)',fmt(x.forecast.snow24,'cm')],['Precipitación 24 h (modelo)',fmt(x.forecast.pr24,'mm')],['Racha 24 h (modelo)',fmt(x.forecast.gust24,'km/h')],['Temperatura (modelo)',fmt(x.forecast.temp,'°C')]]:
+   [['Datos disponibles','UNKNOWN']];
+ details.forEach(([name,value])=>{const li=document.createElement('li'),s=document.createElement('span'),v=document.createElement('em');s.textContent=name;v.textContent=value;li.append(s,v);list.appendChild(li)});
+ set('guidance',x.guidance);set('qualification',x.available?'Diagnóstico del último ciclo; el estado de cada sensor debe revisarse en su fuente.':'Datos obsoletos o ausentes: consultar boletines oficiales vigentes.');
+ $('deep-link').href=pages[kind.domain]+(profile==='barca'?'#mar':profile==='meteo'?'#forense':profile==='esqui'?'#corte':'');
+ $('official-link').href=official[kind.domain];
+ $('follow').href=pages[kind.domain]+(kind.domain==='portinatx'?'#vigilancia':'#puntos');
+ $('investigate').href=pages[kind.domain]+(kind.domain==='portinatx'?'#forense':'#diagnostico');
+ for(const b of document.querySelectorAll('.profile'))b.setAttribute('aria-pressed',String(b.dataset.profile===profile));
+}
+async function show(profile,refresh=false){
+ current=profile;location.hash=profile;const domain=M.profiles[profile].domain;
+ const ticket=++seq;
+ if(refresh)delete cache[domain];
+ if(!cache[domain]){
+   cache[domain]=window.meteoLoadPart(domain,'core',urls[domain]).catch(()=>({data:null,source:'sin datos'}));
+ }
+ const packet=await cache[domain];if(seq!==ticket)return;render(profile,packet);
+}
+for(const [id,p] of Object.entries(M.profiles)){const b=document.createElement('button');b.type='button';b.className='profile';b.dataset.profile=id;b.textContent=p.label;b.addEventListener('click',()=>show(id));$('profiles').appendChild(b)}
+for(const [id,txt] of Object.entries(M.places)){const o=document.createElement('option');o.value=id;o.textContent=txt;$('place').appendChild(o)}
+$('place').addEventListener('change',()=>{if(cache.pirineo)cache.pirineo.then(p=>render(current,p));});
+$('reload').addEventListener('click',()=>show(current,true));
+window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);if(M.profiles[p]&&p!==current)show(p)});
+show(M.profiles[location.hash.slice(1)]?location.hash.slice(1):'casa');
+})();
+</script>
+</body></html>
