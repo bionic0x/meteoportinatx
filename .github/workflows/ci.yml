@@ -33,6 +33,8 @@ jobs:
         run: node tests/test_decision_cards.cjs
       - name: Device sensors and haptic contract (Node)
         run: node tests/test_device_sensors.cjs
+      - name: Mountain atmospheric profile contract (Node)
+        run: node tests/test_pirineo_atmos.cjs
       - name: Mountain observatory evidence contract (Node)
         run: node tests/test_pirineo_observatory.cjs
       - name: Build one portable application
