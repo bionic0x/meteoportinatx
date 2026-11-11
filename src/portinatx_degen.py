@@ -2374,8 +2374,11 @@ CHANNEL_ROOT = {
     "mar_bahia": "nwp", "manual": "owner"}
 
 
+# #20: familia = peligro físico. La confirmación independiente de 'alarm' exige dos observaciones
+# del MISMO peligro. Los rayos son peligro eléctrico: no confirman lluvia/inundación ni son
+# confirmados por ella. Su intensidad se muestra en su canal y en el eje observado sin rebajarse.
 HAZARD_FAMILY = {"lluvia_observada": "lluvia", "pluviometros": "lluvia", "radar": "lluvia",
-                 "escorrentia_torrentes": "lluvia", "rayos": "lluvia", "frente_racha": "viento",
+                 "escorrentia_torrentes": "lluvia", "rayos": "electrica", "frente_racha": "viento",
                  "viento_estaciones": "viento", "mar_boyas": "mar"}
 
 
