@@ -5324,7 +5324,8 @@ def selftest() -> int:
             [{"t": (tnow - timedelta(minutes=60 * k)).isoformat(), "hm0": 4.1 - 0.2 * k, "dmd": d, "tp": 9.0} for k in (3, 2, 1, 0)]}})
     ne, sw = ch_sea_obs(mk(35.0)), ch_sea_obs(mk(220.0))
     check("PORTUS boya: Hs 4,1 m del NE → alert (techo del mar abierto); mismo Hs del SW no cuenta",
-          ne.level == 2 and sw.level == 0 and ne.available and "+0.60 m en 3 h" in " ".join(ne.evidence))
+          ne.level == 2 and sw.level == 0 and ne.available and "Hs 4.10 m" in " ".join(ne.evidence)
+          and "en 3 h" not in " ".join(ne.evidence))
     check("R5 lluvia local + mar en boyas NO se confirman (fenómenos distintos); lluvia + radar sí",
           fx["proposed"] == "alert" and fy["proposed"] == "alarm")
     # F10 — aviso costero descartado
