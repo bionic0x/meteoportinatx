@@ -154,3 +154,29 @@ def record(srcs: dict, issued: datetime, site: dict, buoy_coords: dict, root: st
         return out
     except Exception as exc:                       # el ciclo meteorológico no depende de esto
         return {"estado": "ERROR", "motivo": type(exc).__name__}
+
+
+def record_observations(observations: list[dict], root: str | None = None) -> dict:
+    """Escribe observaciones ya validadas por su proveedor (p. ej. Météo-France Q 0/1) en el ledger privado.
+    Mismas garantías que `record`: opcional, fuera del repositorio, nunca lanza."""
+    root = root or os.environ.get("METEO_LEDGER")
+    if not root:
+        return {"estado": "DESACTIVADO"}
+    try:
+        import forecast_ledger as fl
+        root_path = Path(root).resolve()
+        repo = Path(__file__).resolve().parents[1]
+        if root_path == repo or repo in root_path.parents:
+            return {"estado": "RECHAZADO", "motivo": "METEO_LEDGER dentro del repositorio"}
+        led = fl.Ledger(root_path)
+        out = {"estado": "OK", "observaciones": 0, "repetidos": 0, "conflictos": 0, "rechazados": 0}
+        for item in observations:
+            try:
+                out["observaciones" if not led.add("observation", item)["replay"] else "repetidos"] += 1
+            except fl.ConflictError:
+                out["conflictos"] += 1
+            except fl.ValidationError:
+                out["rechazados"] += 1
+        return out
+    except Exception as exc:
+        return {"estado": "ERROR", "motivo": type(exc).__name__}
