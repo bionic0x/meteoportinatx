@@ -2220,7 +2220,13 @@ def fuse(channels: list[Channel], hr_gate: bool = False) -> dict:
     # fenómeno obligatoria (lluvia) sin ningún canal observado vivo, se declara cobertura
     # insuficiente y la histéresis no desescala. Viento y mar vivos no dicen nada de la lluvia.
     n_obs_total = sum(1 for c in channels if c.kind == "obs")
-    families = {f: ("OK" if any(HAZARD_FAMILY.get(c.name) == f for c in obs) else "UNKNOWN")
+    # H1: rayos y proxy de escorrentía están en la familia de *peligro* lluvia,
+    # pero NO son medidas de precipitación que certifiquen cobertura seca.
+    COVERAGE_RAIN = frozenset(("lluvia_observada", "pluviometros", "radar"))
+    rain_all = [c for c in channels if c.kind == "obs" and c.name in COVERAGE_RAIN]
+    rain_live = [c for c in rain_all if c.available]
+    families = {f: ("OK" if (bool(rain_live) if f == "lluvia" else
+                         any(HAZARD_FAMILY.get(c.name) == f for c in obs)) else "UNKNOWN")
                 for f in CFG["required_families"]}
     blind = [f for f, st in families.items() if st == "UNKNOWN"]
     insufficient = len(obs) < CFG["min_obs_channels"] or bool(blind)
@@ -2228,13 +2234,14 @@ def fuse(channels: list[Channel], hr_gate: bool = False) -> dict:
         reasons.append(f"⚠ COBERTURA INSUFICIENTE: {len(obs)}/{n_obs_total} canales observados — "
                        f"un 'quiet' aquí no significa calma")
     for f in blind:
-        reasons.append(f"⚠ COBERTURA INSUFICIENTE: familia {f} sin ningún canal observado vivo — "
-                       f"{f} UNKNOWN, un 'quiet' aquí no significa calma")
+        reasons.append(f"⚠ COBERTURA INSUFICIENTE DE {f.upper()}: familia sin medida reciente "
+                       f"directa de precipitación — {f} UNKNOWN, un 'quiet' no significa calma")
     cov = f"{len(obs)}/{n_obs_total} canales observados activos"
     if blind:
         cov += " · sin dato: " + ", ".join(blind)
     return {"proposed": LEVELS[level], "reasons": reasons, "missing": missing, "insufficient": insufficient,
-            "families": families, "obs_coverage": cov}
+            "families": families, "rain_coverage": f"{len(rain_live)}/{len(rain_all)}",
+            "obs_coverage": cov}
 
 
 def apply_hysteresis(proposed: str, state: dict, key: str = "level", *,
@@ -2821,10 +2828,12 @@ def cycle(state: dict) -> dict:
             "level": final, "proposed": fz_out["proposed"], "transition": transition,
             "reasons": fz_out["reasons"], "missing": fz_out["missing"], "coverage": fz_out["obs_coverage"],
             "nowcast": {"level": now_lvl, "proposed": fz_now["proposed"], "transition": now_tr,
+                        "insufficient": fz_now["insufficient"], "rain_coverage": fz_now["rain_coverage"],
                         "reasons": fz_now["reasons"]},
             "warning_changes": changes, "notify": notified,
             "official_warning": official, "observed_local_hazard": hazard,
             "operational_precaution": {"level": now_lvl, "transition": now_tr, "hold": hold,
+                                       "insufficient": fz_now["insufficient"], "rain_coverage": fz_now["rain_coverage"],
                                        "decision": decision, "exit_conditions": exit_cond,
                                        "note": "precaución propia; NO prolonga la vigencia del aviso oficial"},
             "governance": {"framework": "Ante Agency Agents (doctrina + contrato NEXUS)",

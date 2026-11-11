@@ -175,9 +175,9 @@ def _public_view(domain: str, part: str, original: dict) -> dict:
         ]
         result["warning_changes"] = _public_warning_changes(original.get("warning_changes"), official)
         result["hazard"] = _public_hazard(original.get("hazard"))
-        result["precaution"] = {**_pick(precaution, {"level", "transition"}),
+        result["precaution"] = {**_pick(precaution, {"level", "transition", "insufficient", "rain_coverage"}),
                                 "decision": {}, "exit_conditions": []}
-        result["nowcast"] = _pick(now, {"level", "proposed", "transition"})
+        result["nowcast"] = _pick(now, {"level", "proposed", "transition", "insufficient", "rain_coverage"})
         result["outlook"] = {**_pick(outlook, {"level", "proposed", "transition"}), "reasons": []}
         coverage = original.get("coverage")
         result["coverage"] = coverage if isinstance(coverage, (int, float)) and not isinstance(coverage, bool) else None

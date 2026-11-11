@@ -104,10 +104,12 @@
       const items = hazard(core, keys);
       const usable = items.filter(h => h.kind !== 'unknown');
       const precaution = core && core.precaution && core.precaution.level;
+      const insufficient = core && core.precaution && core.precaution.insufficient === true;
       return {...common, official:officialCoast(core), observed:items,
-        operational: profile === 'casa' && Object.prototype.hasOwnProperty.call(LEVELS, precaution) ?
+        operational: profile === 'casa' && !insufficient && Object.prototype.hasOwnProperty.call(LEVELS, precaution) ?
                     {title:`Precaución calculada: ${precaution}`, detail:'Estimación operativa, no instrucción individual ni aviso oficial.'} : null,
-        heading: usable.length ? `${usable.length} de ${items.length} canales observados disponibles` : 'Observación local insuficiente',
+        heading: insufficient ? 'Cobertura de lluvia insuficiente · situación no verificable' :
+        usable.length ? `${usable.length} de ${items.length} canales observados disponibles` : 'Observación local insuficiente',
         guidance: profile === 'casa' ? 'Revisar el protocolo propio y las indicaciones oficiales de emergencias; la web no conoce el estado de la vivienda.' :
                   profile === 'barca' ? 'Contrastar con capitanía, AEMET y condiciones en la bocana antes de maniobras náuticas.' :
                   'Inspeccionar datos de origen, ejecuciones del modelo y evidencias falsables; las fracciones ensemble no están calibradas.'};
