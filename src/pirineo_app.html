@@ -83,6 +83,14 @@ a{color:var(--ice)}
 .chat-opts{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:.82rem;margin-top:6px}.chat-opts .sp{flex:1}
 @media (max-width:600px){header{position:static}.chat{width:100vw;top:auto;height:88vh;border-left:0;border-top:1px solid var(--line);border-radius:10px 10px 0 0}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.pov-pointbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.pov-pointbar select{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:6px;max-width:100%}
+.pov-unknown{padding:12px;border:1px solid var(--line);border-left:3px solid var(--w);background:var(--panel2);font-family:var(--f-mono)}
+.pov-good{display:block;color:var(--q);margin:12px 0}
+.pov-unk{display:block;color:var(--w);margin:12px 0}
+.pov-mini{margin:12px 0}.pov-mini .kv{margin-top:0}
+#pov-official li{margin-bottom:8px}
+nav.tabs{scrollbar-width:thin}
 </style>
 
 <header>
@@ -92,15 +100,49 @@ a{color:var(--ice)}
   <div class="meta"><span id="m-issued">esperando datos…</span><span id="m-src"></span></div>
   <div class="actions"><a class="btn act" href="ruta/" style="text-decoration:none">Ruta y tiempo</a><button class="btn act" id="btn-refresh" type="button" hidden>Actualizar y publicar</button><span id="refresh-st" role="status" aria-live="polite"></span><button class="btn act" id="btn-chat" type="button" hidden aria-expanded="false">Preguntar a Claude</button></div>
   <nav class="tabs" aria-label="Secciones">
-    <a href="#mapa" data-tab="mapa">Mapa</a>
+    <a href="#vigilancia" data-tab="vigilancia">Vigilancia</a>
+    <a href="#satelite" data-tab="satelite">Satélite / radar</a>
+    <a href="#atmosfera" data-tab="atmosfera">Atmósfera</a>
+    <a href="#mapa" data-tab="mapa">Territorio</a>
     <a href="#corte" data-tab="corte">Corte y cotas</a>
+    <a href="#diagnostico" data-tab="diagnostico">Superficie</a>
     <a href="#puntos" data-tab="puntos">Puntos</a>
-    <a href="#diagnostico" data-tab="diagnostico">Diagnóstico</a>
-    <a href="#extendido" data-tab="extendido">15 días · metaanálisis</a>
+    <a href="#modelos" data-tab="modelos">Modelos</a>
+    <a href="#extendido" data-tab="extendido">Ensemble · 15 días</a>
+    <a href="#forense" data-tab="forense">Forense</a>
+    <a href="#gobernanza" data-tab="gobernanza">Gobernanza</a>
+    <a href="#laboratorio" data-tab="laboratorio">Laboratorio</a>
   </nav>
 </header>
 
 <main>
+  <div class="tab" id="tab-vigilancia" hidden>
+    <section class="card"><h2>Tres ejes · aviso oficial / observación / diagnóstico</h2>
+      <div class="kv" id="pov-axes"></div><div id="pov-evidence"></div>
+      <p class="src">El diagnóstico de montaña no equivale a un aviso institucional. Para aludes deben comprobarse los boletines de la autoridad competente.</p></section>
+    <section class="card"><h2>Avisos oficiales de las zonas pirenaicas</h2><div id="pov-official"></div>
+      <p class="src">CAP AEMET en España y MeteoAlarm para Francia y Andorra. La cobertura completa no está garantizada si una fuente falla.</p></section>
+  </div>
+  <div class="tab" id="tab-satelite" hidden>
+    <section class="card"><h2>Satélite / radar · cobertura externa</h2>
+      <div class="pov-unknown">NOT_INTEGRATED · no hay raster de satélite/radar georreferenciado y fechado para Pirineos 0.6.1. Ausencia de imágenes NO significa ausencia de lluvia o tormentas.</div>
+      <p class="src">Visores oficiales; consulta la hora y el producto en el sitio original. No alimentan el diagnóstico local.</p>
+      <ul class="plain">
+        <li><a href="https://view.eumetsat.int/" target="_blank" rel="noopener noreferrer">EUMETView · satélite EUMETSAT</a></li>
+        <li><a href="https://www.aemet.es/es/eltiempo/observacion/radar/" target="_blank" rel="noopener noreferrer">AEMET · radar de precipitación</a></li>
+        <li><a href="https://es.meteocat.gencat.cat/radar?lang=es" target="_blank" rel="noopener noreferrer">Meteocat · radar de Catalunya</a></li>
+      </ul><p class="src">El radar de Ibiza no es válido para el Pirineo. Integrar imágenes de estas zonas exige georreferenciación, timestamps, permisos y verificación de ecos orográficos.</p></section>
+  </div>
+  <div class="tab" id="tab-atmosfera" hidden>
+    <section class="card"><h2>Termodinámica y viento · punto de control</h2>
+      <div class="pov-pointbar"><label for="pov-point">Punto de diagnóstico</label>
+        <select id="pov-point" aria-label="Punto del observatorio"></select></div>
+      <div class="kv" id="pov-atmos-cards"></div><p id="pov-atmos-note" class="src"></p></section>
+    <section class="card"><h2>Perfil a 700 hPa y cotas por vertiente</h2>
+      <div class="tbl"><table><thead><tr><th>Vertiente</th><th class="num">Isocero m</th><th class="num">Tw 0 °C m</th><th class="num">Copo m</th><th class="num">Viento 700 km/h</th><th>Flujo</th><th class="num">Froude</th></tr></thead><tbody id="pov-atmos-rows"></tbody></table></div>
+      <p class="src">Perfiles ARPEGE norte y sur independientes. Froude y cota son diagnósticos modelizados, no observaciones.</p></section>
+  </div>
+
   <section class="card">
     <div class="bar">
       <div class="ctrl" role="group" aria-label="Modelo" id="models"></div>
@@ -165,7 +207,7 @@ a{color:var(--ice)}
       <article class="card">
         <h2>Observación</h2>
         <div class="tbl" style="margin-top:8px"><table id="t-obs"><thead><tr><th>Estación</th><th>Red</th><th class="num">Alt. m</th><th class="num">T °C</th><th class="num">HR %</th><th class="num">Viento km/h</th><th class="num">Racha día</th><th class="num">Lluvia día</th><th class="num">Hace</th></tr></thead><tbody></tbody></table></div>
-        <p class="src">AEMET (red oficial; La Molina, Planoles, Martinet, Tuixent), Météo-France y SMA de Andorra a través de Meteociel (lectura no oficial de su tabla horaria), ClimayNievePirineos (Envalira, Bordes, El Tarter, Incles), Meteoclimatic (aficionados, coordenadas de núcleo) y METAR de Andorra–La Seu. Las estaciones de AEMET publican con 1–2 h de retraso.</p>
+        <p class="src">AEMET (red oficial; La Molina, Planoles, Martinet, Tuixent), Météo-France DPObs (API oficial opcional, observación reciente), estaciones francesas y SMA de Andorra retransmitidos por Meteociel (lectura secundaria no oficial), ClimayNievePirineos (Envalira, Bordes, El Tarter, Incles), Meteoclimatic (aficionados, coordenadas de núcleo) y METAR de Andorra–La Seu. Las estaciones de AEMET publican con 1–2 h de retraso.</p>
       </article>
       <article class="card">
         <h2>Avisos oficiales</h2>
@@ -197,6 +239,30 @@ a{color:var(--ice)}
     </section>
   </div>
 
+
+  <div class="tab" id="tab-modelos" hidden>
+    <section class="card"><h2>Modelos · contraste en el punto seleccionado</h2>
+      <p class="src">Elige un punto en Atmósfera. Modelos deterministas; no confundir su número con miembros estadísticamente independientes.</p>
+      <div class="tbl"><table><thead><tr><th>Modelo</th><th class="num">T ahora °C</th><th class="num">Precip. 24 h mm</th><th class="num">Nieve 24 h cm</th><th class="num">Racha máx 24 h km/h</th><th>Origen</th></tr></thead><tbody id="pov-model-rows"></tbody></table></div></section>
+    <section class="card"><h2>Serie temporal · bloques 3 h</h2>
+      <div class="tbl"><table><thead><tr><th>Hora local</th><th class="num">T °C</th><th class="num">Precip mm</th><th class="num">Nieve cm</th><th class="num">Racha km/h</th><th class="num">HR %</th><th class="num">Nubes %</th></tr></thead><tbody id="pov-model-timeline"></tbody></table></div>
+      <p class="src" id="pov-model-note"></p></section>
+  </div>
+  <div class="tab" id="tab-forense" hidden>
+    <section class="card"><h2>Forense · revisión de modelos ≠ error observado</h2>
+      <div id="pov-forensic"></div><p class="src">El ledger prospectivo privado no se publica: nunca copiar datos de vivienda ni registro local a Pages.</p></section>
+  </div>
+  <div class="tab" id="tab-gobernanza" hidden>
+    <section class="card"><h2>Trazabilidad de fuentes y edad</h2>
+      <div class="tbl"><table><thead><tr><th>Fuente</th><th>Estado</th><th class="num">Edad caché</th><th>Motivo / procedencia</th></tr></thead><tbody id="pov-source-rows"></tbody></table></div><div id="pov-governance"></div></section>
+  </div>
+  <div class="tab" id="tab-laboratorio" hidden>
+    <section class="card"><h2>Laboratorio · escenario local de rachas</h2>
+      <p class="src">Solo navegador. Ajustar un umbral no cambia reglas, alertas ni el archivo forense.</p>
+      <label for="pov-wind-threshold">Umbral de racha <strong id="pov-lab-value">60 km/h</strong></label>
+      <input type="range" id="pov-wind-threshold" min="30" max="120" step="5" value="60" style="display:block;width:min(100%,520px);margin:12px 0">
+      <div id="pov-lab-result"></div></section>
+  </div>
   <footer>Estimación diagnóstica de un motor propio, no un aviso oficial: mandan el Servei Meteorològic d'Andorra, Meteocat/AEMET y Météo-France. Para aludes, los boletines oficiales. En emergencia, 112.</footer>
 </main>
 
@@ -212,6 +278,7 @@ a{color:var(--ice)}
 
 <script src="../public_config.js"></script>
 <script src="../public_fetch.js"></script>
+<script src="pirineo_observatory.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -509,7 +576,8 @@ function renderDiag(){
   $("t-obs").querySelector("tbody").innerHTML=[...(c.obs||[]).map(o=>`<tr><td>${esc(o.nombre)}</td><td class="ev">${esc(o.red||"")}</td><td class="num">${n0(o.alt)}</td><td class="num">${n1(o.T)}</td><td class="num">${n0(o.HR)}</td><td class="num">${n0(o.viento)}</td><td class="num">${n0(o.racha_dia)}</td><td class="num">${n1(o.lluvia_dia)}</td><td class="num">${o.edad_min} min</td></tr>`),
     ...(c.metar||[]).map(m=>`<tr><td>${esc(m.icao)} <span class="ev">${esc(m.raw)}</span></td><td class="ev">METAR</td><td class="num">${n0(m.alt)}</td><td class="num">${n1(m.T)}</td><td class="num">—</td><td class="num">${m.viento_kt!=null?n0(m.viento_kt*1.852):"—"}</td><td class="num">${m.racha_kt!=null?n0(m.racha_kt*1.852):"—"}</td><td class="num">—</td><td class="num">${m.edad_min} min</td></tr>`)].join("")||'<tr><td colspan="9" class="empty">Sin observaciones.</td></tr>';
   const W2=(c.avisos||[]).filter(w=>!w.error);
-  $("warns").innerHTML=W2.length?W2.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> ${esc(w.evento)} · <span class="ev">${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)} · ${fmtT(w.desde)} → ${fmtT(w.hasta)}${w.vigente?" · vigente":""}</span></li>`).join(""):`<li>Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (${/^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||""))?"AEMET CAP":"MeteoAlarm"}), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm).</li>`;
+  const warnCoverageOk = /^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||"")) || (/^(ok|caché)/.test(String((c.fuentes||{}).avisos||"")) && !(c.avisos||[]).some(w=>w.error));
+  $("warns").innerHTML=W2.length?W2.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> ${esc(w.evento)} · <span class="ev">${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)} · ${fmtT(w.desde)} → ${fmtT(w.hasta)}${w.vigente?" · vigente":""}</span></li>`).join(""):(!warnCoverageOk?'<li class="empty">UNKNOWN · avisos institucionales no verificados; comprueba AEMET, MeteoAlarm y las fuentes oficiales.</li>':`<li>Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (${/^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||""))?"AEMET CAP":"MeteoAlarm"}), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm), con cobertura condicionada.</li>`);
   const A=c.aemet; let am="";
   if(A&&A.montana&&A.montana.length){
     am=A.montana.map(m=>`<p><b>${m.dia===0?"Hoy":"Mañana"}</b>${m.isocero_m?` · isocero ${n0(m.isocero_m)} m`:""}</p><ul class="plain">${(m.prediccion||[]).map(a=>`<li><b>${esc(a.cabecera)}:</b> ${esc(a.texto)}</li>`).join("")}${(m.atmosfera_libre||[]).filter(a=>/Viento/.test(a.cabecera)).map(a=>`<li class="ev">${esc(a.cabecera)}: ${esc(a.texto)}</li>`).join("")}</ul>`).join("");
@@ -541,10 +609,10 @@ $("meta-station").addEventListener("change",renderExtended);
 $("meta-level").addEventListener("change",renderExtended);
 
 /* ── pestañas ── */
-const TABS=["mapa","corte","puntos","diagnostico","extendido"];
-function showTab(t){ if(!TABS.includes(t)) t="mapa"; S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); try{ localStorage.setItem("pir-tab",t); }catch(e){} renderAll(); }
+const TABS=["vigilancia","satelite","atmosfera","mapa","corte","diagnostico","puntos","modelos","extendido","forense","gobernanza","laboratorio"];
+function showTab(t){ if(!TABS.includes(t)) t="vigilancia"; S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); try{ localStorage.setItem("pir-tab",t); }catch(e){} renderAll(); }
 document.querySelectorAll("nav.tabs a").forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); history.replaceState(null,"","#"+a.dataset.tab); showTab(a.dataset.tab); }));
-function renderAll(){ const run=f=>{ try{ f(); }catch(e){ console.error(e); } }; run(renderHeader); run(drawMap); run(renderCut); run(renderPoints); run(renderDiag); run(renderExtended); }
+function renderAll(){ const run=f=>{ try{ f(); }catch(e){ console.error(e); } }; run(renderHeader); run(drawMap); run(renderCut); run(renderPoints); run(renderDiag); run(renderExtended); run(()=>window.PirineoObservatory?.render({core:D.core,series:D.series,extended:D.extended,model:S.model,k:S.k})); }
 window.addEventListener("resize", ()=>{ if(S.tab==="mapa") drawMap(); });
 
 /* ── botón Actualizar y publicar (tarea en la nube) ── */
@@ -595,6 +663,6 @@ $("chat-stop").onclick=()=>CHAT.ctl?.abort();
 $("chat-f").addEventListener("submit",e=>{ e.preventDefault(); ask($("chat-in").value); });
 $("chat-in").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); ask($("chat-in").value); } });
 
-{ let t=location.hash.slice(1); if(!TABS.includes(t)){ try{ t=localStorage.getItem("pir-tab")||"mapa"; }catch(e){ t="mapa"; } } S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); }
+{ let t=location.hash.slice(1); if(!TABS.includes(t)){ try{ t=localStorage.getItem("pir-tab")||"vigilancia"; }catch(e){ t="vigilancia"; } } S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); }
 start();
 </script>

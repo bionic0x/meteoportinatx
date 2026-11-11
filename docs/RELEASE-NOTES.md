@@ -1,9 +1,8 @@
-# Sin publicar — Météo-France en tiempo real para el Pirineo
+# Sin publicar — vigilancia de la clave de Météo-France
 
-- `src/mf_rt.py`: observación horaria oficial de la API DPObs de Météo-France (Puigmal, Formiguères, Railleu, Targasonne, Aston, Ascou). Un paquete por departamento (66, 09) y, si falla, la última hora por estación. Clave en el secreto `METEOFRANCE_API_KEY`, enviada en la cabecera `apikey` y nunca impresa.
-- Sin clave la fuente queda `sin clave (METEOFRANCE_API_KEY)`; clave rechazada → `clave rechazada`. Lluvia y racha del día solo con todas las horas desde la medianoche local (si no, `null`, no 0).
-- Con clave, Meteociel deja de leerse para las estaciones de Météo-France (solo quedan las del SMA de Andorra). Atribución con la hora del último dato.
-- `credential-expiry.yml` vigila también `METEOFRANCE_KEY_EXPIRES` si se registra (opcional). `meteofrance-probe.yml` prueba la clave a mano o al cambiar el conector, mostrando solo estado y recuentos.
+- `credential-expiry.yml` vigila también `METEOFRANCE_KEY_EXPIRES` si se registra (opcional; los tokens del portal tienen la caducidad que se elija al generarlos).
+- `meteofrance-probe.yml` y `scripts/probe_meteofrance.py` prueban `METEOFRANCE_API_KEY` contra DPObs con el conector `src/meteo_france_obs.py` (#38): código HTTP del catálogo y recuentos por estación, nunca la clave.
+- Atribución de Météo-France con la hora del último dato cuando sus observaciones se usan.
 
 # Sin publicar — lote de issues #7 #8 #9 #10 #11 #18 #20 #21 #23
 

@@ -39,7 +39,7 @@ import portinatx_degen as pd  # noqa: E402
 import pirineo_meta as meta  # noqa: E402
 import knowledge_base as kb  # noqa: E402
 import mf_obs  # noqa: E402  (verificación: archivo horario oficial de Météo-France)
-import mf_rt  # noqa: E402  (tiempo real: API DPObs de Météo-France, clave del propietario)
+import meteo_france_obs as mf  # noqa: E402  (tiempo real: API DPObs, clave del propietario)
 
 VERSION = "0.6.1"
 UTC = timezone.utc
@@ -911,21 +911,12 @@ def parse_meteociel_table(html_txt: str, day: datetime) -> list[dict]:
     return sorted(out, key=lambda x: x["t"])
 
 
-def src_meteo_france() -> list[dict]:
-    """Tiempo real oficial de Météo-France (API DPObs). Sin METEOFRANCE_API_KEY → PermissionError."""
-    return mf_rt.fetch(pd.now_utc(), tz=MADRID)
-
-
 def src_meteociel() -> list[dict]:
     """Observación horaria de estaciones de Météo-France y del SMA de Andorra a través de meteociel.fr.
     No es una API oficial: se lee la tabla HTML una vez por ciclo y estación, con atribución."""
     out, now = [], pd.now_utc()
     day = now.astimezone(MADRID)
-    # Con clave de Météo-France sus estaciones llegan de la API oficial (mf_rt); aquí solo quedan las del SMA.
-    skip_mf = bool(os.environ.get(mf_rt.KEY_ENV, "").strip())
     for sid, (name, la, lo, alt) in MCL_STATIONS.items():
-        if skip_mf and name.endswith("(MF)"):
-            continue
         rows = []
         for d in (day, day - timedelta(days=1)):     # pasada la medianoche, la tabla de hoy aún puede estar vacía
             try:
@@ -1109,7 +1100,7 @@ def build(dem: dict | None = None) -> dict:
                 warns = val
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}"
-    extra = (("aemet_obs", 30, src_aemet_obs), ("xema", 30, src_xema), ("meteo_france", 30, src_meteo_france),
+    extra = (("aemet_obs", 30, src_aemet_obs), ("xema", 30, src_xema), ("meteo_france_obs", 45, mf.fetch_observations),
              ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
              ("aemet_cap", 30, src_aemet_cap), ("aemet_texto", 120, src_aemet_text))
     cnp_perm = source_permission()
@@ -1122,24 +1113,23 @@ def build(dem: dict | None = None) -> dict:
             ttl = max(ttl, cnp_perm["intervalo_min"] or ttl)        # cadencia acordada
         try:
             val, st = _cached(name, ttl, fn, max_age_min=180)
-            srcs[name] = st if name not in ("aemet_obs", "xema", "meteo_france", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
-        except mf_rt.KeyRejected as exc:
-            srcs[name] = f"clave rechazada: {exc}"
-            continue
-        except PermissionError as exc:
-            srcs[name] = f"sin clave ({str(exc).removeprefix('sin ') or 'AEMET_API_KEY'})"
+            srcs[name] = st if name not in ("aemet_obs", "xema", "meteo_france_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
+        except PermissionError:
+            srcs[name] = ("sin clave METEOFRANCE_API_KEY" if name == "meteo_france_obs"
+                          else "sin clave AEMET_API_KEY")
             continue
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}: {str(exc)[:100]}"
             continue
-        if name in ("aemet_obs", "xema", "meteo_france", "cnp", "meteociel"):
+        if name in ("aemet_obs", "xema", "meteo_france_obs", "cnp", "meteociel"):
             obs += val
             if name == "xema" and val:
                 newest = max(pd.parse_time(o["t"]) for o in val)
                 atribuciones.append(f"{XEMA_ATTRIBUTION}; dades fins a {newest.astimezone(MADRID):%d/%m/%Y %H:%M} (hora local)")
-            if name == "meteo_france" and val:
+            if name == "meteo_france_obs" and val:
                 newest = max(pd.parse_time(o["t"]) for o in val)
-                atribuciones.append(f"{mf_rt.ATTRIBUTION}; données jusqu'à {newest:%d/%m/%Y %H:%M} UTC")
+                atribuciones.append(f"Météo-France, données d'observation (API DPObs, Licence Ouverte Etalab); "
+                                    f"données jusqu'à {newest:%d/%m/%Y %H:%M} UTC")
             if name == "cnp" and val and cnp_perm["atribucion"]:
                 atribuciones.append(cnp_perm["atribucion"])
         elif name == "aemet_cap":
@@ -1221,14 +1211,24 @@ def compact_series(series: dict) -> dict:
         m_out = {}
         for m, d in P["m"].items():
             row = {}
-            for k in ("temperature_2m", "precipitation", "snowfall", "wind_gusts_10m", "relative_humidity_2m"):
+            for k in ("temperature_2m", "dew_point_2m", "relative_humidity_2m",
+                      "cloud_cover", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m",
+                      "freezing_level_height", "precipitation", "snowfall"):
                 v = d.get(k)
                 if not v or all(x is None for x in v):
                     continue
                 if k in ("precipitation", "snowfall"):
-                    row[k] = [None if all(x is None for x in v[i:i + 3]) else round(sum(x or 0 for x in v[i:i + 3]), 1) for i in idx]
+                    # Incomplete interval = UNKNOWN, not a zero-filled precipitation total.
+                    def complete_block(i):
+                        block = v[i:i + 3]
+                        if len(block) != 3 or any(not isinstance(x, (int, float)) or isinstance(x, bool)
+                                                  or not math.isfinite(x) or x < 0 for x in block):
+                            return None
+                        return round(sum(block), 1)
+                    row[k] = [complete_block(i) for i in idx]
                 else:
-                    row[k] = [None if v[i] is None else round(v[i], 1) for i in idx]
+                    row[k] = [round(v[i], 1) if i < len(v) and isinstance(v[i], (int, float))
+                              and not isinstance(v[i], bool) and math.isfinite(v[i]) else None for i in idx]
             m_out[m] = row
         out[pid] = {"time": [tt[i] for i in idx], "m": m_out}
     return out

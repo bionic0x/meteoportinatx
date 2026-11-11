@@ -71,6 +71,7 @@ def build_site(port_home: Path, pir_home: Path, target: Path, max_age_h: float =
             for name in required:
                 shutil.copy2(home / "app" / f"{name}.json", dest / "api" / f"{name}.json")
             if domain == "pirineo":
+                shutil.copy2(ROOT / "src" / "pirineo_observatory.js", dest / "pirineo_observatory.js")
                 (dest / "ruta").mkdir()
                 shutil.copy2(ROOT / "src" / "pirineo_ruta.html", dest / "ruta" / "index.html")
                 shutil.copy2(ROOT / "src" / "route_engine.js", dest / "ruta" / "route_engine.js")
