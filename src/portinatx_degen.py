@@ -139,6 +139,8 @@ from datetime import datetime, timedelta, timezone, tzinfo
 from pathlib import Path
 from typing import Any, Callable
 
+import radar_motion  # noqa: E402  (#10: advección de ecos, stdlib)
+
 VERSION = "0.6.1"
 UTC = timezone.utc
 
@@ -1399,6 +1401,13 @@ def radar_frame_metrics(tiles: dict[tuple[int, int], bytes], z: int, palette: di
             "max_class_30km": cls, "colors": colors}
 
 
+def radar_geom() -> dict:
+    """Geometría de la rejilla de radar guardada en cada frame (fila 0 = norte)."""
+    rg = CFG["radar_grid"]
+    return {"lat_n": SITE["lat"] + rg["dlat"], "lon_w": SITE["lon"] - rg["dlon"], "step": rg["step"],
+            "nlat": int(round(2 * rg["dlat"] / rg["step"])) + 1, "nlon": int(round(2 * rg["dlon"] / rg["step"])) + 1}
+
+
 def radar_grid(tiles: dict[tuple[int, int], bytes], z: int) -> str:
     """Rejilla lat/lon de dBZ alrededor de Portinatx (fila 0 = norte), 1 byte por celda:
     0 sin eco · 1 eco de color no tabulado · 5–65 dBZ. Codificada en base64."""
@@ -1765,12 +1774,25 @@ def ch_radar(src: SourceResult | None) -> Channel:
     near = last["nearest_km"]
     ch.evidence.append(f"cobertura de ecos: {cov[10]:.0%} ≤10 km · {cov[30]:.0%} ≤30 km · {cov[60]:.0%} ≤60 km; "
                        f"eco más cercano {('—' if near is None else f'{near:.0f} km')}")
-    # acercamiento: pendiente de la distancia mínima
-    ds = [(parse_time(f["time"]), f["nearest_km"]) for f in fr if f["nearest_km"] is not None]
-    closing = None
-    if len(ds) >= 2 and (ds[-1][0] - ds[0][0]).total_seconds() > 0:
-        closing = (ds[0][1] - ds[-1][1]) / ((ds[-1][0] - ds[0][0]).total_seconds() / 3600)
-        ch.evidence.append(f"velocidad de acercamiento del eco más cercano: {closing:+.0f} km/h")
+    # #10: movimiento por advección de la rejilla (no la pendiente de la distancia al eco más cercano,
+    # que confundía crecimiento con desplazamiento). Sin base suficiente → MOTION_UNKNOWN.
+    motion = radar_motion.estimate_motion(frames, radar_geom(), now_utc())
+    if motion["estado"] == "OK":
+        last_grid = radar_motion.decode(fr[-1].get("grid") or "", radar_geom()["nlat"], radar_geom()["nlon"])
+        motion["eta"] = (radar_motion.eta_to_site(last_grid, radar_geom(), (SITE["lat"], SITE["lon"]), motion)
+                         if last_grid else {"estado": "MOTION_UNKNOWN", "eta_min": None})
+        e = motion["eta"]
+        eta_txt = (f"eco ≥{e['umbral_dbz']} dBZ a ≤{radar_motion.SITE_RADIUS_KM:.0f} km en ~{e['eta_min']} min "
+                   f"({e['eta_rango_min'][0]}–{e['eta_rango_min'][1]})" if e["estado"] == "OK" else
+                   "eco ya sobre el sitio" if e["estado"] == "EN_CURSO" else
+                   f"sin eco ≥{radar_motion.ETA_DBZ} dBZ en trayectoria a {radar_motion.HORIZON_MIN:.0f} min"
+                   if e["estado"] == "SIN_ECO_EN_TRAYECTORIA" else "ETA desconocida")
+        ch.evidence.append(f"movimiento de ecos: {motion['velocidad_kmh']:.0f} ± {motion['incertidumbre_kmh']:.0f} km/h "
+                           f"hacia {motion['hacia_deg'] if motion['hacia_deg'] is not None else '—'}° "
+                           f"({motion['pares']} pares) · {eta_txt} — extrapolación, no aviso")
+    else:
+        ch.evidence.append(f"movimiento de ecos: MOTION_UNKNOWN ({motion['motivo']})")
+    ch.metrics["motion"] = motion
     # Cobertura/proximidad solo da 'watch'. 'alert'/'alarm' exigen paleta calibrada Y
     # persistencia: ecos fuertes en ≥2 de los 3 últimos frames (un frame aislado no basta).
     lvl = 1 if (cov[60] > 0.05 or (near is not None and near <= 60)) else 0
@@ -4512,6 +4534,11 @@ def build_app(snap: dict, state: dict) -> dict[str, dict]:
                           "nlon": int(round(2 * rg["dlon"] / rg["step"])) + 1,
                           "encoding": "base64 uint8: 0 sin eco, 1 eco sin tabular, ≥2 dBZ"},
              "metrics_radius_km": CFG["radar_radius_km"], "frames": [], "status": srcs["radar"].status if "radar" in srcs else "—"}
+    rch = next((c for c in snap["channels"] if c.get("name") == "radar"), None)
+    radar["motion"] = ((rch or {}).get("metrics") or {}).get("motion") or {"estado": "MOTION_UNKNOWN",
+                                                                            "motivo": "canal de radar sin datos"}
+    if ok("radar"):
+        radar["window_skill"] = radar_motion.window_skill(srcs["radar"].payload["frames"], radar_geom())
     if ok("radar"):
         for f in srcs["radar"].payload["frames"][-rg["frames"]:]:
             radar["frames"].append({"time": f["time"], "dup": f["dup"], "grid": f.get("grid"),
