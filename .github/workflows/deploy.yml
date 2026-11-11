@@ -35,6 +35,8 @@ jobs:
       PORTINATX_HOME: './portinatx_state'
       PIRINEO_HOME: './portinatx_state/pirineo'
       PIRINEO_EXTENDED: '1'
+      # Optional local sidecars; none are downloaded by this deployment.
+      METEO_SIDECAR_DIR: ${{ github.workspace }}/data/sidecar
       METEO_BACKEND_URL: ${{ vars.METEO_BACKEND_URL }}
       AEMET_API_KEY: ${{ secrets.AEMET_API_KEY }}
       # No household telemetry, owner notes, local state, or secrets are uploaded.
