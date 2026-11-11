@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 DIST = ROOT / "dist"
 SOURCES = ("__main__.py", "nowcast.py", "nowcast_hub.html", "public_fetch.js", "portinatx_degen.py",
-           "portinatx_app.html", "pirineo.py", "pirineo_app.html", "pirineo_observatory.js", "pirineo_meta.py", "zone_engine.py", "weather_core.py", "zone_packages.py", "zone_report.py", "zone_sources.py", "zone_forensics.py", "episode_evidence.py", "zone_evidence.py", "forecast_ledger.py", "decision_app.html", "decision_cards.js", "knowledge_base.py", "pirineo_ruta.html", "route_engine.js", "radar_motion.py", "ledger_shadow.py")
+           "portinatx_app.html", "pirineo.py", "meteo_france_obs.py", "pirineo_app.html", "pirineo_observatory.js", "pirineo_meta.py", "zone_engine.py", "weather_core.py", "zone_packages.py", "zone_report.py", "zone_sources.py", "zone_forensics.py", "episode_evidence.py", "zone_evidence.py", "forecast_ledger.py", "decision_app.html", "decision_cards.js", "knowledge_base.py", "pirineo_ruta.html", "route_engine.js", "radar_motion.py", "ledger_shadow.py")
 
 
 def main() -> int:

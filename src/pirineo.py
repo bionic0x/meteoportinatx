@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import portinatx_degen as pd  # noqa: E402
 import pirineo_meta as meta  # noqa: E402
 import knowledge_base as kb  # noqa: E402
+import meteo_france_obs as mf  # noqa: E402
 
 VERSION = "0.6.1"
 UTC = timezone.utc
@@ -991,7 +992,8 @@ def build(dem: dict | None = None) -> dict:
                 warns = val
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}"
-    extra = (("aemet_obs", 30, src_aemet_obs), ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
+    extra = (("aemet_obs", 30, src_aemet_obs), ("meteo_france_obs", 45, mf.fetch_observations),
+             ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
              ("aemet_cap", 30, src_aemet_cap), ("aemet_texto", 120, src_aemet_text))
     for name, ttl, fn in extra:
         if name == "cnp" and os.environ.get(CNP_PERMISSION_ENV) != "1":
@@ -1001,14 +1003,15 @@ def build(dem: dict | None = None) -> dict:
             continue
         try:
             val, st = _cached(name, ttl, fn, max_age_min=180)
-            srcs[name] = st if name not in ("aemet_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
+            srcs[name] = st if name not in ("aemet_obs", "meteo_france_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
         except PermissionError:
-            srcs[name] = "sin clave AEMET (config.env)"
+            srcs[name] = ("sin clave METEOFRANCE_API_KEY" if name == "meteo_france_obs"
+                          else "sin clave AEMET_API_KEY")
             continue
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}: {str(exc)[:100]}"
             continue
-        if name in ("aemet_obs", "cnp", "meteociel"):
+        if name in ("aemet_obs", "meteo_france_obs", "cnp", "meteociel"):
             obs += val
         elif name == "aemet_cap":
             warns = [w for w in warns if w.get("pais") != "spain"] + val     # AEMET sustituye a MeteoAlarm en España
