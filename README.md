@@ -66,7 +66,7 @@ Portinatx conserva los **tres ejes**: aviso oficial, peligro observado y precauc
 
 En el Pirineo, el 0–72 h usa **DEM Terrarium**, perfiles verticales, bulbo húmedo, tres cotas de nieve, relación nieve/agua tipo Kuchera, inversión y föhn. El 3–15 d añade datos de ensembles **ECMWF/GEFS/ICON** por familia, sin contar miembros como modelos independientes; deterministas IFS/GFS/AROME/AIFS se muestran por separado. ENSO, NAO/AO, vórtice y Atlántico son hipótesis contextuales verificadas, no multiplicadores de nieve. La calibración histórica necesita casos independientes; los valores no son probabilidades oficiales ni predicción de pistas abiertas.
 
-Consulta [Arquitectura unificada](docs/ARQUITECTURA-UNIFICADA.md), [release notes](docs/RELEASE-NOTES.md) y [síntesis forense pública](docs/FORENSE-PUBLICO.md). Los documentos históricos originales se conservan en la entrega local, no en el repositorio público.
+Consulta [Arquitectura unificada](docs/ARQUITECTURA-UNIFICADA.md), [release notes](docs/RELEASE-NOTES.md) y [síntesis forense pública](docs/FORENSE-PUBLICO.md). La [evaluación del modelo, los usos y el potencial](docs/EVALUACION-MODELO-USOS-POTENCIAL.md) recoge hallazgos verificados y una hoja de ruta priorizada. Los documentos históricos originales se conservan en la entrega local, no en el repositorio público.
 
 ## Estado
 
