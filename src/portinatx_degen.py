@@ -998,7 +998,8 @@ def marine_source_recency(src: SourceResult, now: datetime | None = None) -> dic
                else {"freshness": "UNKNOWN", "age_min": None})
     summary["limit_min"] = limit
     if src.name == "portus":
-        station_series = (src.payload or {}).get("stations", {}) if isinstance(src.payload, dict) else {}
+        station_series = ((src.payload or {}).get("stations", {})
+                          if src.status == "ok" and isinstance(src.payload, dict) else {})
         metrics = {}
         for metric, cols in PORTUS_METRIC_FIELDS.items():
             statuses = []
