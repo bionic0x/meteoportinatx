@@ -58,3 +58,11 @@ Se rechaza (`invalido`) si: falta una clave, hay claves no previstas, `schema` �
 - 0,7 °C es literatura de Cataluña aplicada a Cerdanya/Andorra sin calibrar; la rampa y `tw07_m` son hipótesis.
 - Licencias marcadas `UNVERIFIED` en el catálogo deben comprobarse antes de redistribuir datos derivados (Meteocat en particular).
 - El archivo horario de AEMET (B954/LEIB) debe empezar a archivarse ya: no hay backfill. Conecta con `docs/FORECAST-LEDGER-P0.md`.
+
+## Sidecar adicional: ERA5-Land Pirineo (manual y experimental)
+
+El generador `scripts/sidecar_era5land_pirineo.py` calcula tablas mensuales de lluvia diaria en días húmedos para puntos del Pirineo a partir de series temporales ERA5-Land. Su convención de acumulados y la estructura CSV se validan de forma sintética; **no se ha ejecutado ninguna petición real al CDS**. Antes de uso operativo hay que ejecutar `--probe` y comprobar cobertura, periodos, metadatos, condiciones de licencia y atribución.
+
+Comandos de referencia: `python scripts/sidecar_era5land_pirineo.py --probe` y `python scripts/sidecar_era5land_pirineo.py --from-dir DIR --out data/sidecar`. El workflow `.github/workflows/sidecar-era5land.yml` es exclusivamente manual y genera un artefacto para revisión; no modifica el sitio ni Render.
+
+La salida opcional `climatologia_era5land_pirineo.json` es un prior científico. `pirineo.core.contexto.notas_lluvia_24h` solo muestra la comparación de pronósticos frente a percentiles; no modifica avisos, cálculo de nieve ni niveles de alarma. Falta de fichero, formato inválido o caducidad => `UNKNOWN`.

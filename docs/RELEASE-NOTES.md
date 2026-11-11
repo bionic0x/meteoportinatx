@@ -8,6 +8,10 @@
 - **#9** Sin acceso automático a ClimayNievePirineos salvo `CNP_PERMISSION_VERIFIED=1`.
 - **#11** La vista de decisión muestra la fuente oficial y la cota de la vertiente. Protocolo de evaluación con usuarios en `docs/EVALUACION-USUARIOS-P1.md` (sin sesiones realizadas).
 
+## Pirineo — Sidecar climatológico ERA5-Land (experimental)
+
+Se incorpora generador manual con pruebas sintéticas y notas informativas de lluvia a 24 h. Sin descargas reales, sin credenciales provisionadas, sin impacto en alertas ni Render Free. Pendiente validar el formato del CDS y los términos de redistribución.
+
 # Sin publicar — motor del Pirineo 0.6.1 (paridad con el costero y física de montaña)
 
 `src/pirineo.py` y `src/pirineo_meta.py` pasan de 0.3.0 a 0.6.1. El número alinea el motor de montaña con las garantías del núcleo costero 0.6.1; no indica calibración.

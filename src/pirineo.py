@@ -1020,15 +1020,16 @@ def build(dem: dict | None = None) -> dict:
                       "T": m["T"], "edad_min": m["edad_min"]} for m in metar]
     # Contexto climatológico/nieve de un sidecar opcional: solo estado y procedencia (sin valores). Cualquier estado
     # distinto de "ok" es UNKNOWN; nunca altera el diagnóstico físico ni los avisos.
+    resumen = summarize_points(points["puntos"], pois, prof) if points else []   # #8: cotas por vertiente
+    bundle = kb.context_bundle(Path(os.environ.get("METEO_SIDECAR_DIR") or (HOME / "sidecar")), "pirineo", pd.now_utc())
     contexto = {"nota": "contexto, no observación ni aviso; UNKNOWN si el estado no es ok",
-                "sidecars": {n: {k: v for k, v in b.items() if k != "data"}
-                             for n, b in kb.context_bundle(Path(os.environ.get("METEO_SIDECAR_DIR") or (HOME / "sidecar")),
-                                                           "pirineo", pd.now_utc()).items()}}
+                "sidecars": {n: {k: v for k, v in b.items() if k != "data"} for n, b in bundle.items()},
+                "notas_lluvia_24h": kb.pirineo_precip_notes(bundle.get("climatologia_era5land_pirineo"), resumen, pd.now_utc())}
     core = {"issued": pd.now_utc().isoformat(), "engine": VERSION, "box": BOX, "pois": pois, "corte": CORTE,
             "contexto": contexto, "fuentes": srcs,
             "fuentes_edad_min": {k: round(v) for k, v in SOURCE_AGE_MIN.items()}, "modelo_puntos": points["fuente"] if points else None,
             "modelos": points["modelos"] if points else [], "modelo_nombre": MODEL_NAME,
-            "puntos": summarize_points(points["puntos"], pois, prof) if points else [],
+            "puntos": resumen,
             "series": points["puntos"] if points else {}, "perfil": prof,
             "foehn": foehn_diag(points["puntos"] if points else None, pmap, prof.get("norte")),
             "inversion_obs": obs_inversion(obs_all), "obs": obs, "metar": metar, "avisos": warns, "aemet": aemet_txt,
