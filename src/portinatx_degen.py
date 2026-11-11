@@ -958,6 +958,67 @@ def _age_min(iso: str | None) -> float:
     return (now_utc() - t).total_seconds() / 60 if t else 1e9
 
 
+# Freshness of *measurements*, not cache requests. These provisional ceilings follow
+# the existing channel limits; they are NOT calibrated provider SLAs.
+OBS_SOURCE_MAX_AGE_MIN = {"portus": 120, "radar_hf": 90}
+PORTUS_METRIC_MAX_AGE_MIN = {"wave": 120, "wind": 60, "sea_level": 120}
+PORTUS_METRIC_FIELDS = {
+    "wave": ("hm0", "hmax"),
+    "wind": ("vv_mx", "vv_md"),
+    "sea_level": ("nivel", "nivelMedio"),
+}
+
+
+def observation_recency(timestamp: str | None, limit_min: float,
+                        now: datetime | None = None) -> dict:
+    """Judge an actual measurement UTC instant, never fetched_at or cache TTL.
+
+    Unzoned timestamps are ambiguous across DST and must stay UNKNOWN.
+    A future measurement beyond 10 min is STALE, not a fresh observation.
+    """
+    if not isinstance(timestamp, str) or not timestamp:
+        return {"freshness": "UNKNOWN", "age_min": None}
+    try:
+        dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        return {"freshness": "UNKNOWN", "age_min": None}
+    if dt.tzinfo is None:
+        return {"freshness": "UNKNOWN", "age_min": None}
+    age = ((now or now_utc()).astimezone(UTC) - dt.astimezone(UTC)).total_seconds() / 60
+    return {"freshness": "FRESH" if -10 <= age <= limit_min else "STALE",
+            "age_min": round(age, 1)}
+
+
+def marine_source_recency(src: SourceResult, now: datetime | None = None) -> dict:
+    """Public-safe freshness labels for HF current and PORTUS variable families."""
+    limit = OBS_SOURCE_MAX_AGE_MIN.get(src.name)
+    if limit is None:
+        return {}
+    summary = (observation_recency(src.data_time, limit, now) if src.status == "ok"
+               else {"freshness": "UNKNOWN", "age_min": None})
+    summary["limit_min"] = limit
+    if src.name == "portus":
+        station_series = ((src.payload or {}).get("stations", {})
+                          if src.status == "ok" and isinstance(src.payload, dict) else {})
+        metrics = {}
+        for metric, cols in PORTUS_METRIC_FIELDS.items():
+            statuses = []
+            for rows in station_series.values():
+                if not isinstance(rows, list):
+                    continue
+                for row in rows:
+                    if isinstance(row, dict) and any(
+                        isinstance(row.get(col), (int, float)) and not isinstance(row.get(col), bool)
+                        and math.isfinite(row[col]) for col in cols
+                    ):
+                        statuses.append(observation_recency(
+                            row.get("t"), PORTUS_METRIC_MAX_AGE_MIN[metric], now)["freshness"])
+            metrics[metric] = ("FRESH" if "FRESH" in statuses else
+                               "STALE" if "STALE" in statuses else "UNKNOWN")
+        summary["metrics_freshness"] = metrics
+    return summary
+
+
 def cached_source(name: str, ttl_min: float, fn: Callable[[], SourceResult]) -> Callable[[], SourceResult]:
     """Envuelve un conector de modelo: reutiliza la última respuesta mientras sea fresca;
     si la API falla (p. ej. 429), sirve la última buena marcada como 'caché'."""
@@ -2033,14 +2094,19 @@ def ch_sea_obs(src: SourceResult | None) -> Channel:
         ch.evidence.append(f"PORTUS no disponible ({src.status if src else '—'})")
         return ch
     got = False
+    now = now_utc()
     for name in CFG["portus_buoys"].values():
-        ser = [r for r in src.payload["stations"].get(name, []) if r.get("hm0") is not None]
+        all_rows = [r for r in src.payload["stations"].get(name, []) if r.get("hm0") is not None]
+        ser = [r for r in all_rows if observation_recency(
+            r.get("t"), CFG["channel_max_age_min"]["mar_boyas"], now)["freshness"] == "FRESH"]
         if not ser:
+            if all_rows:
+                ch.evidence.append(f"{name}: oleaje STALE → UNKNOWN (sin Hs reciente)")
             continue
         got = True
         last = ser[-1]
         _mark_time(ch, last["t"])
-        age = (now_utc() - parse_time(last["t"])).total_seconds() / 60
+        age = (now - parse_time(last["t"])).total_seconds() / 60
         trend = last["hm0"] - ser[-4]["hm0"] if len(ser) >= 4 else None
         d = last.get("dmd")
         ne = d is not None and in_sector(d, (330.0, 100.0))
@@ -2052,6 +2118,8 @@ def ch_sea_obs(src: SourceResult | None) -> Channel:
                            + f" ({parse_time(last['t']).astimezone(MADRID):%H:%M} local"
                            + (", STALE" if age > 120 else "") + ")")
     ch.available = got
+    if not got:
+        ch.evidence.append("oleaje PORTUS UNKNOWN: ninguna boya con Hs reciente")
     ch.evidence.append("boyas lejanas: describen el mar regional, no la altura de ola dentro de la cala")
     return ch
 
@@ -2063,9 +2131,12 @@ def ch_wind_obs(src: SourceResult | None) -> Channel:
         ch.evidence.append(f"PORTUS no disponible ({src.status if src else '—'})")
         return ch
     got = False
+    now = now_utc()
     for name in CFG["portus_wind"].values():
         ser = src.payload["stations"].get(name, [])
-        recent = [r for r in ser if (now_utc() - parse_time(r["t"])).total_seconds() <= 3600]
+        recent = [r for r in ser if (r.get("vv_mx") is not None or r.get("vv_md") is not None)
+                  and observation_recency(r.get("t"), CFG["channel_max_age_min"]["viento_estaciones"],
+                                          now)["freshness"] == "FRESH"]
         if not recent:
             continue
         got = True
@@ -2384,12 +2455,16 @@ def build_claims(issued: datetime, channels: list[Channel], warnings: list[dict]
 def sea_model_check(sea_obs: Channel, marine: SourceResult | None, portus: SourceResult | None) -> None:
     """DANA 18–19/10: el oleaje modelizado (1,7 m) quedó muy por debajo de las boyas (3,5–4,1 m).
     Si la boya NE más alta supera 1,5× el máximo del modelo, se marca: manda la observación."""
-    if not (marine and marine.status == "ok" and portus and portus.status == "ok"):
+    if not (sea_obs.available and marine and marine.status == "ok"
+            and portus and portus.status == "ok"):
         return
     mod = max((x or 0) for x in marine.payload.get("wave_height") or [0])
     obs = 0.0
     for name in CFG["portus_buoys"].values():
-        ser = [r for r in portus.payload["stations"].get(name, []) if r.get("hm0") is not None]
+        ser = [r for r in portus.payload["stations"].get(name, [])
+               if r.get("hm0") is not None
+               and observation_recency(r.get("t"), CFG["channel_max_age_min"]["mar_boyas"]
+                                       )["freshness"] == "FRESH"]
         if ser and ser[-1].get("dmd") is not None and in_sector(ser[-1]["dmd"], (330.0, 100.0)):
             obs = max(obs, ser[-1]["hm0"])
     sea_obs.metrics.update({"buoy_hs_ne": obs, "model_hs_max": mod})
@@ -2857,7 +2932,8 @@ def cycle(state: dict) -> dict:
                            "bias_radar_gauge": bias, "episode": episode},
             "channels": [asdict(c) for c in [inst_all, inst_now, *observed, *forecast]],
             "context": context_notes(srcs.get("contexto"), rain),
-            "sources": [{k: v for k, v in asdict(s).items() if k != "payload"} for s in srcs.values()],
+            "sources": [{**{k: v for k, v in asdict(s).items() if k != "payload"},
+                         **marine_source_recency(s, issued)} for s in srcs.values()],
             "_srcs": srcs, "_forense": {**forensic_bundle(state, srcs, None), "archivado_ciclo": archived}}
 
 
@@ -5248,7 +5324,8 @@ def selftest() -> int:
             [{"t": (tnow - timedelta(minutes=60 * k)).isoformat(), "hm0": 4.1 - 0.2 * k, "dmd": d, "tp": 9.0} for k in (3, 2, 1, 0)]}})
     ne, sw = ch_sea_obs(mk(35.0)), ch_sea_obs(mk(220.0))
     check("PORTUS boya: Hs 4,1 m del NE → alert (techo del mar abierto); mismo Hs del SW no cuenta",
-          ne.level == 2 and sw.level == 0 and ne.available and "+0.60 m en 3 h" in " ".join(ne.evidence))
+          ne.level == 2 and sw.level == 0 and ne.available and "Hs 4.10 m" in " ".join(ne.evidence)
+          and "en 3 h" not in " ".join(ne.evidence))
     check("R5 lluvia local + mar en boyas NO se confirman (fenómenos distintos); lluvia + radar sí",
           fx["proposed"] == "alert" and fy["proposed"] == "alarm")
     # F10 — aviso costero descartado
