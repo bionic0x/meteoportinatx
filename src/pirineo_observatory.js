@@ -68,6 +68,14 @@
     }
     return delta<=toleranceHours*3600000 ? best : null;
   };
+  // Classify at viewing time, not at the time the snapshot was exported.
+  function warningTiming(w, now=Date.now()) {
+    const start=utc(w?.desde), end=utc(w?.hasta);
+    if(!Number.isFinite(now)||!start||!end||end<start) return 'SIN HORARIO VERIFICABLE';
+    if(now<start.getTime()) return 'PRÓXIMO';
+    if(now<=end.getTime()) return 'VIGENTE';
+    return 'FINALIZADO';
+  }
   function derive(c,series,extended,opts={}) {
     if(!c) return {status:'UNKNOWN'};
     const ids=(c.pois||[]).map(p=>p.id);
@@ -84,7 +92,9 @@
     const aemetState=delta!=null && valid(ages.aemet_cap) ? source(c.fuentes?.aemet_cap,ages.aemet_cap) : 'UNKNOWN';
     const meteolarmState=delta!=null && valid(ages.avisos) ? source(c.fuentes?.avisos,ages.avisos) : 'UNKNOWN';
     const officialOk=['OK','CACHED'].includes(aemetState) || ['OK','CACHED'].includes(meteolarmState);
-    const warn=(c.avisos||[]).filter(x=>!x.error && x.nivel);
+    const warn=(c.avisos||[]).filter(x=>!x.error && x.nivel).map(x=>({...x,estado_temporal:warningTiming(x,now)}));
+    const order={'VIGENTE':0,'PRÓXIMO':1,'SIN HORARIO VERIFICABLE':2,'FINALIZADO':3};
+    warn.sort((a,b)=>order[a.estado_temporal]-order[b.estado_temporal]);
     const freshObs=[...(c.obs||[]),...(c.metar||[])].map(o=>({...o,edad_min:liveAge(o,c.issued,now)})).filter(o=>valid(o.edad_min)&&o.edad_min<=90);
     const profiles={sur:nearest(c.perfil?.sur,current.time), norte:nearest(c.perfil?.norte,current.time)};
     const revisions=Array.isArray(extended?.run_revisions)?extended.run_revisions:[];
@@ -103,20 +113,19 @@
     S.point=e.id;
     const el=id=>document.getElementById(id);
     const set=(id,html)=>{const n=el(id);if(n)n.innerHTML=html;};
-    const po=el('pov-point');
-    if(po) {
+    for (const po of [el('pov-point'),el('pov-model-point')].filter(Boolean)) {
       const ids=(c.pois||[]).map(p=>p.id).join('|');
       if(po.dataset.ids!==ids) {
         po.innerHTML=(c.pois||[]).map(p=>`<option value="${escape(p.id)}">${label(p)} · ${escape(p.zona)}</option>`).join('');
         po.dataset.ids=ids;
       }
       po.value=e.id||'';
-      if(!po.onchange) po.onchange=()=>{S.point=po.value;render(ctx);};
+      po.onchange=()=>{S.point=po.value;render(ctx);};
     }
-    const off= e.officialOk ? '<strong class="pov-good">FUENTE OFICIAL DISPONIBLE</strong>' : '<strong class="pov-unk">UNKNOWN · sin comprobación oficial suficiente</strong>';
-    const w=e.warnings.length?e.warnings.slice(0,15).map(x=>`<li><b>${escape(x.nivel)} · ${escape(x.evento)}</b> · ${escape(x.fuente||x.pais||'autoridad')} · ${escape(x.area||x.zona||'zona no indicada')} · ${stamp(x.desde)}–${stamp(x.hasta)}</li>`).join('')
+    const off= e.officialOk ? '<strong>Fuente oficial consultada · comprueba zona y vigencia</strong>' : '<strong class="pov-unk">UNKNOWN · sin comprobación oficial suficiente</strong>';
+    const w=e.warnings.length?e.warnings.slice(0,15).map(x=>`<li><b>${escape(x.estado_temporal)} · ${escape(x.nivel)} · ${escape(x.evento)}</b> · ${escape(x.fuente||x.pais||'autoridad')} · ${escape(x.area||x.zona||'zona no indicada')} · ${stamp(x.desde)}–${stamp(x.hasta)}</li>`).join('')
       :(e.officialOk?'<li>Sin mensajes de nivel amarillo o superior en las zonas procesadas del ciclo; comprobar cobertura de fuentes.</li>':'<li>UNKNOWN: no interpretar la ausencia de mensajes como calma.</li>');
-    set('pov-official',off+'<ul class="plain">'+w+'</ul>');
+    set('pov-official',off+'<p class="src">Estos avisos cubren distintas zonas pirenaicas. No se ha verificado su correspondencia con el punto seleccionado; consulta el ámbito oficial.</p><ul class="plain">'+w+'</ul>');
     const obs=e.observations;
     const ageCycle=utc(c.issued)?Math.round((Date.now()-utc(c.issued).getTime())/60000):null;
     const oldCycle=ageCycle==null||ageCycle>360||ageCycle< -10;
@@ -129,7 +138,7 @@
       ['Punto',e.station?.nombre||'UNKNOWN']
     ]));
     set('pov-evidence',`<p class="src">Las estaciones son observaciones; temperatura, precipitación, nieve y viento previstos son modelos. No se sustituye un aviso oficial por umbrales propios. En Pages la publicación es periódica, no vigilancia continua.</p>
-    <div class="pov-mini">${grid([['Racha prevista',e.current.gust==null?'UNKNOWN':number(e.current.gust,0)+' km/h'],['Precipitación (bloque 3 h)',e.current.rain==null?'UNKNOWN':number(e.current.rain)+' mm'],['Nieve modelo (3 h)',e.current.snow==null?'UNKNOWN':number(e.current.snow)+' cm'],['Cota copo',e.snowAtPoint?.cota_copo_m==null?'UNKNOWN':number(e.snowAtPoint.cota_copo_m,0)+' m']])}</div>`);
+    <div class="pov-mini kv">${grid([['Racha prevista',e.current.gust==null?'UNKNOWN':number(e.current.gust,0)+' km/h'],['Precipitación (bloque 3 h)',e.current.rain==null?'UNKNOWN':number(e.current.rain)+' mm'],['Nieve modelo (3 h)',e.current.snow==null?'UNKNOWN':number(e.current.snow)+' cm'],['Cota copo',e.snowAtPoint?.cota_copo_m==null?'UNKNOWN':number(e.snowAtPoint.cota_copo_m,0)+' m']])}</div>`);
 
     const atmos=Object.entries(e.profile).map(([side,p])=>`<tr><td>${side==='norte'?'Norte (Ariège/Capcir)':'Sur (Cerdanya)'}</td><td class="num">${number(p?.isocero_m,0)}</td><td class="num">${number(p?.tw0_m,0)}</td><td class="num">${number(p?.cota_copo_m,0)}</td><td class="num">${number(p?.viento700_kmh,0)}</td><td class="num">${escape(p?.flujo||'UNKNOWN')}</td><td class="num">${number(p?.froude,2)}</td></tr>`).join('');
     tbody(el('pov-atmos-rows'),atmos,7);
@@ -153,14 +162,14 @@
       rows.push(`<tr><td>${stamp(x.time)}</td><td class="num">${number(x.temperature)}</td><td class="num">${number(x.rain)}</td><td class="num">${number(x.snow)}</td><td class="num">${number(x.gust,0)}</td><td class="num">${number(x.humidity,0)}</td><td class="num">${number(x.cloud,0)}</td></tr>`);
     }
     tbody(el('pov-model-timeline'),rows.join(''),7);
-    set('pov-model-note','Modelo seleccionado: '+escape(c.modelo_nombre?.[e.model]||e.model||'UNKNOWN')+' · muestreo cada 3 h. Precipitación y nieve: suma de tres horas completas; si falta un elemento: UNKNOWN. Ninguna cifra equivale a probabilidad de impacto local.');
+    set('pov-model-note','Punto: '+escape(e.station?.nombre||'UNKNOWN')+' · modelo seleccionado: '+escape(c.modelo_nombre?.[e.model]||e.model||'UNKNOWN')+' · muestreo cada 3 h. Precipitación y nieve: suma de tres horas completas; si falta un elemento: UNKNOWN. Ninguna cifra equivale a probabilidad de impacto local.');
     const rev= e.revisions.length?e.revisions.length+' revisiones entre salidas, NO habilidad verificada':'UNKNOWN · sin comparativa de salidas';
     const sc=Object.entries(e.sidecars).map(([key,value])=>`<li>${escape(key)} · ${escape(value?.state||value?.status||'UNKNOWN')} · contexto informativo, no alerta</li>`).join('')||'<li>Sin contexto lateral validado</li>';
     const notes=(c.contexto?.notas_lluvia_24h||[]).slice(0,8).map(x=>'<li>'+escape(typeof x==='string'?x:JSON.stringify(x))+'</li>').join('');
-    set('pov-forensic',`<div class="pov-mini">${grid([['Revisiones 15 d',rev],['Skill fuera de muestra','NO VERIFICADA'],['Archivo prospectivo','NO PUBLICADO (ledger privado)'],['Datos ausentes','UNKNOWN, nunca 0']])}</div><h3>Contexto y fuentes suplementarias</h3><ul class="plain">${sc}${notes}</ul><p class="src">Los cambios de una salida a otra no son errores contra observación. No hay CSI, POD, FAR, MAE o Brier válidos sin emparejamiento temporal y espacial, QC instrumental y pronóstico congelado.</p>`);
+    set('pov-forensic',`<div class="pov-mini kv">${grid([['Revisiones 15 d',rev],['Skill fuera de muestra','NO VERIFICADA'],['Archivo prospectivo','NO PUBLICADO (ledger privado)'],['Datos ausentes','UNKNOWN, nunca 0']])}</div><h3>Contexto y fuentes suplementarias</h3><ul class="plain">${sc}${notes}</ul><p class="src">Los cambios de una salida a otra no son errores contra observación. No hay CSI, POD, FAR, MAE o Brier válidos sin emparejamiento temporal y espacial, QC instrumental y pronóstico congelado.</p>`);
     const srcrows=Object.entries(e.sources).map(([name,value])=>`<tr><td>${escape(name)}</td><td>${escape(valid(e.ages[name])?source(value,e.ages[name]):'UNKNOWN')}</td><td class="num">${valid(e.ages[name])?number(e.ages[name],0)+' min':'—'}</td><td style="white-space:normal">${escape(String(value).slice(0,220))}</td></tr>`).join('');
     tbody(el('pov-source-rows'),srcrows,4);
-    set('pov-governance',`<div class="pov-mini">${grid([['Ciclo UTC',c.issued||'UNKNOWN'],['Motorización',c.engine||'UNKNOWN'],['Permiso CNP',/PERMISSION_UNKNOWN/.test(e.sources.cnp||'')?'NO VERIFICADO':'Comprobar condiciones'],['Modelo ≠ aviso','Separación obligatoria'],['Alertas marinas','FUERA DE DOMINIO']])}</div><p class="src">Edad de consulta o caché actualizada desde el ciclo; la edad de cada medición figura en Observaciones. «CACHED» indica respuesta almacenada, no observación recién medida; «UNKNOWN» no es ausencia de peligro. Los enlaces a boletines de aludes son referencias externas, no boletines integrados.</p>`);
+    set('pov-governance',`<div class="pov-mini kv">${grid([['Ciclo UTC',c.issued||'UNKNOWN'],['Motorización',c.engine||'UNKNOWN'],['Permiso CNP',/PERMISSION_UNKNOWN/.test(e.sources.cnp||'')?'NO VERIFICADO':'Comprobar condiciones'],['Modelo ≠ aviso','Separación obligatoria'],['Alertas marinas','FUERA DE DOMINIO']])}</div><p class="src">Edad de consulta o caché actualizada desde el ciclo; la edad de cada medición figura en Observaciones. «CACHED» indica respuesta almacenada, no observación recién medida; «UNKNOWN» no es ausencia de peligro. Los enlaces a boletines de aludes son referencias externas, no boletines integrados.</p>`);
     const slider=el('pov-wind-threshold');
     if(slider){
       slider.value=String(S.threshold);
@@ -170,9 +179,9 @@
     const wind=Array.isArray(v)?v.slice(0,8):[], all24=wind.length===8&&wind.every(valid);
     const exceed=all24?wind.filter(x=>x>=S.threshold).length:null;
     set('pov-lab-value',String(S.threshold)+' km/h');
-    set('pov-lab-result',`<div class="pov-mini">${grid([['Umbral hipotético',S.threshold+' km/h'],['Bloques 3 h sobre umbral',all24?exceed+' de 8':'UNKNOWN · faltan intervalos'],['Duración de la señal',all24?(exceed*3)+' h muestreadas (no continuas)':'UNKNOWN'],['Modelo',c.modelo_nombre?.[e.model]||e.model||'UNKNOWN']])}</div><p class="src">Solo navegador. La racha disponible es una muestra del bloque de 3 h, no una vigilancia continua. Ningún ajuste cambia reglas, avisos, archivo forense o pronósticos publicados.</p>`);
+    set('pov-lab-result',`<div class="pov-mini kv">${grid([['Umbral hipotético',S.threshold+' km/h'],['Bloques 3 h sobre umbral',all24?exceed+' de 8':'UNKNOWN · faltan intervalos'],['Duración de la señal',all24?(exceed*3)+' h muestreadas (no continuas)':'UNKNOWN'],['Modelo',c.modelo_nombre?.[e.model]||e.model||'UNKNOWN']])}</div><p class="src">Solo navegador. La racha disponible es una muestra del bloque de 3 h, no una vigilancia continua. Ningún ajuste cambia reglas, avisos, archivo forense o pronósticos publicados.</p>`);
   }
-  const api={source,derive,forecast,nearest,render,liveAge};
+  const api={source,derive,forecast,nearest,render,liveAge,warningTiming};
   if(typeof module==='object' && module.exports) module.exports=api;
   if(root) root.PirineoObservatory=api;
 })(typeof window!=='undefined'?window:null);
