@@ -21,7 +21,7 @@ class MFranceObservations(unittest.TestCase):
                   "123;FAKE;42.5;2.0;1000\n")
         stations=mf.station_catalog(csv_text)
         self.assertEqual({s["id"] for s in stations},{"66001001","09002002"})
-        self.assertEqual(stations[0]["lat"],42.57)
+        self.assertEqual(next(x for x in stations if x["id"]=="66001001")["lat"],42.57)
 
     def test_geojson_conversions_and_nulls(self):
         data=[{"type":"Feature","geometry":{"coordinates":[2.07,42.57]},
