@@ -65,8 +65,8 @@ def run(root):
             if not verified.get('ok'):
                 raise RuntimeError('ledger verification failed')
             counts = {k: shadow.get(k, 0) for k in ('pronosticos', 'observaciones', 'repetidos', 'conflictos', 'rechazados')}
-            no_data = not any(counts[k] for k in ('pronosticos', 'observaciones', 'repetidos')) and not shadow.get('pronosticos_omitidos_misma_hora')
-            state = 'NO_DATA' if no_data else ('DEGRADED' if counts['conflictos'] or counts['rechazados'] else 'OK')
+            no_data = not any(counts[k] for k in ('pronosticos', 'observaciones'))
+            state = 'DEGRADED' if counts['conflictos'] or counts['rechazados'] else ('NO_DATA' if no_data else 'OK')
             status.update(state=state,
                           capture=counts, same_hour=bool(shadow.get('pronosticos_omitidos_misma_hora')),
                           records=verified['records'], issued_utc=results[0].get('issued'))
