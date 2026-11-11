@@ -35,6 +35,7 @@ jobs:
       PORTINATX_HOME: './portinatx_state'
       PIRINEO_HOME: './portinatx_state/pirineo'
       PIRINEO_EXTENDED: '1'
+      METEO_PUBLIC_BUILD: '1'   # permisos de fuentes: solo ámbito «publico»
       # Optional local sidecars; none are downloaded by this deployment.
       METEO_SIDECAR_DIR: ${{ github.workspace }}/data/sidecar
       METEO_BACKEND_URL: ${{ vars.METEO_BACKEND_URL }}

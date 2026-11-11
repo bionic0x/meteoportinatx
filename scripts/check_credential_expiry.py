@@ -37,19 +37,50 @@ def evaluate(key_present: bool, expires: str | None, today: date, warn_days: int
     return True, f"Clave de AEMET vigente hasta el {end.isoformat()} (quedan {left} días)"
 
 
+def permission_checks(directory, today: date, warn_days: int = DEFAULT_WARN_DAYS) -> list[tuple[bool, str]]:
+    """Permisos de fuentes (`permisos/*.json`, salvo ejemplos): avisa antes de que venzan."""
+    import json
+    from pathlib import Path
+    out = []
+    for f in sorted(Path(directory).glob("*.json")):
+        if f.name.endswith(".example.json"):
+            continue
+        try:
+            rec = json.loads(f.read_text(encoding="utf-8"))
+            end = rec.get("valido_hasta")
+            end = date.fromisoformat(end) if end else None
+        except (OSError, ValueError, AttributeError):
+            out.append((False, f"Permiso {f.name} ilegible o con fecha inválida: la fuente queda desactivada"))
+            continue
+        if end is None:
+            out.append((True, f"Permiso {f.name}: sin fecha de fin"))
+            continue
+        left = (end - today).days
+        if left < 0:
+            out.append((True, f"Permiso {f.name} vencido el {end.isoformat()}: la fuente se desactivó sola"))
+        elif left <= warn_days:
+            out.append((False, f"Permiso {f.name} vence el {end.isoformat()} (quedan {left} días): renuévalo o la fuente se desactivará"))
+        else:
+            out.append((True, f"Permiso {f.name} vigente hasta el {end.isoformat()} (quedan {left} días)"))
+    return out
+
+
 def main() -> int:
     try:
         warn = int(os.environ.get("AEMET_WARN_DAYS") or DEFAULT_WARN_DAYS)
     except ValueError:
         warn = DEFAULT_WARN_DAYS
-    ok, msg = evaluate(bool(os.environ.get("AEMET_API_KEY")), os.environ.get("AEMET_KEY_EXPIRES"),
-                       datetime.now(timezone.utc).date(), warn)
-    print(msg if ok else f"::error::{msg}")
+    today = datetime.now(timezone.utc).date()
+    results = [evaluate(bool(os.environ.get("AEMET_API_KEY")), os.environ.get("AEMET_KEY_EXPIRES"), today, warn)]
+    from pathlib import Path
+    results += permission_checks(Path(__file__).resolve().parents[1] / "permisos", today, warn)
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
-    if summary:
-        with open(summary, "a", encoding="utf-8") as f:
-            f.write(("✅ " if ok else "❌ ") + msg + "\n")
-    return 0 if ok else 1
+    for ok, msg in results:
+        print(msg if ok else f"::error::{msg}")
+        if summary:
+            with open(summary, "a", encoding="utf-8") as f:
+                f.write(("✅ " if ok else "❌ ") + msg + "\n")
+    return 0 if all(ok for ok, _ in results) else 1
 
 
 if __name__ == "__main__":

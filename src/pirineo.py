@@ -731,15 +731,66 @@ class CommunityPermissionError(RuntimeError):
     """#9: acceso automático a una red comunitaria sin autorización verificada."""
 
 
-CNP_PERMISSION_ENV = "CNP_PERMISSION_VERIFIED"
+CNP_PERMISSION_ENV = "CNP_PERMISSION_VERIFIED"      # solo uso local privado, nunca en compilaciones públicas
+PUBLIC_BUILD_ENV = "METEO_PUBLIC_BUILD"            # Pages y Render: "1"
+PERMISSION_FIELDS = {"fuente", "otorgado_por", "fecha_autorizacion", "valido_desde", "valido_hasta",
+                     "ambito", "atribucion", "intervalo_min_minutos", "referencia"}
+
+
+def permissions_dir() -> Path:
+    return Path(os.environ.get("METEO_PERMISSIONS_DIR") or (Path(__file__).resolve().parents[1] / "permisos"))
+
+
+def source_permission(source: str = "climaynievepirineos", now=None, public: bool | None = None) -> dict:
+    """#9: el permiso es un fichero `permisos/<fuente>.json`. Se activa solo dentro de su periodo de validez
+    y, en compilaciones públicas, solo si el ámbito incluye «publico». Cualquier defecto → inactivo."""
+    now = now or pd.now_utc()
+    public = (os.environ.get(PUBLIC_BUILD_ENV) == "1") if public is None else public
+    off = lambda why: {"activo": False, "motivo": why, "atribucion": None, "intervalo_min": None, "valido_hasta": None}
+    f = permissions_dir() / ("cnp.json" if source == "climaynievepirineos" else f"{source}.json")
+    if not f.is_file():
+        if not public and os.environ.get(CNP_PERMISSION_ENV) == "1":
+            return {"activo": True, "motivo": "override local (uso privado, sin publicar)", "atribucion": None,
+                    "intervalo_min": 30, "valido_hasta": None}
+        return off("sin autorización registrada (permisos/cnp.json)")
+    try:
+        rec = json.loads(f.read_text(encoding="utf-8"))
+        if not isinstance(rec, dict) or set(rec) - PERMISSION_FIELDS:
+            return off("registro de permiso con campos no reconocidos")
+        if rec.get("fuente") != source:
+            return off("el registro no corresponde a esta fuente")
+        for k in ("otorgado_por", "atribucion", "referencia"):
+            if not isinstance(rec.get(k), str) or not rec[k].strip():
+                return off(f"falta {k} en el registro de permiso")
+        datetime.fromisoformat(rec["fecha_autorizacion"])
+        start = datetime.fromisoformat(rec["valido_desde"]).date()
+        end = datetime.fromisoformat(rec["valido_hasta"]).date() if rec.get("valido_hasta") else None
+        scope = rec.get("ambito")
+        if not isinstance(scope, list) or not scope or set(scope) - {"privado", "publico"}:
+            return off("ámbito inválido (privado/publico)")
+        interval = rec.get("intervalo_min_minutos")
+        if not isinstance(interval, int) or isinstance(interval, bool) or interval < 10:
+            return off("intervalo_min_minutos inválido (entero ≥10)")
+    except (OSError, ValueError, TypeError, KeyError):
+        return off("registro de permiso ilegible o con fechas inválidas")
+    today = now.date()
+    if today < start:
+        return off(f"permiso aún no vigente (desde {start.isoformat()})")
+    if end is not None and today > end:
+        return off(f"permiso caducado el {end.isoformat()}")
+    if public and "publico" not in scope:
+        return off("el permiso no cubre la publicación (ámbito solo privado)")
+    return {"activo": True, "motivo": f"autorizado por {rec['otorgado_por']} ({'/'.join(scope)})",
+            "atribucion": rec["atribucion"], "intervalo_min": interval,
+            "valido_hasta": end.isoformat() if end else None}
 
 
 def src_cnp() -> list[dict]:
-    """ClimayNievePirineos. #9: NO se consulta automáticamente salvo que el propietario haya verificado
-    permiso, cadencia y atribución con sus responsables y lo declare con CNP_PERMISSION_VERIFIED=1.
-    Sin eso: PERMISSION_UNKNOWN, ninguna petición. Las observaciones manuales van por episode_evidence."""
-    if os.environ.get(CNP_PERMISSION_ENV) != "1":
-        raise CommunityPermissionError("PERMISSION_UNKNOWN")
+    """ClimayNievePirineos. #9: solo con un permiso vigente en `permisos/cnp.json` (o, en uso local privado,
+    CNP_PERMISSION_VERIFIED=1). Sin él: ninguna petición. Las observaciones manuales van por episode_evidence."""
+    perm = source_permission()
+    if not perm["activo"]:
+        raise CommunityPermissionError(perm["motivo"])
     out, now = [], pd.now_utc()
     for sid, (name, la, lo) in CNP_STATIONS.items():
         try:
@@ -979,6 +1030,7 @@ def build(dem: dict | None = None) -> dict:
             srcs["puntos"] += f" → respaldo MET Norway falló: {type(exc).__name__}"
     prof = {k: profile_diag(v) for k, v in (prof_raw or {}).items()}
     obs, metar, warns, aemet_txt = [], [], [], None
+    atribuciones: list[str] = []
     for name, fn in (("meteoclimatic", lambda: src_meteoclimatic(dem)), ("metar", src_metar), ("avisos", src_warnings)):
         try:
             val = fn()
@@ -993,12 +1045,14 @@ def build(dem: dict | None = None) -> dict:
             srcs[name] = f"error: {type(exc).__name__}"
     extra = (("aemet_obs", 30, src_aemet_obs), ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
              ("aemet_cap", 30, src_aemet_cap), ("aemet_texto", 120, src_aemet_text))
+    cnp_perm = source_permission()
     for name, ttl, fn in extra:
-        if name == "cnp" and os.environ.get(CNP_PERMISSION_ENV) != "1":
-            # #9: sin permiso verificado, ni consulta ni copia en caché de consultas anteriores
-            srcs[name] = (f"PERMISSION_UNKNOWN: acceso automático desactivado hasta verificar permiso de uso "
-                          f"({CNP_PERMISSION_ENV}=1); ver issue #9")
-            continue
+        if name == "cnp":
+            if not cnp_perm["activo"]:
+                # #9: sin permiso vigente, ni consulta ni copia en caché de consultas anteriores
+                srcs[name] = f"PERMISSION_UNKNOWN: {cnp_perm['motivo']}"
+                continue
+            ttl = max(ttl, cnp_perm["intervalo_min"] or ttl)        # cadencia acordada
         try:
             val, st = _cached(name, ttl, fn, max_age_min=180)
             srcs[name] = st if name not in ("aemet_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
@@ -1010,6 +1064,8 @@ def build(dem: dict | None = None) -> dict:
             continue
         if name in ("aemet_obs", "cnp", "meteociel"):
             obs += val
+            if name == "cnp" and val and cnp_perm["atribucion"]:
+                atribuciones.append(cnp_perm["atribucion"])
         elif name == "aemet_cap":
             warns = [w for w in warns if w.get("pais") != "spain"] + val     # AEMET sustituye a MeteoAlarm en España
             srcs["avisos"] += " · España: AEMET CAP"
@@ -1027,7 +1083,9 @@ def build(dem: dict | None = None) -> dict:
                 "notas_lluvia_24h": kb.pirineo_precip_notes(bundle.get("climatologia_era5land_pirineo"), resumen, pd.now_utc())}
     core = {"issued": pd.now_utc().isoformat(), "engine": VERSION, "box": BOX, "pois": pois, "corte": CORTE,
             "contexto": contexto, "fuentes": srcs,
-            "fuentes_edad_min": {k: round(v) for k, v in SOURCE_AGE_MIN.items()}, "modelo_puntos": points["fuente"] if points else None,
+            "fuentes_edad_min": {k: round(v) for k, v in SOURCE_AGE_MIN.items()},
+            "atribuciones": atribuciones,
+            "permiso_cnp": {k: cnp_perm[k] for k in ("activo", "motivo", "valido_hasta")}, "modelo_puntos": points["fuente"] if points else None,
             "modelos": points["modelos"] if points else [], "modelo_nombre": MODEL_NAME,
             "puntos": resumen,
             "series": points["puntos"] if points else {}, "perfil": prof,

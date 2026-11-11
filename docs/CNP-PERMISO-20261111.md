@@ -29,3 +29,15 @@ No enviar a direcciones inferidas de terceros. Registrar respuesta con fecha UTC
 - Protocolo de retirada: desactivar variable, detener peticiones, revocar credenciales y eliminar copias conforme al permiso.
 
 **Estado operativo:** el test `tests/test_community_permission.py` ya verifica que, sin permiso, no se accede a la red. No se ha enviado ninguna solicitud de autorización desde esta sesión. #9 permanece abierta.
+
+## Activación automática al recibir la autorización
+
+El permiso ya no depende de una variable: es el fichero `permisos/cnp.json` (plantilla y campos en `permisos/README.md`). Basta con subirlo a `main` con los términos reales:
+- **Periodo:** se activa el día `valido_desde` y se desactiva sola tras `valido_hasta`. Admite permisos por un periodo determinado o indefinidos (`null`).
+- **Ámbito:** `ambito` decide si cubre solo el uso privado/local o también Pages y Render (`METEO_PUBLIC_BUILD=1`). Con ámbito solo privado, la web pública nunca lo usa.
+- **Atribución:** se muestra siempre que se usan los datos.
+- **Cadencia:** `intervalo_min_minutos` fija el tiempo mínimo entre consultas.
+- **Aviso:** el workflow diario `credential-expiry.yml` avisa 14 días antes del vencimiento.
+- **Revocación:** borrar el fichero o adelantar `valido_hasta`.
+
+`CNP_PERMISSION_VERIFIED=1` queda solo como interruptor local privado y se ignora en compilaciones públicas.

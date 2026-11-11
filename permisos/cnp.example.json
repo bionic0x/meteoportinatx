@@ -1,0 +1,11 @@
+{
+  "fuente": "climaynievepirineos",
+  "otorgado_por": "Administración de ClimayNievePirineos (rol, sin datos personales)",
+  "fecha_autorizacion": "2027-01-15",
+  "valido_desde": "2027-01-15",
+  "valido_hasta": "2027-12-31",
+  "ambito": ["privado", "publico"],
+  "atribucion": "Datos de estaciones: ClimayNievePirineos (climaynievepirineos.com), con autorización",
+  "intervalo_min_minutos": 30,
+  "referencia": "Autorización escrita del 15/01/2027, archivada en el expediente privado"
+}
