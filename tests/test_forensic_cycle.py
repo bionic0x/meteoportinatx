@@ -18,6 +18,14 @@ class ForensicCycle(unittest.TestCase):
         with self.assertRaises(ValueError): fc.private_root('relative')
         with self.assertRaises(ValueError): fc.private_root(str(ROOT / 'ledger'))
 
+    def test_existing_public_directory_is_not_chmodded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "existing"
+            root.mkdir(mode=0o755)
+            root.chmod(0o755)
+            with self.assertRaises(ValueError): fc.run(root)
+            self.assertEqual(root.stat().st_mode & 0o777, 0o755)
+
     def test_result_and_secret_redaction(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / 'private'
