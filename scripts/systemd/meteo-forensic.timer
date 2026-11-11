@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly MeteoPortinatx private forensic capture
+
+[Timer]
+OnBootSec=5min
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
