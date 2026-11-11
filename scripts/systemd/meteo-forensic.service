@@ -1,0 +1,11 @@
+[Unit]
+Description=MeteoPortinatx private prospective forensic cycle
+
+[Service]
+Type=oneshot
+# Replace /PATH/TO with the absolute paths on your persistent Linux host.
+Environment=METEO_LEDGER=/PATH/TO/private/forecast-ledger
+WorkingDirectory=/PATH/TO/meteoportinatx
+ExecStart=/usr/bin/python3 /PATH/TO/meteoportinatx/scripts/forensic_cycle.py
+UMask=0077
+TimeoutStartSec=1250
