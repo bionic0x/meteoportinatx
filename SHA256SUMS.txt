@@ -47,6 +47,7 @@ ca7ee07864195443e3716947b32341e7f019434cc8f1bab135f78355d8661d91  docs/agency/04
 4b21b111f94ef04cc15f6323aa6b9101a8c48ed229a5efa3131ca07cf9e8fe1a  docs/ux-review/01-arquitectura-y-flujos.md
 027d9c25aadff594b2835c34b58165759b1ca0a4cd8b63f510124883b5602105  docs/ux-review/02-ui-sistema-visual.md
 b743ef2f6354b265a5a405e8dc32aabf258d88a849ba4892601e8b6d48bddfd3  docs/ux-review/03-identidad-y-grafica.md
+fd226caf621a09eec1754b30a4ba8b2a2750d4219e1f75fa0ab521ae4ec7a1a5  docs/ux-review/04-personas-y-accesibilidad.md
 b3e74f073cb8d60a009adde54cc8080270e24fb07be57a9492ed295e1176d6c3  docs/ux-review/img/a11y-decidir-320-text-spacing.png
 415e7074822cb5ae73f53adb08ac8c9f52ec766afd11876049506cfe30d34d35  docs/ux-review/img/a11y-decidir-foco-teclado.png
 226259ac40292abf3cf16a61676b5c9c2bb9ca6705b1c345f69d1587d0618b0a  docs/ux-review/img/a11y-pirineo-320-text-spacing.png
