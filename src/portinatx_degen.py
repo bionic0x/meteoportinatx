@@ -22,7 +22,8 @@ Cada ciclo
                             salida explícitas (no baja con escorrentía observada)
      Y la perspectiva PRÓXIMAS 36 h (avisos previstos + observación + modelos).
   4. Histéresis asimétrica: sube al instante; baja un escalón tras 3 ciclos.
-     Con <2 canales observados vivos se declara COBERTURA INSUFICIENTE y no baja.
+     Con <2 canales observados vivos O sin fuente reciente de lluvia se declara
+     COBERTURA INSUFICIENTE y no baja.
   5. Congela el ciclo (anti-hindsight) en cycles/NWC-<UTC>-<sha256>.json,
      nunca se sobrescribe, y lo añade a log.jsonl.
 
@@ -297,6 +298,8 @@ CFG: dict[str, Any] = {
     "rain_3h": (30.0, 50.0, 80.0),
     "pws_stale_min": 30,
     "min_obs_channels": 2,
+    "rain_obs_stale_min": 120,
+    "radar_stale_min": 30,
     # Distancia (km) de estaciones puntuales a Portinatx: más allá de local_obs_km son precursoras,
     # no medida local (DANA 18/10: el frente de racha de LEIB/puerto se debilitó hacia el norte).
     "station_km": {"B908X": 4.5, "B954": 29.0, "LEIB": 29.0, "ISANTJ159": 6.0},
@@ -397,6 +400,15 @@ def parse_time(s: str | int | float | None) -> datetime | None:
         except ValueError:
             continue
     return None
+
+
+def observation_is_fresh(value, max_age_min: float) -> bool:
+    """Valida hora de observación, no hora de descarga (UNKNOWN si obsoleta)."""
+    t = parse_time(value)
+    if t is None:
+        return False
+    age = (now_utc() - t).total_seconds() / 60
+    return -5 <= age <= max_age_min
 
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -1523,6 +1535,9 @@ def ch_rain_obs(sources: dict[str, SourceResult]) -> Channel:
             rec = [p for p in pts if p.R1 is not None]
             if not rec:
                 continue
+            if not observation_is_fresh(rec[-1].t, CFG["rain_obs_stale_min"]):
+                ch.evidence.append(f"{idema}: AEMET obsoleto o futuro, lluvia UNKNOWN")
+                continue
             got = True
             last1 = rec[-1].R1
             acc3 = sum(p.R1 for p in rec if p.t > rec[-1].t - timedelta(hours=3))
@@ -1555,6 +1570,10 @@ def ch_rain_obs(sources: dict[str, SourceResult]) -> Channel:
     if m and m.status == "ok":
         for icao in ("LEIB",):
             raw = (m.payload["raw"].get(icao) or [])[-1:]
+            meta = (m.payload.get("meta") or {}).get(icao) or {}
+            if raw and not observation_is_fresh(meta.get("last"), CFG["rain_obs_stale_min"]):
+                ch.evidence.append(f"METAR {icao}: sin hora fresca, lluvia UNKNOWN")
+                continue
             for line in raw:
                 got = True
                 if "+TSRA" in line or "+RA" in line:
@@ -1662,6 +1681,10 @@ def ch_radar(src: SourceResult | None) -> Channel:
         ch.evidence.append(f"radar no disponible ({src.status if src else '—'})")
         return ch
     fr = [f for f in src.payload["frames"] if not f["dup"]] or src.payload["frames"]
+    if not fr or not observation_is_fresh(fr[-1].get("time"), CFG["radar_stale_min"]):
+        ch.available = False
+        ch.evidence.append("radar obsoleto, futuro o sin hora: lluvia UNKNOWN aunque status='ok'")
+        return ch
     last = fr[-1]
     cov = last["cover"]
     near = last["nearest_km"]
@@ -1904,7 +1927,7 @@ def ch_gauges(src: SourceResult | None, state: dict) -> Channel:
     for g in sorted(src.payload["stations"], key=lambda g: g["dist_km"]):
         near = g["dist_km"] <= CFG["gauge_near_km"]
         tag = f"{g['nombre']} (a {g['dist_km']:.0f} km{', vecina' if near else ''})"
-        if g["edad_min"] > CFG["gauge_stale_min"] or g["lluvia_dia"] is None:
+        if not (-5 <= g["edad_min"] <= CFG["gauge_stale_min"]) or g["lluvia_dia"] is None:
             ch.evidence.append(f"{tag}: STALE (dato de hace {g['edad_min']:.0f} min) — no se infiere 0")
             continue
         t = parse_time(g["t"])
@@ -2114,15 +2137,23 @@ def fuse(channels: list[Channel], hr_gate: bool = False) -> dict:
     top = sorted([c for c in channels if c.available], key=lambda c: -c.level)[:3]
     reasons += [f"{c.name}={LEVELS[c.level]}" for c in top if c.level]
     missing = [c.name for c in channels if not c.available]
-    # Ausencia de datos ≠ tranquilidad: con <2 canales observados vivos se declara
-    # cobertura insuficiente y la histéresis no desescala.
+    # H1: viento/mar/rayos/escorrentía no sustituyen lluvia medida o radar.
     n_obs_total = sum(1 for c in channels if c.kind == "obs")
-    insufficient = len(obs) < CFG["min_obs_channels"]
+    rain_names = frozenset(("lluvia_observada", "pluviometros", "radar"))
+    rain_all = [c for c in channels if c.kind == "obs" and c.name in rain_names]
+    rain_live = [c for c in rain_all if c.available]
+    insufficient = len(obs) < CFG["min_obs_channels"] or not rain_live
+    if len(obs) < CFG["min_obs_channels"]:
+        reasons.append(f"⚠ COBERTURA INSUFICIENTE: {len(obs)}/{n_obs_total} canales vivos")
+    if not rain_live:
+        reasons.append("⚠ COBERTURA INSUFICIENTE DE LLUVIA: sin pluviómetros, METAR/AEMET ni radar recientes; "
+                       "viento, mar y rayos NO acreditan calma")
     if insufficient:
-        reasons.append(f"⚠ COBERTURA INSUFICIENTE: {len(obs)}/{n_obs_total} canales observados — "
-                       f"un 'quiet' aquí no significa calma")
+        reasons.append("UNKNOWN para cobertura: nivel interno quiet no significa ausencia de peligro; no desescalar")
+    rain_count = f"{len(rain_live)}/{len(rain_all)}"
     return {"proposed": LEVELS[level], "reasons": reasons, "missing": missing, "insufficient": insufficient,
-            "obs_coverage": f"{len(obs)}/{n_obs_total} canales observados activos"}
+            "rain_coverage": rain_count,
+            "obs_coverage": f"{len(obs)}/{n_obs_total} canales observados activos; lluvia {rain_count}"}
 
 
 def apply_hysteresis(proposed: str, state: dict, key: str = "level", *,
@@ -2320,7 +2351,9 @@ def deescalation_decision(current: str, proposed: str, *, gauges: Channel | None
     if manual_hold:
         conds.append(("LOCAL_HAZARD_OBSERVED", "PENDING_EVIDENCE", manual_hold))
     if insufficient:
-        conds.append(("COVERAGE", "PENDING_EVIDENCE", "menos de 2 canales observados vivos"))
+        conds.append(("COVERAGE", "PENDING_EVIDENCE",
+                      "se requieren ≥2 observaciones vivas Y ≥1 fuente reciente de lluvia "
+                      "(pluviómetros, METAR/AEMET o radar)"))
     if radar is not None and radar.metrics.get("coverage_gap"):
         conds.append(("RADAR_COVERAGE_GAP", "PENDING_EVIDENCE", "radar mudo con lluvia medida cerca"))
     if dissent and pro == 0:
@@ -2685,7 +2718,8 @@ def cycle(state: dict) -> dict:
     bias = update_bias(state, issued, radar, gauges)
     exit_cond = [f"aviso oficial vigente ≤ {LEVELS[max(0, LEVELS.index(now_lvl) - 1)]}",
                  "sin peligro local observado ≥ nivel actual en 3 ciclos seguidos",
-                 f"≥{CFG['min_obs_channels']} canales observados vivos (ahora {fz_now['obs_coverage']})",
+                 f"≥{CFG['min_obs_channels']} observaciones vivas Y ≥1 fuente reciente de lluvia "
+                 f"(ahora {fz_now['obs_coverage']})",
                  f"sin escorrentía/anegamiento observados en las últimas {CFG['manual_obs_ttl_h']} h",
                  "pluviómetro vecino fresco que no contradiga la bajada desde alert/alarm (retador)",
                  "sin disenso abierto (para bajar a quiet) ni anomalías sin revisar"]
@@ -2704,10 +2738,13 @@ def cycle(state: dict) -> dict:
             "level": final, "proposed": fz_out["proposed"], "transition": transition,
             "reasons": fz_out["reasons"], "missing": fz_out["missing"], "coverage": fz_out["obs_coverage"],
             "nowcast": {"level": now_lvl, "proposed": fz_now["proposed"], "transition": now_tr,
+                        "insufficient": fz_now["insufficient"], "rain_coverage": fz_now["rain_coverage"],
                         "reasons": fz_now["reasons"]},
             "warning_changes": changes, "notify": notified,
             "official_warning": official, "observed_local_hazard": hazard,
             "operational_precaution": {"level": now_lvl, "transition": now_tr, "hold": hold,
+                                       "insufficient": fz_now["insufficient"],
+                                       "rain_coverage": fz_now["rain_coverage"],
                                        "decision": decision, "exit_conditions": exit_cond,
                                        "note": "precaución propia; NO prolonga la vigencia del aviso oficial"},
             "governance": {"framework": "Ante Agency Agents (doctrina + contrato NEXUS)",
@@ -4761,14 +4798,16 @@ def selftest() -> int:
           all(apply_hysteresis("quiet", st, insufficient=True)[0] == "alert" for _ in range(4)))
     def frames(dbzs):
         return SourceResult("radar", "ok", payload={"frames": [
-            {"time": f"2026-10-18T06:{10 * i:02d}:00+00:00", "dup": False, "cover": {10: 0, 30: 0.2, 60: 0.3},
+            {"time": (now_utc() - timedelta(minutes=(2 - i) * 10)).isoformat(),
+             "dup": False, "cover": {10: 0, 30: 0.2, 60: 0.3},
              "nearest_km": 12.0, "nearest_strong_km": 12.0, "max_dbz_30km": d, "max_dbz_15km": d,
              "site_max_dbz": 30, "qpe_site_mmh": {"marshall_palmer": 3.0, "tropical": 4.0}}
             for i, d in enumerate(dbzs)]})
     one, two = ch_radar(frames([20, 20, 55])), ch_radar(frames([20, 55, 55]))
     def far_frames(nk, c30):
         return SourceResult("radar", "ok", payload={"frames": [
-            {"time": f"2026-10-18T06:{10 * i:02d}:00+00:00", "dup": False, "cover": {10: 0, 30: c30, 60: 0.3},
+            {"time": (now_utc() - timedelta(minutes=(2 - i) * 10)).isoformat(),
+             "dup": False, "cover": {10: 0, 30: c30, 60: 0.3},
              "nearest_km": nk, "nearest_strong_km": None, "max_class_30km": 0} for i in range(3)]})
     check("radar: eco a 50 km no es local; eco a 15 km con 20 % a ≤30 km sí",
           not ch_radar(far_frames(50.0, 0.0)).local and ch_radar(far_frames(15.0, 0.2)).local)

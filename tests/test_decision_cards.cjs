@@ -92,4 +92,11 @@ test('missing point or NaN is not converted to zero',()=>{
 test('invalid profile cannot render arbitrary input',()=>{
   assert.throws(()=>M.project('__proto__',base(),'snapshot','font_romeu',NOW),TypeError);
 });
+test('H1: missing rain coverage cannot look like an operational quiet verdict',()=>{
+  const x=base();x.precaution={level:'quiet',insufficient:true,rain_coverage:'0/3'};
+  for (const k of ['lluvia_pluviometros','lluvia_metar_aemet','radar']) x.hazard[k]={estado:'UNKNOWN',nivel:'—'};
+  const p=M.project('casa',x,'snapshot','font_romeu',NOW);
+  assert.equal(p.operational,null);assert.match(p.heading,/lluvia insuficiente/i);
+  assert.equal(p.official.kind,'official');
+});
 console.log(`PASS ${n} decision tests`);
