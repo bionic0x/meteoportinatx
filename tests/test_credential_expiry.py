@@ -27,6 +27,13 @@ class Evaluate(unittest.TestCase):
     def test_invalid_date_fails(self):
         self.assertFalse(ce.evaluate(True, "11/02/2027", TODAY)[0])
 
+    def test_full_iso_timestamp_is_accepted(self):
+        for value in ("2027-02-02 16:52:02+00:00", "2027-02-02T16:52:02Z", "2027-02-02"):
+            with self.subTest(value=value):
+                ok, msg = ce.evaluate(True, value, TODAY)
+                self.assertTrue(ok)
+                self.assertIn("2027-02-02", msg)
+
     def test_thresholds(self):
         cases = {"2027-02-11": True, "2026-11-26": True, "2026-11-25": False,
                  "2026-11-11": False, "2026-11-01": False}

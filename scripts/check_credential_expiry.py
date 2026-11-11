@@ -17,6 +17,20 @@ from datetime import date, datetime, timezone
 DEFAULT_WARN_DAYS = 14
 
 
+def parse_day(value: str) -> date | None:
+    """AAAA-MM-DD o fecha y hora ISO (p. ej. «2027-02-02 16:52:02+00:00», en UTC)."""
+    value = (value or "").strip()
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        pass
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return (dt.astimezone(timezone.utc) if dt.tzinfo else dt).date()
+
+
 def evaluate(key_present: bool, expires: str | None, today: date, warn_days: int = DEFAULT_WARN_DAYS) -> tuple[bool, str]:
     expires = (expires or "").strip()
     if not key_present:
@@ -25,10 +39,9 @@ def evaluate(key_present: bool, expires: str | None, today: date, warn_days: int
         return True, "AEMET_API_KEY ausente: nada que vigilar (eje oficial solo MeteoAlarm)"
     if not expires:
         return False, "AEMET_API_KEY presente sin fecha de caducidad: registra la variable AEMET_KEY_EXPIRES (AAAA-MM-DD)"
-    try:
-        end = date.fromisoformat(expires)
-    except ValueError:
-        return False, f"AEMET_KEY_EXPIRES no es una fecha AAAA-MM-DD válida: {expires!r}"
+    end = parse_day(expires)
+    if end is None:
+        return False, f"AEMET_KEY_EXPIRES no es una fecha válida (AAAA-MM-DD o fecha y hora ISO): {expires!r}"
     left = (end - today).days
     if left < 0:
         return False, f"La clave de AEMET CADUCÓ el {end.isoformat()} (hace {-left} días): renuévala y actualiza AEMET_KEY_EXPIRES"
