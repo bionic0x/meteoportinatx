@@ -134,6 +134,12 @@ nav.tabs{scrollbar-width:thin}
       </ul><p class="src">El radar de Ibiza no es válido para el Pirineo. En una instalación local, <code>python3 src/nowcast.py zone fetch pirineo --output captura.zip</code> y <code>python3 src/nowcast.py zone report --pack captura.zip --output informe.html</code> generan un informe con las teselas disponibles. No las incorporan a esta consola. La hora de una composición RainViewer no garantiza la de cada medición subyacente; cobertura local y ecos orográficos requieren validación.</p></section>
   </div>
   <div class="tab" id="tab-atmosfera" hidden>
+    <section class="card"><h2>Perfil atmosférico detallado · Pirineo</h2>
+      <p class="src">Modelo en puntos representativos por vertiente; no es un sondeo observado.</p>
+      <div class="pov-pointbar"><label for="pa-side">Vertiente</label><select id="pa-side"><option value="sur">Sur · Cerdanya</option><option value="norte">Norte · Ariège / Capcir</option></select>
+      <label for="pa-hour">Hora</label><input type="range" id="pa-hour" min="0" max="0" value="0" disabled><output id="pa-time" for="pa-hour">Sin hora verificable</output></div>
+      <div id="pa-content">UNKNOWN · Perfil no disponible en este ciclo.</div>
+    </section>
     <section class="card"><h2>Termodinámica y viento · punto de control</h2>
       <div class="pov-pointbar"><label for="pov-point">Punto de diagnóstico</label>
         <select id="pov-point" aria-label="Punto del observatorio"></select></div>
@@ -279,6 +285,7 @@ nav.tabs{scrollbar-width:thin}
 <script src="../public_config.js"></script>
 <script src="../public_fetch.js"></script>
 <script src="pirineo_observatory.js"></script>
+<script src="pirineo_atmos.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -613,7 +620,10 @@ const TABS=["vigilancia","satelite","atmosfera","mapa","corte","diagnostico","pu
 function showTab(t){ if(!TABS.includes(t)) t="vigilancia"; S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); try{ localStorage.setItem("pir-tab",t); }catch(e){} renderAll(); }
 document.querySelectorAll("nav.tabs a").forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); history.replaceState(null,"","#"+a.dataset.tab); showTab(a.dataset.tab); }));
 setInterval(()=>{ if(D.core){ try{renderDiag();}catch(e){console.error(e);} try{window.PirineoObservatory?.render({core:D.core,series:D.series,extended:D.extended,model:S.model,k:S.k});}catch(e){console.error(e);} } },60000);
-function renderAll(){ const run=f=>{ try{ f(); }catch(e){ console.error(e); } }; run(renderHeader); run(drawMap); run(renderCut); run(renderPoints); run(renderDiag); run(renderExtended); run(()=>window.PirineoObservatory?.render({core:D.core,series:D.series,extended:D.extended,model:S.model,k:S.k})); }
+const PA={index:null,side:null};
+function renderPirineoAtmos(){if(!window.PirineoAtmos)return;const side=$("pa-side").value,p=D.core?.atmosfera_detalle?.[side];if(PA.index===null||PA.side!==side){let best=Infinity,found=0;(p?.time||[]).forEach((t,i)=>{let v=Date.parse(/(?:Z|[+-]\d\d:\d\d)$/.test(t)?t:t+"Z"),d=Math.abs(v-Date.now());if(Number.isFinite(d)&&d<best){best=d;found=i}});PA.index=found;PA.side=side}const result=window.PirineoAtmos.render(D.core,side,PA.index);PA.index=result.index;$("pa-content").innerHTML=result.html;$("pa-hour").max=Math.max(0,result.count-1);$("pa-hour").value=result.index;$("pa-hour").disabled=!result.count;$("pa-time").textContent=result.time||"Sin hora verificable";}
+$("pa-side").addEventListener("change",()=>{PA.index=null;renderPirineoAtmos()});$("pa-hour").addEventListener("input",e=>{PA.index=Number(e.target.value);renderPirineoAtmos()});
+function renderAll(){ const run=f=>{ try{ f(); }catch(e){ console.error(e); } }; run(renderHeader); run(drawMap); run(renderCut); run(renderPoints); run(renderDiag); run(renderExtended); run(renderPirineoAtmos); run(()=>window.PirineoObservatory?.render({core:D.core,series:D.series,extended:D.extended,model:S.model,k:S.k})); }
 window.addEventListener("resize", ()=>{ if(S.tab==="mapa") drawMap(); });
 
 /* ── botón Actualizar y publicar (tarea en la nube) ── */
