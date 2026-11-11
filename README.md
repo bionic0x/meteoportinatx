@@ -46,7 +46,7 @@ El portal local es http://localhost:8787/, con `/portinatx/` y `/pirineo/`; incl
 
 CI ejecuta Python 3.10 y 3.11, prueba la carga web en Node, verifica `SHA256SUMS.txt` y genera un `.pyz`. El resultado de las pruebas sintéticas **no calibra** la predicción meteorológica ni garantiza disponibilidad de proveedores externos. El despliegue de Pages requiere datos reales recientes de ambos dominios y falla cerrado si faltan.
 
-Ver [arquitectura](docs/ARQUITECTURA-UNIFICADA.md), [notas de versión](docs/RELEASE-NOTES.md) y [guía del backend gratuito](docs/BACKEND-PERSISTENTE.md).
+Ver [arquitectura](docs/ARQUITECTURA-UNIFICADA.md), [notas de versión](docs/RELEASE-NOTES.md) y [guía del backend gratuito](docs/BACKEND-PERSISTENTE.md). La [evaluación del modelo, los usos y el potencial](docs/EVALUACION-MODELO-USOS-POTENCIAL.md) añade hallazgos de auditoría reproducidos y una hoja de ruta priorizada.
 
 ## Verificación prospectiva de pronósticos (investigación P0, sin despliegue)
 
