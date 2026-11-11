@@ -33,7 +33,8 @@ def private_root(value):
 
 def run(root):
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
-    os.chmod(root, 0o700)
+    if root.stat().st_mode & 0o077:
+        raise ValueError('ledger directory must not be accessible by group or others')
     with (root / '.cycle.lock').open('a') as lock:
         try:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
