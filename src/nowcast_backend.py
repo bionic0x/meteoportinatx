@@ -277,7 +277,10 @@ class Store:
         issued = parsed["core"].get("issued")
         _utc_issue(issued)
         if domain == "portinatx":
-            usable = sum(x.get("status") == "ok" for x in parsed["core"].get("sources", []) if isinstance(x, dict))
+            # kind=context (sidecar climatológico) es contexto, no una fuente costera utilizable: no puede
+            # sostener la publicación cuando todas las fuentes reales han fallado.
+            usable = sum(x.get("status") == "ok" and x.get("kind") != "context"
+                         for x in parsed["core"].get("sources", []) if isinstance(x, dict))
             if not usable:
                 raise ValueError("no fresh, usable coastal source")
         else:

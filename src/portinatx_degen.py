@@ -268,7 +268,8 @@ CFG: dict[str, Any] = {
     "sea_hs": (1.5, 2.5, 4.0),                 # Hs (m) en boyas con mar del sector N–E
     "manual_obs_ttl_h": 6,
     "socib_buoy_url": os.environ.get("SOCIB_BUOY_URL", ""),   # ⚠ pega la de v1.2.1
-    # Umbrales de lluvia (mm) ≈ escalones Meteoalerta Pitiusas. ⚠ verificar plan vigente.
+    # Umbrales de lluvia (mm) ≈ escalones Meteoalerta Pitiusas. ⚠ verificar plan vigente: los valores oficiales están
+    # en los Anexos 1/2 del plan (no obtenidos). Procedencia de cada umbral: knowledge_base.THRESHOLD_PROVENANCE.
     "rain_1h": (20.0, 40.0, 60.0),
     "rain_12h": (60.0, 100.0, 180.0),
     "runoff_antecedent_mm": 40.0,
@@ -2737,6 +2738,8 @@ SOURCES = [
     ("forense_modelos", "model", cached_source("forense_modelos", 180, lambda: src_forensic_models())),
     ("forense_mar", "model", cached_source("forense_mar", 180, lambda: src_forensic_marine())),
     ("forense_malla", "model", cached_source("forense_malla", 180, lambda: src_forensic_grid())),
+    # Contexto de un sidecar opcional (climatología, SST, nieve, scores). kind='context': NO entra en la fusión.
+    ("contexto", "context", lambda: src_contexto()),
 ]
 
 
@@ -2842,6 +2845,7 @@ def cycle(state: dict) -> dict:
                            "predictions": {"summary": psum, "new": new_preds, "verified": verified},
                            "bias_radar_gauge": bias, "episode": episode},
             "channels": [asdict(c) for c in [inst_all, inst_now, *observed, *forecast]],
+            "context": context_notes(srcs.get("contexto"), rain),
             "sources": [{k: v for k, v in asdict(s).items() if k != "payload"} for s in srcs.values()],
             "_srcs": srcs, "_forense": {**forensic_bundle(state, srcs, None), "archivado_ciclo": archived}}
 
@@ -2920,6 +2924,11 @@ def render(snap: dict) -> str:
         L.append(f"{tag} {c['name']:<34} [{c['kind']}, conf. {c['confidence']}]")
         for e in c["evidence"]:
             L.append(f"      {e}")
+    ctx = snap.get("context")
+    if ctx and ctx.get("notas"):
+        L.append("── contexto climatológico (no altera niveles) ──")
+        for n in ctx["notas"]:
+            L.append(f"   {n['estacion']}: {n['mm_1h']:.1f} mm/1 h en la banda {n['banda']} de la climatología local")
     L.append("── fuentes ──")
     for s in snap["sources"]:
         L.append(f"   {s['name']:<14} {s['status']:<13} {s['data_time'][:16]:<16} {s['detail'][:110]}")
@@ -3792,6 +3801,52 @@ def update_ledgers(state: dict, srcs: dict) -> dict:
         for name in CFG["portus_buoys"].values():
             buoy_ledger_add(state, name, po.payload["stations"].get(name, []))
     return out
+
+
+def sidecar_dir() -> Path:
+    """Directorio de los JSON del sidecar. Sobrescribible con METEO_SIDECAR_DIR."""
+    return Path(os.environ.get("METEO_SIDECAR_DIR") or (HOME / "sidecar"))
+
+
+def src_contexto() -> SourceResult:
+    """Contexto escrito por un proceso aparte con dependencias propias (ver knowledge_base.py y CATALOGO-FUENTES.md).
+
+    Es CONTEXTO: ni observación ni aviso ni modelo. kind='context' no participa en `fuse`. Sin ficheros válidos devuelve
+    'deshabilitado' (UNKNOWN, no «sin riesgo»).
+    """
+    import knowledge_base as kb
+    bundle = kb.context_bundle(sidecar_dir(), "portinatx", now_utc())
+    detail = "; ".join(f"{n}={b['state']}" for n, b in bundle.items())
+    ok = {n: b for n, b in bundle.items() if b["state"] == "ok"}
+    if not ok:
+        return SourceResult(name="contexto", status="deshabilitado",
+                            detail="sin sidecar válido → contexto UNKNOWN (no calma): " + detail,
+                            payload={"sidecars": bundle})
+    newest = max(b["generated_at"] for b in ok.values())
+    return SourceResult(name="contexto", status="ok", data_time=newest, detail=detail, payload={"sidecars": bundle})
+
+
+def context_notes(ctx: SourceResult | None, rain: Channel) -> dict:
+    """Sitúa la lluvia observada respecto a la climatología local del sidecar. SOLO informativo: no cambia niveles.
+
+    Tabla esperada: values.precip_1h_mm = {p50,p90,p95,p99,max} (celda de reanálisis ~9 km, no punto de estación).
+    """
+    if ctx is None or ctx.status != "ok":
+        return {"estado": "UNKNOWN", "notas": [], "detalle": ctx.detail if ctx else "fuente ausente",
+                "aviso": "contexto no disponible: UNKNOWN, no «normal»"}
+    import knowledge_base as kb
+    clim = ((ctx.payload or {}).get("sidecars") or {}).get("climatologia_era5land") or {}
+    table = (clim.get("data") or {}).get("precip_1h_mm") if clim.get("state") == "ok" else None
+    notes = []
+    for key, val in rain.metrics.items():
+        if not key.endswith("_r1") or not isinstance(val, (int, float)) or isinstance(val, bool) or val <= 0:
+            continue
+        pr = kb.percentile_rank(val, table)
+        if pr["band"] in ("UNKNOWN", "<p50"):
+            continue
+        notes.append({"estacion": key[:-3], "mm_1h": val, "banda": pr["band"], "rank": pr["rank"]})
+    return {"estado": "ok", "notas": notes, "detalle": ctx.detail,
+            "aviso": "contexto climatológico de celda ~9 km frente a un punto: indicio, no medida ni aviso"}
 
 
 def forensic_points() -> list[tuple[str, str, float, float]]:
@@ -5333,6 +5388,18 @@ def selftest() -> int:
     check("G5 MeteoAlarm y CAP de AEMET comparten raíz; LEIB y lluvia observada también (no se confirman entre sí)",
           channel_root("aviso_aemet") == channel_root("aviso_aemet_activo") == channel_root("frente_racha")
           == channel_root("lluvia_observada"))
+    import knowledge_base as kb_
+    check("contexto: kind='context' no cuenta como canal en la fusión (fuse solo mira institutional/obs/model/ensemble)",
+          not any(n == "contexto" and k in ("institutional", "obs", "model", "ensemble") for n, k, _ in SOURCES)
+          and any(n == "contexto" and k == "context" for n, k, _ in SOURCES))
+    check("contexto: sin sidecar → fuente deshabilitada (UNKNOWN) y notas vacías, nunca «normal»",
+          (lambda r: r.status == "deshabilitado" and context_notes(r, Channel("x"))["estado"] == "UNKNOWN")(
+              run_source("contexto", "context", lambda: SourceResult(name="contexto", status="deshabilitado", detail="sin sidecar"))))
+    check("percentil de contexto: 25 mm/h con p95=20 y p99=35 → banda p95–p99; sin tabla → UNKNOWN",
+          kb_.percentile_rank(25.0, {"p50": 1, "p90": 8, "p95": 20, "p99": 35, "max": 60})["band"] == "p95–p99"
+          and kb_.percentile_rank(25.0, None)["band"] == "UNKNOWN")
+    check("umbrales: todo umbral con procedencia declarada existe en CFG y Meteoalerta Anexo 1 sigue sin cargar (None)",
+          all(k in CFG for k in kb_.THRESHOLD_PROVENANCE) and kb_.METEOALERTA_ANNEX1 is None)
     print(f"\n{ok} OK, {fail} fallos — pruebas de LÓGICA con datos sintéticos; no validan umbrales ni endpoints.")
     return 1 if fail else 0
 

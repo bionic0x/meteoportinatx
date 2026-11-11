@@ -7,6 +7,13 @@
 - `core.json`, la API pública y la vista de Portinatx muestran la edad del dato de cada canal.
 - Límites de edad de partida, sin calibrar; revisar con el archivo de pronósticos (#7).
 
+# Sin publicar — catálogo de fuentes y conocimiento con procedencia
+
+- Nuevo `src/knowledge_base.py` (stdlib): catálogo de fuentes con licencia/verificación, priors marcados HYPOTHESIS, procedencia de umbrales (`THRESHOLD_PROVENANCE`; Meteoalerta Anexo 1 = `None`, sin valores inventados) y lectura validada de sidecars JSON.
+- Nueva fuente `contexto` (`kind="context"`): UNKNOWN si no hay sidecar válido; no entra en la fusión ni cambia niveles. El backend no la cuenta como fuente costera utilizable.
+- Pirineo: la rampa de fase de `snow_frac` pasa de 0,5 °C a 0,7 °C de bulbo húmedo (literatura de Cataluña, sin calibrar localmente) y `profile_diag` añade `tw07_m`. Las cotas heurísticas de copo/cuajado/acumulación no cambian.
+- `docs/CATALOGO-FUENTES.md`. Sin sidecar real, sin conectores probados en vivo. No se ha cambiado ninguna versión.
+
 # Release 0.5.1 — correcciones de integración y seguridad
 
 - Reparada lectura de `X-Meteo-Freshness` mediante `Access-Control-Expose-Headers`.

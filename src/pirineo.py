@@ -37,6 +37,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import portinatx_degen as pd  # noqa: E402
 import pirineo_meta as meta  # noqa: E402
+import knowledge_base as kb  # noqa: E402
 
 VERSION = "0.3.0"
 UTC = timezone.utc
@@ -266,13 +267,21 @@ def src_points_metno(pois: list[dict]) -> dict:
     return {"fuente": "MET Norway (respaldo: Open-Meteo sin servicio)", "modelos": ["metno"], "puntos": out}
 
 
+SNOW_TW_C = kb.PRIORS["wet_bulb_snow_threshold_c"]["value"]            # HIPÓTESIS (Casellas et al.), ver knowledge_base
+SNOW_RAMP_HALF_C = kb.PRIORS["snow_ramp_half_width_c"]["value"]
+
+
 def snow_frac(t: float | None, td: float | None, z_m: float = 1500) -> float:
-    """Fracción sólida aproximada a partir del bulbo húmedo en superficie (0 lluvia … 1 nieve)."""
+    """Fracción sólida aproximada a partir del bulbo húmedo en superficie (0 lluvia … 1 nieve).
+
+    Rampa lineal centrada en SNOW_TW_C (0,7 °C: umbral nieve/no nieve del bulbo húmedo en Cataluña, Casellas et al.;
+    antes 0,5 °C sin procedencia). HIPÓTESIS hasta calibrarla con observaciones de fase locales.
+    """
     if t is None:
         return 0.0
     p = 1013.25 * (1 - 2.25577e-5 * z_m) ** 5.25588
     tw = pd.wet_bulb(t, td if td is not None else t - 2, p) if td is not None else t
-    return max(0.0, min(1.0, (1.5 - tw) / 2.0))
+    return max(0.0, min(1.0, (SNOW_TW_C + SNOW_RAMP_HALF_C - tw) / (2 * SNOW_RAMP_HALF_C)))
 
 
 def src_grid_om() -> dict:
@@ -331,6 +340,8 @@ def profile_diag(h: dict) -> list[dict]:
         lev.sort(key=lambda x: x["z"])
         fz = _zero_height(lev, "T")
         wbz = _zero_height(lev, "Tw")
+        # Altura donde el Tw del perfil cruza el umbral de fase (0,7 °C): diagnóstico adicional, NO sustituye a tw0_m.
+        tw07 = _zero_height([{**x, "Tw": None if x["Tw"] is None else x["Tw"] - SNOW_TW_C} for x in lev], "Tw")
         tmax = max((x["T"] for x in lev if 500 <= x["p"] <= 850), default=None)      # 925 hPa queda bajo el terreno
         ws7, wd7 = h.get("wind_speed_700hPa", [None])[k], h.get("wind_direction_700hPa", [None])[k]
         l85 = next((x for x in lev if x["p"] == 850), None)
@@ -341,7 +352,7 @@ def profile_diag(h: dict) -> list[dict]:
             n2 = 9.81 / ((th85 + th70) / 2) * (th70 - th85) / max(1.0, l70["z"] - l85["z"])
             nbv = math.sqrt(n2) if n2 > 0 else 0.0
         fr = (ws7 / 3.6) / (nbv * 1000) if ws7 is not None and nbv else None      # U/(N·h), h ≈ 1000 m sobre los valles
-        out.append({"t": t, "isocero_m": _r(fz, 0), "tw0_m": _r(wbz, 0),
+        out.append({"t": t, "isocero_m": _r(fz, 0), "tw0_m": _r(wbz, 0), "tw07_m": _r(tw07, 0),
                     "cota_copo_m": _r(wbz - 300, 0) if wbz is not None else None,
                     "cota_cuajado_m": _r(wbz - 100, 0) if wbz is not None else None,
                     "cota_acum_m": _r(wbz + 200, 0) if wbz is not None else None,
@@ -845,8 +856,14 @@ def build(dem: dict | None = None) -> dict:
     obs = [o for o in obs if o.get("edad_min") is not None and o["edad_min"] <= 24 * 60]
     obs_all = obs + [{"nombre": m["icao"] + " " + (m["nombre"] or ""), "lat": m["lat"], "lon": m["lon"], "alt": m["alt"],
                       "T": m["T"], "edad_min": m["edad_min"]} for m in metar]
+    # Contexto climatológico/nieve de un sidecar opcional: solo estado y procedencia (sin valores). Cualquier estado
+    # distinto de "ok" es UNKNOWN; nunca altera el diagnóstico físico ni los avisos.
+    contexto = {"nota": "contexto, no observación ni aviso; UNKNOWN si el estado no es ok",
+                "sidecars": {n: {k: v for k, v in b.items() if k != "data"}
+                             for n, b in kb.context_bundle(Path(os.environ.get("METEO_SIDECAR_DIR") or (HOME / "sidecar")),
+                                                           "pirineo", pd.now_utc()).items()}}
     core = {"issued": pd.now_utc().isoformat(), "engine": VERSION, "box": BOX, "pois": pois, "corte": CORTE,
-            "fuentes": srcs, "modelo_puntos": points["fuente"] if points else None,
+            "contexto": contexto, "fuentes": srcs, "modelo_puntos": points["fuente"] if points else None,
             "modelos": points["modelos"] if points else [], "modelo_nombre": MODEL_NAME,
             "puntos": summarize_points(points["puntos"], pois, prof.get("sur", [])) if points else [],
             "series": points["puntos"] if points else {}, "perfil": prof,
@@ -941,6 +958,10 @@ def selftest() -> int:
     inv = obs_inversion([{"alt": 1100, "T": -4.0, "edad_min": 10}, {"alt": 1200, "T": -3.5, "edad_min": 10}, {"alt": 1700, "T": 1.0, "edad_min": 10}])
     check("inversión observada: más frío en el fondo de la Cerdanya → gradiente positivo", inv["inversion"] and inv["gradiente_c_km"] > 5)
     check("fracción sólida: Tw −2 °C nieve, +4 °C lluvia", snow_frac(-1.5, -2.5) == 1.0 and snow_frac(5, 3) == 0.0)
+    check("fase: la rampa está centrada en Tw = 0,7 °C (0,6 °C → >50 % sólido; 0,8 °C → <50 %)",
+          snow_frac(0.6, 0.6) > 0.5 > snow_frac(0.8, 0.8) and abs(snow_frac(0.7, 0.7) - 0.5) < 1e-9)
+    check("perfil: Tw 0,7 °C se alcanza igual o más abajo que Tw 0 °C (Tw decrece con la altura)",
+          d["tw07_m"] is not None and d["tw07_m"] <= d["tw0_m"])
     dem = {"lat_n": 42.6, "lon_w": 1.6, "step": 0.1, "nlat": 3, "nlon": 3, "rows": [[1000, 1000, 1000], [1000, 2000, 1000], [1000, 1000, 1000]]}
     check("DEM bilineal en el centro y a medio camino", dem_at(dem, 42.5, 1.7) == 2000 and dem_at(dem, 42.55, 1.7) == 1500 and dem_at(dem, 43, 1.7) is None)
     pk = pack_dem(dem)
