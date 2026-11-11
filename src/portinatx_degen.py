@@ -2169,6 +2169,20 @@ def manual_obs(state: dict, now: datetime) -> dict:
     return out
 
 
+def official_source_label(cap: SourceResult | None, alarm: SourceResult | None) -> dict:
+    """#18: qué fuente oficial sostiene el eje 1, dicho de forma visible y no solo en la tabla de fuentes."""
+    cap_ok, ma_ok = bool(cap and cap.status == "ok"), bool(alarm and alarm.status == "ok")
+    why = f"AEMET CAP {cap.status if cap else 'no consultado'}"
+    if cap_ok and ma_ok:
+        return {"fuente_oficial": "AEMET_CAP+METEOALARM", "fuente_oficial_nota": "AEMET CAP y MeteoAlarm disponibles"}
+    if cap_ok:
+        return {"fuente_oficial": "AEMET_CAP", "fuente_oficial_nota": "solo AEMET CAP (MeteoAlarm no disponible)"}
+    if ma_ok:
+        return {"fuente_oficial": "SOLO_METEOALARM",
+                "fuente_oficial_nota": f"eje oficial solo con MeteoAlarm ({why}): sin respaldo directo de AEMET"}
+    return {"fuente_oficial": "NINGUNA", "fuente_oficial_nota": f"sin fuente oficial ({why}, MeteoAlarm no disponible)"}
+
+
 def official_state(inst_now: Channel, inst_all: Channel, warnings: list[dict]) -> dict:
     act = [w for w in warnings if w.get("activo_ahora")]
     top = max(act, key=lambda w: w["rank"]) if act else None
@@ -2896,6 +2910,7 @@ def cycle(state: dict) -> dict:
     if MANUAL_FLOOR:
         warns.append(MANUAL_FLOOR)
     official = official_state(inst_now, inst_all, warns)
+    official.update(official_source_label(srcs.get("aemet_cap"), srcs.get("meteoalarm")))
     changes = detect_warning_changes(state, warns, issued)          # F1: un cambio de aviso no puede pasar callado
     notified = notify(changes, cid)
     # ── EJE 2: PELIGRO LOCAL OBSERVADO ──
