@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import portinatx_degen as pd  # noqa: E402
 import pirineo_meta as meta  # noqa: E402
 import knowledge_base as kb  # noqa: E402
+import pirineo_atmos as atmos  # noqa: E402
 import mf_obs  # noqa: E402  (verificación: archivo horario oficial de Météo-France)
 import meteo_france_obs as mf  # noqa: E402  (tiempo real: API DPObs, clave del propietario)
 
@@ -1086,6 +1087,13 @@ def build(dem: dict | None = None) -> dict:
         except Exception as exc:
             srcs["puntos"] += f" → respaldo MET Norway falló: {type(exc).__name__}"
     prof = {k: profile_diag(v) for k, v in (prof_raw or {}).items()}
+    atmos_detail = {}
+    try:
+        raw_atmos, state_atmos = _cached("atmosfera_detalle", 180, atmos.fetch_profiles)
+        atmos_detail = {side: atmos.derive(row) for side, row in raw_atmos.items()}
+        srcs["atmosfera_detalle"] = state_atmos + (" · cobertura parcial" if len(atmos_detail) < 2 else "")
+    except Exception as exc:
+        srcs["atmosfera_detalle"] = f"error: {type(exc).__name__}"
     obs, metar, warns, aemet_txt = [], [], [], None
     atribuciones: list[str] = []
     for name, fn in (("meteoclimatic", lambda: src_meteoclimatic(dem)), ("metar", src_metar), ("avisos", src_warnings)):
@@ -1166,7 +1174,7 @@ def build(dem: dict | None = None) -> dict:
             "permiso_cnp": {k: cnp_perm[k] for k in ("activo", "motivo", "valido_hasta")}, "modelo_puntos": points["fuente"] if points else None,
             "modelos": points["modelos"] if points else [], "modelo_nombre": MODEL_NAME,
             "puntos": resumen,
-            "series": points["puntos"] if points else {}, "perfil": prof,
+            "series": points["puntos"] if points else {}, "perfil": prof, "atmosfera_detalle": atmos_detail,
             "foehn": foehn_diag(points["puntos"] if points else None, pmap, prof.get("norte")),
             "inversion_obs": obs_inversion(obs_all), "obs": obs, "metar": metar, "avisos": warns, "aemet": aemet_txt,
             "status": {k: {"estado": a, "nota": b} for k, (a, b) in STATUS.items()},
