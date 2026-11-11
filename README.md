@@ -2,7 +2,7 @@
 
 Radar, avisos Meteoalarm, observaciones METAR y evaluación forense comparten motor para Portinatx y Pirineo. Pirineo excluye mar. [Perfiles, descargas y guía forense](docs/ZONAS-MODULARES.md).
 
-Un solo desarrollo con dos dominios separados: **Portinatx (Ibiza)** y **Pirineo (Andorra, Cerdanya y Capcir)**. El núcleo costero sigue en 0.6.1, el motor pirenaico y su metaanálisis en 0.3.0; la aplicación, API y web usan la versión de integración **0.6.0**.
+Un solo desarrollo con dos dominios separados: **Portinatx (Ibiza)** y **Pirineo (Andorra, Cerdanya y Capcir)**. El núcleo costero sigue en 0.6.1, el motor pirenaico y su metaanálisis en 0.6.1; la aplicación, API y web usan la versión de integración **0.6.0**.
 
 > Diagnósticos experimentales: **no sustituyen avisos oficiales** (AEMET / protección civil / Meteocat / SMA / Météo-France). Ausencia de una fuente ≠ calma. El aprendizaje forense no altera los avisos oficiales.
 

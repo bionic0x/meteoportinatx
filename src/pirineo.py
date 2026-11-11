@@ -39,7 +39,7 @@ import portinatx_degen as pd  # noqa: E402
 import pirineo_meta as meta  # noqa: E402
 import knowledge_base as kb  # noqa: E402
 
-VERSION = "0.3.0"
+VERSION = "0.6.1"
 UTC = timezone.utc
 MADRID = pd.MADRID
 HOME = Path(os.environ.get("PIRINEO_HOME") or (pd.HOME / "pirineo"))
@@ -104,15 +104,19 @@ MODEL_NAME = {"meteofrance_arome_france_hd": "AROME HD 1,5 km", "icon_eu": "ICON
               "metno": "MET Norway (ECMWF)"}
 PROFILE_POINTS = {"norte": (42.62, 1.80), "sur": (42.40, 1.90)}     # Ariège alto / Cerdanya
 LEVELS = (925, 850, 700, 600, 500)
+# 0.6.1 · paridad con el motor costero: ausencia de dato = UNKNOWN, nunca 0 ni «sin señal».
+NOW_TOLERANCE_MIN = 90          # el valor «ahora» de un punto debe estar a ≤90 min de la hora actual
+INVERSION_MIN_SPAN_M = 300      # desnivel mínimo entre estaciones para afirmar un gradiente
+FOEHN_NORTH_SECTOR = (300.0, 30.0)
 WARN_AREAS = {"spain": ("pirineo de girona", "pirineo de lleida", "girona", "lleida"),
               "france": ("pyrénées-orientales", "pyrenees-orientales", "ariège", "ariege"), "andorra": ("andorra",)}
 STATUS = {
     "dem": ("ESTÁNDAR", "Relieve de las teselas Terrarium (SRTM/Copernicus/ASTER combinados, ~76 m), remuestreado a ~0,004°. Curvas cada 100 m."),
     "puntos": ("DIAGNÓSTICO", "Previsión por punto a la altitud real del punto. Open-Meteo ajusta la temperatura del modelo a esa altitud; MET Norway lo hace con un gradiente fijo de 6 °C/km (no ve inversiones)."),
-    "cota": ("DIAGNÓSTICO", "Cota de nieve desde el perfil por niveles: cero de bulbo húmedo (Tw = 0 °C). Copo ≈ Tw0 − 300 m (±150 m), cuajado ≈ Tw0 − 100 m, acumulación fiable ≈ Tw0 + 200 m. Con precipitación intensa baja más (enfriamiento por fusión)."),
+    "cota": ("DIAGNÓSTICO", "Cota de nieve desde el perfil por niveles y la superficie del modelo (los niveles bajo el terreno se descartan): cero de bulbo húmedo (Tw = 0 °C). Copo ≈ Tw0 − 300 m (±150 m), cuajado ≈ Tw0 − 100 m, acumulación fiable ≈ Tw0 + 200 m. Con precipitación intensa baja más (enfriamiento por fusión, no modelizado). Con capa cálida sobre aire bajo cero en el fondo no se dan cotas: riesgo de lluvia engelante o hielo."),
     "slr": ("DIAGNÓSTICO", "Relación nieve/agua de Kuchera con la temperatura máxima de la columna bajo 500 hPa."),
-    "foehn": ("EXPERIMENTAL", "Föhn: flujo a 700 hPa perpendicular a la divisoria (≥10 m/s) y, en el par barlovento/sotavento, θ de sotavento ≥2 K mayor y HR ≥20 puntos menor."),
-    "inversion": ("DIAGNÓSTICO", "Inversión observada entre estaciones de fondo y de ladera de la Cerdanya y Andorra: gradiente con la altitud de la temperatura medida."),
+    "foehn": ("EXPERIMENTAL", "Föhn del norte: flujo a 700 hPa perpendicular a la divisoria (≥10 m/s) y, en el par barlovento/sotavento, θ de sotavento ≥2 K mayor y HR ≥20 puntos menor, en cualquiera de los modelos. Sin perfil u horas comunes: UNKNOWN. El föhn del sur no se evalúa."),
+    "inversion": ("DIAGNÓSTICO", "Inversión observada entre estaciones de fondo y de ladera de la Cerdanya y Andorra: gradiente con la altitud de la temperatura medida. Solo se afirma con ≥300 m de desnivel y pendiente mayor que dos veces su error; si no, «no concluyente». Mezcla cuencas: no resuelve lagos fríos de cada valle."),
     "viento_collados": ("DIAGNÓSTICO", "Racha prevista en Envalira, Pas de la Casa, Puymorens y Toses; ventisca probable si además nieva con T < −1 °C y racha ≥ 50 km/h."),
 }
 
@@ -300,7 +304,9 @@ def src_grid_om() -> dict:
         fields[v] = []
         for k in k3:
             if v in ("precipitation", "snowfall"):
-                fields[v].append([None if r["hourly"][v][k] is None else round(sum(x or 0 for x in r["hourly"][v][k:k + 3]), 1) for r in res])
+                blk = lambda r: r["hourly"][v][k:k + 3]
+                fields[v].append([None if len(blk(r)) < 3 or any(x is None for x in blk(r)) else round(sum(blk(r)), 1)
+                                  for r in res])                         # un hueco no es 0 mm
             else:
                 fields[v].append([r["hourly"][v][k] for r in res])
     return {"modelo": OM_MODELS[0], "lats": las, "lons": los, "time": [tt[k] for k in k3],
@@ -313,7 +319,8 @@ def src_profile_om() -> dict:
     for k, (la, lo) in PROFILE_POINTS.items():
         q = {"hourly": hv + ",temperature_2m,dew_point_2m,surface_pressure,precipitation", "models": "meteofrance_arpege_europe",
              "forecast_hours": 72, "timezone": "UTC", "latitude": la, "longitude": lo}
-        out[k] = pd.get_json("https://api.open-meteo.com/v1/forecast?" + urllib.parse.urlencode(q), timeout=60).get("hourly", {})
+        res = pd.get_json("https://api.open-meteo.com/v1/forecast?" + urllib.parse.urlencode(q), timeout=60)
+        out[k] = {**(res.get("hourly") or {}), "_elevation": res.get("elevation")}
     return out
 
 
@@ -337,7 +344,16 @@ def profile_diag(h: dict) -> list[dict]:
                 continue
             td = pd._dewpoint(T, RH)
             lev.append({"p": p, "z": Z, "T": T, "Tw": pd.wet_bulb(T, td, p)})
+        # Superficie del modelo: los niveles de presión bajo el terreno son extrapolados y se descartan.
+        zs = h.get("_elevation")
+        t2, d2, sp = (h.get(v, [None])[k] if k < len(h.get(v, [])) else None
+                      for v in ("temperature_2m", "dew_point_2m", "surface_pressure"))
+        if zs is not None:
+            lev = [x for x in lev if x["z"] > zs + 10]
+            if None not in (t2, d2, sp):
+                lev.append({"p": sp, "z": zs, "T": t2, "Tw": pd.wet_bulb(t2, d2, sp), "sfc": True})
         lev.sort(key=lambda x: x["z"])
+        warm = warm_layer(lev)
         fz = _zero_height(lev, "T")
         wbz = _zero_height(lev, "Tw")
         # Altura donde el Tw del perfil cruza el umbral de fase (0,7 °C): diagnóstico adicional, NO sustituye a tw0_m.
@@ -352,14 +368,44 @@ def profile_diag(h: dict) -> list[dict]:
             n2 = 9.81 / ((th85 + th70) / 2) * (th70 - th85) / max(1.0, l70["z"] - l85["z"])
             nbv = math.sqrt(n2) if n2 > 0 else 0.0
         fr = (ws7 / 3.6) / (nbv * 1000) if ws7 is not None and nbv else None      # U/(N·h), h ≈ 1000 m sobre los valles
+        pr_h = h.get("precipitation", [None])[k] if k < len(h.get("precipitation", [])) else None
+        cotas_ok = wbz is not None and warm is None          # con capa cálida la cota de nieve no tiene sentido
         out.append({"t": t, "isocero_m": _r(fz, 0), "tw0_m": _r(wbz, 0), "tw07_m": _r(tw07, 0),
-                    "cota_copo_m": _r(wbz - 300, 0) if wbz is not None else None,
-                    "cota_cuajado_m": _r(wbz - 100, 0) if wbz is not None else None,
-                    "cota_acum_m": _r(wbz + 200, 0) if wbz is not None else None,
+                    "cota_copo_m": _r(wbz - 300, 0) if cotas_ok else None,
+                    "cota_cuajado_m": _r(wbz - 100, 0) if cotas_ok else None,
+                    "cota_acum_m": _r(wbz + 200, 0) if cotas_ok else None,
+                    "capa_calida": warm, "superficie_m": _r(zs, 0),
+                    "riesgo_engelante": bool(warm) and (pr_h is None or pr_h > 0),
                     "slr": kuchera_slr(tmax + 273.15 if tmax is not None else None),
                     "viento700_kmh": ws7, "dir700": wd7, "flujo": _flow_sector(wd7), "froude": _r(fr, 2),
                     "pr_mm": h.get("precipitation", [None])[k]})
     return out
+
+
+def warm_layer(lev: list[dict]) -> dict | None:
+    """Capa por encima de 0 °C sobre aire bajo cero en el nivel más bajo (lago frío en el valle).
+
+    La precipitación funde en la capa cálida y se recongela abajo: lluvia engelante o hielo granulado.
+    Devuelve base, tope y temperatura máxima de la capa, o None si no la hay.
+    """
+    pts = [x for x in lev if x.get("T") is not None]
+    if len(pts) < 2 or pts[0]["T"] > 0:
+        return None
+    above = [i for i, x in enumerate(pts) if x["T"] > 0]
+    if not above:
+        return None
+    i0 = above[0]
+    a, b = pts[i0 - 1], pts[i0]
+    base = a["z"] + (b["z"] - a["z"]) * (0 - a["T"]) / (b["T"] - a["T"])
+    j = i0
+    while j + 1 < len(pts) and pts[j + 1]["T"] > 0:
+        j += 1
+    top = None
+    if j + 1 < len(pts):
+        c, d = pts[j], pts[j + 1]
+        top = c["z"] + (d["z"] - c["z"]) * c["T"] / (c["T"] - d["T"])
+    return {"base_m": _r(base, 0), "tope_m": _r(top, 0), "tmax_c": _r(max(x["T"] for x in pts[i0:j + 1]), 1),
+            "t_fondo_c": _r(pts[0]["T"], 1)}
 
 
 def _zero_height(lev: list[dict], key: str) -> float | None:
@@ -387,29 +433,55 @@ def theta(t: float, z: float) -> float:
     return (t + 273.15) * (1000 / p) ** 0.286
 
 
-def foehn_diag(points: dict, pois: dict, prof: list[dict]) -> list[dict]:
-    """Para cada par barlovento/sotavento y cada hora con flujo perpendicular: Δθ y ΔHR del primer modelo."""
+def _tkey(t) -> str | None:
+    """Hora normalizada a UTC: los puntos (Open-Meteo / MET Norway) y el perfil se emparejan por instante."""
+    if not isinstance(t, str):
+        return None
+    tt = pd.parse_time(t if ("+" in t[10:] or t.endswith("Z")) else t + "Z")
+    return tt.isoformat() if tt else None
+
+
+def foehn_diag(points: dict | None, pois: dict, prof: list[dict] | None) -> list[dict]:
+    """Para cada par barlovento/sotavento: horas con flujo del norte y firma de föhn en CUALQUIER modelo.
+    Sin perfil, sin puntos u horas comunes → estado UNKNOWN y horas None (no «0 h»)."""
     out = []
+    pmap = {_tkey(p["t"]): p for p in (prof or []) if _tkey(p["t"])}
     for up, down, label in FOEHN_PAIRS:
-        A, B = points.get(up), points.get(down)
-        if not (A and B):
+        base = {"par": label, "barlovento": up, "sotavento": down}
+        A, B = (points or {}).get(up), (points or {}).get(down)
+        if not pmap:
+            out.append({**base, "estado": "UNKNOWN", "horas": None, "primeras": [], "motivo": "sin perfil vertical"})
             continue
-        m = next(iter(A["m"]))
-        ta, tb = A["m"][m].get("temperature_2m") or [], B["m"][m].get("temperature_2m") or []
-        ra, rb = A["m"][m].get("relative_humidity_2m") or [], B["m"][m].get("relative_humidity_2m") or []
+        if not (A and B):
+            out.append({**base, "estado": "UNKNOWN", "horas": None, "primeras": [], "motivo": "sin previsión en el par"})
+            continue
         za, zb = pois[up]["alt_dem"] or pois[up]["alt_ref"], pois[down]["alt_dem"] or pois[down]["alt_ref"]
-        hits = []
-        pmap = {p["t"]: p for p in prof}
-        for k, t in enumerate(A["time"]):
-            if k >= min(len(ta), len(tb)) or None in (ta[k], tb[k]):
+        per_model, best, evaluated = {}, [], 0
+        for m in A["m"]:
+            if m not in B["m"]:
                 continue
-            pr = pmap.get(t)
-            north = pr and pr["dir700"] is not None and (pr["dir700"] >= 300 or pr["dir700"] <= 30) and (pr["viento700_kmh"] or 0) >= 36
-            dth = theta(tb[k], zb) - theta(ta[k], za)
-            drh = (ra[k] - rb[k]) if k < min(len(ra), len(rb)) and None not in (ra[k], rb[k]) else None
-            if north and dth >= 2 and (drh or 0) >= 20:
-                hits.append({"t": t, "dtheta": round(dth, 1), "dhr": drh, "v700": pr["viento700_kmh"]})
-        out.append({"par": label, "barlovento": up, "sotavento": down, "horas": len(hits), "primeras": hits[:6]})
+            ta, tb = A["m"][m].get("temperature_2m") or [], B["m"][m].get("temperature_2m") or []
+            ra, rb = A["m"][m].get("relative_humidity_2m") or [], B["m"][m].get("relative_humidity_2m") or []
+            hits = []
+            for k, t in enumerate(A["time"]):
+                pr = pmap.get(_tkey(t))
+                if pr is None or k >= min(len(ta), len(tb)) or None in (ta[k], tb[k]):
+                    continue
+                evaluated += 1
+                north = (pr["dir700"] is not None and pd.in_sector(pr["dir700"], FOEHN_NORTH_SECTOR)
+                         and (pr["viento700_kmh"] or 0) >= 36)
+                dth = theta(tb[k], zb) - theta(ta[k], za)
+                drh = (ra[k] - rb[k]) if k < min(len(ra), len(rb)) and None not in (ra[k], rb[k]) else None
+                if north and dth >= 2 and drh is not None and drh >= 20:
+                    hits.append({"t": t, "dtheta": round(dth, 1), "dhr": drh, "v700": pr["viento700_kmh"], "modelo": m})
+            per_model[m] = len(hits)
+            if len(hits) > len(best):
+                best = hits
+        if not evaluated:
+            out.append({**base, "estado": "UNKNOWN", "horas": None, "primeras": [], "por_modelo": per_model,
+                        "motivo": "perfil y puntos sin horas comunes con datos"})
+            continue
+        out.append({**base, "estado": "OK", "horas": len(best), "primeras": best[:6], "por_modelo": per_model})
     return out
 
 
@@ -423,8 +495,19 @@ def obs_inversion(obs: list[dict]) -> dict | None:
     den = sum((z - mz) ** 2 for z, _ in pts)
     if den <= 0:
         return None
-    slope = sum((z - mz) * (t - mt) for z, t in pts) / den * 1000
-    return {"gradiente_c_km": round(slope, 1), "n": n, "inversion": slope > 0,
+    b = sum((z - mz) * (t - mt) for z, t in pts) / den              # °C/m
+    slope = b * 1000
+    span = max(z for z, _ in pts) - min(z for z, _ in pts)
+    resid = sum((t - (mt + b * (z - mz))) ** 2 for z, t in pts)
+    se = math.sqrt(resid / (n - 2) / den) * 1000 if n > 2 else float("inf")
+    conclusive = span >= INVERSION_MIN_SPAN_M and abs(slope) > 2 * max(se, 0.5)
+    if not conclusive:
+        return {"gradiente_c_km": round(slope, 1), "n": n, "desnivel_m": round(span), "error_c_km": _r(se, 1),
+                "concluyente": False, "inversion": None,
+                "lectura": f"no concluyente: desnivel {span:.0f} m (mín. {INVERSION_MIN_SPAN_M}) o pendiente "
+                           f"dentro del ruido (±{2 * max(se, 0.5):.1f} °C/km)"}
+    return {"gradiente_c_km": round(slope, 1), "n": n, "desnivel_m": round(span), "error_c_km": _r(se, 1),
+            "concluyente": True, "inversion": slope > 0,
             "lectura": "inversión: más templado arriba que en el fondo" if slope > 0 else
                        ("gradiente débil: capa estable" if slope > -4 else "gradiente normal o inestable")}
 
@@ -514,7 +597,7 @@ MCL_STATIONS = {              # Meteociel: id → (nombre, lat, lon, alt). Coord
     "9006": ("Envalira (SMA)", 42.540, 1.718, 2510), "9041": ("Grau Roig (SMA)", 42.533, 1.700, 2083),
     "9040": ("Bordes de Seturia (SMA)", 42.573, 1.470, 1910), "9008": ("La Comella (SMA)", 42.502, 1.524, 1225),
     "9009": ("Sant Julià de Lòria (SMA)", 42.464, 1.491, 873)}
-UA = {"User-Agent": "PirineoNowcast/0.2 (uso personal; consulta horaria)"}
+UA = {"User-Agent": f"PirineoNowcast/{VERSION} (uso personal; consulta horaria)"}
 
 
 def src_aemet_obs() -> list[dict]:
@@ -738,7 +821,9 @@ def summarize_points(points: dict, pois: list[dict], prof: list[dict]) -> list[d
                             and all(y - x == timedelta(hours=1) for x, y in zip(stamps, stamps[1:])))
                 coverage[f"{var}:{a}-{b}h"] = {"valid": len(valid), "expected": b - a, "complete": complete}
                 return _r(f([x for _, x in valid]), 1) if complete else None
-            k0 = min(range(len(tt)), key=lambda i: abs((tt[i] - now).total_seconds())) if tt else None
+            k0 = min((i for i in range(len(tt)) if tt[i]), key=lambda i: abs((tt[i] - now).total_seconds()), default=None)
+            if k0 is not None and abs((tt[k0] - now).total_seconds()) > NOW_TOLERANCE_MIN * 60:
+                k0 = None                                  # la serie no cubre «ahora»: UNKNOWN, no el valor de otra hora
             T = (d.get("temperature_2m") or [None])[k0] if k0 is not None else None
             Td = (d.get("dew_point_2m") or [None])[k0] if k0 is not None else None
             z = p["alt_dem"] or p["alt_ref"]
@@ -762,6 +847,9 @@ def summarize_points(points: dict, pois: list[dict], prof: list[dict]) -> list[d
     return out
 
 
+SOURCE_AGE_MIN: dict[str, float] = {}       # edad (min) del dato servido por fuente en este ciclo
+
+
 def _cached(name: str, ttl_min: float, fn, max_age_min: float = 360):
     """Reutiliza la última respuesta buena mientras sea fresca; si la API falla, sirve la de ≤6 h marcada."""
     f = HOME / "cache" / f"{name}.json"
@@ -771,20 +859,24 @@ def _cached(name: str, ttl_min: float, fn, max_age_min: float = 360):
         c = None
     age = (pd.now_utc() - pd.parse_time(c["t"])).total_seconds() / 60 if c else 1e9
     if c and age < ttl_min:
+        SOURCE_AGE_MIN[name] = age
         return c["v"], f"caché {age:.0f} min"
     try:
         v = fn()
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps({"t": pd.now_utc().isoformat(), "v": v}, default=str))
+        SOURCE_AGE_MIN[name] = 0.0
         return v, "ok"
     except Exception as exc:
         if c and age < max_age_min:
+            SOURCE_AGE_MIN[name] = age
             return c["v"], f"API falló ({type(exc).__name__}); caché de {age:.0f} min"
         raise
 
 
 def build(dem: dict | None = None) -> dict:
     srcs = {}
+    SOURCE_AGE_MIN.clear()
     import hashlib
     sig = hashlib.sha256(json.dumps(POIS).encode()).hexdigest()[:12]
     fdem = HOME / "cache" / "dem.json"
@@ -863,11 +955,12 @@ def build(dem: dict | None = None) -> dict:
                              for n, b in kb.context_bundle(Path(os.environ.get("METEO_SIDECAR_DIR") or (HOME / "sidecar")),
                                                            "pirineo", pd.now_utc()).items()}}
     core = {"issued": pd.now_utc().isoformat(), "engine": VERSION, "box": BOX, "pois": pois, "corte": CORTE,
-            "contexto": contexto, "fuentes": srcs, "modelo_puntos": points["fuente"] if points else None,
+            "contexto": contexto, "fuentes": srcs,
+            "fuentes_edad_min": {k: round(v) for k, v in SOURCE_AGE_MIN.items()}, "modelo_puntos": points["fuente"] if points else None,
             "modelos": points["modelos"] if points else [], "modelo_nombre": MODEL_NAME,
             "puntos": summarize_points(points["puntos"], pois, prof.get("sur", [])) if points else [],
             "series": points["puntos"] if points else {}, "perfil": prof,
-            "foehn": foehn_diag(points["puntos"], pmap, prof.get("norte", [])) if points and prof else [],
+            "foehn": foehn_diag(points["puntos"] if points else None, pmap, prof.get("norte")),
             "inversion_obs": obs_inversion(obs_all), "obs": obs, "metar": metar, "avisos": warns, "aemet": aemet_txt,
             "status": {k: {"estado": a, "nota": b} for k, (a, b) in STATUS.items()},
             "enlaces": {"aludes_andorra": "https://www.meteo.ad/estatneu", "aludes_meteocat": "https://www.meteo.cat/prediccio/allaus",

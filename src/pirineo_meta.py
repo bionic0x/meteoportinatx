@@ -11,7 +11,8 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from hashlib import sha256
-from weather_core import wet_bulb_c, complete_day as _complete_day
+from weather_core import wet_bulb_psychro, pressure_hpa_at, complete_day as _complete_day
+import knowledge_base as kb
 from pathlib import Path
 import json
 import re
@@ -19,7 +20,10 @@ import statistics
 import urllib.parse
 import urllib.request
 
-VERSION = "0.3.0"
+VERSION = "0.6.1"
+# Fase: mismo umbral de bulbo húmedo que el motor 0–72 h (HIPÓTESIS, ver knowledge_base)
+SNOW_TW_C = kb.PRIORS["wet_bulb_snow_threshold_c"]["value"]
+PRECIP_HOUR_MM = 0.1   # hora con precipitación medible para evaluar su fase
 HORIZON = 15
 UTC = timezone.utc
 # Puntos para el microclima de pista; NO confundir pueblos con bases operativas.
@@ -130,7 +134,8 @@ def parse_deterministic(payload, model, pts=None):
             snow = [_as_float(data["snowfall"][i]) for i in idx]
             temp = [_as_float(data["temperature_2m"][i]) for i in idx]
             dew = [_as_float(data["dew_point_2m"][i]) for i in idx]
-            wet = [wet_bulb_c(t, td) for t, td in zip(temp, dew)]
+            p_hpa = pressure_hpa_at(point.get("elevation") or 0)
+            wet = [wet_bulb_psychro(t, td, p_hpa) for t, td in zip(temp, dew)]
             day[valid] = {"snow_cm": round(sum(max(0,x) for x in snow if x is not None),1) if _complete_day(times, valid, idx) and all(x is not None and x >= 0 for x in snow) else None,
                           "precip_mm": round(sum(max(0,x) for x in pr if x is not None),1) if _complete_day(times, valid, idx) and all(x is not None and x >= 0 for x in pr) else None,
                           "tw_min_c": round(min(x for x in wet if x is not None),1) if _complete_day(times, valid, idx) and all(x is not None for x in wet) else None,
@@ -178,7 +183,8 @@ def parse_ensemble(payload, model, pts=None):
     return out
 
 
-def daily_member(members, times):
+def daily_member(members, times, elevation_m=None):
+    p_hpa = pressure_hpa_at(elevation_m or 0)
     days = defaultdict(list)
     for k, stamp in enumerate(times):
         days[stamp[:10]].append(k)
@@ -189,7 +195,8 @@ def daily_member(members, times):
         for mid, v in members.items():
             pr = [_as_float(v["precipitation"][i]) for i in idx]
             snow = [_as_float(v["snowfall"][i]) for i in idx]
-            tw = [wet_bulb_c(_as_float(v["temperature_2m"][i]), _as_float(v["dew_point_2m"][i])) for i in idx]
+            tw = [wet_bulb_psychro(_as_float(v["temperature_2m"][i]), _as_float(v["dew_point_2m"][i]), p_hpa)
+                  for i in idx]
             coverage = {"expected": 24, "complete_time_axis": complete,
                         "precipitation": sum(x is not None and x >= 0 for x in pr),
                         "snowfall": sum(x is not None and x >= 0 for x in snow),
@@ -198,9 +205,12 @@ def daily_member(members, times):
             res.append({"mid": mid,
                         "snow_cm": sum(snow) if valid("snowfall") else None,
                         "precip_mm": sum(pr) if valid("precipitation") else None,
-                        "phase_solid_mm": sum(pr[k] for k, t in enumerate(tw) if t <= .5)
+                        "phase_solid_mm": sum(pr[k] for k, t in enumerate(tw) if t <= SNOW_TW_C)
                             if valid("precipitation") and valid("wet_bulb") else None,
                         "tw_min": min(tw) if valid("wet_bulb") else None,
+                        # Fase solo donde hay precipitación: un día seco y frío no es «nieve».
+                        "tw_precip_min": (min((t for k, t in enumerate(tw) if pr[k] >= PRECIP_HOUR_MM), default=None)
+                                          if valid("precipitation") and valid("wet_bulb") else None),
                         "measurable": valid("precipitation"), "coverage": coverage})
         if res:
             out[day] = res
@@ -221,7 +231,7 @@ def percentiles(vals):
 def family_summaries(parsed, model):
     ans = {}
     for point, value in parsed.items():
-        days = daily_member(value["members"], value["time"])
+        days = daily_member(value["members"], value["time"], value.get("elevation_m"))
         ans[point] = {}
         for day, members in days.items():
             n = len(members)
@@ -229,7 +239,7 @@ def family_summaries(parsed, model):
                 continue
             snowvals = [m["snow_cm"] for m in members if m["snow_cm"] is not None]
             rainvals = [m["precip_mm"] for m in members if m["precip_mm"] is not None]
-            phase = [m["tw_min"] for m in members if m["tw_min"] is not None]
+            phase = [m["tw_precip_min"] for m in members if m["tw_precip_min"] is not None]
             ans[point][day] = {"n_members": n,
                                "valid_members": {"snowfall": len(snowvals), "precipitation": len(rainvals), "wet_bulb": len(phase)},
                                "snow_cm": percentiles(snowvals if len(snowvals) >= 10 else []),
@@ -237,6 +247,7 @@ def family_summaries(parsed, model):
                                "snow_ge5_fraction": round(sum(x >= 5 for x in snowvals) / len(snowvals), 3) if len(snowvals) >= 10 else None,
                                "snow_ge10_fraction": round(sum(x >= 10 for x in snowvals) / len(snowvals), 3) if len(snowvals) >= 10 else None,
                                "wet_bulb_le0_fraction": round(sum(x <= 0 for x in phase) / len(phase), 3) if len(phase) >= 10 else None,
+                               "wet_bulb_basis": "fraction of members WITH precipitation (>=0.1 mm/h) whose precipitating hours reach Tw<=0 C; Tw at station pressure; None if <10 such members",
                                "basis": "complete UTC day; raw-member-fraction; uncalibrated; not forecast probability"}
     return ans
 
