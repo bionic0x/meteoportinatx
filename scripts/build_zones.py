@@ -39,7 +39,9 @@ def stage_zones(target,*,getter=fetch_json,application=None):
             for point in profile['points']:
                 days=computed[point['id']].get('forecast',{})
                 if not any(row['values'].get('temperature_2m') is not None for row in days.values()):
-                    raise ValueError(name+': no complete daily temperature forecast for '+point['id'])
+                    entry=next(e for e in manifest['entries'] if e['point']==point['id'] and e['module']=='forecast')
+                    detail={k:entry.get(k) for k in ('status','error','http_status','coverage')}
+                    raise ValueError(name+': no complete daily temperature forecast for '+point['id']+'; '+json.dumps(detail))
             document=render_report(pack)
             navigation='<nav><a href="../../">Observatorios</a> · <a href="zone.zip" download>Descargar datos de esta zona</a> · <a href="zone.json" download>Perfil editable</a> · <a href="../../downloads/">Modelar mi zona</a></nav>'
             (folder/'index.html').write_text(document.replace('<main>','<main>'+navigation,1),encoding='utf-8')
@@ -72,4 +74,10 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--target',type=Path,default=ROOT/'site')
     args=parser.parse_args()
-    print(json.dumps(stage_zones(args.target),indent=2))
+    try:
+        print(json.dumps(stage_zones(args.target),indent=2))
+    except (ValueError,OSError,TypeError) as exc:
+        # GitHub's public run view exposes annotations even when logs require login.
+        message=str(exc).replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+        print('::error title=Regional acquisition failed::'+message,flush=True)
+        raise SystemExit(1)

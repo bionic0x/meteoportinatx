@@ -204,10 +204,10 @@ def collect(profile, output, *, getter=fetch_json):
             try:
                 cache[url] = (True,getter(url))
             except (OSError,ValueError,TypeError) as exc:
-                cache[url] = (False,type(exc).__name__)
+                cache[url] = (False,exc)
         ok,result=cache[url]
         if not ok:
-            raise ValueError('provider unavailable: '+result)
+            raise result
         return result
     with tempfile.TemporaryFile() as tmp:
         with zipfile.ZipFile(tmp, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
@@ -246,6 +246,8 @@ def collect(profile, output, *, getter=fetch_json):
                             entry['diagnostic'] = {'path': diagnostic_path, 'sha256': hashlib.sha256(derived).hexdigest()}
                     except (OSError, ValueError, TypeError) as exc:
                         entry['error'] = type(exc).__name__
+                        if isinstance(exc, urllib.error.HTTPError):
+                            entry['http_status'] = exc.code
                     manifest['entries'].append(entry)
             count = sum(e['status'] == 'AVAILABLE' for e in manifest['entries'])
             manifest['status'] = 'AVAILABLE' if count == len(manifest['entries']) else ('PARTIAL' if count else 'UNKNOWN')
