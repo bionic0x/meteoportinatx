@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "source": "GitHub Pages meteoportinatx workflow 43051163150 artifact 13869591734",
+  "commit": "535c1e4e8abdf3b33fdc8b9111d7055dbe1a6c35",
+  "core_issued": "2026-11-11T15:43:48+00:00",
+  "bay": {
+    "lat": 39.145,
+    "lon": 1.525,
+    "valid_time": "2026-11-11T15:00:00+00:00",
+    "wave_height_m": 0.5,
+    "model": "Open-Meteo Marine, bay point"
+  },
+  "buoy": {
+    "name": "Boya Dragonera",
+    "lat": 39.563,
+    "lon": 2.097,
+    "observed_at": "2026-11-11T15:00:00+00:00",
+    "hm0_m": 0.82,
+    "hmax_m": 1.47,
+    "tp_s": 4.3,
+    "source": "PORTUS Puertos del Estado",
+    "provider_qc": "NOT_EXPOSED"
+  },
+  "comparison": "NO_COMPARABLE",
+  "spatial_tolerance_note": "Model at the bay, not at buoy. A model-at-buoy forecast is NOT in public snapshot."
+}
