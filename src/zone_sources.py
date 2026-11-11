@@ -168,6 +168,7 @@ def radar(raw,point,getter,now):
         raise ValueError('no radar frames in collection window')
     return {'schema':1,'kind':'radar','frames':frames,
             'coverage':'UNVERIFIED: transparent or blank tiles do not prove dry weather',
+            'frame_time_semantics':'composite frame time; individual radar observations may be older or unknown',
             'interpretation':'radar image only; no calibrated local rain rate or warning'}
 
 

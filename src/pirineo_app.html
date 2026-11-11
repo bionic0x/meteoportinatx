@@ -125,13 +125,13 @@ nav.tabs{scrollbar-width:thin}
   </div>
   <div class="tab" id="tab-satelite" hidden>
     <section class="card"><h2>Satélite / radar · cobertura externa</h2>
-      <div class="pov-unknown">NOT_INTEGRATED · no hay raster de satélite/radar georreferenciado y fechado para Pirineos 0.6.1. Ausencia de imágenes NO significa ausencia de lluvia o tormentas.</div>
+      <div class="pov-unknown">NOT_INTEGRATED EN ESTA CONSOLA · no se ingieren imágenes propias de satélite ni radar. La herramienta local de paquetes de zona puede descargar teselas de radar para puntos del Pirineo, con cobertura sin verificar. Ausencia de imágenes NO significa ausencia de lluvia o tormentas.</div>
       <p class="src">Visores oficiales; consulta la hora y el producto en el sitio original. No alimentan el diagnóstico local.</p>
       <ul class="plain">
         <li><a href="https://view.eumetsat.int/" target="_blank" rel="noopener noreferrer">EUMETView · satélite EUMETSAT</a></li>
         <li><a href="https://www.aemet.es/es/eltiempo/observacion/radar/" target="_blank" rel="noopener noreferrer">AEMET · radar de precipitación</a></li>
         <li><a href="https://es.meteocat.gencat.cat/radar?lang=es" target="_blank" rel="noopener noreferrer">Meteocat · radar de Catalunya</a></li>
-      </ul><p class="src">El radar de Ibiza no es válido para el Pirineo. Integrar imágenes de estas zonas exige georreferenciación, timestamps, permisos y verificación de ecos orográficos.</p></section>
+      </ul><p class="src">El radar de Ibiza no es válido para el Pirineo. En una instalación local, <code>python3 src/nowcast.py zone fetch pirineo --output captura.zip</code> y <code>python3 src/nowcast.py zone report --pack captura.zip --output informe.html</code> generan un informe con las teselas disponibles. No las incorporan a esta consola. La hora de una composición RainViewer no garantiza la de cada medición subyacente; cobertura local y ecos orográficos requieren validación.</p></section>
   </div>
   <div class="tab" id="tab-atmosfera" hidden>
     <section class="card"><h2>Termodinámica y viento · punto de control</h2>
