@@ -29,7 +29,8 @@ PARTS = {
 }
 PAGES = {"/": "nowcast_hub.html", "/index.html": "nowcast_hub.html",
          "/portinatx/": "portinatx_app.html", "/portinatx/index.html": "portinatx_app.html",
-         "/pirineo/": "pirineo_app.html", "/pirineo/index.html": "pirineo_app.html"}
+         "/pirineo/": "pirineo_app.html", "/pirineo/index.html": "pirineo_app.html",
+         "/decidir/": "decision_app.html", "/decidir/index.html": "decision_app.html"}
 
 
 def home(domain: str) -> Path:
@@ -153,6 +154,9 @@ def server_handler(workers: dict[str, Collector]):
                     return self.send_bytes(200, page_for(path), "text/html; charset=utf-8")
                 except (OSError, KeyError):
                     return self.send_error(404)
+            if path == "/decision_cards.js":
+                return self.send_bytes(200, coastal.resource_bytes("decision_cards.js"),
+                                       "text/javascript; charset=utf-8")
             if path == "/public_fetch.js":
                 return self.send_bytes(200, coastal.resource_bytes("public_fetch.js"),
                                        "text/javascript; charset=utf-8")

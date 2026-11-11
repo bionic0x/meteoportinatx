@@ -59,6 +59,8 @@ jobs:
       - name: Prohibit state/credentials and validate static output
         run: |
           test -f site/index.html
+          test -f site/decidir/index.html
+          test -f site/decision_cards.js
           test -f site/portinatx/api/core.json
           test -f site/pirineo/api/core.json
           test -f site/pirineo/api/extended.json

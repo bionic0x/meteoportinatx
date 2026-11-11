@@ -53,3 +53,9 @@ Ver [arquitectura](docs/ARQUITECTURA-UNIFICADA.md), [notas de versión](docs/REL
 El módulo aislado [`src/forecast_ledger.py`](src/forecast_ledger.py) congela pronósticos **antes** del inicio de su ventana y permite compararlos luego con una observación instrumental QC PASS del mismo periodo y lugar. También registra exclusiones (`UNKNOWN`, ventana futura, hindcast, falta de medida) y ofrece exportación, importación y un verificador de integridad local. Un import externo **no** se convierte en prueba prospectiva certificada. Consultar [protocolo P0](docs/FORECAST-LEDGER-P0.md).
 
 **No cambia ninguna alerta, no requiere Render ni extrae foros.** Guarda el archivo **fuera** del repositorio y con copias de seguridad independientes: no hay almacenamiento persistente gratuito configurado. Las métricas son experimentales, sin skill meteorológico medido ni probabilidades calibradas.
+
+## Decision P0 — vistas por perfil (preparación MeteoPortinatx 0.6)
+
+La ruta `/decidir/` propone cinco lecturas rápidas sobre **los mismos `core.json`**: casa junto a torrente, barca/amarre, segunda residencia, esquí/montaña y análisis meteorológico. Presenta avisos institucionales, mediciones y estimaciones por separado, con fecha/origen visible y `UNKNOWN` cuando el ciclo es antiguo. Cada caso enlaza a la consola científica completa. **No cambia umbrales, modelos, forense, fuentes ni proveedores.**
+
+En GitHub Pages se publica desde `src/decision_app.html` y `src/decision_cards.js`; el servidor local también los sirve en `/decidir/`. La interfaz no guarda perfiles ni hace recomendaciones de evacuación/navegación. Leer [contrato de producto, frescura y pruebas](docs/DECISION-P0.md). `METEO_BACKEND_URL` continúa siendo opcional y la cadencia de Pages (6 h) **no permite ofrecer un nowcast continuo**.
