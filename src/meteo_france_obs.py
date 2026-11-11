@@ -121,7 +121,7 @@ def measurement(payload, station, now=None):
             continue
         stamp = p.get("validity_time")
         # Provider timestamps must explicitly include a timezone; never guess UTC around DST.
-        zoned = isinstance(stamp, str) and bool(re.search(r"(?:Z|[+-]\\d{2}:?\\d{2})$", stamp))
+        zoned = isinstance(stamp, str) and bool(re.search(r"(?:Z|[+-]\d{2}:?\d{2})$", stamp))
         ts = pd.parse_time(stamp) if zoned else None
         if not ts or ts.tzinfo is None:
             continue
