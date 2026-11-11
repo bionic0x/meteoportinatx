@@ -31,6 +31,14 @@ La adquisición, diagnóstico diario, radar, avisos, observaciones e informes fo
 
 No hay garantía de ciclos cada cinco minutos en Render Free. GitHub Pages conserva sus propios snapshots incluso con Render suspendido, pero **su cadencia tampoco equivale a nowcast continuo**. El archivo forense de Render Free es volátil: el nombre `forensics.sqlite3` no implica durabilidad.
 
+## Observaciones y condiciones de las fuentes
+
+Pirineo integra AEMET, Meteocat XEMA y Météo-France DPObs; la disponibilidad depende de las credenciales, de cada proveedor y de la frescura de cada medición. La publicación del 11/11/2026 incluyó observaciones de las tres redes y del archivo horario francés; esto no garantiza ciclos posteriores ni la calidad de cada valor. Consulta el estado y la hora de cada fuente en la consola. Los visores pirenaicos de radar y satélite son externos; la cobertura local y la edad de los datos deben comprobarse en cada producto.
+
+**ClimayNievePirineos** es una red privada no oficial. Según su [artículo sobre las estaciones](https://www.climaynievepirineos.com/estaciones/UsoYCaracteristicasCYNP.htm), sus datos pueden difundirse en webs y otros medios citando la fuente o enlazando la estación. El artículo no especifica una frecuencia máxima de consultas automatizadas. El conector del proyecto mantiene actualmente un control propio de activación mediante `permisos/cnp.json` o, solo en local privado, `CNP_PERMISSION_VERIFIED=1`; es una decisión técnica del proyecto, no una prohibición expresada en ese artículo. Ver [registro de fuentes](docs/CNP-PERMISO-20261111.md).
+
+El manual describe la intensidad de la tabla general como un **máximo diario**, no como lluvia actual. El parser de páginas individuales conserva el campo `intensidad_mmh`; su semántica debe verificarse antes de interpretarlo como intensidad instantánea. Las posibles subestimaciones de precipitación y viento descritas en el manual de 2014 son orientativas y dependen de la estación; no se aplican correcciones automáticas generales.
+
 ## Uso local
 
 Requiere Python 3.10+ y biblioteca estándar. El motor puede usar internet y claves opcionales en archivos locales excluidos de Git.
@@ -73,6 +81,12 @@ Ver [arquitectura](docs/ARQUITECTURA-UNIFICADA.md), [notas de versión](docs/REL
 El módulo aislado [`src/forecast_ledger.py`](src/forecast_ledger.py) congela pronósticos **antes** del inicio de su ventana y permite compararlos luego con una observación instrumental QC PASS del mismo periodo y lugar. También registra exclusiones (`UNKNOWN`, ventana futura, hindcast, falta de medida) y ofrece exportación, importación y un verificador de integridad local. Un import externo **no** se convierte en prueba prospectiva certificada. Consultar [protocolo P0](docs/FORECAST-LEDGER-P0.md).
 
 **No cambia ninguna alerta, no requiere Render ni extrae foros.** Guarda el archivo **fuera** del repositorio y con copias de seguridad independientes: no hay almacenamiento persistente gratuito configurado. Las métricas son experimentales, sin skill meteorológico medido ni probabilidades calibradas.
+
+## Divisiones de agentes
+
+El repositorio configura siete perfiles de Codex —datos, geoespacial, backend, operaciones, calidad, interfaz y seguridad— adaptados a MeteoPortinatx. Pueden coordinarse en sesiones compatibles; la configuración no inicia agentes persistentes ni programa tareas. Ver [divisiones y uso](docs/agency-agents.md).
+
+El ciclo supervisado del archivo prospectivo de Portinatx y sus plantillas de systemd se describen en el [protocolo forense](docs/FORECAST-LEDGER-P0.md). Requieren instalación en un equipo Linux con almacenamiento persistente y copias independientes; su presencia en el repositorio no demuestra que estén activos.
 
 ## Paquetes de zona y evidencias comunes (experimental)
 
