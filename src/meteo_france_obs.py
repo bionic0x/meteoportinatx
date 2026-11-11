@@ -120,7 +120,9 @@ def measurement(payload, station, now=None):
         if sample_id and sample_id != station["id"]:
             continue
         stamp = p.get("validity_time")
-        ts = pd.parse_time(stamp) if isinstance(stamp, str) else None
+        # Provider timestamps must explicitly include a timezone; never guess UTC around DST.
+        zoned = isinstance(stamp, str) and bool(re.search(r"(?:Z|[+-]\\d{2}:?\\d{2})$", stamp))
+        ts = pd.parse_time(stamp) if zoned else None
         if not ts or ts.tzinfo is None:
             continue
         age = (now - ts).total_seconds() / 60
