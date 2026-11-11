@@ -10,19 +10,39 @@
     "public_api": "0.6.0",
     "regional_engine": "0.6.0"
   },
-  "delivery": "source_release_pending_deployment_verification",
-  "web_deployed": false,
-  "render_backend_deployed": false,
+  "delivery": "public_site_and_render_api_verified_2026-11-11",
+  "web_deployed": true,
+  "render_backend_deployed": true,
   "live_bridge_enabled": false,
   "forensic_state_durable": false,
-  "verified_live_data": "Regional adapters validated with fixtures; live provider access blocked in the development environment. Verify Actions and Pages separately.",
+  "verified_live_data": "Pages Actions #43051163150 (535c1e4) served a live source snapshot at 2026-11-11T15:43:48Z; PORTUS and Marine ok, AEMET CAP/obs and MTG-LI had no key, HF radar unavailable. Neither live scientific skill nor long-running uptime is verified.",
   "scientific_skill_calibrated": false,
   "secrets_in_repository": false,
-  "notes": "Shared regional radar, Meteoalarm warnings, METAR observations and daily forensic verification. Pirineo excludes marine. Pages updates every six hours, not continuous surveillance. Forensic measurements stay local; VERIFIED is a human declaration. Render Free has no durable forensic state. This metadata describes readiness at source commit, not a live deployment guarantee.",
+  "notes": "Verified GitHub Pages and Render Free deployments are one-time snapshots; do not imply uninterrupted weather surveillance. AEMET and MTG-LI credentials are not configured in the public export. Personal forensic data remain local, not stored in Render. Credible calibration and 90-day prospective validation remain pending.",
   "previous_release_deployment": {
     "release": "0.5.1",
     "web_deployed": true,
     "render_backend_deployed": true,
     "basis": "metadata inherited from origin/main; not reverified here"
+  },
+  "deployment_verification": {
+    "as_of": "2026-11-11T15:45:58Z",
+    "pages": {
+      "workflow_run": 43051163150,
+      "source_commit": "535c1e4e8abdf3b33fdc8b9111d7055dbe1a6c35",
+      "status": "success"
+    },
+    "render": {
+      "service": "meteoportinatx-backend-free",
+      "plan": "free",
+      "deploy_id": "dep-dbq8r16gekts73ep12i0",
+      "source_commit": "535c1e4e8abdf3b33fdc8b9111d7055dbe1a6c35",
+      "status": "live",
+      "healthz_version": "0.6.0",
+      "parity_workflow_run": 43051163259,
+      "storage": "ephemeral",
+      "autodeploy": false
+    },
+    "note": "Render parity is version-based, not commit-SHA parity. Subsequent docs/tests changes do not automatically redeploy Render; backend code version remains 0.6.0. Do not infer 24/7 alerting or durable observations."
   }
 }
