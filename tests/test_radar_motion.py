@@ -1,6 +1,5 @@
 """#10 — advección de ecos de radar: desplazamiento conocido, crecimiento, clutter, radar viejo y ETA."""
 import base64
-import math
 import sys
 import unittest
 from datetime import datetime, timedelta, timezone

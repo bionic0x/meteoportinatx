@@ -1,7 +1,7 @@
 """Official DPObs connector: local synthetic response, no live bearer token."""
 import sys
 import unittest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 

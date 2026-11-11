@@ -1,6 +1,6 @@
 """Página de rutas en un navegador real: privacidad (cero peticiones externas), cálculo, fallo cerrado y móvil.
 
-Datos sintéticos servidos desde un servidor local temporal. Se omite si faltan Node, Playwright o Chrome.
+Datos sintéticos servidos desde un servidor local temporal. Se omite si faltan Node, Playwright o Chrome (salvo METEO_REQUIRE_BROWSER=1).
 """
 import json
 import math
@@ -16,10 +16,10 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tests")]
 import pirineo  # noqa: E402
+from browser_support import NODE, require_browser  # noqa: E402
 
-CHROME = shutil.which("google-chrome") or shutil.which("chromium") or shutil.which("chromium-browser")
 LATS = [round(42.30 + 0.05 * i, 2) for i in range(8)]
 LONS = [round(1.45 + 0.05 * j, 2) for j in range(16)]
 
@@ -123,11 +123,9 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
-@unittest.skipUnless(CHROME and shutil.which("node"), "Node y Chrome requeridos")
 class RoutePageBrowser(unittest.TestCase):
     def test_page_end_to_end(self):
-        if subprocess.run(["node", "-e", "require('playwright')"], capture_output=True).returncode:
-            self.skipTest("Playwright Node module required")
+        chrome = require_browser(self)
         now = datetime.now(timezone.utc)
         start = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
         with tempfile.TemporaryDirectory() as td:
@@ -146,10 +144,11 @@ class RoutePageBrowser(unittest.TestCase):
             server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(site)))
             threading.Thread(target=server.serve_forever, daemon=True).start()
             try:
-                r = subprocess.run(["node", "-e", JS, CHROME, f"http://127.0.0.1:{server.server_port}", str(gpx)],
+                r = subprocess.run([NODE, "-e", JS, chrome, f"http://127.0.0.1:{server.server_port}", str(gpx)],
                                    capture_output=True, text=True, timeout=120, cwd=str(ROOT))
             finally:
                 server.shutdown()
+                server.server_close()
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertIn("PASS", r.stdout)
 

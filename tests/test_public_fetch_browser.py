@@ -1,10 +1,8 @@
 """Real Chromium CORS test. Optional when Node/Playwright/Chromium are unavailable."""
 import json
 from pathlib import Path
-import shutil
 import subprocess
 import sys
-import tempfile
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -13,15 +11,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'src'), str(ROOT / 'tests')]
 import nowcast_backend as backend
 import test_backend
+from browser_support import NODE, require_browser
 
 
 class BrowserFetch(unittest.TestCase):
     def test_cross_origin_fresh_stale_and_unavailable(self):
-        if not shutil.which('node') or not shutil.which('chromium'):
-            self.skipTest('Node and Chromium required')
-        probe = subprocess.run(['node', '-e', "require('playwright')"], capture_output=True)
-        if probe.returncode:
-            self.skipTest('Playwright Node module required')
+        chrome = require_browser(self)
         fixture = test_backend.PersistentBackend()
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
@@ -59,9 +54,9 @@ const {chromium} = require('playwright');
 })().catch(e=>{console.error(e);process.exit(1)});
 '''
         def check(expected):
-            result = subprocess.run(['node','-e',js,shutil.which('chromium'),origin,
+            result = subprocess.run([NODE,'-e',js,chrome,origin,
                 f'http://127.0.0.1:{api.server_port}',str(ROOT/'src/public_fetch.js'),expected],
-                text=True,capture_output=True,timeout=30)
+                cwd=ROOT,text=True,capture_output=True,timeout=30)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         check('backend')
         pointer = fixture.store.public / 'portinatx' / 'CURRENT.json'

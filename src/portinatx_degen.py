@@ -116,7 +116,6 @@ Limitaciones
 from __future__ import annotations
 
 import argparse
-import csv
 import gzip
 import hashlib
 import io
@@ -4776,7 +4775,6 @@ def cmd_serve(interval: int, port: int, open_browser: bool = False) -> None:
     """Aplicación local en tiempo real: un hilo ejecuta el ciclo; el navegador lee /api/<parte>.json."""
     import threading
     import http.server
-    import socket
     page_bytes = resource_bytes("portinatx_app.html")
     lock = threading.Lock()
 
@@ -5005,7 +5003,7 @@ def selftest() -> int:
     v = gust_front(surge)
     check("enfriamiento+viento SIN subida de presión → no detectado (puerta dura)", not v["detected"])
     # CAP
-    cap = f"""<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2"><info><language>es-ES</language>
+    cap = """<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2"><info><language>es-ES</language>
       <event>Aviso de lluvias de nivel naranja</event><onset>2026-10-18T00:00:00+02:00</onset>
       <expires>2026-10-18T23:59:59+02:00</expires>
       <parameter><valueName>AEMET-Meteoalerta nivel</valueName><value>naranja</value></parameter>

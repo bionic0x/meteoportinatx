@@ -2,7 +2,7 @@
 import json
 import sys
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from unittest import mock
 

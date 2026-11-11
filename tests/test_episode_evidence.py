@@ -1,5 +1,4 @@
 """The forum lane must never affect safety level or leak private content."""
-import json
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import sys

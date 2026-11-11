@@ -1,7 +1,6 @@
 """One offline, escaped HTML report for every regional profile."""
 from datetime import datetime, timezone
 from html import escape
-import json
 from pathlib import Path
 
 from zone_packages import read_pack, analysis
