@@ -236,10 +236,19 @@ def regression(root: Path) -> int:
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "zone":
+        import zone_engine
+        return zone_engine.main(argv[1:])
+    if argv and argv[0] == "evidence":
+        import zone_evidence
+        return zone_evidence.main(argv[1:])
     cli = argparse.ArgumentParser(description="MeteoPortinatx Unified · Portinatx + Pirineo")
     sub = cli.add_subparsers(dest="command", required=False)
     x = sub.add_parser("export", help="actualiza uno o ambos dominios")
     x.add_argument("--domain", choices=(*DOMAINS, "all"), default="all")
+    sub.add_parser("zone", help="perfiles, packs y diagnósticos compartidos de zona")
+    sub.add_parser("evidence", help="metadatos de radar, avisos, estaciones y forense; no alertas")
     sub.add_parser("selftest")
     sub.add_parser("status")
     s = sub.add_parser("serve", help="servidor local con dos colectores independientes")

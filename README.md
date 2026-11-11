@@ -46,13 +46,37 @@ El portal local es http://localhost:8787/, con `/portinatx/` y `/pirineo/`; incl
 
 CI ejecuta Python 3.10 y 3.11, prueba la carga web en Node, verifica `SHA256SUMS.txt` y genera un `.pyz`. El resultado de las pruebas sintéticas **no calibra** la predicción meteorológica ni garantiza disponibilidad de proveedores externos. El despliegue de Pages requiere datos reales recientes de ambos dominios y falla cerrado si faltan.
 
-Ver [arquitectura](docs/ARQUITECTURA-UNIFICADA.md), [notas de versión](docs/RELEASE-NOTES.md) y [guía del backend gratuito](docs/BACKEND-PERSISTENTE.md).
+Ver [arquitectura](docs/ARQUITECTURA-UNIFICADA.md), [notas de versión](docs/RELEASE-NOTES.md) y [guía del backend gratuito](docs/BACKEND-PERSISTENTE.md). La [evaluación del modelo, los usos y el potencial](docs/EVALUACION-MODELO-USOS-POTENCIAL.md) añade hallazgos de auditoría reproducidos y una hoja de ruta priorizada.
 
 ## Verificación prospectiva de pronósticos (investigación P0, sin despliegue)
 
 El módulo aislado [`src/forecast_ledger.py`](src/forecast_ledger.py) congela pronósticos **antes** del inicio de su ventana y permite compararlos luego con una observación instrumental QC PASS del mismo periodo y lugar. También registra exclusiones (`UNKNOWN`, ventana futura, hindcast, falta de medida) y ofrece exportación, importación y un verificador de integridad local. Un import externo **no** se convierte en prueba prospectiva certificada. Consultar [protocolo P0](docs/FORECAST-LEDGER-P0.md).
 
 **No cambia ninguna alerta, no requiere Render ni extrae foros.** Guarda el archivo **fuera** del repositorio y con copias de seguridad independientes: no hay almacenamiento persistente gratuito configurado. Las métricas son experimentales, sin skill meteorológico medido ni probabilidades calibradas.
+
+## Paquetes de zona y evidencias comunes (experimental)
+
+Portinatx y Pirineo comparten la adquisición modular, los indicadores de cobertura, la evaluación
+por familias ensemble y los informes HTML verificables. El perfil del Pirineo es interior y excluye
+mar; los perfiles personalizados deben elegir explícitamente coordenadas, módulos y entorno.
+
+```bash
+python3 src/nowcast.py zone list
+python3 src/nowcast.py zone plan portinatx
+python3 src/nowcast.py zone plan pirineo
+python3 src/nowcast.py zone template pirineo --output pirineo.json
+python3 src/nowcast.py zone fetch pirineo --output captura.zip
+python3 src/nowcast.py zone inspect captura.zip
+python3 src/nowcast.py zone install captura.zip --root /ruta/archivo
+python3 src/nowcast.py zone report --pack captura.zip --output informe.html
+python3 src/nowcast.py evidence pirineo evidencias.json --as-of 2026-11-11T00:00:00+00:00
+```
+
+Los paquetes declaran por variable datos presentes, unidades y procedencia. La nueva lectura de
+radar, avisos, estaciones y forense es **solo metadatos de investigación sin autenticar**:
+`PRESENT_UNVERIFIED` no es una alerta oficial ni prueba científica. Falta conectar proveedores
+reales, validar frescura y calidad instrumental, integrarlo con el ledger prospectivo y realizar
+la paridad completa de las interfaces locales. Ver [zonas modulares](docs/ZONAS-MODULARES.md).
 
 ## Decision P0 — vistas por perfil (preparación MeteoPortinatx 0.6)
 
