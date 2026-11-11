@@ -580,13 +580,28 @@ async function start(){
   setupChat();
 }
 
+let pullInFlight = false;
 async function pullLocal(){
-  let got = false;
-  for (const part of ["core","radar","series","atmos","sat","mar","modx","forense"]) {
-    try { const item = window.meteoLoadPart ? await window.meteoLoadPart("portinatx", part, `api/${part}.json`) : null; const r = item ? null : await fetch(`api/${part}.json`, {cache:"no-store"}); if (item || r.ok) { S[part] = item ? item.data : await r.json(); got = true; S.remote = item?.source || "local"; } } catch(e){}
-  }
-  if (got) { S.mode = S.remote==="backend" ? "Backend persistente · consulta cada 30 s" : S.remote==="snapshot-fallback" ? "Respaldo GitHub Pages (API no disponible)" : "Instantánea periódica · consulta cada 30 s"; renderAll(); }
-  else if (!S.core) $("m-issued").textContent = "Sin datos: abre esta página desde el motor (serve) o desde el artifact con sesión iniciada.";
+  if (pullInFlight) return;
+  pullInFlight = true;
+  try {
+    const names = ["core","radar","series","atmos","sat","mar","modx","forense"];
+    const packet = window.meteoLoadDomain
+      ? await window.meteoLoadDomain("portinatx", names, "api/")
+      : {parts: Object.fromEntries(await Promise.all(names.map(async part => {
+          const r = await fetch(`api/${part}.json`, {cache:"no-store"});
+          if (!r.ok) throw Error(`HTTP ${r.status}`);
+          return [part, await r.json()];
+        }))), source: "local"};
+    Object.assign(S, packet.parts); // Commit the complete, coherent domain only.
+    S.remote = packet.source;
+    S.mode = packet.source === "backend" ? "Backend en vivo · consulta cada 30 s"
+      : packet.source === "snapshot-fallback" ? "Respaldo GitHub Pages (API no disponible)"
+      : "Instantánea periódica · consulta cada 30 s";
+    renderAll();
+  } catch (e) {
+    if (!S.core) $("m-issued").textContent = "Sin datos disponibles: verifica el motor o el snapshot web.";
+  } finally { pullInFlight = false; }
 }
 
 /* ── botón Actualizar ──

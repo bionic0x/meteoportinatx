@@ -1,6 +1,8 @@
 # Evaluación del modelo, los usos y el potencial
 
-Fecha: 11 de noviembre de 2026. Base de código: `main` en `fded39b` (0.5.0). No incluye los cambios de [bionic0x/meteoportinatx#5](https://github.com/bionic0x/meteoportinatx/pull/5).
+Fecha: 11 de noviembre de 2026. Análisis hecho sobre `fded39b`; revalidado sobre `main` en `a035deb` (0.5.1), donde `portinatx_degen.py`, `pirineo.py` y `pirineo_meta.py` no han cambiado, por lo que las referencias de línea siguen valiendo.
+
+**Relación con lo ya fusionado.** Complementa la investigación [`docs/agency/`](agency/00-MANDATO-Y-DIAGNOSTICO.md) y el libro [`FORECAST-LEDGER-P0`](FORECAST-LEDGER-P0.md). Lo que aporta de nuevo es la auditoría de calidad con hallazgos reproducidos (sección 1.4: H1–H3, M1–M7), que no aparecen en esos documentos, y el contraste de la sección 5.
 
 ## Método
 
@@ -155,7 +157,7 @@ Los avisos de alcance ya existen, pero dispersos y en letra pequeña. Se propone
 - **Idioma:** solo castellano, para un público balear, andorrano y francés (demanda no verificada).
 - **Móvil y accesibilidad:** el HTML de Portinatx pesa unos 170 KB con decenas de gráficos; los niveles parecen depender del color; no hay pruebas de contraste ni de lector de pantalla.
 - **Confianza:** el libro de predicciones es el gran diferenciador, pero en modo gratuito no persiste.
-- **Documentación contradictoria** sobre el estado de despliegue (corregida en parte por el PR #5).
+- **Documentación contradictoria** sobre el estado de despliegue (corregida en 0.5.1).
 
 ---
 
@@ -224,7 +226,7 @@ Ordenada por valor frente a esfuerzo. Cada punto lleva la prueba que demostrarí
 **Ahora (días)**
 
 1. **Cobertura por fenómeno y frescura uniforme** (H1, H2): exigir al menos una fuente viva de la familia «lluvia» y tratar como no disponible lo caducado, vacío o duplicado. Es el único hallazgo que contradice la regla central del proyecto. *Prueba:* con solo viento y mar vivos, `insufficient=True` y lluvia `UNKNOWN`; casos parametrizados por canal (radar de 6 h, boya de 5 h, modelo vacío, METAR viejo).
-2. **Archivo persistente de pares pronóstico–observación** en una rama de datos escrita por Actions. Condición previa de todo lo demás. *Prueba:* tras una semana, cada ciclo publicado tiene su línea congelada y verificable por hash.
+2. **Archivo persistente de pares pronóstico–observación.** El formato ya existe (`src/forecast_ledger.py`, P0); falta conectarlo al ciclo real y darle un almacén duradero fuera del repositorio. Condición previa de todo lo demás. *Prueba:* tras una semana, cada ciclo publicado tiene su línea congelada y verificable por hash.
 3. **Saneamiento de etiquetas y comparaciones:** «fracción de miembros» en lugar de «P(…)», vecindad real en km, `sea_model_check` emparejado o reetiquetado, perfil norte/sur por zona en el Pirineo. *Prueba:* test que falle si una cadena de evidencia contiene «P(» sin calibración declarada.
 4. **Franja común de alcance y edad del dato visible** en las tres páginas. *Prueba:* ninguna vista muestra un nivel sin su antigüedad.
 

@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 import portinatx_degen as coastal
 import pirineo as mountain
 
-VERSION = "0.4.0"
+VERSION = "0.5.1"
 DOMAINS = ("portinatx", "pirineo")
 PARTS = {
     "portinatx": frozenset(("core", "radar", "series", "atmos", "sat", "mar", "modx", "forense")),
@@ -153,6 +153,13 @@ def server_handler(workers: dict[str, Collector]):
                     return self.send_bytes(200, page_for(path), "text/html; charset=utf-8")
                 except (OSError, KeyError):
                     return self.send_error(404)
+            if path == "/public_fetch.js":
+                return self.send_bytes(200, coastal.resource_bytes("public_fetch.js"),
+                                       "text/javascript; charset=utf-8")
+            if path == "/public_config.js":
+                # Loopback is a local server, not a remote production backend.
+                return self.send_bytes(200, b"window.METEO_BACKEND_URL=\"\";\n",
+                                       "text/javascript; charset=utf-8")
             segments = path.strip("/").split("/")
             if len(segments) == 3 and segments[0] in DOMAINS and segments[1] == "api":
                 domain = segments[0]
@@ -225,10 +232,19 @@ def regression(root: Path) -> int:
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "zone":
+        import zone_engine
+        return zone_engine.main(argv[1:])
+    if argv and argv[0] == "evidence":
+        import zone_evidence
+        return zone_evidence.main(argv[1:])
     cli = argparse.ArgumentParser(description="MeteoPortinatx Unified · Portinatx + Pirineo")
     sub = cli.add_subparsers(dest="command", required=False)
     x = sub.add_parser("export", help="actualiza uno o ambos dominios")
     x.add_argument("--domain", choices=(*DOMAINS, "all"), default="all")
+    sub.add_parser("zone", help="perfiles, packs y diagnósticos compartidos de zona")
+    sub.add_parser("evidence", help="metadatos de radar, avisos, estaciones y forense; no alertas")
     sub.add_parser("selftest")
     sub.add_parser("status")
     s = sub.add_parser("serve", help="servidor local con dos colectores independientes")

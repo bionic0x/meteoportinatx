@@ -67,7 +67,7 @@ def build_site(port_home: Path, pir_home: Path, target: Path, max_age_h: float =
             shutil.copy2(ROOT / "src" / page, dest / "index.html")
             for name in required:
                 shutil.copy2(home / "app" / f"{name}.json", dest / "api" / f"{name}.json")
-        (staging / "manifest.json").write_text(json.dumps({"schema": 1, "release": "0.4.0",
+        (staging / "manifest.json").write_text(json.dumps({"schema": 1, "release": "0.5.1",
            "generated_at": datetime.now(timezone.utc).isoformat(), "domains": reports},
            ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         old = target.with_name(target.name + ".previous")
