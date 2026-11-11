@@ -31,6 +31,8 @@ jobs:
         run: node tests/test_route_engine.cjs
       - name: Five-profile decision view regression (Node)
         run: node tests/test_decision_cards.cjs
+      - name: Mountain observatory evidence contract (Node)
+        run: node tests/test_pirineo_observatory.cjs
       - name: Build one portable application
         run: python scripts/build.py
       - name: Confirm that Pages workflow is separately gated

@@ -39,6 +39,7 @@ jobs:
       METEO_SIDECAR_DIR: ${{ github.workspace }}/data/sidecar
       METEO_BACKEND_URL: ${{ vars.METEO_BACKEND_URL }}
       AEMET_API_KEY: ${{ secrets.AEMET_API_KEY }}
+      METEOFRANCE_API_KEY: ${{ secrets.METEOFRANCE_API_KEY }}
       # No household telemetry, owner notes, local state, or secrets are uploaded.
     steps:
       - name: Checkout reviewed source
@@ -82,6 +83,7 @@ jobs:
           test -f site/pirineo/api/extended.json
           test -f site/pirineo/ruta/index.html
           test -f site/pirineo/ruta/route_engine.js
+          test -f site/pirineo/pirineo_observatory.js
           test -z "$(find site -type f \( -name 'config.env' -o -name 'state.json' -o -name '*.jsonl' -o -name '*.pem' -o -name '.env*' \) -print -quit)"
           python - <<'PY'
           import json

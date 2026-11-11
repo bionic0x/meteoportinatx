@@ -171,6 +171,8 @@ def server_handler(workers: dict[str, Collector]):
             if path == "/public_fetch.js":
                 return self.send_bytes(200, coastal.resource_bytes("public_fetch.js"),
                                        "text/javascript; charset=utf-8")
+            if path == "/pirineo/pirineo_observatory.js":
+                return self.send_bytes(200, coastal.resource_bytes("pirineo_observatory.js"), "text/javascript; charset=utf-8")
             if path == "/pirineo/ruta/route_engine.js":
                 return self.send_bytes(200, coastal.resource_bytes("route_engine.js"), "text/javascript; charset=utf-8")
             if path == "/public_config.js":
