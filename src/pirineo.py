@@ -84,6 +84,16 @@ POIS = [
     ("toses", "Collada de Toses", 42.3335, 1.9865, "collado", "Cerdanya", 1800),
     ("puigmal", "Puigmal", 42.3833, 2.1167, "cima", "Cerdanya", 2913),
 ]
+# #8: vertiente de cada punto para elegir el perfil de cotas (norte = Ariège/Aude; sur = Segre).
+# Los collados en la divisoria usan el perfil más desfavorable (la cota más baja de los dos).
+VERTIENTE_ZONA = {"Andorra": "sur", "Cerdanya": "sur", "Cerdagne": "sur", "Puymorens": "norte", "Capcir": "norte"}
+VERTIENTE_PUNTO = {"pas_casa": "norte", "carlit": "norte", "envalira": "divisoria", "col_puymorens": "divisoria"}
+
+
+def vertiente(poi: dict) -> str | None:
+    return VERTIENTE_PUNTO.get(poi.get("id")) or VERTIENTE_ZONA.get(poi.get("zona"))
+
+
 # Pares barlovento/sotavento para el föhn (norte de la divisoria / sur de la divisoria)
 FOEHN_PAIRS = [("porte", "puigcerda", "Puymorens → Cerdanya"), ("pas_casa", "encamp", "Envalira → valle de Andorra"),
                ("les_angles", "font_romeu", "Capcir → Cerdagne")]
@@ -798,16 +808,44 @@ def src_meteociel() -> list[dict]:
 
 
 # ───────────────────────────────── ensamblado ─────────────────────────────────
-def summarize_points(points: dict, pois: list[dict], prof: list[dict]) -> list[dict]:
+def _profile_now(prof: list[dict], now) -> dict | None:
+    best = None
+    for p in prof or []:
+        t = pd.parse_time(p["t"] + "Z") if isinstance(p.get("t"), str) and len(p["t"]) <= 16 else pd.parse_time(p.get("t"))
+        if t and abs((t - now).total_seconds()) <= NOW_TOLERANCE_MIN * 60:
+            if best is None or abs((t - now).total_seconds()) < best[0]:
+                best = (abs((t - now).total_seconds()), p)
+    return best[1] if best else None
+
+
+def point_snow_levels(poi: dict, prof: dict, now) -> dict:
+    """Cotas de la hora actual con el perfil de la vertiente del punto, y su posición respecto a ellas."""
+    side = vertiente(poi)
+    cand = {k: _profile_now(prof.get(k), now) for k in (("norte", "sur") if side == "divisoria" else (side,))
+            if k}
+    cand = {k: v for k, v in cand.items() if v}
+    alt = poi.get("alt_dem") or poi.get("alt_ref")
+    if not cand:
+        return {"vertiente": side, "perfil": None, "estado": "UNKNOWN", "cota_copo_m": None, "sobre_cota_copo": None}
+    # en la divisoria, la cota más baja (más desfavorable para nieve y hielo)
+    k, pr = min(cand.items(), key=lambda kv: kv[1].get("cota_copo_m") if kv[1].get("cota_copo_m") is not None else 1e9)
+    copo = pr.get("cota_copo_m")
+    return {"vertiente": side, "perfil": k, "estado": "OK" if copo is not None else "UNKNOWN",
+            "tw0_m": pr.get("tw0_m"), "cota_copo_m": copo, "cota_acum_m": pr.get("cota_acum_m"),
+            "capa_calida": pr.get("capa_calida"), "riesgo_engelante": pr.get("riesgo_engelante"),
+            "sobre_cota_copo": (alt >= copo) if (alt is not None and copo is not None) else None}
+
+
+def summarize_points(points: dict, pois: list[dict], prof) -> list[dict]:
     now = pd.now_utc()
-    pmap = {p["t"]: p for p in prof}
+    prof = prof if isinstance(prof, dict) else {"sur": prof or []}      # compatibilidad: lista = perfil sur
     out = []
     for p in pois:
         P = points.get(p["id"])
         if not P:
             continue
         tt = [pd.parse_time(t + "Z") for t in P["time"]]
-        row = {"id": p["id"], "modelos": {}}
+        row = {"id": p["id"], "modelos": {}, "vertiente": vertiente(p), "cotas": point_snow_levels(p, prof, now)}
         for m, d in P["m"].items():
             coverage = {}
             def win(var, a, b, f=sum):
@@ -958,7 +996,7 @@ def build(dem: dict | None = None) -> dict:
             "contexto": contexto, "fuentes": srcs,
             "fuentes_edad_min": {k: round(v) for k, v in SOURCE_AGE_MIN.items()}, "modelo_puntos": points["fuente"] if points else None,
             "modelos": points["modelos"] if points else [], "modelo_nombre": MODEL_NAME,
-            "puntos": summarize_points(points["puntos"], pois, prof.get("sur", [])) if points else [],
+            "puntos": summarize_points(points["puntos"], pois, prof) if points else [],
             "series": points["puntos"] if points else {}, "perfil": prof,
             "foehn": foehn_diag(points["puntos"] if points else None, pmap, prof.get("norte")),
             "inversion_obs": obs_inversion(obs_all), "obs": obs, "metar": metar, "avisos": warns, "aemet": aemet_txt,

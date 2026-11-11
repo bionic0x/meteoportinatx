@@ -78,7 +78,7 @@ Detectores
   · Escorrentía/anegamiento observados a mano (--obs runoff=observed): validez
     6 h; mientras duren, la precaución operativa no desescala.
   · Ensemble: control + miembros identificados por nombre, ventanas completas,
-    en el punto y en la vecindad (±17 km) por separado; <10 miembros → no opina.
+    en el punto y en la vecindad (radio real calculado, hasta ~30 km) por separado; <10 miembros → no opina.
   · Núcleo convectivo: rejilla 0,15° por run (hora de inicio vía meta.json),
     distancia a Portinatx, desplazamiento entre runs y runs centrados seguidos.
   · Escorrentía: B908X es un proxy fuera de la cuenca; techo 'watch' salvo
@@ -213,7 +213,7 @@ CFG: dict[str, Any] = {
     "aemet_zone": "645301",
     "emma_id": "ES113",                     # misma zona en MeteoAlarm (verificado 17/10/2026)
     "wu_station": "ISANTJ159",
-    # Vecindad para modelos: punto + 4 desplazamientos (~15–17 km). El error de
+    # Vecindad para modelos: punto + 6 desplazamientos (13–30 km; radio real en neighborhood_km). El error de
     # posición de la convección a +24/48 h es de ese orden: se mira el máximo.
     "neighborhood": [(0.0, 0.0), (0.15, 0.0), (-0.15, 0.0), (0.0, 0.2), (0.0, -0.2),
                      (0.0, 0.35), (-0.15, 0.25)],      # +2 al E/SE: la DANA descargó al E del máximo modelizado
@@ -1115,9 +1115,15 @@ def update_run_tracks(state: dict, grid: dict) -> dict:
 
 def src_marine() -> SourceResult:
     lat, lon = CFG["marine_point"]
+    # #8: el mismo modelo también en la posición de cada boya, para comparar misma boya y misma hora.
+    buoys = [n for n in CFG["portus_buoys"].values() if n in CFG["portus_coords"]]
     res = _om_multi("https://marine-api.open-meteo.com/v1/marine", {
-        "hourly": "wave_height,wave_direction,wave_period", "forecast_hours": 72}, [(lat, lon)])
+        "hourly": "wave_height,wave_direction,wave_period", "forecast_hours": 72, "past_hours": 6},
+        [(lat, lon)] + [CFG["portus_coords"][n] for n in buoys])
     h = res[0].get("hourly", {})
+    h["_buoys"] = {n: {"time": (r.get("hourly") or {}).get("time", []),
+                       "wave_height": (r.get("hourly") or {}).get("wave_height", [])}
+                   for n, r in zip(buoys, res[1:])}
     return SourceResult(name="marine", status="ok", kind="model", data_time=now_utc().isoformat(),
                         detail="oleaje Open-Meteo Marine", payload=h)
 
@@ -1899,7 +1905,7 @@ def ch_models(src: SourceResult | None) -> list[Channel]:
         c.level = min(lvl, 2)                       # un determinista nunca da 'alarm'
         c.group = "nwp_hr" if m in CFG["gate_models"] else "nwp_global"
         c.evidence.append(f"punto: máx {p1_pt:.1f} mm/1h, {_n(p12_pt)} mm/12h (pico {t_peak}Z) · "
-                          f"vecindad ±17 km: {p1_nb:.1f} mm/1h, {_n(p12_nb)} mm/12h · "
+                          f"vecindad ≤{neighborhood_km():.0f} km: {p1_nb:.1f} mm/1h, {_n(p12_nb)} mm/12h · "
                           f"racha {_n(gust)} km/h · CAPE {_n(cape)} J/kg")
         chans.append(c)
     return chans
@@ -1967,7 +1973,7 @@ def ch_ensemble(src: SourceResult | None) -> Channel:
     p24_any = sum(any((_window_max(pt[i], 24) or 0) >= 50 for pt in pp) for i in range(nn)) / nn
     p12_any = sum(any((_window_max(pt[i], 12) or 0) >= 100 for pt in pp) for i in range(nn)) / nn
     mem = [mem[i] for i in ok]
-    c.evidence.append(f"vecindad ±17 km (algún punto): P(24h≥50)={p24_any:.0%} · P(12h≥100)={p12_any:.0%} "
+    c.evidence.append(f"vecindad ≤{neighborhood_km():.0f} km (algún punto): P(24h≥50)={p24_any:.0%} · P(12h≥100)={p12_any:.0%} "
                       f"— no equivale a probabilidad en Portinatx")
     tot = sorted(sum(x or 0 for x in m) for m in mem)
     med, p90 = tot[n // 2], tot[min(n - 1, int(0.9 * n))]
@@ -2207,6 +2213,12 @@ def precaution_hold(manual: dict) -> str | None:
 # ════════════════════════════════════════════════════════════════════════
 # FRESCURA (#16): un dato viejo, vacío o sin hora no es una observación
 # ════════════════════════════════════════════════════════════════════════
+def neighborhood_km() -> float:
+    """Radio real de la vecindad de modelos: distancia haversine máxima desde el sitio (#8)."""
+    return max(haversine_km(SITE["lat"], SITE["lon"], SITE["lat"] + a, SITE["lon"] + b)
+               for a, b in CFG["neighborhood"])
+
+
 def channel_age_limit(name: str) -> float | None:
     lim = CFG["channel_max_age_min"]
     if name in lim:
@@ -2455,25 +2467,43 @@ def build_claims(issued: datetime, channels: list[Channel], warnings: list[dict]
     return out
 
 
-def sea_model_check(sea_obs: Channel, marine: SourceResult | None, portus: SourceResult | None) -> None:
-    """DANA 18–19/10: el oleaje modelizado (1,7 m) quedó muy por debajo de las boyas (3,5–4,1 m).
-    Si la boya NE más alta supera 1,5× el máximo del modelo, se marca: manda la observación."""
-    if not (sea_obs.available and marine and marine.status == "ok"
-            and portus and portus.status == "ok"):
+SEA_PAIR_TOL_MIN = 30          # #8: tolerancia entre la hora de la boya y la hora del modelo emparejado
+
+
+def sea_model_check(sea_obs: Channel, marine: SourceResult | None, portus: SourceResult | None,
+                    now: datetime | None = None) -> None:
+    """Modelo frente a boya SOLO emparejados: misma boya (modelo en su posición) y misma hora (±30 min).
+    Sin pareja válida → NO_COMPARABLE; nunca máximo de 72 h frente a la última lectura."""
+    now = now or now_utc()
+    sea_obs.metrics["sea_model_pairing"] = "NO_COMPARABLE"
+    if not (marine and marine.status == "ok" and portus and portus.status == "ok"):
         return
-    mod = max((x or 0) for x in marine.payload.get("wave_height") or [0])
-    obs = 0.0
+    buoys = (marine.payload or {}).get("_buoys") or {}
+    pairs = []
     for name in CFG["portus_buoys"].values():
-        ser = [r for r in portus.payload["stations"].get(name, [])
-               if r.get("hm0") is not None
-               and observation_recency(r.get("t"), CFG["channel_max_age_min"]["mar_boyas"]
-                                       )["freshness"] == "FRESH"]
-        if ser and ser[-1].get("dmd") is not None and in_sector(ser[-1]["dmd"], (330.0, 100.0)):
-            obs = max(obs, ser[-1]["hm0"])
-    sea_obs.metrics.update({"buoy_hs_ne": obs, "model_hs_max": mod})
-    if mod and obs > 1.5 * mod:
-        sea_obs.evidence.insert(0, f"⚠ el oleaje modelizado (máx {mod:.1f} m) infraestima: boyas del NE con {obs:.1f} m "
-                                   "— manda la observación y el aviso costero")
+        rows = [r for r in (portus.payload.get("stations") or {}).get(name, []) if r.get("hm0") is not None
+                and observation_recency(r.get("t"), CFG["channel_max_age_min"]["mar_boyas"], now)["freshness"] == "FRESH"]
+        mod = buoys.get(name)
+        if not rows or not mod:
+            continue
+        last, t_obs = rows[-1], parse_time(rows[-1]["t"])
+        cand = []
+        for tm, hs in zip(mod.get("time") or [], mod.get("wave_height") or []):
+            tt = parse_time(tm if ("+" in tm[10:] or tm.endswith("Z")) else tm + "Z") if isinstance(tm, str) else None
+            if tt and hs is not None and abs((tt - t_obs).total_seconds()) <= SEA_PAIR_TOL_MIN * 60:
+                cand.append((abs((tt - t_obs).total_seconds()), hs))
+        if cand:
+            pairs.append({"boya": name, "t": last["t"], "obs_hs": last["hm0"], "mod_hs": min(cand)[1]})
+    if not pairs:
+        sea_obs.evidence.append("oleaje modelo/boya: NO_COMPARABLE (sin modelo en la misma boya y hora ±30 min)")
+        return
+    sea_obs.metrics.update({"sea_model_pairing": "PAIRED", "sea_model_pairs": pairs})
+    under = [p for p in pairs if p["mod_hs"] > 0.1 and p["obs_hs"] > 1.5 * p["mod_hs"]]
+    if under:
+        w = max(under, key=lambda p: p["obs_hs"] / p["mod_hs"])
+        sea_obs.evidence.insert(0, f"⚠ el modelo infraestima el oleaje en {w['boya']}: boya {w['obs_hs']:.1f} m frente a "
+                                   f"modelo {w['mod_hs']:.1f} m a la misma hora — manda la observación y el aviso costero")
+
 
 
 def radar_coverage_check(radar: Channel, gauges: Channel, rain: Channel) -> None:
