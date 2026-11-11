@@ -651,6 +651,61 @@ def src_aemet_obs() -> list[dict]:
     return out
 
 
+# Meteocat XEMA vía datos abiertos de la Generalitat (Socrata, sin clave). Coordenadas y altitudes de la tabla
+# oficial de metadatos (yqwd-vj5e). Datos semihorarios con ~1 h de retraso. Licencia: propiedad de Meteocat;
+# su aviso legal permite reutilizar sin alterar ni desnaturalizar, citando la fuente y la fecha de actualización.
+XEMA_URL = "https://analisi.transparenciacatalunya.cat/resource/nzvn-apee.json"
+XEMA_STATIONS = {
+    "YA": ("Puigcerdà (Meteocat)", 42.44013, 1.93482, 1214), "DP": ("Das - Aeròdrom (Meteocat)", 42.38603, 1.86639, 1096),
+    "Z3": ("Malniu (Meteocat)", 42.46605, 1.77850, 2229), "ZD": ("La Tosa d'Alp (Meteocat)", 42.32213, 1.89716, 2478),
+    "Z9": ("Cadí Nord (Meteocat)", 42.29265, 1.71498, 2145), "DG": ("Núria (Meteocat)", 42.39848, 2.15517, 1971),
+    "ZC": ("Ulldeter (Meteocat)", 42.42102, 2.24593, 2413), "CD": ("La Seu d'Urgell - Bellestar (Meteocat)", 42.37083, 1.43279, 849)}
+XEMA_VARS = {"32": "T", "33": "HR", "34": "P", "35": "pr", "30": "v10", "46": "v2", "50": "g10", "56": "g2"}
+XEMA_ATTRIBUTION = "Meteocat XEMA (Servei Meteorològic de Catalunya), dades obertes de la Generalitat de Catalunya"
+
+
+def src_xema(now=None, fetch=None) -> list[dict]:
+    """Últimas observaciones semihorarias de la XEMA en Cerdanya y alta montaña. Hora = inicio del periodo
+    (UTC), lo que hace la edad conservadora. Lluvia y racha del día local solo con ese día cubierto."""
+    now = now or pd.now_utc()
+    since = (now - timedelta(hours=26)).strftime("%Y-%m-%dT%H:%M:%S")
+    codes = ",".join(f"'{c}'" for c in XEMA_STATIONS)
+    varis = ",".join(f"'{v}'" for v in XEMA_VARS)
+    q = {"$where": f"codi_estacio in({codes}) AND codi_variable in({varis}) AND data_lectura > '{since}'",
+         "$order": "data_lectura ASC", "$limit": "20000"}
+    rows = (fetch or pd.get_json)(XEMA_URL + "?" + urllib.parse.urlencode(q))
+    by = {}
+    for r in rows or []:
+        c, var, val = r.get("codi_estacio"), XEMA_VARS.get(str(r.get("codi_variable"))), r.get("valor_lectura")
+        t = pd.parse_time(str(r.get("data_lectura", ""))[:19] + "Z") if r.get("data_lectura") else None
+        try:
+            x = float(val)
+        except (TypeError, ValueError):
+            continue
+        if c in XEMA_STATIONS and var and t and math.isfinite(x):
+            by.setdefault(c, []).append((t, var, x))
+    out = []
+    for c, recs in by.items():
+        name, la, lo, alt = XEMA_STATIONS[c]
+        tl = max(t for t, _, _ in recs)
+        last = {var: x for t, var, x in sorted(recs) if t == tl}
+        day = tl.astimezone(MADRID).date()
+        today = [(t, var, x) for t, var, x in recs if t.astimezone(MADRID).date() == day]
+        rain_slots = {t for t, var, _ in today if var == "pr"}
+        midnight = datetime.combine(day, datetime.min.time(), MADRID).astimezone(UTC)
+        expected = int((tl - midnight).total_seconds() // 1800) + 1
+        gusts = [x for _, var, x in today if var in ("g10", "g2")]
+        wind = last.get("v10", last.get("v2"))
+        out.append({"id": f"xema-{c}", "red": "Meteocat XEMA", "nombre": name, "lat": la, "lon": lo, "alt": alt,
+                    "t": tl.isoformat(), "edad_min": round((now - tl).total_seconds() / 60),
+                    "T": last.get("T"), "HR": last.get("HR"), "P": last.get("P"),
+                    "viento": _r(wind * 3.6, 0) if wind is not None else None,
+                    "racha_dia": _r(max(gusts) * 3.6, 0) if gusts else None,
+                    "lluvia_dia": (_r(sum(x for _, var, x in today if var == "pr"), 1)
+                                   if len(rain_slots) >= expected else None)})   # día incompleto → UNKNOWN, no 0
+    return out
+
+
 def src_aemet_cap() -> list[dict]:
     """Avisos CAP oficiales de AEMET para las zonas pirenaicas (hasta D+2)."""
     if not os.environ.get("AEMET_API_KEY"):
@@ -1043,7 +1098,7 @@ def build(dem: dict | None = None) -> dict:
                 warns = val
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}"
-    extra = (("aemet_obs", 30, src_aemet_obs), ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
+    extra = (("aemet_obs", 30, src_aemet_obs), ("xema", 30, src_xema), ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
              ("aemet_cap", 30, src_aemet_cap), ("aemet_texto", 120, src_aemet_text))
     cnp_perm = source_permission()
     for name, ttl, fn in extra:
@@ -1055,15 +1110,18 @@ def build(dem: dict | None = None) -> dict:
             ttl = max(ttl, cnp_perm["intervalo_min"] or ttl)        # cadencia acordada
         try:
             val, st = _cached(name, ttl, fn, max_age_min=180)
-            srcs[name] = st if name not in ("aemet_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
+            srcs[name] = st if name not in ("aemet_obs", "xema", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
         except PermissionError:
             srcs[name] = "sin clave AEMET (config.env)"
             continue
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}: {str(exc)[:100]}"
             continue
-        if name in ("aemet_obs", "cnp", "meteociel"):
+        if name in ("aemet_obs", "xema", "cnp", "meteociel"):
             obs += val
+            if name == "xema" and val:
+                newest = max(pd.parse_time(o["t"]) for o in val)
+                atribuciones.append(f"{XEMA_ATTRIBUTION}; dades fins a {newest.astimezone(MADRID):%d/%m/%Y %H:%M} (hora local)")
             if name == "cnp" and val and cnp_perm["atribucion"]:
                 atribuciones.append(cnp_perm["atribucion"])
         elif name == "aemet_cap":
