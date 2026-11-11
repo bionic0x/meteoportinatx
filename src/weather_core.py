@@ -21,6 +21,32 @@ def wet_bulb_c(t, dew):
             - math.atan(rh - 1.676331) + .00391838 * rh ** 1.5 * math.atan(.023101 * rh) - 4.686035)
 
 
+def pressure_hpa_at(z_m):
+    """Presión estándar (hPa) a la altitud z (m); suficiente para la ecuación psicrométrica."""
+    return 1013.25 * (1 - 2.25577e-5 * z_m) ** 5.25588
+
+
+def wet_bulb_psychro(t, dew, p_hpa):
+    """Bulbo húmedo (°C) por la ecuación psicrométrica a la presión real (bisección).
+
+    Stull (wet_bulb_c) supone 1013 hPa; a 1500–2500 m se desvía varias décimas justo
+    alrededor del umbral nieve/lluvia. Esta es la que debe usarse en montaña.
+    """
+    if t is None or dew is None or p_hpa is None:
+        return None
+    dew = min(dew, t)
+    e = 6.112 * math.exp(17.67 * dew / (dew + 243.5))
+    lo, hi = dew, t
+    for _ in range(40):
+        tw = (lo + hi) / 2
+        es = 6.112 * math.exp(17.67 * tw / (tw + 243.5))
+        if es - 0.00066 * (1 + 0.00115 * tw) * p_hpa * (t - tw) - e > 0:
+            hi = tw
+        else:
+            lo = tw
+    return (lo + hi) / 2
+
+
 def complete_day(times, day, idx):
     return [times[i] for i in idx] == [f'{day}T{hour:02d}:00' for hour in range(24)]
 

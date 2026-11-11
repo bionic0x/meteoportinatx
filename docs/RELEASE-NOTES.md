@@ -1,3 +1,21 @@
+# Sin publicar — motor del Pirineo 0.6.1 (paridad con el costero y física de montaña)
+
+`src/pirineo.py` y `src/pirineo_meta.py` pasan de 0.3.0 a 0.6.1. El número alinea el motor de montaña con las garantías del núcleo costero 0.6.1; no indica calibración.
+
+**Ausencia de dato = UNKNOWN, nunca 0**
+- Föhn sin perfil, sin previsión en el par o sin horas comunes → `estado: UNKNOWN` y `horas: null` (antes «0 h», que se leía como «sin föhn»). Se emparejan horas por instante UTC (Open-Meteo y MET Norway) y cuenta la señal de cualquier modelo, no solo el primero (`por_modelo`).
+- Valores «ahora» de un punto (T, Td, Tw, viento) → `null` si la serie no cubre la hora actual con ±90 min, en vez de tomar el valor de otra hora.
+- Malla: un acumulado de 3 h con algún hueco → `null`, no la suma con huecos a 0.
+- `core.fuentes_edad_min`: edad del dato servido por cada fuente con caché.
+
+**Física de montaña**
+- Perfil con la superficie del modelo: se descartan los niveles de presión bajo el terreno (p. ej. 925 hPa bajo la Cerdanya) y se añade el nivel de 2 m a la presión de superficie.
+- Capa cálida sobre aire bajo cero en el fondo (lago frío): `capa_calida` (base, tope, T máx., T del fondo) y `riesgo_engelante` si hay precipitación. En ese caso no se dan cotas de nieve; antes el isocero de la capa alta ocultaba el aire bajo cero del valle.
+- Metaanálisis: bulbo húmedo psicrométrico a la presión de cada estación (antes Stull a 1013 hPa, con desvíos de décimas justo en el umbral de fase). La fracción `wet_bulb_le0` solo cuenta miembros con precipitación: un día seco y frío ya no da 1,0. El umbral de fase sólida usa el mismo 0,7 °C que el motor 0–72 h.
+- Inversión observada: solo se afirma con ≥300 m de desnivel y pendiente mayor que dos veces su error típico; si no, `concluyente: false` y la vista no dibuja la recta.
+
+**Sin cambiar:** el umbral de fase sigue siendo una hipótesis sin calibrar; el enfriamiento por fusión no se modeliza; la inversión sigue mezclando cuencas; el föhn del sur no se evalúa; el motor regional (`zone_engine.py`) aún usa Stull.
+
 # Sin publicar — confirmación independiente para alarm y Z–R explícita (#17)
 
 - Ninguna observación aislada da `alarm`: cada canal observado aporta como mucho `alert` a la fusión. El rojo solo llega por confirmación independiente (grupo, raíz y familia distintos, con una observación local), por el gate de alta resolución o por el suelo del aviso oficial, que no cambia. Los motivos indican cuándo se ha aplicado el techo.

@@ -4,8 +4,8 @@
   "product": "MeteoPortinatx Unified",
   "components": {
     "portinatx_core": "0.6.1",
-    "pirineo_core": "0.3.0",
-    "pirineo_extended": "0.3.0",
+    "pirineo_core": "0.6.1",
+    "pirineo_extended": "0.6.1",
     "unified_application": "0.6.0",
     "public_api": "0.6.0",
     "regional_engine": "0.6.0"
