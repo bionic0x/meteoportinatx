@@ -13,8 +13,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / 'SHA256SUMS.txt'
-TRACK = ('.github/workflows/', 'docs/', 'scripts/', 'src/', 'tests/')
-TOP = {'.gitignore', 'README.md', 'RELEASE_STATUS.json', 'render.yaml'}
+TRACK = ('.github/workflows/', '.codex/agents/', '.codex/nexus/', 'docs/', 'scripts/', 'src/', 'tests/')
+TOP = {'.gitignore', '.codex/config.toml', 'README.md', 'RELEASE_STATUS.json', 'render.yaml'}
 IGNORE = {'__pycache__', '.pytest_cache', '.git', 'dist', 'site', 'portinatx_state', 'backend_state', 'build'}
 
 

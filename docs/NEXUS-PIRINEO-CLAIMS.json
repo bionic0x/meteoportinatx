@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "initiative": "Revisión de producto, UX y diseño gráfico de Pirineo",
+  "owner": "Javier Peiró",
+  "last_updated": "2026-11-12",
+  "allowed_status": ["EVIDENCE", "HYPOTHESIS", "ASSUMPTION", "ATTRIBUTED_INTENT", "UNKNOWN"],
+  "allowed_quantitative_status": ["MEASURED", "TARGET", "ESTIMATE", "HYPOTHESIS", "NOT_APPLICABLE"],
+  "claims": [
+    {"id": "CLM-001", "proposition": "La consola incluye secciones de vigilancia, atmósfera, territorio, puntos y modelos.", "status": "EVIDENCE", "quantitative_status": "NOT_APPLICABLE", "source_refs": ["src/pirineo_app.html"], "limitations": ["La presencia en código no acredita usabilidad ni estado de publicación."], "owner": "nexus_investigacion_ux"},
+    {"id": "CLM-002", "proposition": "Organizar la interfaz según las tareas del usuario facilita encontrar la información relevante.", "status": "HYPOTHESIS", "quantitative_status": "NOT_APPLICABLE", "source_refs": [], "falsifier": "Las personas siguen sin localizar la información o confunden datos y avisos en pruebas con tareas reales.", "limitations": ["No se han realizado pruebas de usuario en este registro."], "owner": "nexus_arquitectura_ux"},
+    {"id": "CLM-003", "proposition": "El rediseño supera una prueba de usabilidad y accesibilidad en teléfonos reales.", "status": "UNKNOWN", "quantitative_status": "NOT_APPLICABLE", "source_refs": [], "limitations": ["Pendiente de prueba independiente con dispositivos y tareas representativas."], "owner": "nexus_verificacion"}
+  ]
+}
