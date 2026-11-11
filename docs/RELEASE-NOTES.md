@@ -1,3 +1,9 @@
+# Sin publicar — confirmación independiente para alarm y Z–R explícita (#17)
+
+- Ninguna observación aislada da `alarm`: cada canal observado aporta como mucho `alert` a la fusión. El rojo solo llega por confirmación independiente (grupo, raíz y familia distintos, con una observación local), por el gate de alta resolución o por el suelo del aviso oficial, que no cambia. Los motivos indican cuándo se ha aplicado el techo.
+- El umbral de QPE del radar se evalúa solo con `CFG["radar_threshold_zr"]` (Marshall–Palmer, coherente con 45 dBZ). Con la relación «tropical» el `alert` saltaba ya hacia 40 dBZ; ahora sigue mostrándose solo como diagnóstico.
+- Tests del canal de rayos: niveles por recuento, distancia, localidad y salto de actividad.
+
 # Sin publicar — cobertura por familia y frescura uniforme (#16)
 
 - `fuse()` exige al menos un canal observado vivo de la familia lluvia: con solo viento y mar vivos declara cobertura insuficiente, marca lluvia `UNKNOWN` y no desescala.
