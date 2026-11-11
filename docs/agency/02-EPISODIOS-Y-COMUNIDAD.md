@@ -1,6 +1,6 @@
 # Informe 2 · Seguimiento de episodios y red ClimayNievePirineos
 
-**Lentes:** Spatial Data Engineer, Geographer, Research Synthesist, Privacy Engineer. **Estado:** diseño de piloto y prototipo local; **no existe un scraper de foros habilitado** ni un acuerdo de reutilización comprobado con ClimayNievePirineos.
+**Lentes:** Spatial Data Engineer, Geographer, Research Synthesist, Privacy Engineer. **Estado:** diseño de piloto y prototipo local; **no existe un scraper de foros habilitado**. La difusión de datos de estaciones está permitida con atribución según el [artículo del proveedor](https://www.climaynievepirineos.com/estaciones/UsoYCaracteristicasCYNP.htm); las condiciones de extracción automática no se especifican allí.
 
 ## 1. Qué está integrado y qué NO
 
@@ -69,7 +69,7 @@ El resultado siempre dice `UNVERIFIED`, `model_weight: 0`, `official_warning: fa
 
 ## 5. Cómo aprovechar la red de estaciones sin apropiársela
 
-1. Solicitar condiciones a los responsables de CNP: endpoints permitidos, uso de datos, cadencia, atribución, límites de consultas, redistribución, uso comercial, imágenes y conservación histórica. Registrar respuesta o marcar `PERMISSION_UNKNOWN`.
+1. Aclarar con CNP endpoints y cadencia de consulta automatizada, límites, uso comercial y conservación histórica. La difusión con atribución está expresamente contemplada en el artículo del proveedor; no implica por sí sola condiciones de extracción automatizada. Mantener imágenes y foro fuera de alcance.
 2. Verificar metadatos de las cuatro estaciones (altitud/sensor/ubicación, horario local con DST, frecuencia, precipitaciones acumuladas, reinicio a medianoche y mantenimiento); corregir coordenadas solo con fuente comprobada.
 3. Solo después, definir un adaptador con ETag/If-Modified-Since y `User-Agent` identificable, contactos y límite inferior de petición; no hacer scraping agresivo, no saltarse 403/robots.
 4. Construir QC espacial: estación de montaña no representa automáticamente pista a 4 km o ladera opuesta; registrar cota, relieve, exposición, gradiente y error de representatividad.
