@@ -61,5 +61,33 @@ class MFranceObservations(unittest.TestCase):
                 with self.assertRaises(ValueError):mf.fetch_observations(NOW)
                 self.assertEqual(request.call_count,1)
 
+class Credential(unittest.TestCase):
+    def test_api_key_goes_in_apikey_header_first(self):
+        with mock.patch.dict("os.environ",{"METEOFRANCE_API_KEY":"TEST-ONLY"}):
+            with mock.patch.object(mf.pd,"http_get",return_value=b"ok") as get:
+                self.assertEqual(mf._request("/liste-stations",{"format":"csv"}),"ok")
+        headers=get.call_args.kwargs["headers"]
+        self.assertEqual(headers.get("apikey"),"TEST-ONLY")
+        self.assertNotIn("Authorization",headers)
+        self.assertNotIn("TEST-ONLY",get.call_args.args[0])
+
+    def test_bearer_only_after_a_401(self):
+        calls=[]
+        def get(url,headers,**kw):
+            calls.append(headers)
+            if "apikey" in headers:
+                raise RuntimeError(f"GET falló ({url}): HTTP Error 401: Unauthorized")
+            return b"ok"
+        with mock.patch.dict("os.environ",{"METEOFRANCE_API_KEY":"TEST-ONLY"}):
+            with mock.patch.object(mf.pd,"http_get",side_effect=get):
+                self.assertEqual(mf._request("/liste-stations"),"ok")
+        self.assertEqual(calls[1].get("Authorization"),"Bearer TEST-ONLY")
+
+    def test_outage_is_not_retried_with_another_credential(self):
+        with mock.patch.dict("os.environ",{"METEOFRANCE_API_KEY":"TEST-ONLY"}):
+            with mock.patch.object(mf.pd,"http_get",side_effect=RuntimeError("HTTP Error 503")) as get:
+                with self.assertRaises(RuntimeError):mf._request("/liste-stations")
+        self.assertEqual(get.call_count,1)
+
 if __name__=="__main__":
     unittest.main()

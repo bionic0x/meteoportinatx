@@ -33,12 +33,30 @@ def _key():
     return value
 
 
+# The portal issues two credential kinds: a long-lived API key (header "apikey") and a one-hour
+# OAuth2 token ("Authorization: Bearer"). The owner's secret was verified against the catalogue on
+# 11/11/2026: apikey → 200, Bearer → 401. API key first; Bearer only if the gateway says 401.
+AUTH_FORMS = ("apikey", "bearer")
+
+
+def _auth_header(form, key):
+    return {"apikey": key} if form == "apikey" else {"Authorization": "Bearer " + key}
+
+
 def _request(path, params=None):
     query = ("?" + urllib.parse.urlencode(params)) if params else ""
-    blob = pd.http_get(BASE + path + query,
-                       headers={"Authorization": "Bearer " + _key(),
-                                "Accept": "*/*"}, timeout=35)
-    return blob.decode("utf-8-sig", "replace")
+    key = _key()
+    last = None
+    for form in AUTH_FORMS:
+        try:
+            blob = pd.http_get(BASE + path + query, headers={**_auth_header(form, key), "Accept": "*/*"},
+                               timeout=35, retries=0 if form != AUTH_FORMS[-1] else 2)
+            return blob.decode("utf-8-sig", "replace")
+        except RuntimeError as exc:
+            last = exc
+            if "401" not in str(exc):            # only a rejected credential justifies the other form
+                raise
+    raise last
 
 
 def _norm(name):

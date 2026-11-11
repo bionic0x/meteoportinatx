@@ -40,8 +40,7 @@ def main() -> int:
                 403: "aplicación sin suscripción a «Données d'observation» o credencial de otro tipo"}
         print("ESTADO: credencial rechazada · " + hint.get(codes.get("Bearer"), "revisar en portail-api.meteofrance.fr"))
         return 1
-    if codes.get("Bearer") != 200:
-        print("AVISO: solo funciona como «apikey»; el conector usa Bearer y hay que adaptarlo")
+    print("Tipo de credencial: " + ("clave API (cabecera apikey)" if codes.get("apikey") == 200 else "token OAuth2 (Bearer)"))
     print(f"Catálogo DPObs: ok · {len(mf.station_catalog(catalog))} estaciones en el dominio")
     try:
         obs = mf.fetch_observations()
