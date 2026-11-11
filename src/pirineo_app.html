@@ -521,6 +521,7 @@ function renderDiag(){
   $("links").innerHTML=Object.entries(L).map(([k,u])=>`<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(lab[k]||k)}</a></li>`).join("");
   $("srcs").innerHTML=Object.entries(c.fuentes||{}).map(([k,v])=>`<li><b>${esc(k)}</b> · <span class="ev">${esc(String(v).slice(0,140))}</span></li>`).join("");
   if((c.atribuciones||[]).length) $("srcs").innerHTML+=c.atribuciones.map(a=>`<li class="ev">Datos: ${esc(String(a).slice(0,200))}</li>`).join("");
+  const mfv=c.verificacion_mf; if(mfv&&Array.isArray(mfv.estaciones)) $("srcs").innerHTML+=`<li><b>Verificación Météo-France</b> · <span class="ev">archivo diario, no tiempo real · datos hasta ${fmtT(mfv.datos_hasta)}</span></li>`+mfv.estaciones.map(s=>`<li class="ev">${esc(s.nombre)} (${n0(s.alt)} m): ${n1(s.T)} °C hace ${n1(s.edad_h)} h${s.QT==="9"?" · sin validar":""} · lluvia 24 h ${s.rr_24h==null?"—":n1(s.rr_24h)+" mm"}</li>`).join("");
 }
 
 /* ── metaanálisis 15 días ── */

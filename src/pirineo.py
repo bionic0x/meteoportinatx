@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import portinatx_degen as pd  # noqa: E402
 import pirineo_meta as meta  # noqa: E402
 import knowledge_base as kb  # noqa: E402
+import mf_obs  # noqa: E402  (verificación: archivo horario oficial de Météo-France)
 
 VERSION = "0.6.1"
 UTC = timezone.utc
@@ -1136,13 +1137,25 @@ def build(dem: dict | None = None) -> dict:
     # distinto de "ok" es UNKNOWN; nunca altera el diagnóstico físico ni los avisos.
     resumen = summarize_points(points["puntos"], pois, prof) if points else []   # #8: cotas por vertiente
     bundle = kb.context_bundle(Path(os.environ.get("METEO_SIDECAR_DIR") or (HOME / "sidecar")), "pirineo", pd.now_utc())
+    # Verificación con el archivo horario oficial de Météo-France (diario, no tiempo real; no entra en «obs»)
+    verificacion_mf = {"estado": "UNKNOWN", "nota": "archivo diario de Météo-France no disponible"}
+    try:
+        mf_st, st = _cached("meteo_france_base", 360, lambda: mf_obs.fetch(BOX), max_age_min=60 * 30)
+        verificacion_mf = mf_obs.summary(mf_st, pd.now_utc())
+        srcs["meteo_france_base"] = f"{st} · {len(mf_st)} estaciones (archivo diario, no tiempo real)"
+        atribuciones.append(mf_obs.ATTRIBUTION)
+        if os.environ.get("METEO_LEDGER"):
+            import ledger_shadow
+            verificacion_mf["ledger"] = ledger_shadow.record_observations(mf_obs.ledger_observations(mf_st))
+    except Exception as exc:
+        srcs["meteo_france_base"] = f"error: {type(exc).__name__}"
     contexto = {"nota": "contexto, no observación ni aviso; UNKNOWN si el estado no es ok",
                 "sidecars": {n: {k: v for k, v in b.items() if k != "data"} for n, b in bundle.items()},
                 "notas_lluvia_24h": kb.pirineo_precip_notes(bundle.get("climatologia_era5land_pirineo"), resumen, pd.now_utc())}
     core = {"issued": pd.now_utc().isoformat(), "engine": VERSION, "box": BOX, "pois": pois, "corte": CORTE,
             "contexto": contexto, "fuentes": srcs,
             "fuentes_edad_min": {k: round(v) for k, v in SOURCE_AGE_MIN.items()},
-            "atribuciones": atribuciones,
+            "atribuciones": atribuciones, "verificacion_mf": verificacion_mf,
             "permiso_cnp": {k: cnp_perm[k] for k in ("activo", "motivo", "valido_hasta")}, "modelo_puntos": points["fuente"] if points else None,
             "modelos": points["modelos"] if points else [], "modelo_nombre": MODEL_NAME,
             "puntos": resumen,
