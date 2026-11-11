@@ -52,11 +52,11 @@ def source_sections(pack, pid):
         if data and not data.get('records'):
             rows.append('<p>No se encontraron coincidencias en los boletines descargados.</p>')
     if 'radar' in modules:
-        rows.append('<h3>Radar · RainViewer</h3><p>Últimas imágenes disponibles al descargar. La cruz marca el punto. Cobertura sin verificar: una imagen vacía o transparente no demuestra ausencia de lluvia. Sin estimación local calibrada de intensidad.</p><div class="frames">')
+        rows.append('<h3>Radar · RainViewer</h3><p>Composiciones disponibles al descargar; la cruz marca el punto. La hora es la del fotograma compuesto, no garantiza la hora de cada radar que lo integra. Su antigüedad tampoco demuestra que la cobertura local sea reciente. Una imagen vacía o transparente no demuestra ausencia de lluvia. Sin estimación local calibrada de intensidad. Datos: <a href="https://www.rainviewer.com/">RainViewer</a>.</p><div class="frames">')
         frames=pack['data'].get((pid,'radar'),{}).get('frames',[])
         for f in frames:
             x,y=f['point_pixel']
-            rows.append(f'<figure><div class="tile"><img width="256" height="256" alt="Eco radar; punto señalado con una cruz" src="data:image/png;base64,{f["png_base64"]}"><span aria-hidden="true" style="left:{x/256*100:.3f}%;top:{y/256*100:.3f}%">+</span></div><figcaption>{text(stamp(f["observed_at"]))}<br>{text(f["freshness"])} en la captura</figcaption></figure>')
+            rows.append(f'<figure><div class="tile"><img width="256" height="256" alt="Tesela del radar; punto señalado con una cruz" src="data:image/png;base64,{f["png_base64"]}"><span aria-hidden="true" style="left:{x/256*100:.3f}%;top:{y/256*100:.3f}%">+</span></div><figcaption>Fotograma: {text(stamp(f["observed_at"]))}<br>Antigüedad del fotograma: {text(f["freshness"])} en la captura</figcaption></figure>')
         if not frames:
             rows.append('<p class="missing">Sin imágenes de radar utilizables.</p>')
         rows.append('</div>')
