@@ -26,7 +26,7 @@ class CnpGate(unittest.TestCase):
                 pi.src_cnp()
 
     def test_explicit_permission_enables_the_adapter(self):
-        with mock.patch.dict(os.environ, {pi.CNP_PERMISSION_ENV: "1"}), \
+        with mock.patch.dict(os.environ, {pi.CNP_PERMISSION_ENV: "1", "METEO_PUBLIC_BUILD": "0"}), \
              mock.patch.object(pi.pd, "http_get", side_effect=OSError("offline")) as http:
             self.assertEqual(pi.src_cnp(), [])
             self.assertEqual(http.call_count, len(pi.CNP_STATIONS))
