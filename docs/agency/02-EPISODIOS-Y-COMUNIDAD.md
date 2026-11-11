@@ -100,3 +100,7 @@ El resultado siempre dice `UNVERIFIED`, `model_weight: 0`, `official_warning: fa
 - Latencia, cobertura, precisión temporal y representatividad publicadas; desviaciones auditables.
 - Sin exposición de PII ni textos protegidos. Interfaz marca `COMUNIDAD · NO VERIFICADO`.
 - Comportamiento de alertas oficiales inmutable; cualquier integración en `fuse()` requiere PR científico separado.
+
+## 9. Estado del acceso automático a CNP (issue #9)
+
+`src/pirineo.py` ya no consulta ClimayNievePirineos en cada ciclo. Sin permiso verificado, la fuente figura como `PERMISSION_UNKNOWN`: no hace ninguna petición ni sirve copias en caché de consultas anteriores. Para reactivarla, el propietario debe documentar antes el permiso, la cadencia y la atribución acordados con los responsables, y declarar `CNP_PERMISSION_VERIFIED=1` en `config.env` (cualquier otro valor no cuenta). El parser se conserva. Las observaciones del piloto se siguen introduciendo a mano con `src/episode_evidence.py` como `UNVERIFIED` y con peso 0.

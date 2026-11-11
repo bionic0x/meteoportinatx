@@ -712,7 +712,19 @@ def parse_cnp_table(page: str, now: datetime) -> dict | None:
             "intensidad_mmh": float(rate[0]) if rate else None}
 
 
+class CommunityPermissionError(RuntimeError):
+    """#9: acceso automático a una red comunitaria sin autorización verificada."""
+
+
+CNP_PERMISSION_ENV = "CNP_PERMISSION_VERIFIED"
+
+
 def src_cnp() -> list[dict]:
+    """ClimayNievePirineos. #9: NO se consulta automáticamente salvo que el propietario haya verificado
+    permiso, cadencia y atribución con sus responsables y lo declare con CNP_PERMISSION_VERIFIED=1.
+    Sin eso: PERMISSION_UNKNOWN, ninguna petición. Las observaciones manuales van por episode_evidence."""
+    if os.environ.get(CNP_PERMISSION_ENV) != "1":
+        raise CommunityPermissionError("PERMISSION_UNKNOWN")
     out, now = [], pd.now_utc()
     for sid, (name, la, lo) in CNP_STATIONS.items():
         try:
@@ -967,6 +979,11 @@ def build(dem: dict | None = None) -> dict:
     extra = (("aemet_obs", 30, src_aemet_obs), ("cnp", 30, src_cnp), ("meteociel", 50, src_meteociel),
              ("aemet_cap", 30, src_aemet_cap), ("aemet_texto", 120, src_aemet_text))
     for name, ttl, fn in extra:
+        if name == "cnp" and os.environ.get(CNP_PERMISSION_ENV) != "1":
+            # #9: sin permiso verificado, ni consulta ni copia en caché de consultas anteriores
+            srcs[name] = (f"PERMISSION_UNKNOWN: acceso automático desactivado hasta verificar permiso de uso "
+                          f"({CNP_PERMISSION_ENV}=1); ver issue #9")
+            continue
         try:
             val, st = _cached(name, ttl, fn, max_age_min=180)
             srcs[name] = st if name not in ("aemet_obs", "cnp", "meteociel") else f"{st} · {len(val)} estaciones"
