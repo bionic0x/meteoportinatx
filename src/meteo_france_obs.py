@@ -1,7 +1,7 @@
 """Official Météo-France DPObs (land observations only), fail-closed and credential-safe.
 
 API: https://public-api.meteofrance.fr/public/DPObs/v2/
-No credentials in URLs, logs, files or public JSON. 24-hour source retention;
+No credentials in URLs, logs, files or public JSON. Use the apikey header for portal API Key tokens. 24-hour source retention;
 does not imply QC climatologique or real-time mountain coverage.
 """
 from __future__ import annotations
@@ -36,8 +36,8 @@ def _key():
 def _request(path, params=None):
     query = ("?" + urllib.parse.urlencode(params)) if params else ""
     blob = pd.http_get(BASE + path + query,
-                       headers={"Authorization": "Bearer " + _key(),
-                                "Accept": "*/*"}, timeout=35)
+                       headers={"apikey": _key(),
+                                "Accept": "*/*"}, timeout=35, retries=0)
     return blob.decode("utf-8-sig", "replace")
 
 
