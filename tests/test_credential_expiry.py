@@ -45,10 +45,24 @@ class Evaluate(unittest.TestCase):
         self.assertIn("CADUCÓ", ce.evaluate(True, "2026-11-01", TODAY)[1])
 
 
+class MeteoFrance(unittest.TestCase):
+    def test_absent_or_undated_key_does_not_fail(self):
+        self.assertTrue(ce.evaluate_meteofrance(False, None, TODAY)[0])
+        ok, msg = ce.evaluate_meteofrance(True, "", TODAY)
+        self.assertTrue(ok)
+        self.assertIn("METEOFRANCE_KEY_EXPIRES", msg)
+
+    def test_dated_key_is_watched(self):
+        self.assertTrue(ce.evaluate_meteofrance(True, "2027-11-11", TODAY)[0])
+        self.assertFalse(ce.evaluate_meteofrance(True, "2026-11-20", TODAY)[0])
+        self.assertFalse(ce.evaluate_meteofrance(True, "mañana", TODAY)[0])
+
+
 class NeverRevealsSecret(unittest.TestCase):
     def test_output_and_summary_do_not_contain_the_key(self):
         secret = "SECRET-AEMET-VALUE-123"
         with mock.patch.dict(os.environ, {"AEMET_API_KEY": secret, "AEMET_KEY_EXPIRES": "2026-11-01",
+                                          "METEOFRANCE_API_KEY": secret + "-MF",
                                           "GITHUB_STEP_SUMMARY": os.devnull}):
             out = io.StringIO()
             with redirect_stdout(out):

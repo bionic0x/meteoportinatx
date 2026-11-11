@@ -40,6 +40,7 @@ jobs:
       METEO_SIDECAR_DIR: ${{ github.workspace }}/data/sidecar
       METEO_BACKEND_URL: ${{ vars.METEO_BACKEND_URL }}
       AEMET_API_KEY: ${{ secrets.AEMET_API_KEY }}
+      METEOFRANCE_API_KEY: ${{ secrets.METEOFRANCE_API_KEY }}   # tiempo real DPObs (Licence Ouverte)
       # No household telemetry, owner notes, local state, or secrets are uploaded.
     steps:
       - name: Checkout reviewed source
@@ -63,6 +64,12 @@ jobs:
           else
             echo "::warning::AEMET_API_KEY ausente: el eje oficial publicado dependerá solo de MeteoAlarm"
             echo "AEMET_API_KEY: AUSENTE (eje oficial solo MeteoAlarm)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${METEOFRANCE_API_KEY}" ]; then
+            echo "METEOFRANCE_API_KEY: presente" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::METEOFRANCE_API_KEY ausente: Météo-France en tiempo real quedará «sin clave»"
+            echo "METEOFRANCE_API_KEY: AUSENTE (Météo-France tiempo real sin clave)" >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Acquire real meteorological data for both domains
         run: python -u src/nowcast.py export
