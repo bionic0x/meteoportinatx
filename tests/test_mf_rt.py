@@ -90,6 +90,36 @@ class Fetch(unittest.TestCase):
         with self.assertRaises(mf_rt.KeyRejected) as cm:
             mf_rt.fetch(NOW, key=SECRET, get=get)
         self.assertNotIn(SECRET, str(cm.exception))
+        self.assertEqual({m for m, _, _ in cm.exception.intentos}, {"apikey", "bearer"})
+
+    def test_oauth_token_is_accepted_as_bearer(self):
+        def get(url, headers):
+            if headers.get("Authorization") != "Bearer " + SECRET:
+                raise http_error(401)
+            return json.dumps(day_rows("66082004") if "=66" in url else day_rows("09024004")).encode()
+        obs = mf_rt.fetch(NOW, key=SECRET, get=get)
+        self.assertEqual(len(obs), 2)
+        self.assertEqual(mf_rt.fetch.last_auth, "bearer")
+
+    def test_application_id_is_exchanged_for_a_token(self):
+        import base64
+        app_id = base64.b64encode(b"client:secret").decode()
+        def get(url, headers):
+            if headers.get("Authorization") != "Bearer TOKEN":
+                raise http_error(401)
+            return json.dumps(day_rows("66082004") if "=66" in url else day_rows("09024004")).encode()
+        mf_rt.fetch(NOW, key=app_id, get=get, token=lambda a: "TOKEN")
+        self.assertEqual(mf_rt.fetch.last_auth, "application_id")
+
+    def test_package_403_tries_station_endpoint_before_blaming_the_key(self):
+        def get(url, headers):
+            if "paquet" in url:
+                raise http_error(403)
+            sid = url.split("id_station=")[1][:8]
+            return json.dumps([row(sid, datetime(2026, 11, 11, 17, tzinfo=UTC))]).encode()
+        obs = mf_rt.fetch(NOW, key=SECRET, get=get)
+        self.assertEqual(len(obs), len(mf_rt.STATIONS))
+        self.assertEqual(mf_rt.fetch.last_auth, "apikey")
 
     def test_package_failure_falls_back_to_station_endpoint(self):
         def get(url, headers):

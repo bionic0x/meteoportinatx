@@ -24,4 +24,6 @@ jobs:
         with:
           python-version: '3.11'
       - name: Query DPObs for the Pirineo stations
-        run: python src/mf_rt.py | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -o pipefail
+          python src/mf_rt.py | tee -a "$GITHUB_STEP_SUMMARY"
