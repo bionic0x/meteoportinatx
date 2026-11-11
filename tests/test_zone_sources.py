@@ -28,7 +28,7 @@ class Sources(unittest.TestCase):
                 self.assertEqual(len(calls),len(set(calls)))
                 pack=read_pack(path)
                 html=render_report(path)
-                for term in ('METAR','Meteoalarm','RainViewer','data:image/png;base64,'):
+                for term in ('METAR','Meteoalarm','RainViewer','data:image/png;base64,', 'no garantiza la hora de cada radar', 'https://www.rainviewer.com/'):
                     self.assertIn(term,html)
                 self.assertNotIn('<h3>Mar</h3>',html) if name=='pirineo' else self.assertIn('<h3>Mar</h3>',html)
                 for point in pack['profile']['points']:
@@ -70,6 +70,7 @@ class Sources(unittest.TestCase):
         raw=provider('https://api.rainviewer.com')
         result=s.radar(raw,point,provider,now)
         self.assertIn('UNVERIFIED',result['coverage'])
+        self.assertIn('individual radar observations may be older',result['frame_time_semantics'])
         raw['host']='https://untrusted.invalid'
         with self.assertRaises(ValueError): s.radar(raw,point,provider,now)
         raw['host']='https://tilecache.rainviewer.com'
