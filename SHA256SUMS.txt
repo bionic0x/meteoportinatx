@@ -44,6 +44,7 @@ ca7ee07864195443e3716947b32341e7f019434cc8f1bab135f78355d8661d91  docs/agency/04
 18cfb96fa0bf50fa0c45cfebb34cbd1c49060f12fea52e08155f39d7ef32c957  docs/knowledge/addendum-conector-contexto.md
 5b7f457f2737d6eb6ddac75eab40222c8df84b05b44ebf08990b30a2a5bbb878  docs/knowledge/catalogo-fuentes-y-conocimiento.md
 479e6e11ae0e3dcf42c219fcca7bda78441bf26ba2a5e83cc04ce29716d02871  docs/teleconnections.example.json
+f90fa5f9792cde33d0f4cb0c81f09d093a454cdd2c897a132703c7fadff77556  docs/ux-review/00-plan-consolidado.md
 4b21b111f94ef04cc15f6323aa6b9101a8c48ed229a5efa3131ca07cf9e8fe1a  docs/ux-review/01-arquitectura-y-flujos.md
 027d9c25aadff594b2835c34b58165759b1ca0a4cd8b63f510124883b5602105  docs/ux-review/02-ui-sistema-visual.md
 b743ef2f6354b265a5a405e8dc32aabf258d88a849ba4892601e8b6d48bddfd3  docs/ux-review/03-identidad-y-grafica.md
