@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Pirineo Nowcast</title>
+<title>Observatorio Pirineo · MeteoPortinatx</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -90,32 +90,56 @@ a{color:var(--ice)}
 .pov-unk{display:block;color:var(--w);margin:12px 0}
 .pov-mini{margin:12px 0}.pov-mini .kv{margin-top:0}
 #pov-official li{margin-bottom:8px}
-nav.tabs{scrollbar-width:thin}
+/* Las herramientas avanzadas quedan agrupadas sin retirar sus enlaces. */
+nav.tabs{overflow:visible;flex-wrap:wrap;align-items:center;gap:4px 6px}
+nav.tabs a{min-height:38px;display:inline-flex;align-items:center;line-height:1.2}
+nav.tabs details{position:relative;flex:none}
+nav.tabs summary{min-height:38px;display:flex;align-items:center;cursor:pointer;gap:6px;padding:5px 12px;border:1px solid var(--line);border-radius:4px;color:var(--ink);font-family:var(--f-disp);font-size:1rem;letter-spacing:.04em}
+nav.tabs summary::after{content:"▾";font-family:var(--f-body);font-size:.8rem}
+nav.tabs details[open] summary{background:var(--panel)}
+nav.tabs .tab-menu{position:absolute;z-index:8;top:calc(100% + 5px);right:0;width:min(270px,90vw);max-height:min(70vh,440px);overflow-y:auto;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);box-shadow:0 12px 24px rgba(0,0,0,.35)}
+nav.tabs .tab-menu a{display:flex;width:100%;padding:8px 10px}
+nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+#pa-content svg.ch{max-width:520px;max-height:360px;object-fit:contain}
+#pa-content .grid2>section{min-width:0}
+.pov-mini>div{display:inline-flex;flex-direction:column;gap:2px;min-width:150px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;margin:4px 6px 4px 0}
+.pov-mini>div>span{display:block;color:var(--muted);font-size:.76rem}
+.pov-mini>div>b{display:block;font-size:.95rem}
+.skip-link{position:absolute;left:12px;top:-80px;z-index:30;padding:8px;background:var(--ink);color:var(--bg)}
+.skip-link:focus{top:8px}
+@media(max-width:600px){nav.tabs{gap:4px}nav.tabs a,nav.tabs summary{padding:7px 8px;font-size:.92rem}nav.tabs .tab-menu{left:0;right:auto}#pa-content svg.ch{max-height:320px}.pov-mini>div{min-width:calc(50% - 10px)}}
 </style>
 
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <header>
   <a href="../decidir/#esqui" style="color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:4px;padding:2px 9px">Decidir</a>
 <a href="../" aria-label="Volver a observatorios" style="color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:4px;padding:2px 9px">← Observatorios</a>
-  <h1>Pirineo <span>Nowcast</span></h1>
+  <h1>Pirineo <span>Observatorio</span></h1>
   <div class="meta"><span id="m-issued">esperando datos…</span><span id="m-src"></span></div>
   <div class="actions"><a class="btn act" href="ruta/" style="text-decoration:none">Ruta y tiempo</a><button class="btn act" id="btn-refresh" type="button" hidden>Actualizar y publicar</button><span id="refresh-st" role="status" aria-live="polite"></span><button class="btn act" id="btn-chat" type="button" hidden aria-expanded="false">Preguntar a Claude</button></div>
-  <nav class="tabs" aria-label="Secciones">
-    <a href="#vigilancia" data-tab="vigilancia">Vigilancia</a>
-    <a href="#satelite" data-tab="satelite">Satélite / radar</a>
+  <nav class="tabs" aria-label="Secciones del observatorio">
+    <a href="#vigilancia" data-tab="vigilancia">Situación</a>
+    <a href="#puntos" data-tab="puntos">Localidades</a>
+    <a href="#mapa" data-tab="mapa">Mapa</a>
     <a href="#atmosfera" data-tab="atmosfera">Atmósfera</a>
-    <a href="#mapa" data-tab="mapa">Territorio</a>
-    <a href="#corte" data-tab="corte">Corte y cotas</a>
-    <a href="#diagnostico" data-tab="diagnostico">Superficie</a>
-    <a href="#puntos" data-tab="puntos">Puntos</a>
-    <a href="#modelos" data-tab="modelos">Modelos</a>
-    <a href="#extendido" data-tab="extendido">Ensemble · 15 días</a>
-    <a href="#forense" data-tab="forense">Forense</a>
-    <a href="#gobernanza" data-tab="gobernanza">Gobernanza</a>
-    <a href="#laboratorio" data-tab="laboratorio">Laboratorio</a>
+    <a href="#extendido" data-tab="extendido">15 días</a>
+    <details id="other-sections"><summary>Más herramientas</summary>
+      <div class="tab-menu">
+        <span class="menu-label">Explorar condiciones</span>
+        <a href="#satelite" data-tab="satelite">Satélite / radar</a>
+        <a href="#corte" data-tab="corte">Corte y cotas</a>
+        <a href="#diagnostico" data-tab="diagnostico">Superficie</a>
+        <a href="#modelos" data-tab="modelos">Modelos</a>
+        <span class="menu-label">Verificación y herramientas</span>
+        <a href="#forense" data-tab="forense">Forense</a>
+        <a href="#gobernanza" data-tab="gobernanza">Fuentes y estado</a>
+        <a href="#laboratorio" data-tab="laboratorio">Laboratorio</a>
+      </div>
+    </details>
   </nav>
 </header>
 
-<main>
+<main id="contenido">
   <div class="tab" id="tab-vigilancia" hidden>
     <section class="card"><h2>Tres ejes · aviso oficial / observación / diagnóstico</h2>
       <div class="kv" id="pov-axes"></div><div id="pov-evidence"></div>
@@ -135,9 +159,9 @@ nav.tabs{scrollbar-width:thin}
   </div>
   <div class="tab" id="tab-atmosfera" hidden>
     <section class="card"><h2>Perfil atmosférico detallado · Pirineo</h2>
-      <p class="src">Modelo en puntos representativos por vertiente; no es un sondeo observado.</p>
+      <p class="src">Perfil de modelo en puntos representativos por vertiente; no es un sondeo observado. Su hora es independiente de la de mapas y modelos.</p>
       <div class="pov-pointbar"><label for="pa-side">Vertiente</label><select id="pa-side"><option value="sur">Sur · Cerdanya</option><option value="norte">Norte · Ariège / Capcir</option></select>
-      <label for="pa-hour">Hora</label><input type="range" id="pa-hour" min="0" max="0" value="0" disabled><output id="pa-time" for="pa-hour">Sin hora verificable</output></div>
+      <label for="pa-hour">Hora del perfil</label><input type="range" id="pa-hour" min="0" max="0" value="0" disabled><output id="pa-time" for="pa-hour">Sin hora verificable</output></div>
       <div id="pa-content">UNKNOWN · Perfil no disponible en este ciclo.</div>
     </section>
     <section class="card"><h2>Termodinámica y viento · punto de control</h2>
@@ -149,10 +173,11 @@ nav.tabs{scrollbar-width:thin}
       <p class="src">Perfiles ARPEGE norte y sur independientes. Froude y cota son diagnósticos modelizados, no observaciones.</p></section>
   </div>
 
-  <section class="card">
+  <section class="card" aria-label="Modelo y hora de las vistas generales">
+    <p class="src">Mapas y modelos: selecciona el modelo disponible y su hora. El perfil atmosférico utiliza otra fuente y su propio control de hora.</p>
     <div class="bar">
       <div class="ctrl" role="group" aria-label="Modelo" id="models"></div>
-      <div class="hour"><label for="hour">Hora</label><input type="range" id="hour" min="0" max="0" value="0"><span id="hour-t" class="mono">—</span></div>
+      <div class="hour"><label for="hour">Hora de mapas y modelos</label><input type="range" id="hour" min="0" max="0" value="0"><span id="hour-t" class="mono">—</span></div>
     </div>
     <div class="kv" id="now-kv"></div>
   </section>
@@ -248,7 +273,8 @@ nav.tabs{scrollbar-width:thin}
 
   <div class="tab" id="tab-modelos" hidden>
     <section class="card"><h2>Modelos · contraste en el punto seleccionado</h2>
-      <p class="src">Elige un punto en Atmósfera. Modelos deterministas; no confundir su número con miembros estadísticamente independientes.</p>
+      <div class="pov-pointbar"><label for="pov-model-point">Punto de control</label><select id="pov-model-point"></select></div>
+      <p class="src">Modelos deterministas en el punto elegido; no confundir su número con miembros estadísticamente independientes.</p>
       <div class="tbl"><table><thead><tr><th>Modelo</th><th class="num">T ahora °C</th><th class="num">Precip. 24 h mm</th><th class="num">Nieve 24 h cm</th><th class="num">Racha máx 24 h km/h</th><th>Origen</th></tr></thead><tbody id="pov-model-rows"></tbody></table></div></section>
     <section class="card"><h2>Serie temporal · bloques 3 h</h2>
       <div class="tbl"><table><thead><tr><th>Hora local</th><th class="num">T °C</th><th class="num">Precip mm</th><th class="num">Nieve cm</th><th class="num">Racha km/h</th><th class="num">HR %</th><th class="num">Nubes %</th></tr></thead><tbody id="pov-model-timeline"></tbody></table></div>
@@ -617,7 +643,8 @@ $("meta-level").addEventListener("change",renderExtended);
 
 /* ── pestañas ── */
 const TABS=["vigilancia","satelite","atmosfera","mapa","corte","diagnostico","puntos","modelos","extendido","forense","gobernanza","laboratorio"];
-function showTab(t){ if(!TABS.includes(t)) t="vigilancia"; S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); try{ localStorage.setItem("pir-tab",t); }catch(e){} renderAll(); }
+function updateTabNav(t){ const links=document.querySelectorAll("nav.tabs a"); links.forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); const selected=Array.from(links).find(a=>a.dataset.tab===t), more=$("other-sections"); more.querySelector("summary").textContent=selected&&more.contains(selected)?"Más herramientas · "+selected.textContent.trim():"Más herramientas"; }
+function showTab(t){ if(!TABS.includes(t)) t="vigilancia"; S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); updateTabNav(t); $("other-sections").open=false; try{ localStorage.setItem("pir-tab",t); }catch(e){} renderAll(); }
 document.querySelectorAll("nav.tabs a").forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); history.replaceState(null,"","#"+a.dataset.tab); showTab(a.dataset.tab); }));
 setInterval(()=>{ if(D.core){ try{renderDiag();}catch(e){console.error(e);} try{window.PirineoObservatory?.render({core:D.core,series:D.series,extended:D.extended,model:S.model,k:S.k});}catch(e){console.error(e);} } },60000);
 const PA={index:null,side:null};
@@ -674,6 +701,6 @@ $("chat-stop").onclick=()=>CHAT.ctl?.abort();
 $("chat-f").addEventListener("submit",e=>{ e.preventDefault(); ask($("chat-in").value); });
 $("chat-in").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); ask($("chat-in").value); } });
 
-{ let t=location.hash.slice(1); if(!TABS.includes(t)){ try{ t=localStorage.getItem("pir-tab")||"vigilancia"; }catch(e){ t="vigilancia"; } } S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===t?"page":"false")); }
+{ let t=location.hash.slice(1); if(!TABS.includes(t)){ try{ t=localStorage.getItem("pir-tab")||"vigilancia"; }catch(e){ t="vigilancia"; } } S.tab=t; TABS.forEach(x=>$("tab-"+x).hidden=x!==t); updateTabNav(t); }
 start();
 </script>
