@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import gzip
 import io
+import math
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -31,7 +32,7 @@ def _num(x):
         v = float(x)
     except (TypeError, ValueError):
         return None
-    return v if v == v else None
+    return v if math.isfinite(v) else None
 
 
 def candidate_urls(dept: str, now: datetime) -> list[str]:
@@ -109,12 +110,15 @@ def summary(stations: dict, now: datetime) -> dict:
         t = datetime.fromisoformat(last["t"])
         newest = t if newest is None or t > newest else newest
         day = [r for r in st["serie"] if t - timedelta(hours=24) < datetime.fromisoformat(r["t"]) <= t]
-        rr = [r["RR1"] for r in day if r.get("RR1") is not None]
+        rr = [r["RR1"] for r in day if r.get("RR1") is not None and r.get("QRR1") in VALIDATED]
+        times = [datetime.fromisoformat(r["t"]) for r in day]
+        expected = {t - timedelta(hours=k) for k in range(24)}
+        complete = len(times) == 24 and set(times) == expected and len(rr) == 24
         rows.append({"id": st["id"], "nombre": st["nombre"], "alt": st["alt"], "lat": st["lat"], "lon": st["lon"],
                      "ultima_hora": last["t"], "edad_h": round((now - t).total_seconds() / 3600, 1),
                      "T": last.get("T"), "QT": last.get("QT"), "neige_tot_cm": last.get("NEIGETOT"),
-                     # 24 h de lluvia solo con las 24 horas presentes (ausencia ≠ 0)
-                     "rr_24h": round(sum(rr), 1) if len(rr) == 24 else None,
+                     # 24 horas únicas y consecutivas con lluvia validada (ausencia ≠ 0)
+                     "rr_24h": round(sum(rr), 1) if complete else None,
                      "validadas": sum(1 for r in day if r.get("QT") in VALIDATED),
                      "sin_validar": sum(1 for r in day if r.get("QT") == "9")})
     return {"estado": "ARCHIVO_DIARIO", "nota": "verificación; no es tiempo real (publicación diaria)",

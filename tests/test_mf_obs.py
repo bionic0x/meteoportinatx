@@ -53,6 +53,14 @@ class Parse(unittest.TestCase):
         self.assertIsNone(gap["rr_24h"])
         self.assertEqual(full["edad_h"], 13.0)
 
+    def test_summary_rejects_duplicate_hours_and_unvalidated_rain(self):
+        rows = csv().splitlines()
+        rows[2] = rows[1]  # duplicate replaces a different hour
+        result = mf.summary(mf.parse("\n".join(rows), BOX, NOW - timedelta(hours=72)), NOW)
+        self.assertIsNone(result["estaciones"][0]["rr_24h"])
+        result = mf.summary(mf.parse(csv(q="9"), BOX, NOW - timedelta(hours=72)), NOW)
+        self.assertIsNone(result["estaciones"][0]["rr_24h"])
+
     def test_quality_counts(self):
         s = mf.summary(mf.parse(csv(q="9"), BOX, NOW - timedelta(hours=72)), NOW)["estaciones"][0]
         self.assertEqual((s["validadas"], s["sin_validar"]), (0, 24))
