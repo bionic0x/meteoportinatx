@@ -16,6 +16,23 @@
     const d=utc(s);
     return d ? new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d) : '—';
   };
+  // Ages exported with the snapshot are relative to its issue time, not the viewer.
+  const elapsed = (issued, now=Date.now()) => {
+    const t=utc(issued);
+    if(!t || !Number.isFinite(now) || now - t.getTime() < -600000) return null;
+    return Math.max(0,(now-t.getTime())/60000);
+  };
+  const liveAge = (item, issued, now=Date.now()) => {
+    const delta=elapsed(issued,now);
+    if(delta==null) return null;
+    if(item?.t) {
+      const t=utc(item.t);
+      if(!t) return null;
+      const age=(now-t.getTime())/60000;
+      return age >= -10 ? Math.max(0,age) : null;
+    }
+    return valid(item?.edad_min) && item.edad_min>=-10 ? Math.max(0,item.edad_min+delta) : null;
+  };
   const label = o => escape(o?.nombre || o?.id || '—');
   const present = (v, maxAge=180, age=null) => {
     if (typeof v !== 'string') return false;
@@ -61,12 +78,14 @@
     const k=valid(opts.k)?Math.min(Math.max(0,opts.k),Math.max(0,(P?.time||[]).length-1)):0;
     const current=forecast(series,id,model,k);
     const summary=modelRow(c,id,model);
-    const ages=c.fuentes_edad_min||{};
-    const aemetState=source(c.fuentes?.aemet_cap,ages.aemet_cap);
-    const meteolarmState=source(c.fuentes?.avisos,ages.avisos);
+    const now=valid(opts.now)?opts.now:Date.now();
+    const delta=elapsed(c.issued,now);
+    const ages=Object.fromEntries(Object.entries(c.fuentes_edad_min||{}).map(([key,age])=>[key,delta!=null&&valid(age)&&age>=0?age+delta:null]));
+    const aemetState=delta!=null && valid(ages.aemet_cap) ? source(c.fuentes?.aemet_cap,ages.aemet_cap) : 'UNKNOWN';
+    const meteolarmState=delta!=null && valid(ages.avisos) ? source(c.fuentes?.avisos,ages.avisos) : 'UNKNOWN';
     const officialOk=['OK','CACHED'].includes(aemetState) || ['OK','CACHED'].includes(meteolarmState);
     const warn=(c.avisos||[]).filter(x=>!x.error && x.nivel);
-    const freshObs=[...(c.obs||[]),...(c.metar||[])].filter(o=>valid(o.edad_min)&&o.edad_min>=-10&&o.edad_min<=90);
+    const freshObs=[...(c.obs||[]),...(c.metar||[])].map(o=>({...o,edad_min:liveAge(o,c.issued,now)})).filter(o=>valid(o.edad_min)&&o.edad_min<=90);
     const profiles={sur:nearest(c.perfil?.sur,current.time), norte:nearest(c.perfil?.norte,current.time)};
     const revisions=Array.isArray(extended?.run_revisions)?extended.run_revisions:[];
     const sidecars=c.contexto?.sidecars||{};
@@ -139,9 +158,9 @@
     const sc=Object.entries(e.sidecars).map(([key,value])=>`<li>${escape(key)} · ${escape(value?.state||value?.status||'UNKNOWN')} · contexto informativo, no alerta</li>`).join('')||'<li>Sin contexto lateral validado</li>';
     const notes=(c.contexto?.notas_lluvia_24h||[]).slice(0,8).map(x=>'<li>'+escape(typeof x==='string'?x:JSON.stringify(x))+'</li>').join('');
     set('pov-forensic',`<div class="pov-mini">${grid([['Revisiones 15 d',rev],['Skill fuera de muestra','NO VERIFICADA'],['Archivo prospectivo','NO PUBLICADO (ledger privado)'],['Datos ausentes','UNKNOWN, nunca 0']])}</div><h3>Contexto y fuentes suplementarias</h3><ul class="plain">${sc}${notes}</ul><p class="src">Los cambios de una salida a otra no son errores contra observación. No hay CSI, POD, FAR, MAE o Brier válidos sin emparejamiento temporal y espacial, QC instrumental y pronóstico congelado.</p>`);
-    const srcrows=Object.entries(e.sources).map(([name,value])=>`<tr><td>${escape(name)}</td><td>${escape(source(value,e.ages[name]))}</td><td class="num">${valid(e.ages[name])?number(e.ages[name],0)+' min':'—'}</td><td style="white-space:normal">${escape(String(value).slice(0,220))}</td></tr>`).join('');
+    const srcrows=Object.entries(e.sources).map(([name,value])=>`<tr><td>${escape(name)}</td><td>${escape(valid(e.ages[name])?source(value,e.ages[name]):'UNKNOWN')}</td><td class="num">${valid(e.ages[name])?number(e.ages[name],0)+' min':'—'}</td><td style="white-space:normal">${escape(String(value).slice(0,220))}</td></tr>`).join('');
     tbody(el('pov-source-rows'),srcrows,4);
-    set('pov-governance',`<div class="pov-mini">${grid([['Ciclo UTC',c.issued||'UNKNOWN'],['Motorización',c.engine||'UNKNOWN'],['Permiso CNP',/PERMISSION_UNKNOWN/.test(e.sources.cnp||'')?'NO VERIFICADO':'Comprobar condiciones'],['Modelo ≠ aviso','Separación obligatoria'],['Alertas marinas','FUERA DE DOMINIO']])}</div><p class="src">Estado de cada conector por ciclo. «CACHED» indica respuesta almacenada, no observación recién medida; «UNKNOWN» no es ausencia de peligro. Los enlaces a boletines de aludes son referencias externas, no boletines integrados.</p>`);
+    set('pov-governance',`<div class="pov-mini">${grid([['Ciclo UTC',c.issued||'UNKNOWN'],['Motorización',c.engine||'UNKNOWN'],['Permiso CNP',/PERMISSION_UNKNOWN/.test(e.sources.cnp||'')?'NO VERIFICADO':'Comprobar condiciones'],['Modelo ≠ aviso','Separación obligatoria'],['Alertas marinas','FUERA DE DOMINIO']])}</div><p class="src">Edad de consulta o caché actualizada desde el ciclo; la edad de cada medición figura en Observaciones. «CACHED» indica respuesta almacenada, no observación recién medida; «UNKNOWN» no es ausencia de peligro. Los enlaces a boletines de aludes son referencias externas, no boletines integrados.</p>`);
     const slider=el('pov-wind-threshold');
     if(slider){
       slider.value=String(S.threshold);
@@ -153,7 +172,7 @@
     set('pov-lab-value',String(S.threshold)+' km/h');
     set('pov-lab-result',`<div class="pov-mini">${grid([['Umbral hipotético',S.threshold+' km/h'],['Bloques 3 h sobre umbral',all24?exceed+' de 8':'UNKNOWN · faltan intervalos'],['Duración de la señal',all24?(exceed*3)+' h muestreadas (no continuas)':'UNKNOWN'],['Modelo',c.modelo_nombre?.[e.model]||e.model||'UNKNOWN']])}</div><p class="src">Solo navegador. La racha disponible es una muestra del bloque de 3 h, no una vigilancia continua. Ningún ajuste cambia reglas, avisos, archivo forense o pronósticos publicados.</p>`);
   }
-  const api={source,derive,forecast,nearest,render};
+  const api={source,derive,forecast,nearest,render,liveAge};
   if(typeof module==='object' && module.exports) module.exports=api;
   if(root) root.PirineoObservatory=api;
 })(typeof window!=='undefined'?window:null);
