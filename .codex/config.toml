@@ -1,0 +1,31 @@
+# Perfiles de agentes específicos del proyecto; requieren un entorno Codex compatible.
+[agents]
+max_threads = 6
+
+[agents.datos]
+description = "Datos y fuentes oficiales"
+config_file = "agents/datos.toml"
+
+[agents.geoespacial]
+description = "Geoespacial y orografía"
+config_file = "agents/geoespacial.toml"
+
+[agents.backend]
+description = "Motor y arquitectura"
+config_file = "agents/backend.toml"
+
+[agents.operaciones]
+description = "Operaciones y despliegue"
+config_file = "agents/operaciones.toml"
+
+[agents.calidad]
+description = "Validación independiente"
+config_file = "agents/calidad.toml"
+
+[agents.interfaz]
+description = "Consola y experiencia"
+config_file = "agents/interfaz.toml"
+
+[agents.seguridad]
+description = "Seguridad y credenciales"
+config_file = "agents/seguridad.toml"
