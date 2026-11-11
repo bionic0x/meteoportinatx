@@ -19,3 +19,21 @@ Abre el repositorio en una versión de Codex compatible con subagentes y con con
 El diagnóstico meteorológico sigue las instrucciones del proyecto: separar observación de hipótesis y modelo, probabilidad de impacto de severidad condicional, y expresar incertidumbre y hora de los datos. Los avisos oficiales se identifican como tales. No se debe declarar validada una fuente por el mero éxito de fixtures o mocks.
 
 Para validar sintaxis localmente: `python3 -c 'import pathlib,tomllib; [tomllib.loads(p.read_text()) for p in pathlib.Path(".codex").rglob("*.toml")]'`. Esto solo valida sintaxis TOML; el reconocimiento de perfiles y la delegación requieren probarlos en una sesión compatible.
+
+## Contrato de coordinación
+
+Cada división recibe una tarea acotada, una base o commit y, si va a escribir, una lista de archivos propios. Las tareas independientes pueden ejecutarse en paralelo; el coordinador integra y resuelve cualquier solapamiento. Calidad revisa el comportamiento y la evidencia de las demás divisiones, pero un resultado de CI no sustituye a una prueba real de las fuentes.
+
+El retorno de cada división identifica: **resultado**, commit o fuente y hora, pruebas ejecutadas con su resultado, limitaciones y siguiente paso. El estado `UNKNOWN` se usa cuando falta evidencia; no equivale a tranquilidad meteorológica ni a una comprobación superada. Las credenciales nunca forman parte de los mensajes o archivos de los agentes.
+
+| División | Entregable mínimo específico |
+|---|---|
+| datos | Fuente, variable, estación, hora de medición, unidades, QC y permiso. |
+| geoespacial | Coordenadas, cotas, resolución, emparejamiento espacial y sus límites. |
+| backend | Contrato modificado, compatibilidad, aislamiento y pruebas de fallo. |
+| operaciones | Workflow, commit, publicación efectiva, fecha de datos y persistencia real. |
+| calidad | Reproducción, esperado y observado, resultados PASS/FAIL/UNKNOWN. |
+| interfaz | Estado y procedencia visibles, accesibilidad y comprobaciones en distintos tamaños. |
+| seguridad | Amenaza, evidencia sin secretos, corrección y riesgo residual. |
+
+Los archivos definen perfiles, no siete procesos permanentes. El límite `max_threads = 6` se aplica a la concurrencia admitida por el entorno; no garantiza que siete divisiones puedan trabajar simultáneamente. Según la disponibilidad de herramientas, una tarea puede ejecutarse secuencialmente y debe indicarse con honestidad. Para comprobar la activación real, inicia una nueva sesión Codex con el proyecto autorizado, solicita una tarea independiente a dos perfiles y comprueba que los nombres y respuestas aparecen en la sesión. Registrar esa observación por separado de la comprobación estática de TOML.
