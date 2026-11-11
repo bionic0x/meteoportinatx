@@ -49,6 +49,16 @@ class MFranceObservations(unittest.TestCase):
         self.assertIsNone(mf.measurement(row("2026-11-11T15:00:00"),STA,NOW))
         self.assertIsNone(mf.measurement(row("2026-11-11T15:00:00Z","66001002"),STA,NOW))
 
+    def test_api_key_header_not_bearer(self):
+        with mock.patch.dict("os.environ",{"METEOFRANCE_API_KEY":"TEST-JWT-ONLY"}):
+            with mock.patch.object(mf.pd,"http_get",return_value=b"fake csv") as request:
+                mf._request("/liste-stations",{"format":"csv"})
+                kwargs=request.call_args.kwargs
+                self.assertEqual(kwargs["headers"].get("apikey"),"TEST-JWT-ONLY")
+                self.assertNotIn("Authorization",kwargs["headers"])
+                self.assertNotIn("TEST-JWT-ONLY",request.call_args.args[0])
+                self.assertEqual(kwargs["retries"],0)
+
     def test_missing_secret_fails_before_http(self):
         with mock.patch.dict("os.environ",{},clear=True):
             with mock.patch.object(mf.pd,"http_get") as request:
