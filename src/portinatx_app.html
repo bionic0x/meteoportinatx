@@ -630,6 +630,20 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
  "18/10: escorrentía con ~20–30 mm/h y >60 mm de antecedente · 19/10 10:16: agua en la puerta con 20,8 mm/h y 145 mm de antecedente (IRH ≈ 0,66 sin lluvia prevista; ≈ 0,83 sin el componente previsto). Si falta un componente, el valor se calcula con los demás.":"18 October: runoff at ~20–30 mm/h with >60 mm antecedent rainfall · 19 October 10:16: water at the door at 20.8 mm/h with 145 mm antecedent rainfall (IRH ≈ 0.66 without forecast rain; ≈ 0.83 without the forecast component). If a component is missing, the value is calculated from the others."
  });
  const dynamic = [
+   [/^No se pudo pedir el ciclo: (.+)$/, (_, detail) => `Could not request the cycle: ${detail}`],
+   [/^El ciclo falló: (.+)$/, (_, detail) => `The cycle failed: ${detail}`],
+   [/^Actualizado · (.*)$/, (_, id) => `Updated · ${id}`],
+   [/^Publicado · (.*)$/, (_, id) => `Published · ${id}`],
+   [/^No se pudo lanzar: (.+)$/, (_, detail) => `Could not start: ${detail}`],
+   [/^Sin publicación tras (\d+) min: la ejecución en la nube puede haber fallado\.$/, (_, mins) => `No publication after ${mins} min: the cloud run may have failed.`],
+   [/^En marcha en la nube · (\d+) min\. La página se actualiza sola al publicarse\.$/, (_, mins) => `Cloud run in progress · ${mins} min. The page updates automatically when published.`],
+   [/^No se pudo obtener respuesta \((.+)\)\.$/, (_, detail) => `Could not obtain a response (${detail}).`],
+   [/^aviso oficial vigente ≤ (quiet|watch|alert|alarm)$/, (_, level) => `current official warning ≤ ${level}`],
+   [/^(quiet|watch|alert|alarm) quedaría por debajo del aviso oficial vigente \((quiet|watch|alert|alarm)\)$/, (_, proposed, official) => `${proposed} would fall below the current official warning (${official})`],
+   [/^disenso abierto: (.+)$/, (_, ids) => `open disagreement: ${ids}`],
+   [/^anomalía sin revisar: (.+)$/, (_, details) => `unreviewed anomaly: ${details}`],
+   [/^≥(\d+) canales observados vivos y ≥1 por familia (.+) \(ahora (.+)\)$/, (_, count, families, coverage) => `≥${count} live observation channels and ≥1 per family ${families} (now ${coverage})`],
+   [/^sin escorrentía\/anegamiento observados en las últimas (\d+) h$/, (_, hours) => `no observed runoff/flooding in the last ${hours} h`],
    [/^Ciclo (.+) · motor (.+)$/, (_, time, engine) => `Cycle ${time} · engine ${engine}`],
    [/^hace (<1|\d+) min$/, (_, age) => `${age} min ago`],
    [/^hace (<1|\d+) min · datos atrasados: el motor no está ciclando$/, (_, age) => `${age} min ago · stale data: the engine is not cycling`],
@@ -650,6 +664,15 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
  });
  Object.assign(dict, {
  "Lectura":"Interpretation", "Blanco/realzado = topes fríos y altos: convección profunda o cirros. El realce es visual: no es temperatura de brillo calibrada.":"White/enhanced = high, cold tops: deep convection or cirrus. Enhancement is visual; it is not calibrated brightness temperature.", "Oscuro = aire seco en niveles medios y altos (intrusión seca, posible DANA); blanco = humedad alta y nubes altas.":"Dark = dry air at mid and upper levels (dry intrusion, possible cut-off low); white = high moisture and high clouds.", "Rojo/naranja = aire seco descendente con ozono alto (corriente en chorro, anomalía de PV). Verde = masa tropical cálida. Azul/violeta = masa fría. Blanco = nubes altas espesas.":"Red/orange = descending dry air with high ozone (jet stream, PV anomaly). Green = warm tropical air mass. Blue/violet = cold air mass. White = thick high cloud.", "Solo de día. Amarillo intenso = topes convectivos con partículas pequeñas (corrientes ascendentes fuertes). De noche sale oscura.":"Daytime only. Bright yellow = convective tops with small particles (strong updrafts). Appears dark at night.", "Relieve no disponible en este ciclo.":"Terrain unavailable in this cycle.", "Viento 925 hPa":"925 hPa wind", "Cota máx. del MDT":"Maximum terrain-model elevation", "Ascenso forzado máx. (isla)":"Maximum forced ascent (island)", "Máx. a ≤6 km de Portinatx":"Maximum within 6 km of Portinatx", "m de profundidad":"m depth", "rompe":"breaking", "cerca de romper":"near breaking", "propaga":"propagating", "mm en la ventana":"mm in the window", "saturado":"saturated", "normal":"normal", "cambia":"changes", "Con estos umbrales ninguna estación vecina cambia de nivel.":"With these thresholds no nearby station changes level.", "Solo intensidad entre lecturas; el motor también puntúa el acumulado diario.":"Intensity between readings only; the engine also scores daily accumulation.", "El IRH combina el antecedente de lluvia (ayer + hoy en la vecina más mojada), la intensidad medida ahora y la lluvia prevista a 3 h en la vecindad. Sus pesos salen de dos observaciones del propietario en la cala, así que es":"IRH combines antecedent rain (yesterday + today at the wettest nearby station), measured intensity now and forecast rain over 3 h in the neighbourhood. Its weights come from two owner observations in the bay, so it is", ", no un índice validado. Valor actual:":", not a validated index. Current value:", ". En la pestaña Atmósfera se ven sus componentes.":". Its components are shown in the Atmosphere tab."
+ });
+ Object.assign(dict, {
+ "estado del aviso oficial no verificado":"official warning status not verified", "cobertura insuficiente: menos de 2 canales observados vivos o familia lluvia sin dato":"insufficient coverage: fewer than 2 live observation channels or no data from the rain family", "radar mudo con lluvia medida cerca":"radar silent while rain is measured nearby", "pluviómetro vecino fresco con intensidad medida compatible con la bajada":"fresh nearby rain gauge with measured intensity compatible with lowering the level", "bajada sin confirmación pluviométrica vecina fresca (intensidad medida entre ciclos): el radar o el modelo no bastan — sustitución de métrica":"lowering the level without confirmation from a fresh nearby rain gauge (intensity measured between cycles): radar or the model alone are insufficient — metric substitution", "sin peligro local observado ≥ nivel actual en 3 ciclos seguidos":"no observed local hazard ≥ current level for 3 consecutive cycles", "pluviómetro vecino fresco que no contradiga la bajada desde alert/alarm (retador)":"fresh nearby rain gauge that does not contradict lowering from alert/alarm (challenger)", "sin disenso abierto (para bajar a quiet) ni anomalías sin revisar":"no open disagreement (to lower to quiet) and no unreviewed anomalies", "Eco más cercano":"Nearest echo", "≥45 dBZ más cercano":"Nearest ≥45 dBZ", "dBZ máx ≤30 km":"Max dBZ ≤30 km", "dBZ máx ≤15 km":"Max dBZ ≤15 km", "dBZ en el punto":"dBZ at the location", "Cobertura ≤10/30/60 km":"Coverage ≤10/30/60 km", "ninguno":"none", "sin datos":"no data", "❚❚ Pausa":"❚❚ Pause", "Sesgo radar–pluviómetro":"Radar–rain-gauge bias", "sin pares":"no matched pairs", ". El motor nunca cambia de relación Z–R por su cuenta.":". The engine never changes the Z–R relationship on its own.", "Ninguna.":"None.", "Todas":"All", "señal local":"local signal"
+ });
+ Object.assign(dict, {
+ "Ciclo en curso: radar, estaciones, modelos y satélite (1–2 min)…":"Cycle in progress: radar, stations, models and satellite (1–2 min)…", "El ciclo no termina: mira la ventana del motor.":"The cycle is not finishing: check the engine window.", "Lanzando la ejecución en la nube…":"Starting the cloud run…", "En marcha en la nube. Tarda unos 5–10 min; la página se actualiza sola al publicarse.":"Running in the cloud. It takes around 5–10 min; the page updates automatically when published.", "No has permitido a esta página usar Claude. Puedes cambiarlo en los permisos del artifact.":"You have not allowed this page to use Claude. You can change this in the artifact permissions.", "Demasiadas preguntas seguidas o límite de uso alcanzado: espera un poco.":"Too many consecutive questions or usage limit reached: please wait.", "Los datos no caben en una pregunta: prueba sin adjuntar la imagen.":"The data do not fit in one question: try without attaching the image.", "No se pudo adjuntar la imagen: vuelve a preguntar sin ella.":"The image could not be attached: ask again without it.", "La imagen no se pudo enviar: vuelve a preguntar sin ella.":"The image could not be sent: ask again without it.", "Claude no está disponible para tu cuenta en esta página.":"Claude is not available for your account on this page.", "La sesión ha caducado: recarga la página.":"The session expired: reload the page.", "Detenido.":"Stopped.", "respuesta incompleta":"incomplete response"
+ });
+ Object.assign(dict, {
+ "No se pudo lanzar: no has dado permiso a esta página para usar el conector":"Could not start: you have not allowed this page to use the connector", "No se pudo lanzar: el conector de Claude Code no está disponible en esta vista":"Could not start: the Claude Code connector is unavailable in this view", "No se pudo lanzar: demasiadas peticiones; espera unos minutos":"Could not start: too many requests; wait a few minutes", "No se pudo lanzar: la tarea programada rechazó la petición":"Could not start: the scheduled task rejected the request"
  });
  const originals=new WeakMap(), attributeOriginals=new WeakMap(), selector=document.getElementById('portinatx-language'), note=document.getElementById('portinatx-language-note');
  let language='es', scheduled=false;
@@ -879,7 +902,7 @@ function renderAxes(){
   const c = S.core; if(!c) return;
   const ban = $("banner"); const ch = (c.warning_changes||[]).filter(x=>x.kind!=="INICIAL");
   ban.hidden = !ch.length;
-  if (ch.length) ban.innerHTML = `<div class="banner">Cambio de aviso oficial en este ciclo: ${ch.map(x=> x.kind==="NUEVO" ? `nuevo ${esc(x.nivel)} ${esc(x.tipo)} · ${esc(x.evento)} (${fmtDT(x.onset)}→${fmtDT(x.expires)})` : `${esc(x.kind)} ${esc(x.de)}→${esc(x.a)}`).join(" · ")}</div>`;
+  if (ch.length) ban.innerHTML = `<div class="banner">${uiText("Cambio de aviso oficial en este ciclo:","Official warning changed in this cycle:")} ${ch.map(x=> x.kind==="NUEVO" ? `${uiText("nuevo","new")} ${esc(x.nivel)} ${esc(x.tipo)} · ${esc(x.evento)} (${fmtDT(x.onset)}→${fmtDT(x.expires)})` : `${esc(x.kind)} ${esc(x.de)}→${esc(x.a)}`).join(" · ")}</div>`;
   // oficial
   const o = c.official, lvO = o.level_now || "unknown";
   setAxis("ax-off", lvO);
@@ -1247,7 +1270,7 @@ function renderSurface(){
     const Ps=L.filter(r=>r.P!=null), last=Ps[Ps.length-1], before=Ps.filter(r=>+new Date(r.t)<=+new Date(last?.t)-3*3600e3).pop();
     const lo=Math.min(...Ps.map(r=>r.P)), hi=Math.max(...Ps.map(r=>r.P));
     $("ch-sfc-p").innerHTML = lineChart({series:[{pts:Ps.map(r=>[+new Date(r.t),r.P]),color:"var(--std)",end:true}], xmin, xmax, ymin:Math.floor(lo-1), ymax:Math.ceil(hi+1), yfmt:v=>v.toFixed(0), nowLine:false, nice:false});
-    $("sfc-p-sub").textContent = `hPa (QNH) · tendencia 3 h: ${before&&last?((last.P-before.P)>=0?"+":"")+(last.P-before.P).toFixed(1)+" hPa":"—"}`;
+    $("sfc-p-sub").textContent = `${uiText("hPa (QNH) · tendencia 3 h:","hPa (QNH) · 3 h tendency:")} ${before&&last?((last.P-before.P)>=0?"+":"")+(last.P-before.P).toFixed(1)+" hPa":"—"}`;
     const ser=[], lg=[]; Object.entries(se.surface).forEach(([icao,rows],k)=>{ const col=PAL[k%PAL.length]; ser.push({pts:rows.map(r=>[+new Date(r.t),r.U]),color:col,w:1.4,end:true}); ser.push({pts:rows.map(r=>[+new Date(r.t),r.G]),color:col,dots:true}); lg.push([col,`${icao} ${n0(rows[rows.length-1]?.U)} km/h de ${n0(rows[rows.length-1]?.D)}°`]); });
     $("ch-sfc-w").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>v.toFixed(0), nowLine:false})+legend(lg)+`<div class="sub">Puntos = rachas.</div>`;
   } else ["ch-sfc-t","ch-sfc-p","ch-sfc-w"].forEach(id=>$(id).innerHTML='<p class="empty">Sin METAR.</p>');
@@ -1385,7 +1408,7 @@ function renderSat(){
   const s=S.sat, cv=$("sat-map"); if(!s || cv.closest(".tab").hidden) return;
   const L=s.layers?.[SATS.layer]; const box=s.bbox||{lat_s:37.665,lat_n:40.565,lon_w:-0.4286,lon_e:3.4714};
   const g=geoCanvas(cv, box); g.ctx.fillStyle=css("--sea"); g.ctx.fillRect(0,0,g.W,g.H);
-  $("sat-src").innerHTML = L ? `${esc(L.title)} · capa ${esc(L.layer)} · imagen de ${fmtDT(L.time)} · EUMETView (EUMETSAT). Proyección lat/lon alineada con el radar.` : `Satélite no disponible (${esc(s.status||"—")}).`;
+  $("sat-src").innerHTML = L ? uiText(`${esc(L.title)} · capa ${esc(L.layer)} · imagen de ${fmtDT(L.time)} · EUMETView (EUMETSAT). Proyección lat/lon alineada con el radar.`,`${esc(L.title)} · layer ${esc(L.layer)} · image from ${fmtDT(L.time)} · EUMETView (EUMETSAT). Latitude/longitude projection aligned with radar.`) : uiText(`Satélite no disponible (${esc(s.status||"—")}).`,`Satellite unavailable (${esc(s.status||"—")}).`);
   if(!L){ drawCoast(g); drawSite(g); return; }
   const draw = im => {
     g.ctx.drawImage(im,0,0,g.W,g.H);
@@ -1432,8 +1455,8 @@ function renderTerrain(){
   // ascenso forzado en el entorno de Portinatx (≤6 km)
   let wp=null; for(let r=0;r<T.nrows;r++) for(let c=0;c<T.ncols;c++){ const la=T.lat_n-(r+.5)*T.cell, lo=T.lon_w+(c+.5)*T.cell; if(W[r][c]!=null && Math.hypot((la-39.1153)*111,(lo-1.5214)*86)<=6) wp = wp==null?W[r][c]:Math.max(wp,W[r][c]); }
   const fr=p?.indices?.froude?.[i];
-  $("oro-kv").innerHTML=[["Viento 925 hPa", ws==null?"—":`${n1(ws)} m/s de ${n0(wd)}°`],["Cota máx. del MDT", `${n0(top0)} m`],["Ascenso forzado máx. (isla)", `${wmax.toFixed(2)} m/s`],["Máx. a ≤6 km de Portinatx", wp==null?"—":`${wp.toFixed(2)} m/s`],["Froude", fr==null?"—":(+fr).toFixed(2)+(fr<1?" · rodea":" · remonta")]].map(([k,v])=>`<div><span>${k}</span><b>${v}</b></div>`).join("");
-  $("oro-note").innerHTML = `w = V925·∇h sobre el MDT del IGN a ~500 m (escala de color relativa a ${sc.toFixed(2)} m/s). Con Froude &lt; 1 el aire tiende a rodear Es Amunts y la convergencia se desplaza a los extremos de la isla; con Froude &gt; 1 lo remonta y el ascenso se concentra en la ladera de barlovento. ${ST("froude")}`;
+  $("oro-kv").innerHTML=[["Viento 925 hPa", ws==null?"—":`${n1(ws)} m/s de ${n0(wd)}°`],["Cota máx. del MDT", `${n0(top0)} m`],["Ascenso forzado máx. (isla)", `${wmax.toFixed(2)} m/s`],["Máx. a ≤6 km de Portinatx", wp==null?"—":`${wp.toFixed(2)} m/s`],["Froude", fr==null?"—":(+fr).toFixed(2)+(fr<1?uiText(" · rodea"," · flows around"):uiText(" · remonta"," · flows over"))]].map(([k,v])=>`<div><span>${k}</span><b>${v}</b></div>`).join("");
+  $("oro-note").innerHTML = uiText(`w = V925·∇h sobre el MDT del IGN a ~500 m (escala de color relativa a ${sc.toFixed(2)} m/s). Con Froude &lt; 1 el aire tiende a rodear Es Amunts y la convergencia se desplaza a los extremos de la isla; con Froude &gt; 1 lo remonta y el ascenso se concentra en la ladera de barlovento. ${ST("froude")}`,`w = V925·∇h over the IGN terrain model at ~500 m (colour scale relative to ${sc.toFixed(2)} m/s). With Froude &lt; 1, air tends to flow around Es Amunts and convergence shifts toward the island’s ends; with Froude &gt; 1, it flows over the terrain and ascent concentrates on the windward slope. ${ST("froude")}`);
 }
 $("hour2").addEventListener("input", e => { S.hour=+e.target.value; renderTerrain(); });
 
@@ -1462,7 +1485,7 @@ function renderBathy(){
   $("wv-h").value=WAV.h??2; $("wv-t").value=WAV.t??8; $("wv-h-o").textContent=n1(WAV.h); $("wv-t-o").textContent=n1(WAV.t);
   const rows=shoal(WAV.h, WAV.t, [100,50,30,20,15,10,7,5,4,3,2]); let first=null;
   $("t-shoal").querySelector("tbody").innerHTML=rows.map(r=>{ if(r.rompe&&first==null) first=r.d; return `<tr><td class="num">${r.d}</td><td class="num">${n0(r.L)}</td><td class="num">${r.Ks.toFixed(2)}</td><td class="num">${r.H.toFixed(1)}</td><td>${r.rompe?pill("alarm","rompe"):r.H>0.6*r.d?pill("alert","cerca de romper"):pill("quiet","propaga")}</td></tr>`; }).join("");
-  $("bat-note").innerHTML = `Teoría lineal desde aguas profundas, sin refracción, difracción ni fricción: describe la ola que llega a cada profundidad si el frente entra de cara. ${first?`Con estos datos las olas empiezan a romper hacia los <b>${first} m</b> de fondo.`:""} La boca de la cala y los bajos con 5–10 m concentran la energía con mar del N–NE. EMODnet DTM, ~200 m: no resuelve escollos ni la playa.`;
+  $("bat-note").innerHTML = uiText(`Teoría lineal desde aguas profundas, sin refracción, difracción ni fricción: describe la ola que llega a cada profundidad si el frente entra de cara. ${first?`Con estos datos las olas empiezan a romper hacia los <b>${first} m</b> de fondo.`:""} La boca de la cala y los bajos con 5–10 m concentran la energía con mar del N–NE. EMODnet DTM, ~200 m: no resuelve escollos ni la playa.`,`Linear theory from deep water, without refraction, diffraction or friction: describes the wave reaching each depth if the front arrives head-on. ${first?`With these data waves start breaking at around <b>${first} m</b> depth.`:""} The bay entrance and shallows at 5–10 m concentrate energy with N–NE seas. EMODnet DTM, ~200 m: does not resolve rocks or the beach.`);
 }
 function shoal(h0,tp,depths){ if(!h0||!tp) return []; const g=9.81, cg0=0.5*g*tp/(2*Math.PI); return depths.map(d=>{ const y=Math.pow(2*Math.PI/tp,2)*d/g, kd=Math.sqrt(y*y+y/(1+0.6522*y+0.4622*y*y+0.0864*y**4+0.0675*y**5)), k=kd/d, L=2*Math.PI/k, n=0.5*(1+2*kd/Math.sinh(2*kd)), cg=n*L/tp, Ks=Math.sqrt(cg0/cg), H=h0*Ks; return {d,L,Ks,H,rompe:H>=0.78*d}; }); }
 $("wv-src").addEventListener("change",()=>{ WAV.h=null; renderBathy(); });
@@ -1699,7 +1722,7 @@ async function askClaude(q){
   if (CHAT.images && $("chat-img").checked && view && $(view[0]) && !$(view[0]).closest(".tab").hidden && $(view[0]).width > 0){
     try { img = await new Promise(r => $(view[0]).toBlob(r, "image/png")); } catch(e){ img = null; }
   }
-  renderChatLog(`<div class="msg a think" id="chat-live">Pensando con los datos del ciclo ${esc(S.core?.cycle_id||"")}${img?" y la imagen de tu pantalla":""}…</div>`);
+  renderChatLog(`<div class="msg a think" id="chat-live">${uiText("Pensando con los datos del ciclo","Thinking using cycle data")} ${esc(S.core?.cycle_id||"")}${img?uiText(" y la imagen de tu pantalla"," and your screen image"):""}…</div>`);
   const input = [{role:"user", content:window.portinatxLanguage?.() === "en" ? CHAT_RULES.replace("Responde en español", "Responde en inglés") : CHAT_RULES}, ...hist, {role:"user", content:
     `DATOS (JSON del último ciclo publicado):\n${chatDigest()}\n\nVISTA: pestaña «${TAB_NAME[S.tab]}»${img?` — se adjunta una captura de ${view[1]}`:" — sin imagen adjunta"}.\n\nPREGUNTA: ${q}`}];
   CHAT.ctl = new AbortController();
@@ -1708,7 +1731,7 @@ async function askClaude(q){
   if (img) opts.images = img;
   try {
     const r = await CHAT.sample(input, opts);
-    CHAT.turns.push({role:"assistant", content:r.text, meta:`ciclo ${S.core?.cycle_id||"—"}${img?" · con imagen":""}${r.truncated?" · respuesta cortada":""}`});
+    CHAT.turns.push({role:"assistant", content:r.text, meta:`${uiText("ciclo","cycle")} ${S.core?.cycle_id||"—"}${img?uiText(" · con imagen"," · with image"):""}${r.truncated?uiText(" · respuesta cortada"," · truncated response"):""}`});
   } catch(e){
     if (e?.text) CHAT.turns.push({role:"assistant", content:e.text, meta:"respuesta incompleta"});
     else CHAT.turns.pop();

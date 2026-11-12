@@ -39,6 +39,9 @@ const [chrome, file] = process.argv.slice(1);
   await page.locator('#pov-official').evaluate(e=>{e.innerHTML='<ul><li><span>VIGENTE</span> · <span data-source-text>rojo</span></li></ul>';});
   await page.waitForFunction(()=>document.querySelector('#pov-official li span')?.textContent==='ACTIVE');
   assert.equal(await page.locator('#pov-official [data-source-text]').textContent(),'rojo');
+  assert.equal(await page.locator('#pov-official [data-source-text]').getAttribute('lang'),'und');
+  await page.locator('[data-tab="modelos"]').evaluate(e=>e.click());
+  await page.waitForFunction(()=>document.querySelector('#other-sections summary')?.textContent.includes('Models'));
   await page.reload();
   assert.equal(await page.locator('#pir-language').inputValue(),'en');
   await page.selectOption('#pir-language','es');
@@ -47,6 +50,7 @@ const [chrome, file] = process.argv.slice(1);
   assert.equal(await page.evaluate(() => chatEnglish()),false);
   assert.equal(await page.evaluate(() => window.meteoLocale()),'es-ES');
   assert.equal(await page.locator('nav.tabs').getAttribute('aria-label'),'Secciones del observatorio');
+  assert.match(await page.locator('#other-sections summary').textContent(),/Modelos/);
  } finally { await browser.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});
 '''

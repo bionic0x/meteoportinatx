@@ -666,6 +666,7 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
   let language = 'es';
   try { language = localStorage.getItem('meteo-language') === 'en' ? 'en' : 'es'; } catch (_) {}
   window.meteoLocale = () => language === 'en' ? 'en-GB' : 'es-ES';
+  if (!document.documentElement.lang) document.documentElement.lang = 'es';
   function translateGenerated(value, parent) {
     const profile = value.match(/^(Vertiente norte · Ariège \/ Capcir|Vertiente sur · Cerdanya) · (.+) · ([-0-9.]+) m · ([0-9]+) horas · Fuente: (.+)\. Modelo, no observación\.$/);
     if (profile) {
@@ -707,6 +708,11 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
         if (language === 'en') parent.setAttribute('lang', 'en'); else parent.removeAttribute('lang');
       }
     }
+    // Source language can vary between Spanish, Catalan and French; do not
+    // let a translated wrapper mislabel untouched provider text as English.
+    for (const element of document.querySelectorAll('[data-source-text]')) {
+      if (!element.hasAttribute('lang')) element.setAttribute('lang', 'und');
+    }
     for (const element of document.querySelectorAll('[aria-label], [placeholder], [title]')) {
       for (const name of ['aria-label', 'placeholder', 'title']) {
         if (!element.hasAttribute(name)) continue;
@@ -725,7 +731,14 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
     selector.value = language;
     note.hidden = language !== 'en';
   }
-  selector.addEventListener('change', () => { language = selector.value; try { localStorage.setItem('meteo-language', language); } catch (_) {} try { window.renderAll?.(); window.renderPirineoAtmos?.(); } catch (_) {} translate(); });
+  selector.addEventListener('change', () => {
+    language = selector.value;
+    try { localStorage.setItem('meteo-language', language); } catch (_) {}
+    try { window.renderAll?.(); window.renderPirineoAtmos?.(); } catch (_) {}
+    translate();
+    const current = document.querySelector('nav.tabs a[aria-current="page"]');
+    if (current?.dataset.tab) window.updateTabNav?.(current.dataset.tab);
+  });
   new MutationObserver(translate).observe(document.body, {childList:true, subtree:true, characterData:true});
   translate();
 })();

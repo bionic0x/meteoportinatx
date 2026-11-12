@@ -24,6 +24,19 @@ const [chrome, file] = process.argv.slice(1);
   assert.equal(await page.locator('[data-tab="vigilancia"]').textContent(),'Monitoring');
   assert.equal(await page.locator('#portinatx-language-note').isVisible(),true);
   assert.equal(await page.locator('nav.tabs').getAttribute('aria-label'),'Sections');
+  await page.evaluate(() => {
+   S.forense={modelos:[], pares_cols:[], pares:[], dias:[], puntuacion:{}, aprendizaje:{}};
+   renderForense();
+  });
+  assert.match(await page.locator('#fz-sample').textContent(),/^Archive: 0 days/);
+  await page.locator('#pre-exit').evaluate(e => { e.innerHTML = '<li>aviso oficial vigente ≤ watch</li><li>sin peligro local observado ≥ nivel actual en 3 ciclos seguidos</li>'; });
+  await page.waitForFunction(() => document.querySelector('#pre-exit').textContent.includes('current official warning ≤ watch'));
+  assert.match(await page.locator('#pre-exit').textContent(), /no observed local hazard/);
+  await page.locator('#refresh-st').evaluate(e => { e.textContent = 'El ciclo falló: timeout'; });
+  await page.waitForFunction(() => document.querySelector('#refresh-st').textContent === 'The cycle failed: timeout');
+
+
+
   await page.locator('#off-list').evaluate(e=>{e.innerHTML='<li>Aviso oficial original</li>';});
   await page.waitForTimeout(100);
   assert.equal(await page.locator('#off-list').textContent(),'Aviso oficial original');
