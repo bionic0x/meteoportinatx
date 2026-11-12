@@ -1,5 +1,7 @@
 # Publicación en GitHub Pages — MeteoPortinatx Unified v0.5.1
 
+**Idioma / Language:** Español · [English](DESPLIEGUE-WEB.en.md)
+
 ## Hosting de lectura: GitHub Pages
 
 - URL pública, con publicación confirmada por el workflow: `https://bionic0x.github.io/meteoportinatx/`.

@@ -1,5 +1,7 @@
 # Caso real reproducido — diagnóstico espacial de oleaje (#8)
 
+**Idioma / Language:** Español · [English](REPRODUCCION-ESPACIAL-20261111.en.md)
+
 **Instantánea observada**, no sintética: GitHub Pages workflow [#43051163150](https://github.com/bionic0x/meteoportinatx/actions/runs/43051163150), commit `535c1e4e8abdf3b33fdc8b9111d7055dbe1a6c35`, artefacto `github-pages` id `13869591734` (SHA-256 del ZIP publicado: `2a3db47d765ff7615de78de4dc1147c2c80541a382efdab78ed74a05b8e9bc42`). Capa pública `portinatx/api/core.json` emitida a las **2026-11-11T15:43:48Z**. Los datos instrumentales proceden de PORTUS/Puertos del Estado; el modelo de Open-Meteo Marine, servido en el mismo snapshot. Valores copiados selectivamente a `tests/fixtures/spatial_20261111.json`; no es certificación independiente de la calidad de la medida.
 
 | Campo | Boya Dragonera | Modelo en bahía de Portinatx |

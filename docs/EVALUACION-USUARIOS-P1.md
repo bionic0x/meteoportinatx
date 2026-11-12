@@ -1,5 +1,7 @@
 # Evaluación con usuarios de la vista de decisión (issue #11)
 
+**Idioma / Language:** Español · [English](EVALUACION-USUARIOS-P1.en.md)
+
 **Estado:** protocolo listo; sesiones **no realizadas**. Ningún resultado de este documento existe todavía. No se debe inventar adopción, satisfacción ni habilidad predictiva.
 
 ## Qué se evalúa

@@ -1,5 +1,7 @@
 # Evaluación del modelo, los usos y el potencial
 
+**Idioma / Language:** Español · [English](EVALUACION-MODELO-USOS-POTENCIAL.en.md)
+
 Fecha: 11 de noviembre de 2026. Análisis hecho sobre `fded39b`; revalidado sobre `main` en `a035deb` (0.5.1), donde `portinatx_degen.py`, `pirineo.py` y `pirineo_meta.py` no han cambiado, por lo que las referencias de línea siguen valiendo.
 
 **Relación con lo ya fusionado.** Complementa la investigación [`docs/agency/`](agency/00-MANDATO-Y-DIAGNOSTICO.md) y el libro [`FORECAST-LEDGER-P0`](FORECAST-LEDGER-P0.md). Lo que aporta de nuevo es la auditoría de calidad con hallazgos reproducidos (sección 1.4: H1–H3, M1–M7), que no aparecen en esos documentos, y el contraste de la sección 5.

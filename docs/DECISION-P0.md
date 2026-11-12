@@ -1,5 +1,7 @@
 # Decision P0 — cinco vistas rápidas sobre los motores actuales
 
+**Idioma / Language:** Español · [English](DECISION-P0.en.md)
+
 **Estado:** vista de producto en revisión; no modelo meteorológico nuevo, no acreditación de seguridad, no servicio de avisos ni API adicional. Preparación de la línea MeteoPortinatx 0.6; la versión de integración 0.5.1 sigue vigente hasta decidir release.
 
 ## Contrato de producto

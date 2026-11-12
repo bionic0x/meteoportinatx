@@ -1,5 +1,7 @@
 # Pirineo: revisión de producto, experiencia y diseño
 
+**Idioma / Language:** Español · [English](AUDITORIA-PIRINEO-NEXUS.en.md)
+
 Revisión del observatorio publicado el 11 de noviembre de 2026. Se recorrieron las doce secciones en escritorio, con capturas de las pantallas. Los resultados describen lo observado en ese ciclo; las fuentes y sus datos pueden cambiar. No se ha completado una auditoría de accesibilidad, contraste instrumental, lector de pantalla ni una prueba de uso en teléfonos reales.
 
 ## Qué dificulta la experiencia

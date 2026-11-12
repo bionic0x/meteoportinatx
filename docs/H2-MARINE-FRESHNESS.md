@@ -1,5 +1,7 @@
 # H2 — Frescura instrumental de PORTUS y radar HF (11-11-2026)
 
+**Idioma / Language:** Español · [English](H2-MARINE-FRESHNESS.en.md)
+
 ## Riesgo corregido
 
 La vigencia de la caché de red no constituye una observación reciente. `cached_source`

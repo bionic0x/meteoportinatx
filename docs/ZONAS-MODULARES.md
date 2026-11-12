@@ -1,5 +1,7 @@
 # Un núcleo común, perfiles por zona
 
+**Idioma / Language:** Español · [English](ZONAS-MODULARES.en.md)
+
 Dirección fijada el 11 de noviembre de 2026: Portinatx y Pirineo son dos zonas del mismo producto, con capacidades generales compartidas y módulos específicos de su territorio. Pirineo es una zona interior y excluye el mar. Nuevos usuarios deben poder seleccionar puntos y módulos para su territorio. La disponibilidad de un módulo depende de sus fuentes; no se trasladan umbrales locales de aviso de una región a otra.
 
 ## Implementado en esta iteración

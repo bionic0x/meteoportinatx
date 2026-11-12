@@ -1,5 +1,7 @@
 # MeteoPortinatx
 
+**Español** · [English](README.en.md)
+
 ### Del Mediterráneo al Pirineo. Una manera de mirar el tiempo más de cerca.
 
 Una tormenta puede pasar a pocos kilómetros de Portinatx y cambiar el mar sin dejar lluvia en tierra. En la Cerdanya, una inversión térmica o unos cientos de metros de altitud pueden separar la lluvia de la nieve. **MeteoPortinatx nace para entender esas diferencias locales**, reunir la evidencia disponible y hacer visible lo que todavía no sabemos.

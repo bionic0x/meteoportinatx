@@ -28,8 +28,9 @@ h1{font-size:clamp(2rem,5vw,3.8rem);letter-spacing:-.055em;line-height:1.12;marg
 </style>
 </head>
 <body><div class="wrap">
-<header class="top"><a class="brand" href="../">METEO<span>PORTINATX</span></a><nav class="toplinks" aria-label="Exploración"><a href="../">Observatorios</a><a href="../portinatx/">Ibiza</a><a href="../pirineo/">Pirineo</a></nav></header>
+<header class="top"><a class="brand" href="../">METEO<span>PORTINATX</span></a><label for="decision-language">Idioma / Language <select id="decision-language"><option value="es">Español</option><option value="en">English</option></select></label><nav class="toplinks" aria-label="Exploración"><a href="../">Observatorios</a><a href="../portinatx/">Ibiza</a><a href="../pirineo/">Pirineo</a></nav></header>
 <main>
+<p id="decision-language-notice" lang="en" class="subtle" hidden>Official warnings and other third-party source text are shown in their original language. Consult the issuing authority.</p>
 <section aria-labelledby="page-title"><p class="eyebrow">Interfaz de decisión · Fase P0</p><h1 id="page-title">La información relevante.<br>Sin buscarla entre 60 gráficos.</h1>
 <p class="lede">Selecciona para qué consultas el tiempo. Cada vista distingue aviso oficial, medición y estimación. Una instantánea antigua nunca se interpreta como ausencia de peligro.</p>
 <div class="modes" aria-label="Niveles de profundidad"><span class="active" aria-current="page">01 · Decidir</span><a id="follow" href="../portinatx/#vigilancia">02 · Seguir datos</a><a id="investigate" href="../portinatx/#forense">03 · Investigar</a></div></section>
@@ -57,7 +58,8 @@ const urls={portinatx:'../portinatx/api/core.json',pirineo:'../pirineo/api/core.
 const pages={portinatx:'../portinatx/',pirineo:'../pirineo/'};
 const official={portinatx:'https://www.aemet.es/',pirineo:'https://meteofrance.com/meteo-montagne'};
 const cache={};let current='casa', seq=0;
-const fmt=(n,unit)=>Number.isFinite(n)?`${new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(n)} ${unit}`:'UNKNOWN';
+const locale=()=>{try{return localStorage.getItem('meteo-language')==='en'?'en-GB':'es-ES';}catch(_){return 'es-ES';}};
+const fmt=(n,unit)=>Number.isFinite(n)?`${new Intl.NumberFormat(locale(),{maximumFractionDigits:1}).format(n)} ${unit}`:'UNKNOWN';
 function set(id,value){$(id).textContent=String(value??'—');}
 function axis(id,status,title,detail){$(id+'-card').dataset.status=status||'unknown';set(id+'-title',title);set(id+'-detail',detail);}
 function render(profile, packet){
@@ -66,7 +68,7 @@ function render(profile, packet){
  set('question',x.question);set('answer',x.heading);
  $('freshness').className='tag '+x.state;
  set('freshness', x.state==='recent'?'Ciclo reciente':x.state==='stale'?'Datos antiguos':'Datos no verificables');
- set('issued',x.issued?new Date(x.issued).toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}):'Desconocida');
+ set('issued',x.issued?new Date(x.issued).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}):'Desconocida');
  const sourceName={'backend':'API de Render (no necesariamente continua)','snapshot':'Instantánea GitHub Pages','snapshot-fallback':'Respaldo GitHub Pages','local':'Archivo local'};
  set('provenance',sourceName[x.source]||'Fuente no confirmada');
  set('location',kind.domain==='portinatx'?'Portinatx · Ibiza':M.places[place]||'Pirineo');
@@ -113,7 +115,88 @@ for(const [id,txt] of Object.entries(M.places)){const o=document.createElement('
 $('place').addEventListener('change',()=>{if(cache.pirineo)cache.pirineo.then(p=>render(current,p));});
 $('reload').addEventListener('click',()=>show(current,true));
 window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);if(M.profiles[p]&&p!==current)show(p)});
+window.addEventListener('meteo-language-changed',()=>show(current));
 show(M.profiles[location.hash.slice(1)]?location.hash.slice(1):'casa');
+})();
+</script>
+<script>
+/* The diagnostic stays Spanish internally; this layer translates presentation only.
+ * External events, measurements and model identifiers are never changed. */
+(function(){
+'use strict';
+const dict={
+'Exploración':'Explore','Observatorios':'Observatories','Pirineo':'Pyrenees','Interfaz de decisión · Fase P0':'Decision interface · Phase P0',
+'La información relevante.':'Relevant information.','Sin buscarla entre 60 gráficos.':'Without searching through 60 charts.',
+'Selecciona para qué consultas el tiempo. Cada vista distingue aviso oficial, medición y estimación. Una instantánea antigua nunca se interpreta como ausencia de peligro.':'Choose why you are checking the weather. Each view distinguishes official warnings, measurements and estimates. An old snapshot must never be interpreted as absence of danger.',
+'01 · Decidir':'01 · Decide','02 · Seguir datos':'02 · Monitor data','03 · Investigar':'03 · Investigate',
+'Casa junto a torrente':'House by a torrent','Barca y amarre':'Boat and mooring','Segunda residencia':'Second home','Esquí y montaña':'Skiing and mountains','Investigar el episodio':'Investigate the event',
+'Comprobando datos':'Checking data','Selecciona tu situación':'Select your situation','Buscando la última información disponible…':'Looking for the latest information…','Última captura':'Latest snapshot','Origen del dato':'Data source','Zona o punto':'Area or location','Estado del servicio':'Service status','Consulta bajo demanda, no vigilancia continua':'On-demand information, not continuous monitoring',
+'Punto de referencia':'Reference location','Ubicaciones del motor; no es la dirección personal de una vivienda.':'Model locations, not the personal address of a home.',
+'01 · Avisos institucionales':'01 · Official warnings','02 · Peligro observado':'02 · Observed hazard','02 · Observación en montaña':'02 · Mountain observations','03 · Precaución / estimación':'03 · Precaution / estimate','03 · Precaución calculada':'03 · Calculated precaution','03 · Previsión de un modelo':'03 · Model forecast',
+'Sin verificar':'Unverified','Consulta el organismo oficial':'Consult the official authority','Sin datos':'No data','Solo mediciones disponibles y recientes':'Available, recent measurements only','Sin calcular':'Not calculated','No es una instrucción de emergencia':'Not an emergency instruction',
+'Señales consultadas':'Signals checked','Sin datos comprobados':'No verified data','Cómo interpretarlo':'How to interpret this','Los avisos oficiales prevalecen. No usar datos desactualizados para decidir.':'Official warnings take precedence. Do not use outdated data to make decisions.','Las fracciones de ensemble no son probabilidades calibradas.':'Ensemble fractions are not calibrated probabilities.',
+'Ver el observatorio completo':'Open the full observatory','Consultar avisos oficiales':'Check official warnings','Volver a consultar':'Refresh',
+'Límites de seguridad.':'Safety limits.',
+'Esta pantalla no conoce las condiciones de una vivienda, embarcación, carretera, pista o itinerario ni envía alertas push. Render Free puede suspenderse; GitHub Pages ofrece instantáneas de periodicidad aproximada de seis horas. La ausencia de dato no significa calma. Ante riesgo, prevalecen protección civil, servicios de emergencia y organismos meteorológicos oficiales. Ninguna probabilidad o modelo aquí está acreditado como predicción calibrada.':'This screen does not know conditions at a home, boat, road, ski slope or route, and does not send push alerts. Render Free can sleep; GitHub Pages provides snapshots approximately every six hours. Missing data does not mean calm conditions. In a dangerous situation, follow civil protection, emergency services and official weather agencies. No probability or model here is certified as a calibrated forecast.',
+'¿Qué ha cambiado cerca de casa?':'What has changed near home?','¿Qué viento y mar se están observando?':'What wind and sea conditions are being observed?','¿Qué se prevé para la zona de mi casa?':'What is forecast for the area around my home?','¿Qué se prevé en la estación y a qué altitud?':'What is forecast at the resort and at what elevation?','¿Qué se observa y qué está estimando el motor?':'What is being observed and what is the model estimating?',
+'Ciclo reciente':'Recent cycle','Datos antiguos':'Outdated data','Datos no verificables':'Unverifiable data','Desconocida':'Unknown','API de Render (no necesariamente continua)':'Render API (not necessarily continuous)','Instantánea GitHub Pages':'GitHub Pages snapshot','Respaldo GitHub Pages':'GitHub Pages fallback','Archivo local':'Local file','Fuente no confirmada':'Unconfirmed source','No se dispone de un ciclo reciente':'No recent cycle is available',
+'Datos antiguos · sin diagnóstico actual':'Outdated data · no current assessment','No hay datos verificables':'No verifiable data','Avisos sin verificar':'Warnings unverified','Consultar fuentes oficiales.':'Consult official sources.','No deducir calma ni tomar decisiones de seguridad con estos datos.':'Do not infer calm conditions or make safety decisions from these data.',
+'Aviso oficial: no verificado':'Official warning: unverified','Consultar AEMET directamente.':'Consult AEMET directly.','Avisos: fuente sin verificar':'Warnings: source unverified','Comprobar AEMET, SMA y Météo-France.':'Check AEMET, SMA and Météo-France.','No constan avisos vigentes en este ciclo':'No active warnings recorded in this cycle','No equivale a ausencia de peligro; verificar los organismos oficiales.':'This does not mean there is no danger; check official agencies.',
+'Sin observación local utilizable':'No usable local observations','Mide señales diferentes; niveles internos, no avisos AEMET.':'Different signals are measured; internal levels are not AEMET warnings.','Sin observación instrumental detallada':'No detailed instrumental observations','Consultar estaciones y fuentes de medida en el observatorio.':'Check stations and measurement sources in the observatory.','No usar datos antiguos como situación actual.':'Do not treat old data as current conditions.',
+'Nieve: dato no disponible':'Snow: data unavailable','Estimación no disponible':'Estimate unavailable','No es un nivel de seguridad ni un pronóstico calibrado.':'This is not a safety level or a calibrated forecast.',
+'Lluvia en pluviómetros':'Rain gauge rainfall','Lluvia METAR / AEMET':'METAR / AEMET rainfall','Rayos':'Lightning','Viento':'Wind','Mar':'Sea','Escorrentía manual':'Manual runoff report','Anegamiento manual':'Manual flooding report',
+'sin señal destacada en este canal':'no notable signal on this channel','seguimiento':'monitoring','señal elevada':'elevated signal','señal intensa':'strong signal','UNKNOWN · sin observación utilizable':'UNKNOWN · no usable observation',
+'Fase en el fondo':'Valley-bottom precipitation phase','⚠ capa cálida sobre aire bajo cero: riesgo de lluvia engelante':'⚠ warm layer above sub-zero air: risk of freezing rain',
+'Nieve 24 h (modelo)':'Snow 24 h (model)','Precipitación 24 h (modelo)':'Precipitation 24 h (model)','Racha 24 h (modelo)':'Gust 24 h (model)','Temperatura (modelo)':'Temperature (model)','Datos disponibles':'Available data',
+'Diagnóstico del último ciclo; el estado de cada sensor debe revisarse en su fuente.':'Assessment of the latest cycle; check each sensor’s status at its source.','Datos obsoletos o ausentes: consultar boletines oficiales vigentes.':'Outdated or missing data: consult current official bulletins.',
+'Cobertura de lluvia insuficiente · situación no verificable':'Insufficient rainfall coverage · conditions cannot be verified','Observación local insuficiente':'Insufficient local observations','Pronóstico puntual no disponible':'Point forecast unavailable',
+'Revisar el protocolo propio y las indicaciones oficiales de emergencias; la web no conoce el estado de la vivienda.':'Review your own plan and official emergency guidance; the website does not know the condition of the home.',
+'Contrastar con capitanía, AEMET y condiciones en la bocana antes de maniobras náuticas.':'Check with harbour authorities, AEMET and conditions at the harbour entrance before manoeuvring.',
+'Inspeccionar datos de origen, ejecuciones del modelo y evidencias falsables; las fracciones ensemble no están calibradas.':'Inspect source data, model runs and falsifiable evidence; ensemble fractions are not calibrated.',
+'La previsión por punto no confirma el estado de carreteras ni la cota de acceso; consultar tráfico y avisos oficiales.':'The point forecast does not confirm road conditions or access elevation; consult traffic services and official warnings.',
+'Consultar el boletín de aludes, el viento en collados y las condiciones de terreno: no hay evaluación automática de seguridad.':'Consult the avalanche bulletin, wind at mountain passes and terrain conditions: there is no automatic safety assessment.',
+'Estimación operativa, no instrucción individual ni aviso oficial.':'Operational estimate, not individual guidance or an official warning.',
+'Situación del último ciclo verificado; comprobar AEMET.':'Conditions in the latest verified cycle; check AEMET.',
+'Fuente: solo MeteoAlarm (sin CAP directo de AEMET).':'Source: MeteoAlarm only (no direct AEMET CAP).',
+'Sin fuente oficial disponible en este ciclo.':'No official source available in this cycle.'
+};
+const fixed=new WeakMap(), selector=document.getElementById('decision-language'), notice=document.getElementById('decision-language-notice');
+let lang='es';try{lang=localStorage.getItem('meteo-language')==='en'?'en':'es';}catch(_){}
+function dynamic(s){
+ let m;
+ for(const [es,en] of [['Fuente: solo MeteoAlarm (sin CAP directo de AEMET).','Source: MeteoAlarm only (no direct AEMET CAP).'],['Sin fuente oficial disponible en este ciclo.','No official source available in this cycle.']]) {
+  if(s.startsWith(es+' ')) {const rest=s.slice(es.length+1);return en+' '+(rest==='Situación del último ciclo verificado; comprobar AEMET.'?dict[rest]:rest);}
+ }
+ if((m=s.match(/^Edad del ciclo: (\d+) min\. Los sensores pueden tener otra edad\.$/)))return `Cycle age: ${m[1]} min. Sensor ages may differ.`;
+ if((m=s.match(/^(\d+) de (\d+) canales observados disponibles$/)))return `${m[1]} of ${m[2]} observed channels available`;
+ if((m=s.match(/^(\d+) de (\d+) canales disponibles$/)))return `${m[1]} of ${m[2]} channels available`;
+ if((m=s.match(/^Avisos oficiales: (\d+) vigente\(s\)$/)))return `Official warnings: ${m[1]} active`;
+ if((m=s.match(/^Aviso oficial interpretado: (quiet|watch|alert|alarm)$/)))return `Interpreted official warning: ${{quiet:'no highlighted signal',watch:'watch',alert:'alert',alarm:'alarm'}[m[1]]}`;
+ if((m=s.match(/^Precaución calculada: (quiet|watch|alert|alarm)$/)))return `Calculated precaution: ${{quiet:'no highlighted signal',watch:'watch',alert:'alert',alarm:'alarm'}[m[1]]}`;
+ if((m=s.match(/^Estimación de (.+) para (.+)$/)))return `${m[1]} estimate for ${m[2]}`;
+ if((m=s.match(/^Nieve 24 h: (.+)$/)))return `Snow 24 h: ${m[1]}`;
+ if((m=s.match(/^Modelo (.+); racha 24 h (.+); NO es observación\.$/)))return `Model ${m[1]}; 24-hour gust ${m[2]}; NOT an observation.`;
+ if((m=s.match(/^Cota de copo \(vertiente (.+)\)$/)))return `Snowfall level (mountain side ${m[1]==='norte'?'north':m[1]==='sur'?'south':m[1]==='divisoria'?'divide':m[1]})`;
+ if((m=s.match(/^(.+) · el punto está por (encima|debajo)$/)))return `${m[1]} · the location is ${m[2]==='encima'?'above':'below'}`;
+ return s;
+}
+function apply(){
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let node;
+ while((node=walker.nextNode())){
+  const parent=node.parentElement;if(!parent||parent.closest('script,style,#decision-language,#decision-language-notice'))continue;
+  let source=fixed.get(node);if(source===undefined){source=node.nodeValue;fixed.set(node,source);}
+  const str=source.trim();if(!str)continue;
+  const internalDetails=['Consultar AEMET directamente.','Comprobar AEMET, SMA y Météo-France.','Consultar fuentes oficiales.','Situación del último ciclo verificado; comprobar AEMET.','No equivale a ausencia de peligro; verificar los organismos oficiales.'];
+  const officialDetail=parent.id==='official-detail';
+  const officialAllowed=internalDetails.includes(str)||str.startsWith('Fuente: solo MeteoAlarm (sin CAP directo de AEMET). ')||str.startsWith('Sin fuente oficial disponible en este ciclo. ');
+  const value=lang==='en'&&(!officialDetail||officialAllowed)?(dict[str]||dynamic(str)):str;
+  const next=source.replace(str,value);if(node.nodeValue!==next)node.nodeValue=next;
+ }
+ selector.value=lang;notice.hidden=lang!=='en';document.documentElement.lang=lang;document.title=lang==='en'?'Decide · MeteoPortinatx':'Decidir · MeteoPortinatx';
+ for(const [element,es,en] of [[document.querySelector('.toplinks'),'Exploración','Explore'],[document.querySelector('.modes'),'Niveles de profundidad','Depth levels'],[document.getElementById('profiles'),'Elige tu perfil','Choose your profile'],[document.querySelector('.work'),'Separación de fuentes','Separation of sources']]) if(element)element.setAttribute('aria-label',lang==='en'?en:es);
+}
+selector.addEventListener('change',()=>{lang=selector.value;try{localStorage.setItem('meteo-language',lang);}catch(_){}apply();window.dispatchEvent(new Event('meteo-language-changed'));});
+new MutationObserver(apply).observe(document.body,{subtree:true,childList:true});apply();
 })();
 </script>
 </body></html>

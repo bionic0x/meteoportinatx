@@ -17,7 +17,7 @@ small,.muted{color:var(--muted)}.eyebrow{text-transform:uppercase;letter-spacing
 footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.82rem}
 a:focus-visible{outline:2px solid white;outline-offset:3px}
 </style></head><body><main>
-<header><span class="eyebrow">Bionicgarden · Plataforma meteorológica unificada</span><h1>Dos territorios.<br>Un mismo motor de análisis.</h1>
+<header><label for="language">Idioma / Language </label><select id="language"><option value="es">Español</option><option value="en">English</option></select><span class="eyebrow">Bionicgarden · Plataforma meteorológica unificada</span><h1>Dos territorios.<br>Un mismo motor de análisis.</h1>
 <p class="muted">Observación, modelos, incertidumbre y aprendizaje forense. Cada dominio conserva sus propios avisos y sus fuentes. La edición web publica instantáneas periódicas; no sustituye la vigilancia continua.</p></header>
 <a href="decidir/" class="decision-cta"><span><b>¿Qué necesitas saber ahora?</b><small>Casa · Barca · Segunda residencia · Esquí · Análisis meteorológico</small></span><span class="arr" aria-hidden="true">↗</span></a>
 <p><a href="dispositivo/">Sensores y vibración del teléfono · experimental ↗</a></p>
@@ -31,11 +31,34 @@ a:focus-visible{outline:2px solid white;outline-offset:3px}
 </main><script src="public_config.js"></script>
 <script src="public_fetch.js"></script>
 <script>
-(async()=>{for(const [domain,id] of [['portinatx','port-status'],['pirineo','pir-status']]){
+let currentLanguage='es';
+try{currentLanguage=localStorage.getItem('meteo-language')==='en'?'en':'es'}catch(_){}
+const languageControl=document.getElementById('language');
+const texts=[
+ ['.eyebrow','Bionicgarden · Unified weather platform'],
+ ['header h1','Two territories.<br>One shared analysis engine.'],
+ ['header .muted','Observations, models, uncertainty and forensic learning. Each domain retains its own warnings and sources. The web edition publishes periodic snapshots; it does not provide continuous monitoring.'],
+ ['.decision-cta b','What do you need to know now?'],
+ ['.decision-cta small','Home · Boat · Second home · Skiing · Weather analysis'],
+ ['a[href="dispositivo/"]','Phone sensors and vibration · experimental ↗'],
+ ['.card[data-area="sea"] .tag','Ibiza · North coast'],
+ ['.card[data-area="sea"] p','Radar, convection, wind, AEMET warnings, sea, waves and forecast traceability.'],
+ ['.card[data-area="snow"] p','DEM terrain, snow by elevation, vertical profiles, föhn, inversions and a 15-day meta-analysis.'],
+ ['#shared-zones h2','Radar, warnings and observations in your areas'],
+ ['#shared-zones p:first-of-type','Reports use the same engine and display sources and coverage. The Pyrenees excludes the sea. Images and bulletins reflect what was available when each snapshot was generated; check their dates.'],
+ ['a[href="zones/portinatx/"]','Shared Portinatx report'],
+ ['a[href="zones/pirineo/"]','Shared Pyrenees report'],
+ ['#shared-zones p:last-of-type','<a href="downloads/" style="color:var(--ink)">Download the engine and model my area</a> · Archive, comparison and local forensic evaluation using reviewed measurements.'],
+ ['footer','Diagnostic estimates, not official warnings. Missing or stale data are explicitly marked. Static edition: automatic updates every 6 h; no push warnings or continuous monitoring. Data and warnings depend on their freshness. Forecast sources: <a href="https://open-meteo.com/" style="color:inherit">Open-Meteo</a> (CC BY 4.0) and official agencies. · v0.6.0']
+].map(([selector,en])=>{const node=document.querySelector(selector);return {node,en,es:node.innerHTML}});
+let rerenderStatuses=()=>{};
+function applyLanguage(){languageControl.value=currentLanguage;document.documentElement.lang=currentLanguage;document.title=currentLanguage==='en'?'MeteoPortinatx · Observatories':'MeteoPortinatx · Observatorios';for(const x of texts)x.node.innerHTML=x[currentLanguage];document.querySelector('.grid').setAttribute('aria-label',currentLanguage==='en'?'Observatories':'Observatorios');document.querySelector('#shared-zones').setAttribute('aria-label',currentLanguage==='en'?'Shared engine':'Motor compartido');rerenderStatuses()}
+languageControl.onchange=()=>{currentLanguage=languageControl.value;try{localStorage.setItem('meteo-language',currentLanguage)}catch(_){}applyLanguage()};
+(async()=>{const statuses={'port-status':{checking:true},'pir-status':{checking:true}};rerenderStatuses=()=>{for(const [id,v] of Object.entries(statuses)){const el=document.getElementById(id);if(v.checking){el.textContent=currentLanguage==='en'?'Data: checking…':'Datos: comprobando…';continue}if(!v.date){el.textContent=currentLanguage==='en'?'No verified data':'Sin datos verificados';continue}const locale=currentLanguage==='en'?'en-GB':'es-ES';let source=v.source==='backend'?(currentLanguage==='en'?' · live API':' · API en vivo'):v.source==='snapshot-fallback'?(currentLanguage==='en'?' · static fallback':' · respaldo estático'):'';el.textContent=(currentLanguage==='en'?'Latest cycle: ':'Último ciclo: ')+v.date.toLocaleString(locale,{dateStyle:'short',timeStyle:'short'})+(v.stale?(currentLanguage==='en'?' · STALE DATA':' · DATOS ANTIGUOS'):'')+source}};applyLanguage();for(const [domain,id] of [['portinatx','port-status'],['pirineo','pir-status']]){
 const el=document.getElementById(id);try{const packet=window.meteoLoadPart ? await window.meteoLoadPart(domain,'core',domain+'/api/core.json') : null;
 const r=packet?null:await fetch(domain+'/api/core.json',{cache:'no-store'});if(r&&!r.ok)throw Error('HTTP '+r.status);
-const core=packet?packet.data:await r.json();const provenance=packet?.source==='backend'?' · API en vivo':packet?.source==='snapshot-fallback'?' · respaldo estático':'';const date=core.issued?new Date(core.issued):null;
-if(!date||!Number.isFinite(date.getTime()))throw Error('fecha ausente');
-const hours=(Date.now()-date.getTime())/3600000;el.textContent='Último ciclo: '+date.toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'})+((hours>(domain==='portinatx'?1:6)?' · DATOS ANTIGUOS':''))+provenance;
-}catch(e){el.textContent='Sin datos verificados · '+e.message;}}})();
+const core=packet?packet.data:await r.json();const date=core.issued?new Date(core.issued):null;
+if(!date||!Number.isFinite(date.getTime()))throw Error('date missing');
+const hours=(Date.now()-date.getTime())/3600000;statuses[id]={date,source:packet?.source,stale:hours>(domain==='portinatx'?1:6)};
+}catch(e){statuses[id]={date:null}}rerenderStatuses();}})();
 </script></body></html>

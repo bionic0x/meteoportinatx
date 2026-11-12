@@ -1,5 +1,7 @@
 # MeteoPortinatx Unified 0.5.1 — arquitectura y decisiones
 
+**Idioma / Language:** Español · [English](ARQUITECTURA-UNIFICADA.en.md)
+
 **Fecha:** 2026-11-10. **Ámbito:** un proyecto, dos dominios meteorológicos, un ciclo de release.
 
 ## Contratos de seguridad y observación

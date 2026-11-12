@@ -1,5 +1,7 @@
 # Sin publicar — sensores y háptica del teléfono
 
+**Idioma / Language:** Español · [English](RELEASE-NOTES.en.md)
+
 - Vista experimental `/dispositivo/`, sensores optativos y vibración por transición del ciclo. No sustituye avisos oficiales ni funciona como alerta en segundo plano. Ver `docs/DISPOSITIVO-SENSORES.md`.
 
 # Sin publicar — vigilancia de la clave de Météo-France

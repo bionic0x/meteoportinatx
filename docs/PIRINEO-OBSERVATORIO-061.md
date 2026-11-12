@@ -1,5 +1,7 @@
 # Pirineo 0.6.1 — observatorio ampliado
 
+**Idioma / Language:** Español · [English](PIRINEO-OBSERVATORIO-061.en.md)
+
 **Ámbito:** Andorra, Puymorens, Cerdanya/Cerdagne, Capcir. Paridad de **navegación, presentación y trazabilidad** con Portinatx, NO de instrumentación. No se heredan datos ni umbrales de mar.
 
 | Vista | Contrato efectivo |

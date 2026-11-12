@@ -1,5 +1,7 @@
 # Backend 0.5.1: Render Free y persistencia real
 
+**Idioma / Language:** Español · [English](BACKEND-PERSISTENTE.en.md)
+
 ## Estado desplegado
 
 El servicio público `meteoportinatx-backend-free` usa Python de biblioteca estándar en **Render Free** (Frankfurt), sin disco ni base de datos de pago. La API HTTP escucha en el puerto asignado por Render y ofrece `/healthz`, `/v1/status`, `/v1/{dominio}/api/{parte}.json` y `/v1/forensics/summary` como rutas de lectura. `POST` devuelve 405.

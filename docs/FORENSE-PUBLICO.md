@@ -1,5 +1,7 @@
 # Lecciones técnicas públicas de la DANA 17–20/10/2026
 
+**Idioma / Language:** Español · [English](FORENSE-PUBLICO.en.md)
+
 **Alcance:** estudio retrospectivo de un único episodio en Ibiza, con 3 días de lluvia, 11 estaciones de Meteoclimatic y productos Open-Meteo Previous Runs D0–D2. Las comparaciones derivan de los informes técnicos de la release de octubre de 2026. No son una climatología ni coeficientes calibrados.
 
 ## Modelo/observación de lluvia: D0 (0–24 h)

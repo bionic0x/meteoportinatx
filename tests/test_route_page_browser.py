@@ -95,11 +95,27 @@ const [chrome, base, gpxPath]=process.argv.slice(1);
   assert.ok(!reqs.some(r=>/PRIVADO|42\.4|1\.9/.test(r.url+(r.body||''))), 'el track no viaja en ninguna petición');
   assert.ok(reqs.every(r=>r.method==='GET'), 'solo GET');
   assert.ok(!(await page.evaluate(()=>JSON.stringify(Object.assign({},localStorage,sessionStorage)))).includes('PRIVADO'), 'no se guarda');
+  // El idioma seleccionado se aplica a controles y diagnósticos sin cambiar el aviso original.
+  await page.selectOption('#route-language','en');
+  assert.equal(await page.locator('html').getAttribute('lang'),'en');
+  assert.ok((await page.textContent('#hz')).includes('Not evaluated'));
+  assert.ok((await page.textContent('#limits')).includes('official warning thresholds'));
+  assert.ok((await page.textContent('#official')).includes('Viento'));
+  assert.equal(await page.evaluate(()=>localStorage.getItem('meteo-language')),'en');
+  assert.ok((await page.textContent('#warns')).includes('PRIVADO-XYZ'));
+  assert.equal(reqs.length,before,'switching language sends no track or extra request');
+  await page.selectOption('#route-language','es');
+  assert.ok((await page.textContent('#hz')).includes('No evaluado'));
+  assert.equal(await page.evaluate(()=>localStorage.getItem('meteo-language')),'es');
   // Fichero inválido: error visible, sin resultado.
   await page.setInputFiles('#file',{name:'x.gpx',mimeType:'text/xml',buffer:Buffer.from('<gpx><trk/></gpx>')});
   await page.waitForSelector('#err:not([hidden])');
   assert.ok((await page.textContent('#err')).includes('No se pudo leer'));
   assert.ok(await page.locator('#result').isHidden());
+  await page.selectOption('#route-language','en');
+  assert.ok((await page.textContent('#err')).includes('Could not read GPX'));
+  await page.selectOption('#route-language','es');
+  assert.ok((await page.textContent('#err')).includes('No se pudo leer'));
   // Móvil: sin desbordamiento horizontal.
   await page.setViewportSize({width:390,height:844});
   await page.click('#demo'); await page.waitForSelector('#result:not([hidden])');

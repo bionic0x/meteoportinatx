@@ -1,5 +1,7 @@
 # Divisiones para MeteoPortinatx
 
+**Idioma / Language:** Español · [English](agency-agents.en.md)
+
 Siete perfiles para sesiones Codex con subagentes, adaptados de [agency-agents](https://github.com/msitarzewski/agency-agents) en el commit `8ae6164602c95ca78828b148b9052460ee426885`. Los perfiles son instrucciones breves adaptadas al proyecto; no incorporan el ejecutable o servicio de terceros. La licencia MIT y el aviso de copyright se conservan en `docs/agency-agents-LICENSE.txt`.
 
 | División | Alcance |

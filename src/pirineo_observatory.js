@@ -14,7 +14,7 @@
   };
   const stamp = s => {
     const d=utc(s);
-    return d ? new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d) : '—';
+    return d ? new Intl.DateTimeFormat(typeof window !== 'undefined' ? (window.meteoLocale?.() || 'es-ES') : 'es-ES',{timeZone:'Europe/Madrid',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d) : '—';
   };
   // Ages exported with the snapshot are relative to its issue time, not the viewer.
   const elapsed = (issued, now=Date.now()) => {
@@ -123,7 +123,7 @@
       po.onchange=()=>{S.point=po.value;render(ctx);};
     }
     const off= e.officialOk ? '<strong>Fuente oficial consultada · comprueba zona y vigencia</strong>' : '<strong class="pov-unk">UNKNOWN · sin comprobación oficial suficiente</strong>';
-    const w=e.warnings.length?e.warnings.slice(0,15).map(x=>`<li><b>${escape(x.estado_temporal)} · ${escape(x.nivel)} · ${escape(x.evento)}</b> · ${escape(x.fuente||x.pais||'autoridad')} · ${escape(x.area||x.zona||'zona no indicada')} · ${stamp(x.desde)}–${stamp(x.hasta)}</li>`).join('')
+    const w=e.warnings.length?e.warnings.slice(0,15).map(x=>`<li><b><span>${escape(x.estado_temporal)}</span> · <span>${escape(x.nivel)}</span> · <span data-source-text>${escape(x.evento)}</span></b> · <span data-source-text>${escape(x.fuente||x.pais||'autoridad')} · ${escape(x.area||x.zona||'zona no indicada')}</span> · ${stamp(x.desde)}–${stamp(x.hasta)}</li>`).join('')
       :(e.officialOk?'<li>Sin mensajes de nivel amarillo o superior en las zonas procesadas del ciclo; comprobar cobertura de fuentes.</li>':'<li>UNKNOWN: no interpretar la ausencia de mensajes como calma.</li>');
     set('pov-official',off+'<p class="src">Estos avisos cubren distintas zonas pirenaicas. No se ha verificado su correspondencia con el punto seleccionado; consulta el ámbito oficial.</p><ul class="plain">'+w+'</ul>');
     const obs=e.observations;
@@ -165,7 +165,10 @@
     set('pov-model-note','Punto: '+escape(e.station?.nombre||'UNKNOWN')+' · modelo seleccionado: '+escape(c.modelo_nombre?.[e.model]||e.model||'UNKNOWN')+' · muestreo cada 3 h. Precipitación y nieve: suma de tres horas completas; si falta un elemento: UNKNOWN. Ninguna cifra equivale a probabilidad de impacto local.');
     const rev= e.revisions.length?e.revisions.length+' revisiones entre salidas, NO habilidad verificada':'UNKNOWN · sin comparativa de salidas';
     const sc=Object.entries(e.sidecars).map(([key,value])=>`<li>${escape(key)} · ${escape(value?.state||value?.status||'UNKNOWN')} · contexto informativo, no alerta</li>`).join('')||'<li>Sin contexto lateral validado</li>';
-    const notes=(c.contexto?.notas_lluvia_24h||[]).slice(0,8).map(x=>'<li>'+escape(typeof x==='string'?x:JSON.stringify(x))+'</li>').join('');
+    const notes=(c.contexto?.notas_lluvia_24h||[]).slice(0,8).map(x=>{
+      if(!x||typeof x!=='object'||typeof x.id!=='string') return '<li data-source-text>'+escape(typeof x==='string'?x:JSON.stringify(x))+'</li>';
+      return `<li><span>Localidad</span>: <span data-source-text>${escape(x.id)}</span> · <span>Modelo</span>: <span data-source-text>${escape(x.modelo||'UNKNOWN')}</span> · <span>Lluvia prevista 24 h</span>: ${number(x.pr24_mm)} mm · <span>Mes UTC</span>: ${escape(x.mes??'UNKNOWN')} · <span>Banda climatológica</span>: <span data-source-text>${escape(x.banda||'UNKNOWN')}</span> · <span>Rango percentil</span>: ${number(x.rank,4)}</li>`;
+    }).join('');
     set('pov-forensic',`<div class="pov-mini kv">${grid([['Revisiones 15 d',rev],['Skill fuera de muestra','NO VERIFICADA'],['Archivo prospectivo','NO PUBLICADO (ledger privado)'],['Datos ausentes','UNKNOWN, nunca 0']])}</div><h3>Contexto y fuentes suplementarias</h3><ul class="plain">${sc}${notes}</ul><p class="src">Los cambios de una salida a otra no son errores contra observación. No hay CSI, POD, FAR, MAE o Brier válidos sin emparejamiento temporal y espacial, QC instrumental y pronóstico congelado.</p>`);
     const srcrows=Object.entries(e.sources).map(([name,value])=>`<tr><td>${escape(name)}</td><td>${escape(valid(e.ages[name])?source(value,e.ages[name]):'UNKNOWN')}</td><td class="num">${valid(e.ages[name])?number(e.ages[name],0)+' min':'—'}</td><td style="white-space:normal">${escape(String(value).slice(0,220))}</td></tr>`).join('');
     tbody(el('pov-source-rows'),srcrows,4);
