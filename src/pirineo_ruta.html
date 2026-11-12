@@ -71,6 +71,7 @@ footer{font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padd
   <h1>Pirineo · <span>Ruta y tiempo</span></h1>
   <a href="../">← Panel del Pirineo</a>
   <div class="meta" id="meta">Cargando datos…</div>
+  <label>Idioma / Language <select id="route-language"><option value="es">Español</option><option value="en">English</option></select></label>
 </header>
 <main>
   <section class="card priv" aria-label="Privacidad">
@@ -136,7 +137,7 @@ footer{font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padd
     <div class="card" style="margin-bottom:14px"><h2>6 · Tramos afectados</h2><div class="tbl"><table id="runs"><thead><tr><th>Peligro</th><th>Tramo</th><th>Hora estimada (ventana)</th><th>Nivel máximo</th></tr></thead><tbody></tbody></table></div></div>
   </section>
 
-  <section class="card"><h2>Avisos oficiales vigentes en el Pirineo</h2><ul class="plain" id="official"><li>Cargando…</li></ul>
+  <section class="card"><h2>Avisos oficiales recibidos para el Pirineo</h2><p class="note" id="official-language" hidden lang="en">Official messages below are shown in their original language.</p><ul class="plain" id="official"><li>Cargando…</li></ul>
     <p class="note" style="margin:8px 0 0">Los avisos oficiales se muestran por zona, sin geolocalizarlos sobre tu ruta. Mandan siempre sobre esta herramienta.</p></section>
 
   <section class="card"><h2>Límites de esta herramienta</h2>
@@ -151,28 +152,45 @@ footer{font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padd
 <script>
 'use strict';
 const E = window.RouteEngine;
+let lang = 'es';
+try { lang = localStorage.getItem('meteo-language') === 'en' ? 'en' : 'es'; } catch (_) {}
+const tr = (es, en) => lang === 'en' ? en : es;
+const engineText = text => {
+  if (lang !== 'en') return text;
+  const words = {
+    'Fichero vacío':'Empty file', 'Fichero demasiado grande':'File too large', 'GPX con DOCTYPE/ENTITY: rechazado':'GPX containing DOCTYPE/ENTITY rejected', 'Demasiados puntos':'Too many points', 'El fichero no contiene un track con al menos 2 puntos':'The file does not contain a track with at least two points', 'El fichero es una ruta planificada, no un track grabado: puede ser poco densa y sin tiempos':'This is a planned route, not a recorded track; points may be sparse and lack timestamps', 'El track no tiene movimiento':'The track has no movement', 'El track mide menos de 100 m':'The track is shorter than 100 m', 'DEM con tamaño inconsistente':'Inconsistent DEM size', 'Rejilla inválida':'Invalid grid', 'Rejilla demasiado pequeña':'Grid too small', 'Ejes de rejilla no crecientes':'Grid axes are not increasing', 'Tiempos de rejilla inválidos':'Invalid grid times', 'Tiempos de rejilla no crecientes':'Grid times are not increasing', 'Altitudes de celda inconsistentes':'Inconsistent grid-cell elevations', 'Falta la hora de salida':'Departure time missing', 'tormenta y rayos':'thunderstorms and lightning', 'niebla y visibilidad':'fog and visibility', 'crecidas y cruces de cauces':'flooding and stream crossings', 'aludes y estado de la nieve en suelo':'avalanches and ground snow conditions'
+  };
+  if (words[text]) return words[text];
+  const translated = String(text).replace(/^(\d+) puntos con coordenadas inválidas descartados$/, '$1 points with invalid coordinates discarded').replace(/^Falta el campo (.+)$/, 'Missing field $1').replace(/^Campo (.+) con forma inconsistente$/, 'Field $1 has an inconsistent shape');
+  return translated === String(text) ? '[original] ' + text : translated;
+};
+
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const nf = (x, d = 0) => (x == null || !Number.isFinite(x)) ? '—' : x.toLocaleString('es-ES', { maximumFractionDigits: d, minimumFractionDigits: d });
+const nf = (x, d = 0) => (x == null || !Number.isFinite(x)) ? '—' : x.toLocaleString(lang === 'en' ? 'en-GB' : 'es-ES', { maximumFractionDigits: d, minimumFractionDigits: d });
 const TZ = 'Europe/Madrid';
-const dayFmt = new Intl.DateTimeFormat('es-ES', { timeZone: TZ, weekday: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-const hmFmt = new Intl.DateTimeFormat('es-ES', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+const dayFmt = () => new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'es-ES', { timeZone: TZ, weekday: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+const hmFmt = () => new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'es-ES', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
 const dayKey = new Intl.DateTimeFormat('es-ES', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
-const fmtT = (ms) => ms == null ? '—' : dayFmt.format(new Date(ms));
-const fmtW = (w) => !w ? '—' : (dayKey.format(w[0]) === dayKey.format(w[1]) ? hmFmt.format(new Date(w[0])) + '–' + hmFmt.format(new Date(w[1])) : fmtT(w[0]) + ' → ' + fmtT(w[1]));
+const fmtT = (ms) => ms == null ? '—' : dayFmt().format(new Date(ms));
+const fmtW = (w) => !w ? '—' : (dayKey.format(w[0]) === dayKey.format(w[1]) ? hmFmt().format(new Date(w[0])) + '–' + hmFmt().format(new Date(w[1])) : fmtT(w[0]) + ' → ' + fmtT(w[1]));
 const fmtDur = (s) => { const m = Math.round(s / 60); return Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') + ' min'; };
 
-const LABELS = {
+const LABELS_ES = {
   lluvia: ['sin lluvia', 'débil', 'moderada', 'fuerte', 'muy fuerte'],
   viento: ['racha < 39 km/h', 'molesto (Bf 6–7)', 'fuerte (Bf 8–9)', 'muy fuerte (Bf 10–11)', 'huracanado (Bf 12)'],
   nieve: ['sin nieve', 'débil', 'moderada', 'intensa'],
   frio: ['sensación térmica > −10 °C', 'frío intenso', 'riesgo de congelación (10–30 min)', 'congelación rápida (< 10 min)'],
 };
-const TITLES = { lluvia: 'Lluvia', viento: 'Viento (rachas)', nieve: 'Nieve', frio: 'Frío y sensación térmica' };
+const LABELS_EN = {lluvia:['no rain','light','moderate','heavy','very heavy'], viento:['gust < 39 km/h','uncomfortable (Bf 6–7)','strong (Bf 8–9)','very strong (Bf 10–11)','hurricane force (Bf 12)'], nieve:['no snow','light','moderate','heavy'], frio:['wind chill > −10 °C','severe cold','frostbite risk (10–30 min)','rapid frostbite (< 10 min)']};
+let LABELS = LABELS_ES;
+const TITLES_ES = { lluvia: 'Lluvia', viento: 'Viento (rachas)', nieve: 'Nieve', frio: 'Frío y sensación térmica' };
+const TITLES_EN = { lluvia:'Rain', viento:'Wind (gusts)', nieve:'Snow', frio:'Cold and wind chill' };
+let TITLES = TITLES_ES;
 const COLORS = ['--c0', '--c1', '--c2', '--c3', '--c4'];
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const colorOf = (c) => c < 0 ? css('--cu') : css(COLORS[Math.min(c, 4)]);
-const pill = (h, c) => c < 0 ? '<span class="pill lu">sin datos</span>' : `<span class="pill l${Math.min(c, 4)}">${esc(LABELS[h][c] || c)}</span>`;
+const pill = (h, c) => c < 0 ? '<span class="pill lu">' + tr('sin datos','no data') + '</span>' : `<span class="pill l${Math.min(c, 4)}">${esc(LABELS[h][c] || c)}</span>`;
 
 const S = { core: null, dem: null, grid: null, prep: null, ev: null, sum: null, hazard: 'viento', hover: null, t0: 0, view: null, rawName: null };
 
@@ -207,9 +225,9 @@ function recompute() {
     S.ev = E.evaluateRoute(S.prep, S.grid, { departMs: departMs(), factor: Number($('fac').value), breakMinPerHour: Number($('brk').value), pace: $('pace').value, dem: S.dem });
     S.sum = E.summarize(S.prep, S.ev);
     render();
-  } catch (e) { showError('No se pudo evaluar la ruta: ' + e.message); }
+  } catch (e) { showError(() => tr('No se pudo evaluar la ruta: ', 'Could not evaluate route: ') + engineText(e.message)); }
 }
-function showError(msg) { const el = $('err'); el.hidden = !msg; el.textContent = msg || ''; }
+function showError(msg) { S.error = msg; const text = typeof msg === 'function' ? msg() : msg; const el = $('err'); el.hidden = !text; el.textContent = text || ''; }
 
 function loadTrack(text, label) {
   showError('');
@@ -222,7 +240,7 @@ function loadTrack(text, label) {
     S.hover = null;
     $('result').hidden = false;          // visible antes de dibujar: los lienzos miden su contenedor
     recompute();
-  } catch (e) { S.prep = null; S.ev = null; S.sum = null; S.hover = null; $('result').hidden = true; showError('No se pudo leer el GPX: ' + e.message); }
+  } catch (e) { S.prep = null; S.ev = null; S.sum = null; S.hover = null; $('result').hidden = true; showError(() => tr('No se pudo leer el GPX: ', 'Could not read GPX: ') + engineText(e.message)); }
 }
 
 function demoGpx() {
@@ -232,7 +250,7 @@ function demoGpx() {
   const a = pois.reduce((x, y) => alt(y) < alt(x) ? y : x), b = pois.reduce((x, y) => alt(y) > alt(x) ? y : x);
   const pts = [];
   for (let i = 0; i <= 120; i++) { const f = i / 120; pts.push(`<trkpt lat="${(a.lat + (b.lat - a.lat) * f).toFixed(6)}" lon="${(a.lon + (b.lon - a.lon) * f).toFixed(6)}"/>`); }
-  return `<gpx><trk><name>DEMOSTRACIÓN sintética: línea recta ${esc(a.name || a.id)} → ${esc(b.name || b.id)}</name><trkseg>${pts.join('')}</trkseg></trk></gpx>`;
+  return `<gpx><trk><name>${tr('DEMOSTRACIÓN sintética: línea recta', 'SYNTHETIC DEMONSTRATION: straight line')} ${esc(a.name || a.id)} → ${esc(b.name || b.id)}</name><trkseg>${pts.join('')}</trkseg></trk></gpx>`;
 }
 
 /* ───── presentación ───── */
@@ -241,48 +259,48 @@ function render() {
   const covBad = sm.coverage.ok < 0.999;
   const w = [];
   if (S.prep.name) w.push('Track: <b>' + esc(S.prep.name) + '</b>');
-  for (const t of p.warnings) w.push(esc(t));
-  if (covBad) w.push(`Solo se puede evaluar el <b>${nf(sm.coverage.ok * 100)} %</b> del recorrido: ${nf(sm.coverage.fueraDominio * 100)} % cae fuera de la rejilla del Pirineo oriental, ${nf(sm.coverage.fueraHorizonte * 100)} % fuera del horizonte del pronóstico (48 h) y ${nf(sm.coverage.parcial * 100)} % queda parcialmente fuera. <b>Lo no evaluado NO es «sin riesgo».</b>`);
-  if (p.eleSource === 'dem') w.push('El track no trae altitud fiable: se usa el relieve del modelo (~440 m), con más error en crestas y fondos.');
-  if (p.eleSource === 'ninguna') w.push('Sin altitud: no se puede ajustar la temperatura ni la fase a la cota del track; se usa la altitud de la celda del modelo.');
-  if (sm.uncertainProfileFraction > 0.1) w.push(`El ${nf(sm.uncertainProfileFraction * 100)} % del recorrido tiene un perfil vertical incierto (posible inversión): la temperatura a la cota del track puede estar bastante desviada.`);
+  for (const t of p.warnings) w.push(esc(engineText(t)));
+  if (covBad) w.push(tr(`Solo se puede evaluar el <b>${nf(sm.coverage.ok * 100)} %</b> del recorrido: ${nf(sm.coverage.fueraDominio * 100)} % cae fuera de la rejilla del Pirineo oriental, ${nf(sm.coverage.fueraHorizonte * 100)} % fuera del horizonte del pronóstico (48 h) y ${nf(sm.coverage.parcial * 100)} % queda parcialmente fuera. <b>Lo no evaluado NO es «sin riesgo».</b>`, `Only <b>${nf(sm.coverage.ok * 100)}%</b> of the route can be evaluated: ${nf(sm.coverage.fueraDominio * 100)}% lies outside the eastern Pyrenees grid, ${nf(sm.coverage.fueraHorizonte * 100)}% beyond the 48-hour forecast and ${nf(sm.coverage.parcial * 100)}% is partially outside coverage. <b>Unevaluated does NOT mean safe.</b>`));
+  if (p.eleSource === 'dem') w.push(tr('El track no trae altitud fiable: se usa el relieve del modelo (~440 m), con más error en crestas y fondos.', 'The track lacks reliable elevation: model terrain (~440 m) is used, with greater errors on ridges and valley floors.'));
+  if (p.eleSource === 'ninguna') w.push(tr('Sin altitud: no se puede ajustar la temperatura ni la fase a la cota del track; se usa la altitud de la celda del modelo.', 'Without elevation, temperature and precipitation phase cannot be adjusted to track altitude; model-cell altitude is used.'));
+  if (sm.uncertainProfileFraction > 0.1) w.push(tr(`El ${nf(sm.uncertainProfileFraction * 100)} % del recorrido tiene un perfil vertical incierto (posible inversión): la temperatura a la cota del track puede estar bastante desviada.`, `${nf(sm.uncertainProfileFraction * 100)}% of the route has an uncertain vertical profile (possible inversion): temperature at track elevation may be significantly inaccurate.`));
   $('warns').hidden = !w.length; $('warns').innerHTML = w.map((x) => '<div>' + x + '</div>').join('');
 
   $('kv').innerHTML = [
-    ['Distancia', nf(sm.distanceKm, 1) + ' km'], ['Desnivel', sm.ascentM == null ? '—' : '+' + nf(sm.ascentM) + ' / −' + nf(sm.descentM) + ' m'],
-    ['Duración estimada', fmtDur(sm.durationS)], ['Salida', fmtT(S.ev.departMs)],
-    ['Llegada (ventana)', fmtW(sm.arrivalWindow)], ['Ritmo', S.ev.paceMethod === 'track' ? 'del track' : 'estimado'],
-    ['Lluvia que te caería', sm.precip.liquidMm == null ? '—' : nf(sm.precip.liquidMm, 1) + ' mm'], ['Nieve (agua eq.)', sm.precip.solidMm == null ? '—' : nf(sm.precip.solidMm, 1) + ' mm'],
-    ['Tramo expuesto (crestas)', nf(sm.exposedKm, 1) + ' km'], ['Recorrido evaluado', nf(sm.coverage.ok * 100) + ' %'],
+    [tr('Distancia', 'Distance'), nf(sm.distanceKm, 1) + ' km'], [tr('Desnivel', 'Elevation gain/loss'), sm.ascentM == null ? '—' : '+' + nf(sm.ascentM) + ' / −' + nf(sm.descentM) + ' m'],
+    [tr('Duración estimada', 'Estimated duration'), fmtDur(sm.durationS)], [tr('Salida', 'Departure'), fmtT(S.ev.departMs)],
+    [tr('Llegada (ventana)', 'Arrival (window)'), fmtW(sm.arrivalWindow)], [tr('Ritmo', 'Pace'), S.ev.paceMethod === 'track' ? tr('del track', 'recorded track') : tr('estimado', 'estimated')],
+    [tr('Lluvia que te caería', 'Rain along the route'), sm.precip.liquidMm == null ? '—' : nf(sm.precip.liquidMm, 1) + ' mm'], [tr('Nieve (agua eq.)', 'Snow (water equivalent)'), sm.precip.solidMm == null ? '—' : nf(sm.precip.solidMm, 1) + ' mm'],
+    [tr('Tramo expuesto (crestas)', 'Exposed section (ridges)'), nf(sm.exposedKm, 1) + ' km'], [tr('Recorrido evaluado', 'Route evaluated'), nf(sm.coverage.ok * 100) + ' %'],
   ].map(([k, v]) => `<div><span>${esc(k)}</span><b>${v}</b></div>`).join('');
 
   let hz = '';
   for (const h of E.HAZARDS) {
     const s = sm.hazards[h];
     let txt;
-    if (s.worst < 0) txt = 'No evaluable: sin datos de pronóstico en este recorrido y horario.';
-    else if (s.worst === 0 && s.worstWindow <= 0 && s.unknownFraction === 0) txt = 'Sin aviso de esta herramienta en todo el recorrido.';
+    if (s.worst < 0) txt = tr('No evaluable: sin datos de pronóstico en este recorrido y horario.', 'Cannot evaluate: no forecast data for this route and time.');
+    else if (s.worst === 0 && s.worstWindow <= 0 && s.unknownFraction === 0) txt = tr('Sin aviso de esta herramienta en todo el recorrido.', 'No warning from this tool along the route.');
     else {
-      txt = s.worst === 0 ? 'Nada relevante con la hora central' : `Máximo en el km ${nf(s.atKm, 1)}${s.atEle != null ? ' (' + nf(s.atEle) + ' m)' : ''}, hacia las ${fmtW(s.atWindow)}`;
-      if (s.worstWindow > s.worst) txt += `. <b>Con otro ritmo dentro de la ventana podría llegar a «${esc(LABELS[h][s.worstWindow])}»</b>`;
-      if (s.unknownFraction > 0) txt += `. <b>Sin datos en el ${nf(s.unknownFraction * 100)} % del recorrido.</b>`;
-      if (h === 'viento' && sm.exposedKm > 0) txt += `. ${nf(sm.exposedKm, 1)} km de crestas o collados: la racha real allí puede superar a la del modelo`;
+      txt = s.worst === 0 ? tr('Nada relevante con la hora central', 'Nothing significant at the central estimated time') : tr(`Máximo en el km ${nf(s.atKm, 1)}${s.atEle != null ? ' (' + nf(s.atEle) + ' m)' : ''}, hacia las ${fmtW(s.atWindow)}`, `Maximum at km ${nf(s.atKm, 1)}${s.atEle != null ? ' (' + nf(s.atEle) + ' m)' : ''}, around ${fmtW(s.atWindow)}`);
+      if (s.worstWindow > s.worst) txt += tr(`. <b>Con otro ritmo dentro de la ventana podría llegar a «${esc(LABELS[h][s.worstWindow])}»</b>`, `. <b>At another pace within the time window it could reach “${esc(LABELS[h][s.worstWindow])}”</b>`);
+      if (s.unknownFraction > 0) txt += tr(`. <b>Sin datos en el ${nf(s.unknownFraction * 100)} % del recorrido.</b>`, `. <b>No data for ${nf(s.unknownFraction * 100)}% of the route.</b>`);
+      if (h === 'viento' && sm.exposedKm > 0) txt += tr(`. ${nf(sm.exposedKm, 1)} km de crestas o collados: la racha real allí puede superar a la del modelo`, `. ${nf(sm.exposedKm, 1)} km of ridges or mountain passes: actual gusts can exceed the model`);
     }
     hz += `<div class="h"><div><b>${TITLES[h]}</b><br>${pill(h, s.worst)}</div><div>${txt}</div></div>`;
   }
-  hz += `<div class="h"><div><b>No evaluado</b><br><span class="pill lu">sin datos</span></div><div>${sm.notEvaluated.map(esc).join(' · ')}. <b>Esta herramienta no dice nada sobre ello; consulta los avisos y boletines oficiales.</b></div></div>`;
+  hz += `<div class="h"><div><b>${tr("No evaluado", "Not evaluated")}</b><br><span class="pill lu">${tr("sin datos", "no data")}</span></div><div>${sm.notEvaluated.map(x => esc(engineText(x))).join(' · ')}. <b>${tr("Esta herramienta no dice nada sobre ello; consulta los avisos y boletines oficiales.", "This tool does not assess these hazards; consult official warnings and bulletins.")}</b></div></div>`;
   $('hz').innerHTML = hz;
 
   $('hbtn').innerHTML = E.HAZARDS.map((h) => `<button class="btn" type="button" data-h="${h}" aria-pressed="${h === S.hazard}">${TITLES[h]}</button>`).join('');
   for (const b of $('hbtn').querySelectorAll('button')) b.onclick = () => { S.hazard = b.dataset.h; render(); };
-  const lg = (h) => [0, 1, 2, 3, 4].filter((c) => LABELS[h][c]).map((c) => `<span><i style="background:${colorOf(c)}"></i>${esc(LABELS[h][c])}</span>`).join('') + '<span><i style="background:repeating-linear-gradient(45deg,#4d5b5d,#4d5b5d 3px,#34403f 3px,#34403f 6px)"></i>sin datos</span>';
-  $('lg-map').innerHTML = '<span>Color del track = ' + esc(TITLES[S.hazard]) + ' (hora central):</span>' + lg(S.hazard);
-  $('lg-prof').innerHTML = '<span><i style="background:var(--fz)"></i>isocero del modelo a la hora de paso</span><span>franjas inferiores: lluvia · viento · nieve · frío</span>';
+  const lg = (h) => [0, 1, 2, 3, 4].filter((c) => LABELS[h][c]).map((c) => `<span><i style="background:${colorOf(c)}"></i>${esc(LABELS[h][c])}</span>`).join('') + '<span><i style="background:repeating-linear-gradient(45deg,#4d5b5d,#4d5b5d 3px,#34403f 3px,#34403f 6px)"></i>' + tr('sin datos','no data') + '</span>';
+  $('lg-map').innerHTML = '<span>' + tr('Color del track = ', 'Track colour = ') + esc(TITLES[S.hazard]) + tr(' (hora central):</span>', ' (central time):</span>') + lg(S.hazard);
+  $('lg-prof').innerHTML = tr('<span><i style="background:var(--fz)"></i>isocero del modelo a la hora de paso</span><span>franjas inferiores: lluvia · viento · nieve · frío</span>', '<span><i style="background:var(--fz)"></i>model freezing level at estimated passage time</span><span>lower bands: rain · wind · snow · cold</span>');
 
   const rows = [];
   for (const h of E.HAZARDS) for (const r of sm.hazards[h].runs) rows.push([h, r]);
   rows.sort((a, b) => a[1].d0 - b[1].d0);
-  $('runs').querySelector('tbody').innerHTML = rows.length ? rows.map(([h, r]) => `<tr><td>${TITLES[h]}</td><td>km ${nf(r.d0 / 1000, 1)}–${nf(r.d1 / 1000, 1)}</td><td>${fmtW([r.t0, r.t1])}</td><td>${pill(h, r.max)}</td></tr>`).join('') : '<tr><td colspan="4">Ningún tramo alcanza el primer nivel con la hora central. Mira las ventanas y los datos que faltan arriba.</td></tr>';
+  $('runs').querySelector('tbody').innerHTML = rows.length ? rows.map(([h, r]) => `<tr><td>${TITLES[h]}</td><td>km ${nf(r.d0 / 1000, 1)}–${nf(r.d1 / 1000, 1)}</td><td>${fmtW([r.t0, r.t1])}</td><td>${pill(h, r.max)}</td></tr>`).join('') : tr('<tr><td colspan="4">Ningún tramo alcanza el primer nivel con la hora central. Mira las ventanas y los datos que faltan arriba.</td></tr>', '<tr><td colspan="4">No segment reaches the first threshold at the central time. Check the time windows and missing data above.</td></tr>');
   drawAll();
 }
 
@@ -349,7 +367,7 @@ function drawMap() {
   }
   x.setLineDash([]);
   const mark = (s, txt, col) => { x.beginPath(); x.arc(v.px(s.lon), v.py(s.lat), 6, 0, 7); x.fillStyle = col; x.fill(); x.strokeStyle = '#0d1417'; x.lineWidth = 2; x.stroke(); x.fillStyle = css('--ink'); x.font = '12px ' + css('--f-body'); x.fillText(txt, v.px(s.lon) + 9, v.py(s.lat) - 7); };
-  mark(sam[0], 'Salida ' + hmFmt.format(new Date(sam[0].tMs)), '#fff'); mark(sam[sam.length - 1], 'Llegada ' + hmFmt.format(new Date(sam[sam.length - 1].tMs)), '#fff');
+  mark(sam[0], tr('Salida ', 'Departure ') + hmFmt().format(new Date(sam[0].tMs)), '#fff'); mark(sam[sam.length - 1], tr('Llegada ', 'Arrival ') + hmFmt().format(new Date(sam[sam.length - 1].tMs)), '#fff');
   if (S.hover != null) { const s = sam[S.hover]; x.beginPath(); x.arc(v.px(s.lon), v.py(s.lat), 8, 0, 7); x.strokeStyle = '#fff'; x.lineWidth = 2; x.stroke(); }
 }
 
@@ -394,7 +412,7 @@ function drawProfile() {
     const s = sam.reduce((a, b) => Math.abs(b.d - km * 1000) < Math.abs(a.d - km * 1000) ? b : a);
     x.beginPath(); x.moveTo(X(km * 1000), T); x.lineTo(X(km * 1000), T + ph); x.stroke();
     x.fillText(km + ' km', Math.min(X(km * 1000) - 8, w - 48), 12);
-    x.fillText(hmFmt.format(new Date(s.tMs)), Math.min(X(km * 1000) - 8, w - 40), h - 4);
+    x.fillText(hmFmt().format(new Date(s.tMs)), Math.min(X(km * 1000) - 8, w - 40), h - 4);
   }
   // Franjas por peligro.
   const hp = hatchPattern(x);
@@ -416,14 +434,14 @@ function showTip() {
   const tip = $('tip');
   if (S.hover == null) { tip.hidden = true; return; }
   const s = S.ev.samples[S.hover], v = s.v;
-  const lines = [`km ${nf(s.d / 1000, 1)} · ${s.ele != null ? nf(s.ele) + ' m' : 'sin altitud'}`, `Hora estimada ${fmtW(s.tWin)}`];
-  if (s.estado !== 'ok' && !v) lines.push('Sin datos: ' + ({ fuera_dominio: 'fuera de la rejilla', fuera_horizonte: 'fuera del horizonte del pronóstico' }[s.estado] || s.estado));
+  const lines = [`km ${nf(s.d / 1000, 1)} · ${s.ele != null ? nf(s.ele) + ' m' : tr('sin altitud', 'no elevation')}`, `${tr("Hora estimada", "Estimated time")} ${fmtW(s.tWin)}`];
+  if (s.estado !== 'ok' && !v) lines.push(tr('Sin datos: ', 'No data: ') + ({ fuera_dominio: tr('fuera de la rejilla','outside grid'), fuera_horizonte: tr('fuera del horizonte del pronóstico','beyond forecast horizon') }[s.estado] || s.estado));
   else if (v) {
-    lines.push(`T ${nf(v.t, 1)} °C · sens. ${nf(v.wc, 0)} °C`, `Lluvia ${nf(v.rain, 1)} · nieve ${nf(v.snow, 1)} mm/h`, `Viento ${nf(v.wind, 0)} · racha ${nf(v.gust, 0)} km/h`);
-    if (v.aboveFl != null) lines.push(v.aboveFl ? 'Por encima del isocero del modelo' : 'Por debajo del isocero del modelo');
-    if (s.exposed) lines.push('Cresta/collado: racha real puede ser mayor');
-    if (v.uncertainProfile) lines.push('Perfil vertical incierto');
-    if (s.estado === 'ventana_incompleta') lines.push('Ventana de ritmo parcialmente sin datos');
+    lines.push(`T ${nf(v.t, 1)} °C · ${tr("sens.","feels like")} ${nf(v.wc, 0)} °C`, `${tr("Lluvia","Rain")} ${nf(v.rain, 1)} · ${tr("nieve","snow")} ${nf(v.snow, 1)} mm/h`, `${tr("Viento","Wind")} ${nf(v.wind, 0)} · ${tr("racha","gust")} ${nf(v.gust, 0)} km/h`);
+    if (v.aboveFl != null) lines.push(v.aboveFl ? tr('Por encima del isocero del modelo', 'Above model freezing level') : tr('Por debajo del isocero del modelo', 'Below model freezing level'));
+    if (s.exposed) lines.push(tr('Cresta/collado: racha real puede ser mayor', 'Ridge/pass: actual gust may be higher'));
+    if (v.uncertainProfile) lines.push(tr('Perfil vertical incierto', 'Uncertain vertical profile'));
+    if (s.estado === 'ventana_incompleta') lines.push(tr('Ventana de ritmo parcialmente sin datos', 'Pace window partially lacks data'));
   }
   tip.innerHTML = lines.map(esc).join('<br>'); tip.hidden = false;
 }
@@ -444,12 +462,12 @@ function nearestByProfile(ev) {
 /* ───── arranque ───── */
 function bind() {
   const file = $('file'), drop = $('drop');
-  const readFile = async (f) => { if (!f) return; if (f.size > E.LIMITS.maxChars) return showError('Fichero demasiado grande'); loadTrack(await f.text(), null); };
+  const readFile = async (f) => { if (!f) return; if (f.size > E.LIMITS.maxChars) return showError(() => tr('Fichero demasiado grande', 'File too large')); loadTrack(await f.text(), null); };
   file.onchange = () => readFile(file.files[0]);
   drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); };
   drop.ondragleave = () => drop.classList.remove('over');
   drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); readFile(e.dataTransfer.files[0]); };
-  $('demo').onclick = () => { const g = demoGpx(); if (!g) return showError('No hay puntos de referencia para la demostración'); loadTrack(g, null); };
+  $('demo').onclick = () => { const g = demoGpx(); if (!g) return showError(() => tr('No hay puntos de referencia para la demostración', 'No reference points for the demonstration')); loadTrack(g, null); };
   $('now').onclick = () => { $('dep').value = 0; recompute(); };
   for (const id of ['dep', 'fac', 'brk', 'pace']) $(id).oninput = recompute;
   $('act').onchange = () => { $('fac').value = $('act').value; recompute(); };
@@ -463,20 +481,61 @@ function bind() {
 function renderStatic() {
   const g = S.grid, c = S.core || {};
   const age = c.issued ? (Date.now() - Date.parse(c.issued)) / 36e5 : null;
-  $('meta').textContent = `Pronóstico ${g.modelo || 'modelo'} · emitido ${c.issued ? fmtT(Date.parse(c.issued)) : '—'}${age != null ? ' (hace ' + nf(age, 1) + ' h)' : ''} · horizonte hasta ${fmtT(g.times[g.times.length - 1])} · rejilla 0,05° · ${S.source === 'backend' ? 'backend' : 'instantánea publicada'}`;
-  if (age != null && age > 12) { $('warns').hidden = false; $('warns').innerHTML = `<div>Los datos tienen ${nf(age)} h: pueden estar desfasados. Comprueba la fecha de emisión.</div>`; }
+  $('meta').textContent = tr(`Pronóstico ${g.modelo || 'modelo'} · emitido ${c.issued ? fmtT(Date.parse(c.issued)) : '—'}${age != null ? ' (hace ' + nf(age, 1) + ' h)' : ''} · horizonte hasta ${fmtT(g.times[g.times.length - 1])} · rejilla 0,05° · ${S.source === 'backend' ? 'backend' : 'instantánea publicada'}`, `Forecast ${g.modelo || 'model'} · issued ${c.issued ? fmtT(Date.parse(c.issued)) : '—'}${age != null ? ' (' + nf(age, 1) + ' h ago)' : ''} · horizon until ${fmtT(g.times[g.times.length - 1])} · 0.05° grid · ${S.source === 'backend' ? 'backend' : 'published snapshot'}`);
+  if (age != null && age > 12) { $('warns').hidden = false; $('warns').innerHTML = `<div>${tr(`Los datos tienen ${nf(age)} h: pueden estar desfasados. Comprueba la fecha de emisión.`, `Data are ${nf(age)} h old and may be stale. Check the issue time.`)}</div>`; }
   const W = (c.avisos || []).filter((w) => !w.error);
-  $('official').innerHTML = W.length ? W.map((w) => `<li>${esc(w.nivel)} · ${esc(w.evento)} · ${esc(w.fuente || 'MeteoAlarm')} · ${esc(w.area)}${w.vigente ? ' · vigente' : ''}</li>`).join('') : '<li>Sin avisos amarillos o superiores en el último dato recibido, o fuentes de avisos no disponibles. Consulta siempre las fuentes oficiales.</li>';
+  $('official').innerHTML = W.length ? W.map((w) => `<li><span lang="und">${esc(w.nivel)} · ${esc(w.evento)} · ${esc(w.fuente || 'MeteoAlarm')} · ${esc(w.area)}</span>${w.vigente ? tr(' · vigente en el ciclo', ' · marked current in source cycle') : ''}</li>`).join('') : tr('<li>Sin avisos amarillos o superiores en el último dato recibido, o fuentes de avisos no disponibles. Consulta siempre las fuentes oficiales.</li>', '<li>No yellow or higher warnings in the latest data received, or warning sources unavailable. Always consult official sources.</li>');
   $('limits').innerHTML = [
-    'Pronóstico de un solo modelo determinista (' + esc(g.modelo || '—') + '), rejilla de ~5 km y paso de 3 h: sin probabilidades. Las tormentas pequeñas y los chubascos breves se diluyen o no aparecen.',
-    'Cubre la parte oriental del Pirineo (Cerdanya, Capcir, Andorra y alrededores). Lo que queda fuera se marca como sin datos.',
-    'La temperatura a la cota del track se ajusta con el isocero del modelo cuando es creíble, y con 6,5 °C/km si no. En inversiones puede fallar bastante.',
-    'La racha del modelo no recoge la aceleración en crestas y collados. Los tramos expuestos se señalan solo como aviso.',
-    'La nieve se expresa en milímetros de agua equivalente, sin convertir a centímetros.',
-    'No se evalúan: ' + E.NOT_EVALUATED.map(esc).join(', ') + '.',
-    'Los umbrales de cada nivel son orientativos de la herramienta; no son umbrales de aviso oficial ni están calibrados localmente.',
+    tr('Pronóstico de un solo modelo determinista (' + esc(g.modelo || '—') + '), rejilla de ~5 km y paso de 3 h: sin probabilidades. Las tormentas pequeñas y los chubascos breves se diluyen o no aparecen.', 'Forecast from one deterministic model (' + esc(g.modelo || '—') + '), ~5 km grid and 3-hour steps: no probabilities. Small thunderstorms and short showers may be diluted or absent.'),
+    tr('Cubre la parte oriental del Pirineo (Cerdanya, Capcir, Andorra y alrededores). Lo que queda fuera se marca como sin datos.', 'Covers the eastern Pyrenees (Cerdanya, Capcir, Andorra and surroundings). Areas outside are marked as no data.'),
+    tr('La temperatura a la cota del track se ajusta con el isocero del modelo cuando es creíble, y con 6,5 °C/km si no. En inversiones puede fallar bastante.', 'Temperature at track elevation is adjusted using the model freezing level when credible, otherwise using 6.5 °C/km. This may be very inaccurate during inversions.'),
+    tr('La racha del modelo no recoge la aceleración en crestas y collados. Los tramos expuestos se señalan solo como aviso.', 'Model gusts do not capture acceleration on ridges and mountain passes. Exposed sections are indicated as a caution only.'),
+    tr('La nieve se expresa en milímetros de agua equivalente, sin convertir a centímetros.', 'Snow is expressed in millimetres of water equivalent, without converting to centimetres.'),
+    tr('No se evalúan: ', 'Not evaluated: ') + E.NOT_EVALUATED.map(x => esc(engineText(x))).join(', ') + '.',
+    tr('Los umbrales de cada nivel son orientativos de la herramienta; no son umbrales de aviso oficial ni están calibrados localmente.', 'The level thresholds are indicative for this tool; they are not official warning thresholds and have not been locally calibrated.'),
   ].map((t) => '<li>' + t + '</li>').join('');
 }
+
+const staticTranslations = {
+  'Pirineo ·': 'Pyrenees ·', 'Ruta y tiempo':'Route and weather', '← Panel del Pirineo':'← Pyrenees dashboard',
+  'Tu track no sale de este navegador.':'Your track stays in this browser.',
+  'Se lee y se calcula aquí, no se sube, no se guarda y esta página no lo envía a ningún servidor. Solo descarga datos públicos de pronóstico y relieve. No se usa ningún mapa ni fuente de terceros.':'It is read and processed here, not uploaded or saved, and this page does not send it to any server. Only public forecast and terrain data are downloaded. No third-party map or font is used.',
+  '1 · Tu ruta y tu salida':'1 · Your route and departure', 'Subir track GPX':'Upload GPX track', 'o arrastra aquí el fichero. Exporta a GPX desde Garmin, Suunto, Wikiloc, etc.':'or drag the file here. Export to GPX from Garmin, Suunto, Wikiloc, etc.', 'Ruta de demostración (sintética)':'Demonstration route (synthetic)',
+  'Hora de salida (hora de Madrid)':'Departure time (Madrid time)', 'Ahora':'Now', 'Actividad (factor de ritmo)':'Activity (pace factor)', 'Senderismo · 1,00':'Hiking · 1.00', 'Marcha cargada · 0,75':'Loaded hiking · 0.75', 'Trail / carrera · 1,70':'Trail running · 1.70', 'Raquetas o esquí de travesía · 0,60':'Snowshoeing or ski touring · 0.60', 'Factor de ritmo':'Pace factor', 'Pausas (min por hora de marcha)':'Breaks (min per hour of walking)', 'Origen del ritmo':'Pace source', 'Estimado (Tobler + factor)':'Estimated (Tobler + factor)', 'Tiempos del track':'Recorded track times',
+  'El ritmo es una estimación: la hora de paso se muestra como ventana (±15 % del tiempo transcurrido). Los factores de actividad son orientativos, no calibrados.':'Pace is an estimate: passage time is shown as a window (±15% of elapsed time). Activity factors are indicative and uncalibrated.',
+  '2 · Resumen':'2 · Summary', '3 · Qué te vas a encontrar, por peligro':'3 · Conditions by hazard', '4 · Mapa del recorrido':'4 · Route map', '5 · Perfil y peligros a lo largo de la ruta':'5 · Profile and hazards along the route', '6 · Tramos afectados':'6 · Affected segments', 'Peligro':'Hazard', 'Tramo':'Segment', 'Hora estimada (ventana)':'Estimated time (window)', 'Nivel máximo':'Maximum level', 'Avisos oficiales recibidos para el Pirineo':'Official warnings received for the Pyrenees',
+  'Los avisos oficiales se muestran por zona, sin geolocalizarlos sobre tu ruta. Mandan siempre sobre esta herramienta.':'Official warnings are shown by area, without matching them geographically to your route. They always take precedence over this tool.', 'Límites de esta herramienta':'Limits of this tool',
+  "Estimación diagnóstica de un motor propio, no un aviso oficial: mandan el Servei Meteorològic d'Andorra, Meteocat/AEMET y Météo-France; para aludes, los boletines oficiales. En emergencia, 112. Datos: Open-Meteo (CC BY 4.0); relieve Terrarium.":"Diagnostic estimate from our own engine, not an official warning: Servei Meteorològic d'Andorra, Meteocat/AEMET and Météo-France take precedence; for avalanches, consult official bulletins. In an emergency, call 112. Data: Open-Meteo (CC BY 4.0); terrain: Terrarium."
+};
+const ariaTranslations = {'Privacidad':'Privacy','Controles':'Controls','Hora de salida':'Departure time'};
+const staticNodes = [];
+const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+while (walk.nextNode()) {
+  const node = walk.currentNode, parent = node.parentElement, value = node.nodeValue;
+  if (!parent || parent.closest('script,style,#meta,#warns,#err,#official,#limits,#kv,#hz,#route-language,#official-language')) continue;
+  const key = value.trim();
+  if (staticTranslations[key]) staticNodes.push([node, value, key]);
+}
+const ariaNodes = Array.from(document.querySelectorAll('[aria-label]')).filter(n=>ariaTranslations[n.getAttribute('aria-label')]).map(n=>[n,n.getAttribute('aria-label')]);
+function changeLanguage() {
+  LABELS = lang === 'en' ? LABELS_EN : LABELS_ES;
+  TITLES = lang === 'en' ? TITLES_EN : TITLES_ES;
+  document.documentElement.lang = lang;
+  document.title = tr('Pirineo · Ruta y tiempo', 'Pyrenees · Route and weather');
+  for (const [node, raw, key] of staticNodes) node.nodeValue = lang === 'en' ? raw.replace(key,staticTranslations[key]) : raw;
+  for (const [node, raw] of ariaNodes) node.setAttribute('aria-label', lang === 'en' ? ariaTranslations[raw] : raw);
+  $('route-language').value = lang;
+  $('official-language').hidden = lang !== 'en';
+  if (S.error) showError(S.error);
+  if (!S.grid) { $('meta').textContent = S.error ? tr('Sin pronóstico válido','No valid forecast') : tr('Cargando datos…','Loading data…'); $('official').innerHTML = S.error ? tr('<li>No disponible.</li>','<li>Unavailable.</li>') : tr('<li>Cargando…</li>','<li>Loading…</li>'); }
+  if (S.grid) { updateDepOut(); renderStatic(); if (S.ev) render(); }
+}
+$('route-language').addEventListener('change', event => {
+  lang = event.target.value === 'en' ? 'en' : 'es';
+  try { localStorage.setItem('meteo-language',lang); } catch (_) {}
+  changeLanguage();
+});
+changeLanguage();
 
 (async function main() {
   bind();
@@ -485,9 +544,9 @@ function renderStatic() {
     setupControls();
     renderStatic();
   } catch (e) {
-    $('meta').textContent = 'Sin pronóstico válido';
-    showError('No hay una rejilla de pronóstico válida (' + e.message + '). Sin pronóstico, la herramienta no evalúa ninguna ruta: nada se da por «sin riesgo».');
-    $('official').innerHTML = '<li>No disponible.</li>';
+    $('meta').textContent = tr('Sin pronóstico válido', 'No valid forecast');
+    showError(() => tr('No hay una rejilla de pronóstico válida (', 'No valid forecast grid (') + engineText(e.message) + tr('). Sin pronóstico, la herramienta no evalúa ninguna ruta: nada se da por «sin riesgo».', '). Without a forecast, the tool cannot evaluate routes: nothing is assumed safe.'));
+    $('official').innerHTML = tr('<li>No disponible.</li>', '<li>Unavailable.</li>');
   }
 })();
 </script>

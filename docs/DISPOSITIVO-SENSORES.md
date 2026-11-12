@@ -1,5 +1,7 @@
 # Sensores y háptica del teléfono — experimental
 
+**Idioma / Language:** Español · [English](DISPOSITIVO-SENSORES.en.md)
+
 La vista `/dispositivo/` usa el mismo `core.json` que las consolas y solo funciona con la página abierta y visible. No es un servicio de avisos, ni cambia umbrales, modelos o fuentes. Sin probar en teléfonos reales; la compatibilidad y permisos dependen del dispositivo y navegador. Se requiere HTTPS o localhost para sensores que lo exijan.
 
 La vibración se activa mediante un botón. Una vez fijada una línea base, señala una subida de nivel o la pérdida de un diagnóstico anterior (esta última, como máximo una vez por minuto). Al cambiar de dominio, ocultar la página o volver a mostrarla se reinicia la línea base. La ausencia de vibración no significa ausencia de peligro; consulta los avisos oficiales.

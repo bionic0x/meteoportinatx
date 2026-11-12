@@ -1,5 +1,7 @@
 # H1 — cobertura crítica de lluvia y frescura (parche conservador)
 
+**Idioma / Language:** Español · [English](H1-RAIN-COVERAGE.en.md)
+
 **Objetivo:** evitar que dos observaciones de viento/mar acrediten una falsa sensación de calma cuando la familia lluvia está caída. La fusión mantiene los tres ejes y el suelo oficial.
 
 ## Contrato implementado

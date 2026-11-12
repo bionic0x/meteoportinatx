@@ -1,5 +1,7 @@
 # Decisión de credenciales — AEMET y rayos MTG-LI (#18/#23)
 
+**Idioma / Language:** Español · [English](OPERATIVA-CREDENCIALES-20261111.en.md)
+
 **Fecha: 11/11/2026.** La publicación Pages del commit `535c1e4`, ciclo `2026-11-11T15:43:48Z`, declara `aemet_cap=sin_clave`, `aemet_obs=sin_clave`, `rayos_mtg_li=sin_clave`. La presencia de fuentes internacionales como MeteoAlarm no reemplaza verificar el aviso primario AEMET; la UI debe identificar cuándo funciona solo como fallback.
 
 **AEMET.** Obtener una API Key nueva mediante el procedimiento oficial, con vencimiento cada **tres meses** según los cambios anunciados por AEMET en julio–octubre de 2026. Guardarla exclusivamente en `Settings > Secrets and variables > Actions > AEMET_API_KEY`, nunca en variables públicas, commits, notas ni logs. Comprobar el resumen de presencia de `deploy.yml` y después `aemet_cap=ok` junto con tiempos/autoridad de la fuente, sin imprimir la clave. Registrar el vencimiento fuera de Git, en la variable de Actions `AEMET_KEY_EXPIRES` (`AAAA-MM-DD`, no secreta), y renovar con margen. El workflow diario `credential-expiry.yml` falla, y GitHub te avisa, si la clave caduca en 14 días o menos, ya caducó o está configurada sin fecha; solo comprueba que el secreto existe y nunca imprime su valor; cuando falle la API se publica explícitamente `sin_clave` o `error`, no un aviso AEMET inventado.

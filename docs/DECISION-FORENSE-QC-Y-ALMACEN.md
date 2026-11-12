@@ -1,5 +1,7 @@
 # D-021 — QC instrumental y archivo forense duradero (#7)
 
+**Idioma / Language:** Español · [English](DECISION-FORENSE-QC-Y-ALMACEN.en.md)
+
 **Decisión: 11/11/2026 · estado: política adoptada, almacén remoto NO provisionado.**
 Alcance: archivo de investigación y benchmark PROSPECTIVE fuera de muestra.
 Sin efectos sobre alertas, modelos, vigilancia 24/7 ni Render Free.

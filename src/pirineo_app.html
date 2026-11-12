@@ -117,6 +117,10 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
   <h1>Pirineo <span>Observatorio</span></h1>
   <div class="meta"><span id="m-issued">esperando datos…</span><span id="m-src"></span></div>
   <div class="actions"><a class="btn act" href="ruta/" style="text-decoration:none">Ruta y tiempo</a><button class="btn act" id="btn-refresh" type="button" hidden>Actualizar y publicar</button><span id="refresh-st" role="status" aria-live="polite"></span><button class="btn act" id="btn-chat" type="button" hidden aria-expanded="false">Preguntar a Claude</button></div>
+  <label for="pir-language" class="lang-control">Idioma / Language
+    <select id="pir-language"><option value="es">Español</option><option value="en">English (partial)</option></select>
+  </label>
+  <p id="language-note" class="src" hidden lang="en">English is incomplete: some interface text, forecasts and official warnings remain in their original language. Check official warnings at their source.</p>
   <nav class="tabs" aria-label="Secciones del observatorio">
     <a href="#vigilancia" data-tab="vigilancia">Situación</a>
     <a href="#puntos" data-tab="puntos">Localidades</a>
@@ -308,6 +312,424 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
   <p class="src">Responde Claude con los datos publicados. Estimación diagnóstica, no aviso oficial.</p>
 </aside>
 
+<script>
+/* Partial, offline interface translation. Source warnings and meteorological values are never machine-translated. */
+(() => {
+  const translations = {
+    "Saltar al contenido":"Skip to content", "Decidir":"Decide", "← Observatorios":"← Observatories", "Observatorio":"Observatory", "Ruta y tiempo":"Route and weather",
+    "Situación":"Overview", "Localidades":"Locations", "Mapa":"Map", "Atmósfera":"Atmosphere", "15 días":"15 days", "Más herramientas":"More tools", "Explorar condiciones":"Explore conditions", "Verificación y herramientas":"Verification and tools", "Satélite / radar":"Satellite / radar", "Corte y cotas":"Cross-section and elevations", "Superficie":"Surface", "Modelos":"Models", "Forense":"Forensics", "Fuentes y estado":"Sources and status", "Laboratorio":"Laboratory",
+    "Tres ejes · aviso oficial / observación / diagnóstico":"Three perspectives · official warning / observation / diagnosis", "Avisos oficiales de las zonas pirenaicas":"Official warnings for Pyrenean areas", "El diagnóstico de montaña no equivale a un aviso institucional. Para aludes deben comprobarse los boletines de la autoridad competente.":"Mountain diagnostics are not official warnings. For avalanches, check the relevant authority’s bulletin.",
+    "Perfil atmosférico detallado · Pirineo":"Detailed atmospheric profile · Pyrenees", "Perfil de modelo en puntos representativos por vertiente; no es un sondeo observado. Su hora es independiente de la de mapas y modelos.":"Model profile at representative locations on each side of the range; not an observed sounding. Its time is independent of the map and model time.", "Vertiente":"Mountain side", "Sur · Cerdanya":"South · Cerdanya", "Norte · Ariège / Capcir":"North · Ariège / Capcir", "Hora del perfil":"Profile time", "Sin hora verificable":"No verifiable time", "Termodinámica y viento · punto de control":"Thermodynamics and wind · selected point", "Punto de diagnóstico":"Diagnostic location", "Perfil a 700 hPa y cotas por vertiente":"700 hPa profile and elevations by mountain side", "Perfiles ARPEGE norte y sur independientes. Froude y cota son diagnósticos modelizados, no observaciones.":"Independent northern and southern ARPEGE profiles. Froude and snow level are model diagnostics, not observations.",
+    "Mapas y modelos: selecciona el modelo disponible y su hora. El perfil atmosférico utiliza otra fuente y su propio control de hora.":"Maps and models: select the available model and its time. The atmospheric profile uses a different source and its own time control.", "Hora de mapas y modelos":"Map and model time", "Relieve y tiempo":"Terrain and weather", "Relieve":"Terrain", "Cota de nieve":"Snow level", "Temperatura":"Temperature", "Precipitación 3 h":"Precipitation 3 h", "Racha":"Gust", "Nombres":"Names", "Curvas":"Contours", "Puntos de control":"Control points", "Punto":"Location", "Viento":"Wind", "Nota":"Note", "Hora":"Time", "Observación":"Observation", "Estación":"Station", "Red":"Network", "Avisos oficiales":"Official warnings", "Fuentes":"Sources", "Aludes y carreteras":"Avalanches and roads", "Predicción de montaña de AEMET":"AEMET mountain forecast",
+    "Metaanálisis de nieve y frío · 15 días":"Snow and cold meta-analysis · 15 days", "Base de pistas":"Resort base", "Cota alta":"Upper elevation", "Fecha":"Date", "Calidad de evidencia":"Evidence quality", "Modelos · contraste en el punto seleccionado":"Models · comparison at selected location", "Punto de control":"Control point", "Modelos deterministas en el punto elegido; no confundir su número con miembros estadísticamente independientes.":"Deterministic models for the selected point; their count is not a set of statistically independent members.", "Modelo":"Model", "Origen":"Source", "Serie temporal · bloques 3 h":"Time series · 3-hour blocks", "Hora local":"Local time", "Nieve cm":"Snow cm", "Nubes %":"Cloud %", "Trazabilidad de fuentes y edad":"Source traceability and age", "Fuente":"Source", "Estado":"Status", "Laboratorio · escenario local de rachas":"Laboratory · local gust scenario", "Solo navegador. Ajustar un umbral no cambia reglas, alertas ni el archivo forense.":"Browser only. Changing a threshold does not alter rules, warnings or the forensic archive."
+  };
+  Object.assign(translations, {
+    "esperando datos…": "waiting for data…",
+    "Actualizar y publicar": "Refresh and publish",
+    "Preguntar a Claude": "Ask Claude",
+    "CAP AEMET en España y MeteoAlarm para Francia y Andorra. La cobertura completa no está garantizada si una fuente falla.": "AEMET CAP for Spain and MeteoAlarm for France and Andorra. Complete coverage is not guaranteed if a source fails.",
+    "Satélite / radar · cobertura externa": "Satellite / radar · external coverage",
+    "NOT_INTEGRATED EN ESTA CONSOLA · no se ingieren imágenes propias de satélite ni radar. La herramienta local de paquetes de zona puede descargar teselas de radar para puntos del Pirineo, con cobertura sin verificar. Ausencia de imágenes NO significa ausencia de lluvia o tormentas.": "NOT_INTEGRATED IN THIS CONSOLE · no satellite or radar images are ingested here. The local area package tool can download radar tiles for Pyrenean locations, with unverified coverage. No imagery does NOT mean no rain or storms.",
+    "Visores oficiales; consulta la hora y el producto en el sitio original. No alimentan el diagnóstico local.": "Official viewers; check time and product at the original site. They do not feed the local diagnosis.",
+    "EUMETView · satélite EUMETSAT": "EUMETView · EUMETSAT satellite",
+    "AEMET · radar de precipitación": "AEMET · precipitation radar",
+    "Meteocat · radar de Catalunya": "Meteocat · Catalonia radar",
+    "El radar de Ibiza no es válido para el Pirineo. En una instalación local,": "The Ibiza radar does not cover the Pyrenees. In a local installation,",
+    "generan un informe con las teselas disponibles. No las incorporan a esta consola. La hora de una composición RainViewer no garantiza la de cada medición subyacente; cobertura local y ecos orográficos requieren validación.": "generate a report with available tiles. They do not incorporate them into this console. The time of a RainViewer composite does not guarantee the time of every underlying measurement; local coverage and terrain-related echoes require validation.",
+    "UNKNOWN · Perfil no disponible en este ciclo.": "UNKNOWN · Profile unavailable in this cycle.",
+    "Isocero m": "Freezing level m",
+    "Copo m": "Snowfall level m",
+    "Viento 700 km/h": "700 hPa wind km/h",
+    "Flujo": "Flow",
+    "Corte vertical · Andorra la Vella → Envalira → Puymorens → Cerdanya → Tossa d'Alp": "Vertical cross-section · Andorra la Vella → Envalira → Puymorens → Cerdanya → Tossa d'Alp",
+    "Cotas en las próximas 72 h": "Snow levels over the next 72 h",
+    "Vertiente sur (Cerdanya)": "South side (Cerdanya)",
+    "Vertiente norte (Ariège)": "North side (Ariège)",
+    "Mín/Máx 24 h": "Min/Max 24 h",
+    "Lluvia 24/72 h": "Rain 24/72 h",
+    "Nieve 24/72 h": "Snow 24/72 h",
+    "Racha 24 h": "Gust 24 h",
+    "Flujo y föhn": "Flow and foehn",
+    "Isocero": "Freezing level",
+    "Copo": "Snowfall level",
+    "Lectura": "Interpretation",
+    "Inversión observada": "Observed inversion",
+    "HR %": "RH %",
+    "Viento km/h": "Wind km/h",
+    "Racha día": "Daily gust",
+    "Lluvia día": "Daily rain",
+    "Hace": "Age",
+    "AEMET (red oficial; La Molina, Planoles, Martinet, Tuixent), Météo-France DPObs (API oficial opcional, observación reciente), estaciones francesas y SMA de Andorra retransmitidos por Meteociel (lectura secundaria no oficial), ClimayNievePirineos (Envalira, Bordes, El Tarter, Incles), Meteoclimatic (aficionados, coordenadas de núcleo) y METAR de Andorra–La Seu. Las estaciones de AEMET publican con 1–2 h de retraso.": "AEMET (official network; La Molina, Planoles, Martinet, Tuixent), Météo-France DPObs (optional official API, recent observations), French stations and Andorran SMA relayed by Meteociel (unofficial secondary reading), ClimayNievePirineos (Envalira, Bordes, El Tarter, Incles), Meteoclimatic (amateur network, settlement coordinates) and Andorra–La Seu METAR. AEMET station reports are delayed by 1–2 hours.",
+    "Resultados por familias independientes ECMWF/ENS, GEFS y ICON-EPS. Los porcentajes son": "Results from the independent ECMWF/ENS, GEFS and ICON-EPS families. Percentages are",
+    "fracciones de miembros, no probabilidades locales calibradas": "fractions of members, not calibrated local probabilities",
+    ". Los modelos no predicen qué remontes abrirán. ENOS/ENSO, NAO/AO, vórtice y Atlántico son contexto sin ajuste automático de probabilidades.": ". Models do not predict which lifts will open. ENSO, NAO/AO, the vortex and Atlantic conditions are context; they do not automatically adjust probabilities.",
+    "Cota": "Elevation",
+    "Fracción nieve ≥5 cm": "Fraction snow ≥5 cm",
+    "Fracción nieve ≥10 cm": "Fraction snow ≥10 cm",
+    "Familias nieve ≥5 cm": "Families snow ≥5 cm",
+    "Salud de modelos y revisión entre salidas": "Model health and changes between runs",
+    "Señales contrarian · verificadas o desconocidas": "Contrarian signals · verified or unknown",
+    "T ahora °C": "Current T °C",
+    "Nieve 24 h cm": "Snow 24 h cm",
+    "Racha máx 24 h km/h": "Max gust 24 h km/h",
+    "Racha km/h": "Gust km/h",
+    "Forense · revisión de modelos ≠ error observado": "Forensics · model revision ≠ observed error",
+    "El ledger prospectivo privado no se publica: nunca copiar datos de vivienda ni registro local a Pages.": "The private prospective ledger is not published: never copy household data or local records to Pages.",
+    "Edad consulta / caché": "Request / cache age",
+    "Motivo / procedencia": "Reason / provenance",
+    "Umbral de racha": "Gust threshold",
+    "Estimación diagnóstica de un motor propio, no un aviso oficial: mandan el Servei Meteorològic d'Andorra, Meteocat/AEMET y Météo-France. Para aludes, los boletines oficiales. En emergencia, 112.": "A diagnostic estimate from this project's engine, not an official warning: refer to the Servei Meteorològic d'Andorra, Meteocat/AEMET and Météo-France. For avalanches, consult official bulletins. In an emergency, call 112.",
+    "Pregunta a Claude": "Ask Claude",
+    "Nueva": "New",
+    "Adjuntar lo que veo": "Attach what I see",
+    "Análisis a fondo": "In-depth analysis",
+    "Detener": "Stop",
+    "Enviar": "Send",
+    "Responde Claude con los datos publicados. Estimación diagnóstica, no aviso oficial.": "Claude replies using published data. Diagnostic estimate, not an official warning.",
+    "Las estaciones son observaciones; temperatura, precipitación, nieve y viento previstos son modelos. No se sustituye un aviso oficial por umbrales propios. En Pages la publicación es periódica, no vigilancia continua.": "Stations are observations; forecast temperature, precipitation, snow and wind are model data. Project thresholds do not replace official warnings. Pages updates periodically, not continuously.",
+    "Avisos": "Warnings",
+    "Observación ≤90 min": "Observation ≤90 min",
+    "Diagnóstico modelo": "Model diagnosis",
+    "Antigüedad ciclo": "Cycle age",
+    "Ciclo fresco ≤6 h": "Cycle age ≤6 h",
+    "NO · no concluir calma": "NO · do not infer calm",
+    "SÍ (no es vigilancia continua)": "YES (not continuous monitoring)",
+    "Racha prevista": "Forecast gust",
+    "Precipitación (bloque 3 h)": "Precipitation (3 h block)",
+    "Nieve modelo (3 h)": "Model snow (3 h)",
+    "Cota copo": "Snowfall level",
+    "T / rocío": "T / dew point",
+    "Humedad": "Humidity",
+    "Nubosidad": "Cloud cover",
+    "Racha 10 m": "10 m gust",
+    "Viento / dirección": "Wind / direction",
+    "Isocero en punto (modelo)": "Freezing level at point (model)",
+    "Contexto y fuentes suplementarias": "Context and supplementary sources",
+    "Revisiones 15 d": "15-day revisions",
+    "Skill fuera de muestra": "Out-of-sample skill",
+    "NO VERIFICADA": "UNVERIFIED",
+    "Archivo prospectivo": "Prospective archive",
+    "NO PUBLICADO (ledger privado)": "NOT PUBLISHED (private ledger)",
+    "Datos ausentes": "Missing data",
+    "UNKNOWN, nunca 0": "UNKNOWN, never 0",
+    "Sin contexto lateral validado": "No validated supplementary context",
+    "Los cambios de una salida a otra no son errores contra observación. No hay CSI, POD, FAR, MAE o Brier válidos sin emparejamiento temporal y espacial, QC instrumental y pronóstico congelado.": "Changes between runs are not errors against observations. Valid CSI, POD, FAR, MAE or Brier scores require temporal and spatial matching, instrument QC and frozen forecasts.",
+    "Ciclo UTC": "UTC cycle",
+    "Motorización": "Engine",
+    "Permiso CNP": "CNP permission",
+    "NO VERIFICADO": "UNVERIFIED",
+    "Comprobar condiciones": "Check conditions",
+    "Modelo ≠ aviso": "Model ≠ warning",
+    "Separación obligatoria": "Must remain separate",
+    "Alertas marinas": "Marine warnings",
+    "FUERA DE DOMINIO": "OUTSIDE DOMAIN",
+    "Edad de consulta o caché actualizada desde el ciclo; la edad de cada medición figura en Observaciones. «CACHED» indica respuesta almacenada, no observación recién medida; «UNKNOWN» no es ausencia de peligro. Los enlaces a boletines de aludes son referencias externas, no boletines integrados.": "Request or cache age updated since the cycle; the age of each measurement appears under Observations. “CACHED” means a stored response, not a newly measured observation; “UNKNOWN” does not mean no danger. Avalanche bulletin links are external references, not integrated bulletins.",
+    "Umbral hipotético": "Hypothetical threshold",
+    "Bloques 3 h sobre umbral": "3-hour blocks above threshold",
+    "Duración de la señal": "Signal duration",
+    "UNKNOWN · faltan intervalos": "UNKNOWN · intervals missing",
+    "Solo navegador. La racha disponible es una muestra del bloque de 3 h, no una vigilancia continua. Ningún ajuste cambia reglas, avisos, archivo forense o pronósticos publicados.": "Browser only. The available gust is a sample of the 3-hour block, not continuous monitoring. Adjustments do not change rules, warnings, the forensic archive or published forecasts.",
+    "UNKNOWN · perfil no disponible": "UNKNOWN · profile unavailable",
+    "UNKNOWN · viento no disponible": "UNKNOWN · wind unavailable",
+    "T: rojo · punto de rocío: verde · bulbo húmedo: azul": "T: red · dew point: green · wet bulb: blue",
+    "m/s · vector hacia donde sopla; la curvatura no determina por sí sola la organización convectiva.": "m/s · vector points in the direction of flow; curvature alone does not determine convective organisation.",
+    "Temperatura, rocío y bulbo húmedo": "Temperature, dew point and wet bulb",
+    "Hodógrafa": "Hodograph",
+    "Altitud m s.n.m.; temperaturas °C; θe K; viento m/s y dirección desde °": "Altitude m a.s.l.; temperatures °C; θe K; wind m/s and direction from °",
+    "Nivel": "Level",
+    "Altitud": "Altitude",
+    "Dirección": "Direction",
+    "Índices · hora y evolución": "Indices · selected time and evolution",
+    "θe por niveles": "θe by level",
+    "Cizalladura por altura": "Shear by height",
+    "Se descartan los niveles bajo terreno; la cizalladura hasta niveles de presión no equivale a capas exactas de 1, 3 o 6 km.": "Levels below terrain are discarded; shear to pressure levels is not equivalent to exact 1, 3 or 6 km layers.",
+    "Fórmulas e indicadores no calibrados localmente. Las discontinuidades son datos ausentes. Para la velocidad vertical se muestra el valor solo si la unidad es m/s; el signo de ascenso requiere verificación.": "Formulas and indicators are not locally calibrated. Gaps indicate missing data. Vertical velocity is shown only if its unit is m/s; the sign indicating ascent needs verification.",
+    "IRH es específico de la cala de Portinatx y no se aplica al Pirineo. Froude y cotas de nieve se mantienen en el perfil ARPEGE inferior.": "IRH is specific to Portinatx bay and does not apply to the Pyrenees. Froude and snow levels remain in the ARPEGE profile below.",
+    "Gradiente 700–500": "700–500 lapse rate",
+    "Agua precipitable": "Precipitable water",
+    "Isoterma 0 °C": "0 °C isotherm",
+    "Superficie–925": "Surface–925",
+    "Superficie–700": "Surface–700",
+    "Superficie–500": "Surface–500",
+    "Velocidad vertical 700": "Vertical velocity 700",
+    "Velocidad vertical 850": "Vertical velocity 850",
+    "Velocidad vertical 500": "Vertical velocity 500",
+    "Viento medio 850–300": "Mean wind 850–300",
+    "Flujo humedad 850": "850 moisture flux",
+    "Capa límite": "Boundary layer",
+    "Bulbo húmedo 2 m": "2 m wet bulb",
+    "Cero de bulbo húmedo": "Wet-bulb zero",
+    "Viento 925": "Wind 925",
+    "Divergencia 925": "Divergence 925",
+    "Divergencia 850": "Divergence 850",
+    "Vorticidad 850": "Vorticity 850",
+    "Vorticidad 500": "Vorticity 500",
+    "UNKNOWN · Perfil no disponible en este ciclo; no significa ausencia de riesgo.": "UNKNOWN · Profile unavailable this cycle; this does not mean there is no risk."
+});
+  Object.assign(translations, {
+    "Fuente oficial consultada · comprueba zona y vigencia": "Official source consulted · check location and validity",
+    "UNKNOWN · sin comprobación oficial suficiente": "UNKNOWN · official information not sufficiently verified",
+    "Estos avisos cubren distintas zonas pirenaicas. No se ha verificado su correspondencia con el punto seleccionado; consulta el ámbito oficial.": "These warnings cover different Pyrenean areas. Their correspondence to the selected location has not been verified; check the official area.",
+    "Sin mensajes de nivel amarillo o superior en las zonas procesadas del ciclo; comprobar cobertura de fuentes.": "No yellow-or-higher messages in the areas processed for this cycle; check source coverage.",
+    "UNKNOWN: no interpretar la ausencia de mensajes como calma.": "UNKNOWN: do not interpret an absence of messages as calm."
+});
+  Object.assign(translations, {"Pirineo":"Pyrenees", "VIGENTE":"ACTIVE", "PRÓXIMO":"UPCOMING", "FINALIZADO":"ENDED", "SIN HORARIO VERIFICABLE":"TIME NOT VERIFIED", "amarillo":"yellow", "naranja":"orange", "rojo":"red"});
+  Object.assign(translations, {
+    "Hoy": "Today",
+    "Mañana": "Tomorrow",
+    "UNKNOWN · avisos institucionales no verificados; comprueba AEMET, MeteoAlarm y las fuentes oficiales.": "UNKNOWN · official warnings not verified; check AEMET, MeteoAlarm and official sources.",
+    "AEMET · Pirineo catalán. Compárala con el isocero de los modelos en la pestaña Corte → Cotas.": "AEMET · Catalan Pyrenees. Compare with the model freezing level under Cross-section → Elevations.",
+    "Sin predicción de AEMET (falta la clave en config.env o no respondió).": "No AEMET forecast (the config.env key is missing or the service did not respond).",
+    "Boletín nivológico de AEMET: fuera de campaña (se reanuda con la nieve).": "AEMET snow bulletin: outside the active season (resumes with snowfall).",
+    " · vigente": " · active",
+    "No actualizado:": "Not updated:"
+});
+  Object.assign(translations, {
+    "Norte (Ariège/Capcir)": "North (Ariège/Capcir)",
+    "Sur (Cerdanya)": "South (Cerdanya)",
+    "estacion": "station",
+    "cima": "summit",
+    "collado": "mountain pass",
+    "pueblo": "town",
+    "ESTÁNDAR": "STANDARD",
+    "DIAGNÓSTICO": "DIAGNOSTIC"
+});
+  Object.assign(translations, {
+    "Localidad": "Location",
+    "Lluvia prevista 24 h": "Forecast rain 24 h",
+    "Mes UTC": "UTC month",
+    "Banda climatológica": "Climatological band",
+    "Rango percentil": "Percentile rank"
+});
+  const generatedFragments = {
+    "Isocero (sur)": "Freezing level (south)",
+    "Tw 0 °C (sur / norte)": "Tw 0 °C (south / north)",
+    "Cota de copo": "Snowfall level",
+    "Fase en el fondo": "Precipitation phase at valley floor",
+    "Flujo 700 hPa": "700 hPa flow",
+    "⚠ capa cálida": "⚠ warm layer",
+    "m sobre aire bajo cero: riesgo de lluvia engelante o hielo": "m above subfreezing air: risk of freezing rain or ice",
+    "m sobre aire bajo cero: sin precipitación prevista esta hora": "m above subfreezing air: no precipitation forecast this hour",
+    "— (capa cálida)": "— (warm layer)",
+    "blanco: por encima de la cota de copo (más intenso sobre la de acumulación)": "white: above snowfall level (brighter above accumulation level)",
+    "Cotas del perfil de la vertiente sur (Cerdanya) a la hora elegida. Con precipitación intensa la nieve puede bajar 200–400 m más.": "Snow levels from the south-side profile (Cerdanya) at the selected time. In heavy precipitation, snow can fall a further 200–400 m lower.",
+    "Temperatura de AROME HD (malla 0,05°) reducida al relieve con −6,5 °C/km: no ve las inversiones de fondo de valle. Las etiquetas de los puntos llevan la del modelo elegido.": "AROME HD temperature (0.05° grid), adjusted to terrain using −6.5 °C/km: it does not capture valley-floor inversions. Point labels show the selected model.",
+    "Precipitación de AROME HD en 3 h. Fase según la cota de copo del perfil.": "AROME HD precipitation over 3 h. Phase depends on the profile snowfall level.",
+    "Racha de AROME HD a 10 m. En collados y crestas la aceleración real puede superar la del modelo.": "AROME HD gust at 10 m. At passes and ridges the actual acceleration may exceed the model.",
+    "curvas cada 100 m (gruesas cada 500 m)": "contours every 100 m (bold every 500 m)",
+    "nieve probable (sobre la cota de copo)": "snow likely (above snowfall level)",
+    "mm en 3 h": "mm over 3 h",
+    "▲ cima · ● pueblo o estación ·": "▲ summit · ● town or station ·",
+    "collado": "mountain pass",
+    "cero de bulbo húmedo": "wet-bulb zero",
+    "cota de copo": "snowfall level",
+    "copo → acumulación fiable": "snowfall → reliable accumulation",
+    "entre copo y acumulación fiable": "between snowfall and reliable accumulation",
+    "precipitación horaria": "hourly precipitation",
+    "líneas punteadas: altitud de los puntos de referencia": "dotted lines: altitude of reference points",
+    "Perfil por niveles no disponible en este ciclo.": "Profile by levels unavailable in this cycle.",
+    "Perfil no disponible.": "Profile unavailable.",
+    "Menos de dos estaciones frescas.": "Fewer than two recent stations.",
+    "Sin pares evaluables.": "No station pairs available for evaluation.",
+    "sin señal de föhn en 72 h": "no foehn signal in 72 h",
+    "sin datos": "no data",
+    "Perfil de ARPEGE por niveles de presión (925–500 hPa) en la vertiente sur (Cerdanya). La línea vertical es la hora elegida arriba.": "ARPEGE profile by pressure level (925–500 hPa) on the south side (Cerdanya). The vertical line marks the time selected above.",
+    "Perfil de ARPEGE por niveles de presión (925–500 hPa) en la vertiente norte (Ariège). La línea vertical es la hora elegida arriba.": "ARPEGE profile by pressure level (925–500 hPa) on the north side (Ariège). The vertical line marks the time selected above.",
+    "valores en la altitud real del punto (DEM). Lluvia y nieve en mm y cm; racha en km/h. «Sobre la cota»: el punto está por encima de la cota de copo actual de su vertiente (perfil norte o sur; en los collados de la divisoria, la más baja). AROME HD no publica nieve en Open-Meteo: para la nieve usa ICON-EU o IFS.": "values at the point’s actual elevation (DEM). Rain and snow in mm and cm; gust in km/h. “Above snow level” means above the current snowfall level for the respective side (north or south profile; at watershed passes, the lower one). AROME HD does not publish snow through Open-Meteo: use ICON-EU or IFS for snow.",
+    "Datos insuficientes: no se asignan porcentajes.": "Insufficient data: no percentages are assigned.",
+    "Sin exportación de 15 días": "No 15-day export",
+    "Ejecuta pirineo.py export con acceso a Open-Meteo": "Run pirineo.py export with Open-Meteo access",
+    "Sin datos": "No data",
+    "Solo navegador. La racha disponible es una muestra del bloque de 3 h, no una vigilancia continua. Ningún ajuste cambia reglas, avisos, archivo forense o pronósticos publicados.": "Browser only. The available gust is a sample of the 3-hour block, not continuous monitoring. Adjustments do not change rules, warnings, the forensic archive or published forecasts.",
+    "No actualizado:": "Not updated:",
+    "Actualizado ·": "Updated ·",
+    "Recogiendo datos…": "Collecting data…",
+    "Actualizar ahora": "Refresh now",
+    "Lanzando en la nube…": "Starting in the cloud…",
+    "En marcha: unos 5–10 min; la página se actualiza sola.": "Running: approximately 5–10 min; the page updates automatically.",
+    "No se pudo lanzar:": "Could not start:",
+    "Publicado ·": "Published ·",
+    "Sin publicación tras 15 min.": "No publication after 15 min.",
+    "Más herramientas ·": "More tools ·",
+    "Ciclo ": "Cycle ",
+    " · motor ": " · engine ",
+    "Puntos: ": "Locations: ",
+    " · sin datos: ": " · no data: ",
+    "Fuentes disponibles": "Sources available",
+    "Fuentes AEMET": "AEMET sources",
+    "Modelo seleccionado:": "Selected model:",
+    "Punto:": "Location:",
+    " · modelo seleccionado:": " · selected model:",
+    " · muestreo cada 3 h. Precipitación y nieve: suma de tres horas completas; si falta un elemento: UNKNOWN. Ninguna cifra equivale a probabilidad de impacto local.": " · sampled every 3 h. Precipitation and snow: total of three complete hours; if one element is missing: UNKNOWN. No figure is a local impact probability.",
+    "Hora del modelo:": "Model time:",
+    ". Perfil ARPEGE distinto de modelo del punto. La inversión y föhn están en Superficie.": ". The ARPEGE profile differs from the model at the selected point. Inversion and foehn are under Surface.",
+    "NO habilidad verificada": "NO verified skill",
+    "UNKNOWN · sin comparativa de salidas": "UNKNOWN · no run comparison",
+    "contexto informativo, no alerta": "informational context, not a warning",
+    "Sin calibrar en Pirineos. Componentes ausentes:": "Not calibrated in the Pyrenees. Missing components:"
+};
+  Object.assign(generatedFragments, {
+    "Norte: retención en la vertiente francesa, Andorra norte y Puymorens; föhn y sombra pluviométrica en Cerdanya": "Northerly: precipitation held on the French side, northern Andorra and Puymorens; foehn and rain shadow in Cerdanya",
+    "Norte débil": "Weak northerly",
+    "Sur: precipitación en Cadí-Moixeró y vertientes meridionales; föhn en la vertiente norte": "Southerly: precipitation in Cadí-Moixeró and southern slopes; foehn on the north side",
+    "Sur débil": "Weak southerly",
+    "Levante: humedad mediterránea hacia el Pirineo oriental (Capcir, Cerdanya, Puigmal)": "Easterly: Mediterranean moisture towards the eastern Pyrenees (Capcir, Cerdanya, Puigmal)",
+    "Oeste: flujo zonal parcialmente bloqueado por el relieve": "Westerly: zonal flow partly blocked by terrain",
+    "Oeste débil": "Weak westerly",
+    "Sin observaciones.": "No observations.",
+    "Celdas de referencia de pista; DEM y perfiles verticales siguen en el módulo 72 h.": "Reference ski-slope grid cells; the DEM and vertical profiles remain in the 72-hour module.",
+    "Captura ": "Snapshot ",
+    "Pesos por familias institucionales:": "Institutional family weights:",
+    "Revisiones en días comunes:": "Revisions for common days:",
+    "; no equivalen a error observado": "; these are not observed forecast errors",
+    ". Sin incremento automático de probabilidad de nieve.": ". No automatic increase in snow probability.",
+    "Gradiente observado ": "Observed lapse rate ",
+    " °C/km con ": " °C/km using ",
+    " estaciones: ": " stations: ",
+    ". Referencia de la atmósfera estándar: −6,5 °C/km.": ". Standard atmosphere reference: −6.5 °C/km.",
+    " · tramo Envalira–Puymorens con el perfil de la vertiente norte, resto con el de la sur. Temperaturas del modelo elegido a la altitud real de cada punto.": " · Envalira–Puymorens uses the north-side profile; the rest uses the south-side profile. Selected model temperatures at the real altitude of each point.",
+    "Relieve: ": "Terrain: ",
+    ", remuestreado a ": ", resampled to ",
+    "isocero ": "freezing level ",
+    "copo ": "snowfall level ",
+    " h con señal de föhn": " h with foehn signal",
+    " (primera ": " (first ",
+    " · lluvia": " · rain",
+    "UNKNOWN · sin comparativa de salidas": "UNKNOWN · no run comparison",
+    "Sin contexto lateral validado": "No validated supplementary context",
+    " · faltan intervalos": " · intervals missing",
+    " h muestreadas (no continuas)": " h sampled (not continuous)",
+    " de 8": " of 8",
+    "NO PUBLICADO (ledger privado)": "NOT PUBLISHED (private ledger)",
+    "NO VERIFICADA": "UNVERIFIED",
+    "NO VERIFICADO": "UNVERIFIED",
+    "ESTÁNDAR": "STANDARD",
+    "DIAGNÓSTICO": "DIAGNOSTIC",
+    "EXPERIMENTAL": "EXPERIMENTAL"
+});
+  Object.assign(generatedFragments, {
+    "Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (": "No yellow-or-higher warnings for the Girona Pyrenees, Lleida Pyrenees, Barcelona Pre-Pyrenees or Huesca Pyrenees (",
+    "), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm), con cobertura condicionada.": "), or in Pyrénées-Orientales, Ariège or Andorra (MeteoAlarm), subject to source coverage.",
+    " · vigente": " · active"
+});
+  const pointFragments = {"ventisca ":"blowing snow ", "nieve":"snow", "viento fuerte":"strong wind", "sobre la cota":"above snow level"};
+  Object.assign(generatedFragments, {
+    "sin perfil vertical": "no vertical profile",
+    "sin previsión en el par": "no forecast for the pair",
+    "perfil y puntos sin horas comunes con datos": "profile and points have no common hours with data",
+    "inversión: más templado arriba que en el fondo": "inversion: warmer above than at the valley floor",
+    "gradiente débil: capa estable": "weak lapse rate: stable layer",
+    "gradiente normal o inestable": "normal or unstable lapse rate",
+    "no concluyente: desnivel ": "inconclusive: elevation difference ",
+    " m (mín. ": " m (min. ",
+    ") o pendiente dentro del ruido (±": ") or slope within noise (±"
+});
+  Object.assign(generatedFragments, {
+    "Fracciones de miembros del ensemble, NO probabilidades calibradas localmente; sin observación del manto de nieve ni predicción de apertura": "Ensemble member fractions, NOT locally calibrated probabilities; no observed snowpack or opening prediction"
+});
+  const attributeTranslations = {
+    "Secciones del observatorio": "Observatory sections",
+    "Volver a observatorios": "Back to observatories",
+    "Punto del observatorio": "Observatory location",
+    "Modelo y hora de las vistas generales": "Model and time for the overview",
+    "Modelo": "Model",
+    "Capa": "Layer",
+    "Vertiente": "Mountain side",
+    "Mapa de relieve de Andorra, la Cerdanya y el Capcir con curvas de nivel y la capa elegida": "Terrain map of Andorra, Cerdanya and Capcir with contours and selected layer",
+    "Estación del pronóstico extendido": "Extended forecast station",
+    "Nivel de pista": "Ski slope elevation",
+    "Chat con Claude": "Chat with Claude",
+    "Cerrar el chat": "Close chat",
+    "Tu pregunta": "Your question",
+    "Pregunta por la cota de nieve, el viento en Envalira, la Molina…": "Ask about snow level, wind at Envalira, La Molina…",
+    "Perfil por presión; valores numéricos en la tabla": "Pressure profile; numeric values in the table",
+    "Hodógrafa; viento por nivel en la tabla": "Hodograph; wind by level in the table",
+    "Cizalladura respecto al viento a 10 metros por altura sobre el terreno": "Shear relative to 10-m wind by height above ground",
+    "Corte vertical del relieve con cotas de nieve": "Vertical terrain cross-section with snow levels",
+    "Isocero, cero de bulbo húmedo y cota de nieve en 72 horas": "Freezing level, wet-bulb zero and snow level over 72 hours",
+    "Temperatura observada frente a altitud": "Observed temperature versus elevation"
+};
+  Object.assign(attributeTranslations, {
+    "Relieve de las teselas Terrarium (SRTM/Copernicus/ASTER combinados, ~76 m), remuestreado a ~0,004°. Curvas cada 100 m.": "Terrain from Terrarium tiles (combined SRTM/Copernicus/ASTER, ~76 m), resampled to ~0.004°. Contours every 100 m.",
+    "Previsión por punto a la altitud real del punto. Open-Meteo ajusta la temperatura del modelo a esa altitud; MET Norway lo hace con un gradiente fijo de 6 °C/km (no ve inversiones).": "Point forecast at the actual elevation. Open-Meteo adjusts model temperature to that elevation; MET Norway uses a fixed 6 °C/km lapse rate (does not capture inversions).",
+    "Cota de nieve desde el perfil por niveles y la superficie del modelo (los niveles bajo el terreno se descartan): cero de bulbo húmedo (Tw = 0 °C). Copo ≈ Tw0 − 300 m (±150 m), cuajado ≈ Tw0 − 100 m, acumulación fiable ≈ Tw0 + 200 m. Con precipitación intensa baja más (enfriamiento por fusión, no modelizado). Con capa cálida sobre aire bajo cero en el fondo no se dan cotas: riesgo de lluvia engelante o hielo.": "Snow level from the level profile and model surface (levels below terrain are discarded): wet-bulb zero (Tw = 0 °C). Snowfall ≈ Tw0 − 300 m (±150 m), settling ≈ Tw0 − 100 m, reliable accumulation ≈ Tw0 + 200 m. Heavy precipitation can lower it further (melting cooling, not modelled). No snow levels are given with a warm layer over subfreezing valley-floor air: risk of freezing rain or ice.",
+    "Relación nieve/agua de Kuchera con la temperatura máxima de la columna bajo 500 hPa.": "Kuchera snow-to-water ratio using the maximum temperature of the column below 500 hPa.",
+    "Föhn del norte: flujo a 700 hPa perpendicular a la divisoria (≥10 m/s) y, en el par barlovento/sotavento, θ de sotavento ≥2 K mayor y HR ≥20 puntos menor, en cualquiera de los modelos. Sin perfil u horas comunes: UNKNOWN. El föhn del sur no se evalúa.": "Northern foehn: 700 hPa flow perpendicular to the divide (≥10 m/s), with lee-side θ ≥2 K higher and RH ≥20 percentage points lower than the windward point in any model. Without a profile or common hours: UNKNOWN. Southern foehn is not evaluated.",
+    "Inversión observada entre estaciones de fondo y de ladera de la Cerdanya y Andorra: gradiente con la altitud de la temperatura medida. Solo se afirma con ≥300 m de desnivel y pendiente mayor que dos veces su error; si no, «no concluyente». Mezcla cuencas: no resuelve lagos fríos de cada valle.": "Observed inversion between valley-floor and slope stations in Cerdanya and Andorra: temperature gradient with altitude. Asserted only with ≥300 m elevation difference and slope exceeding twice its error; otherwise “inconclusive”. This mixes basins and does not resolve cold pools in each valley.",
+    "Racha prevista en Envalira, Pas de la Casa, Puymorens y Toses; ventisca probable si además nieva con T < −1 °C y racha ≥ 50 km/h.": "Forecast gust at Envalira, Pas de la Casa, Puymorens and Toses; blowing snow is likely if it is also snowing with T < −1 °C and gust ≥50 km/h."
+});
+  const originalAttributes = new WeakMap();
+  const original = new WeakMap();
+  const rendered = new WeakMap();
+  const selector = document.getElementById('pir-language');
+  const note = document.getElementById('language-note');
+  let language = 'es';
+  try { language = localStorage.getItem('meteo-language') === 'en' ? 'en' : 'es'; } catch (_) {}
+  window.meteoLocale = () => language === 'en' ? 'en-GB' : 'es-ES';
+  function translateGenerated(value, parent) {
+    const profile = value.match(/^(Vertiente norte · Ariège \/ Capcir|Vertiente sur · Cerdanya) · (.+) · ([-0-9.]+) m · ([0-9]+) horas · Fuente: (.+)\. Modelo, no observación\.$/);
+    if (profile) {
+      const side = profile[1].startsWith('Vertiente norte') ? 'North side · Ariège / Capcir' : 'South side · Cerdanya';
+      return `${side} · ${profile[2]} · ${profile[3]} m · ${profile[4]} hours · Source: ${profile[5]}. Model, not observation.`;
+    }
+    const missing = value.match(/^Sin calibrar en Pirineos\. Componentes ausentes: (.+)\.$/);
+    if (missing) return `Not calibrated in the Pyrenees. Missing components: ${missing[1] === 'ninguno' ? 'none' : missing[1]}.`;
+    const count = value.match(/^([0-9]+) estaciones$/);
+    if (count) return `${count[1]} stations`;
+    if (parent.closest('#t-pts td:last-child')) {
+      let translated = value;
+      for (const [span, replacement] of Object.entries(pointFragments)) translated = translated.replaceAll(span, replacement);
+      if (translated !== value) return translated;
+    }
+    const generated = parent.closest('#warns,#m-issued,#m-src,#now-kv,#legend,#map-note,#cut-note,#cotas-note,#pts-note,#foehn,#ch-cotas,#ch-cut,#inv-note,#meta-st,#meta-note,#meta-context,#meta-sources,#t-meta,#t-flow,#t-obs,#pov-atmos-note,#pov-model-note,#pov-forensic,#pov-lab-result,#refresh-st,#btn-refresh,#other-sections summary');
+    if (generated) {
+      let translated = value;
+      for (const [span, replacement] of Object.entries(generatedFragments).sort((a,b)=>b[0].length-a[0].length)) translated = translated.replaceAll(span, replacement);
+      if (translated !== value) return translated;
+    }
+    return null;
+  }
+  function translate() {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const parent = node.parentElement;
+      if (!parent || parent.closest('script, style, #pir-language, #language-note, [data-source-text], #srcs, #chat-log')) continue;
+      let raw = original.get(node);
+      const previous = rendered.has(node) ? rendered.get(node) : raw;
+      if (raw === undefined || node.nodeValue !== previous) { raw = node.nodeValue; original.set(node, raw); }
+      const key = raw.trim();
+      const english = translations[key] || translateGenerated(key, parent);
+      if (english) {
+        const next = language === 'en' ? raw.replace(key, english) : raw;
+        rendered.set(node, next);
+        if (node.nodeValue !== next) node.nodeValue = next;
+        if (language === 'en') parent.setAttribute('lang', 'en'); else parent.removeAttribute('lang');
+      }
+    }
+    for (const element of document.querySelectorAll('[aria-label], [placeholder], [title]')) {
+      for (const name of ['aria-label', 'placeholder', 'title']) {
+        if (!element.hasAttribute(name)) continue;
+        const current = element.getAttribute(name);
+        let saved = originalAttributes.get(element);
+        if (!saved) { saved = {}; originalAttributes.set(element, saved); }
+        if (!saved[name] && attributeTranslations[current]) saved[name] = current;
+        const originalValue = saved[name];
+        if (!originalValue) continue;
+        const translatedValue = attributeTranslations[originalValue];
+        if (current !== originalValue && current !== translatedValue) { delete saved[name]; continue; }
+        const next = language === 'en' ? translatedValue : originalValue;
+        if (current !== next) element.setAttribute(name, next);
+      }
+    }
+    selector.value = language;
+    note.hidden = language !== 'en';
+  }
+  selector.addEventListener('change', () => { language = selector.value; try { localStorage.setItem('meteo-language', language); } catch (_) {} try { window.renderAll?.(); window.renderPirineoAtmos?.(); } catch (_) {} translate(); });
+  new MutationObserver(translate).observe(document.body, {childList:true, subtree:true, characterData:true});
+  translate();
+})();
+</script>
 <script src="../public_config.js"></script>
 <script src="../public_fetch.js"></script>
 <script src="pirineo_observatory.js"></script>
@@ -318,7 +740,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const n0 = x => x==null||isNaN(x) ? "—" : Math.round(+x).toString();
 const n1 = x => x==null||isNaN(x) ? "—" : (+x).toFixed(1);
 const TZ = "Europe/Madrid";
-const fmtT = (iso, o={weekday:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}) => { if(!iso) return "—"; const d=new Date(/Z|[+-]\d\d:?\d\d$/.test(iso)?iso:iso+"Z"); return isNaN(d)?"—":new Intl.DateTimeFormat("es-ES",{timeZone:TZ,...o}).format(d); };
+const fmtT = (iso, o={weekday:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}) => { if(!iso) return "—"; const d=new Date(/Z|[+-]\d\d:?\d\d$/.test(iso)?iso:iso+"Z"); return isNaN(d)?"—":new Intl.DateTimeFormat(window.meteoLocale?.() || "es-ES",{timeZone:TZ,...o}).format(d); };
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const D = {core:null, dem:null, grid:null, series:null, extended:null};
 const S = {tab:"mapa", k:0, model:null, ov:"relieve", names:true, cont:true, pf:"sur", Z:null, times:[]};
@@ -610,13 +1032,13 @@ function renderDiag(){
     ...(c.metar||[]).map(m=>`<tr><td>${esc(m.icao)} <span class="ev">${esc(m.raw)}</span></td><td class="ev">METAR</td><td class="num">${n0(m.alt)}</td><td class="num">${n1(m.T)}</td><td class="num">—</td><td class="num">${m.viento_kt!=null?n0(m.viento_kt*1.852):"—"}</td><td class="num">${m.racha_kt!=null?n0(m.racha_kt*1.852):"—"}</td><td class="num">—</td><td class="num">${n0(window.PirineoObservatory.liveAge(m,c.issued))} min</td></tr>`)].join("")||'<tr><td colspan="9" class="empty">Sin observaciones.</td></tr>';
   const W2=(c.avisos||[]).filter(w=>!w.error);
   const warnCoverageOk = window.PirineoObservatory.derive(c,D.series,D.extended).officialOk;
-  $("warns").innerHTML=W2.length?W2.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> ${esc(w.evento)} · <span class="ev">${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)} · ${fmtT(w.desde)} → ${fmtT(w.hasta)}${w.vigente&&Date.parse(w.desde)<=Date.now()&&Date.now()<=Date.parse(w.hasta)?" · vigente":""}</span></li>`).join(""):(!warnCoverageOk?'<li class="empty">UNKNOWN · avisos institucionales no verificados; comprueba AEMET, MeteoAlarm y las fuentes oficiales.</li>':`<li>Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (${/^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||""))?"AEMET CAP":"MeteoAlarm"}), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm), con cobertura condicionada.</li>`);
+  $("warns").innerHTML=W2.length?W2.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> <span data-source-text>${esc(w.evento)}</span> · <span class="ev"><span data-source-text>${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)}</span> · ${fmtT(w.desde)} → ${fmtT(w.hasta)}${w.vigente&&Date.parse(w.desde)<=Date.now()&&Date.now()<=Date.parse(w.hasta)?" · vigente":""}</span></li>`).join(""):(!warnCoverageOk?'<li class="empty">UNKNOWN · avisos institucionales no verificados; comprueba AEMET, MeteoAlarm y las fuentes oficiales.</li>':`<li>Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (${/^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||""))?"AEMET CAP":"MeteoAlarm"}), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm), con cobertura condicionada.</li>`);
   const A=c.aemet; let am="";
   if(A&&A.montana&&A.montana.length){
-    am=A.montana.map(m=>`<p><b>${m.dia===0?"Hoy":"Mañana"}</b>${m.isocero_m?` · isocero ${n0(m.isocero_m)} m`:""}</p><ul class="plain">${(m.prediccion||[]).map(a=>`<li><b>${esc(a.cabecera)}:</b> ${esc(a.texto)}</li>`).join("")}${(m.atmosfera_libre||[]).filter(a=>/Viento/.test(a.cabecera)).map(a=>`<li class="ev">${esc(a.cabecera)}: ${esc(a.texto)}</li>`).join("")}</ul>`).join("");
+    am=A.montana.map(m=>`<p><b>${m.dia===0?"Hoy":"Mañana"}</b>${m.isocero_m?` · isocero ${n0(m.isocero_m)} m`:""}</p><ul class="plain">${(m.prediccion||[]).map(a=>`<li data-source-text><b>${esc(a.cabecera)}:</b> ${esc(a.texto)}</li>`).join("")}${(m.atmosfera_libre||[]).filter(a=>/Viento/.test(a.cabecera)).map(a=>`<li class="ev" data-source-text>${esc(a.cabecera)}: ${esc(a.texto)}</li>`).join("")}</ul>`).join("");
     am+=`<p class="src">AEMET · Pirineo catalán. Compárala con el isocero de los modelos en la pestaña Corte → Cotas.</p>`;
   } else am='<p class="empty">Sin predicción de AEMET (falta la clave en config.env o no respondió).</p>';
-  if(A&&A.nivologico) am+=`<p class="src">${A.nivologico.fuera_de_campana?"Boletín nivológico de AEMET: fuera de campaña (se reanuda con la nieve).":esc(A.nivologico.texto.slice(0,600))}</p>`;
+  if(A&&A.nivologico) am+=`<p class="src">${A.nivologico.fuera_de_campana?"Boletín nivológico de AEMET: fuera de campaña (se reanuda con la nieve).":`<span data-source-text>${esc(A.nivologico.texto.slice(0,600))}</span>`}</p>`;
   $("aemet-mt").innerHTML=am;
   const L=c.enlaces||{}; const lab={aludes_andorra:"Estat de la neu i allaus · Andorra",aludes_meteocat:"Butlletí de perill d'allaus · Meteocat",aludes_meteofrance:"BERA · Météo-France montagne",carreteras_andorra:"Mobilitat · Andorra (Envalira)",carreteras_francia:"Inforoute 66 (Puymorens)",carreteras_cat:"Trànsit · Catalunya (Toses)"};
   $("links").innerHTML=Object.entries(L).map(([k,u])=>`<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(lab[k]||k)}</a></li>`).join("");
@@ -634,7 +1056,10 @@ function renderExtended(){
   const st=$("meta-station").value, level=$("meta-level").value;
   const rows=m.stations?.[st]?.[level]||{};
   $("t-meta").querySelector("tbody").innerHTML=Object.entries(rows).sort((a,b)=>a[0].localeCompare(b[0])).map(([d,v])=>`<tr><td class="mono">${esc(d)}</td><td class="num">${metaPct(v.snow_ge5_member_fraction)}</td><td class="num">${metaPct(v.snow_ge10_member_fraction)}</td><td class="num">${metaPct(v.wet_bulb_le0_member_fraction)}</td><td class="num">${n0(v.metric_support?.snow_ge5_member_fraction?.n_families ?? v.n_independent_families)}</td><td>${esc(v.metric_support?.snow_ge5_member_fraction?.evidence_status || v.evidence_status || "UNKNOWN")}</td></tr>`).join("") || '<tr><td colspan="6">Datos insuficientes: no se asignan porcentajes.</td></tr>';
-  $("meta-note").textContent=`Captura ${fmtT(m.issued_utc)} · Celdas de referencia de pista; DEM y perfiles verticales siguen en el módulo 72 h. ${m.forecast_basis||"Sin datos"}.`;
+  const knownBasis = "Ensemble member fractions, NOT locally calibrated probabilities; no observed snowpack or opening prediction";
+  const basis = m.forecast_basis === knownBasis ? "Fracciones de miembros del ensemble, NO probabilidades calibradas localmente; sin observación del manto de nieve ni predicción de apertura" : (m.forecast_basis||"Sin datos");
+  const basisHtml = !m.forecast_basis || m.forecast_basis === knownBasis ? esc(basis) : `<span data-source-text>${esc(basis)}</span>`;
+  $("meta-note").innerHTML=`Captura ${esc(fmtT(m.issued_utc))} · Celdas de referencia de pista; DEM y perfiles verticales siguen en el módulo 72 h. ${basisHtml}.`;
   $("meta-sources").innerHTML=Object.entries(m.sources||{}).map(([name,info])=>`<li><b>${esc(name)}</b> · ${esc(info.state||"UNKNOWN")}${info.error?" · "+esc(info.error):""}</li>`).join("") + `<li>Pesos por familias institucionales: ${esc(JSON.stringify(m.model_families||{}))}</li>` + `<li>Revisiones en días comunes: ${n0(m.run_revisions?.length||0)}; no equivalen a error observado</li>`;
   $("meta-context").innerHTML=Object.entries(m.teleconnections||{}).map(([name,entry])=>`<li><b>${esc(name)}</b> · ${esc(entry.state||"UNKNOWN")}${entry.value!=null?" · "+esc(entry.value):""}${entry.valid_at?" · "+esc(entry.valid_at):""}</li>`).join("") + `<li><b>Contrarian:</b> ${esc(m.contrarian?.state||"UNCONFIRMED")}. Sin incremento automático de probabilidad de nieve.</li>`;
 }
@@ -665,7 +1090,8 @@ async function setupRefresh(db){ let mcp=null; try{ mcp=await window.claude.use(
 
 /* ── chat ── */
 const CHAT={sample:null,turns:[],ctl:null,busy:false,images:false};
-const RULES=`Eres el meteorólogo de montaña de guardia del observatorio «Pirineo Nowcast»: Andorra, Cerdanya (catalana y francesa), Puymorens y Capcir. Responde en español, técnico, escéptico y claro.
+const chatEnglish=()=>window.meteoLocale?.()==='en-GB';
+const RULES=`Eres el meteorólogo de montaña de guardia del observatorio «Pirineo Nowcast»: Andorra, Cerdanya (catalana y francesa), Puymorens y Capcir. Responde de forma técnica, escéptica y clara; sigue el idioma de respuesta indicado al final de las instrucciones.
 Reglas:
 1. Usa SOLO el bloque DATOS y, si se adjunta, la imagen de la pantalla. No inventes observaciones ni cifras. Si falta un dato, dilo.
 2. Separa probabilidad de impacto y severidad condicional. Tus probabilidades son «estimación diagnóstica, no probabilidad oficial ni calibrada», en intervalos.
@@ -686,11 +1112,11 @@ function renderChat(extra){ $("chat-log").innerHTML=CHAT.turns.map(t=>t.role==="
 async function ask(q){ q=(q||"").trim(); if(!q||CHAT.busy) return; CHAT.busy=true; $("chat-send").disabled=true; $("chat-stop").hidden=false; $("chat-in").value="";
   const hist=CHAT.turns.slice(-10).map(t=>({role:t.role,content:t.content})); CHAT.turns.push({role:"user",content:q});
   const cvId=S.tab==="mapa"?"map":null; let img=null; if(CHAT.images&&$("chat-img").checked&&cvId){ try{ img=await new Promise(r=>$(cvId).toBlob(r,"image/png")); }catch(e){} }
-  renderChat(`<div class="msg a think" id="live">Pensando con los datos del ciclo${img?" y el mapa de tu pantalla":""}…</div>`);
-  const input=[{role:"user",content:RULES},...hist,{role:"user",content:`DATOS (JSON):\n${digest()}\n\nVISTA: ${S.tab}${img?" (se adjunta el mapa: relieve con curvas cada 100 m, capa "+S.ov+")":""}.\n\nPREGUNTA: ${q}`}];
+  renderChat(`<div class="msg a think" id="live">${chatEnglish()?`Analysing cycle data${img?" and your screen map":""}…`:`Pensando con los datos del ciclo${img?" y el mapa de tu pantalla":""}…`}</div>`);
+  const input=[{role:"user",content:RULES+`\nIdioma de respuesta obligatorio / Required response language: ${chatEnglish()?"English":"español"}.`},...hist,{role:"user",content:`DATOS (JSON):\n${digest()}\n\nVISTA: ${S.tab}${img?" (se adjunta el mapa: relieve con curvas cada 100 m, capa "+S.ov+")":""}.\n\nPREGUNTA: ${q}`}];
   CHAT.ctl=new AbortController(); const opts={signal:CHAT.ctl.signal,cache:false,modelTier:$("chat-deep").checked?"complex":"default",onText:({text})=>{ const el=$("live"); if(el){ el.classList.remove("think"); el.innerHTML=md(text); } }}; if(img) opts.images=img;
-  try{ const r=await CHAT.sample(input,opts); CHAT.turns.push({role:"assistant",content:r.text,meta:`ciclo ${fmtT(D.core?.issued)}${img?" · con mapa":""}`}); }
-  catch(e){ if(e?.text) CHAT.turns.push({role:"assistant",content:e.text,meta:"incompleta"}); CHAT.turns.push({role:"assistant",content:({not_granted:"No has permitido a esta página usar Claude.",rate_limited:"Demasiadas preguntas seguidas: espera un poco.",cancelled:"Detenido."})[e?.code]||`No se pudo responder (${e?.code||"error"}).`}); }
+  try{ const r=await CHAT.sample(input,opts); CHAT.turns.push({role:"assistant",content:r.text,meta:`${chatEnglish()?"cycle":"ciclo"} ${fmtT(D.core?.issued)}${img?(chatEnglish()?" · with map":" · con mapa"):""}`}); }
+  catch(e){ if(e?.text) CHAT.turns.push({role:"assistant",content:e.text,meta:chatEnglish()?"incomplete":"incompleta"}); CHAT.turns.push({role:"assistant",content:(chatEnglish()?{not_granted:"You have not allowed this page to use Claude.",rate_limited:"Too many questions in a row; please wait.",cancelled:"Stopped."}:{not_granted:"No has permitido a esta página usar Claude.",rate_limited:"Demasiadas preguntas seguidas: espera un poco.",cancelled:"Detenido."})[e?.code]||(chatEnglish()?`Could not answer (${e?.code||"error"}).`:`No se pudo responder (${e?.code||"error"}).`)}); }
   finally{ CHAT.busy=false; $("chat-send").disabled=false; $("chat-stop").hidden=true; try{ localStorage.setItem("pir-chat",JSON.stringify(CHAT.turns.slice(-16))); }catch(e){} renderChat(); } }
 async function setupChat(){ let sm=null; try{ sm=await window.claude.use("sample"); }catch(e){} if(!sm) return; CHAT.sample=sm; try{ CHAT.images=!!(await sm.limits())?.images; }catch(e){} $("chat-img-l").hidden=!CHAT.images;
   try{ CHAT.turns=JSON.parse(localStorage.getItem("pir-chat")||"[]"); }catch(e){} $("btn-chat").hidden=false; }

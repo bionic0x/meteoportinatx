@@ -1,5 +1,7 @@
 # P0 — Forecast Ledger / archivo de verificación prospectiva
 
+**Idioma / Language:** Español · [English](FORECAST-LEDGER-P0.en.md)
+
 **Estado:** prototipo local aislado (no desplegado, no integrado en alertas). Implementación de la prioridad [#7](https://github.com/bionic0x/meteoportinatx/issues/7), a partir de [investigación Agency Agents #6](https://github.com/bionic0x/meteoportinatx/pull/6). **No implica que MeteoPortinatx tenga habilidad predictiva demostrada.**
 
 ## 1. Propósito y alcance

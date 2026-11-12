@@ -1,5 +1,7 @@
 # Permisos de fuentes de datos
 
+**Idioma / Language:** Español · [English](README.en.md)
+
 Un fichero por fuente. Mientras no exista, la fuente está **desactivada**: el motor no hace ninguna petición.
 
 Para activar ClimayNievePirineos cuando llegue la autorización, copia `cnp.example.json` como `cnp.json`, rellénalo con los términos reales y súbelo a `main`. No hace falta tocar código ni variables.

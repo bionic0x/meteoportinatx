@@ -1,5 +1,7 @@
 # Catálogo de fuentes, contexto climatológico y conocimiento con procedencia
 
+**Idioma / Language:** Español · [English](CATALOGO-FUENTES.en.md)
+
 **Estado:** contrato y lectura implementados y probados con datos sintéticos. **Ningún sidecar real existe todavía** y **ninguna fuente nueva se ha probado contra su servicio real**. Nada de esto altera niveles de alerta. Documento hermano en el proyecto Claude: `claude/catalogo-fuentes-y-conocimiento.md`.
 
 ## 1. Qué se añadió

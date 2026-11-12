@@ -1,5 +1,7 @@
 # Planificador de rutas del Pirineo (`/pirineo/ruta/`)
 
+**Idioma / Language:** Español · [English](RUTAS-PIRINEO.en.md)
+
 Superpone el pronóstico sobre la **posición estimada** de un track GPS según la hora de salida y el ritmo. Estado: **MVP, solo Pirineo oriental, probado únicamente con datos sintéticos**.
 
 ## Qué hace

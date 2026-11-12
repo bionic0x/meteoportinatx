@@ -1,5 +1,7 @@
 # NEXUS · Revisión de producto y diseño de Pirineo
 
+**Idioma / Language:** Español · [English](NEXUS-PIRINEO.en.md)
+
 ## Mandato y límites
 
 Iniciativa: hacer comprensible y utilizable la consola del Pirineo en móvil y escritorio sin desvirtuar la evidencia meteorológica. El propietario de producto y responsable de decisiones es Javier Peiró. El encargo de revisión y la implementación reversible derivan de su instrucción; la existencia de un perfil no concede permisos ni autoridad adicionales.

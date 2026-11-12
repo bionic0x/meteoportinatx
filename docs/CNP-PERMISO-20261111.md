@@ -1,5 +1,7 @@
 # Registro de permisos — ClimayNievePirineos (#9)
 
+**Idioma / Language:** Español · [English](CNP-PERMISO-20261111.en.md)
+
 **Estado al 11/11/2026: difusión de datos con atribución expresamente permitida por el proveedor; acceso automatizado y su cadencia no especificados.** La página [Modo de utilización y características de las estaciones](https://www.climaynievepirineos.com/estaciones/UsoYCaracteristicasCYNP.htm), consultada el 11/11/2026, indica al final que los datos pueden utilizarse en medios, webs, foros y blogs, citando la fuente o enlazando la estación concreta. La página también describe su red como privada. No concreta endpoints, frecuencia de extracción automatizada, retención histórica ni condiciones comerciales. El gate de acceso automatizado se mantiene por prudencia mientras se aclaran esos extremos; esto no debe presentarse como prohibición expresa del proveedor. El foro y las imágenes quedan fuera de esta evidencia.
 
 ## Estado de las evidencias
