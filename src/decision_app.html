@@ -5,46 +5,83 @@
 <meta name="color-scheme" content="dark">
 <title>Decidir · MeteoPortinatx</title>
 <style>
-:root{color-scheme:dark;--bg:#0b151b;--surface:#13232a;--surface2:#192e36;--line:#314854;--ink:#eaf2f3;--muted:#abc0c9;--sea:#f49b7d;--mount:#88c9df;--green:#b4e0c0;--amber:#ffd49a;--alert:#ffa6a6}
+:root{color-scheme:dark;--bg:#0b151b;--surface:#13232a;--surface2:#192e36;--line:#314854;--ink:#eaf2f3;--muted:#abc0c9;--sea:#f49b7d;--mount:#88c9df;--green:#b4e0c0;--amber:#ffd49a;--alert:#ffa6a6;
+--line-ctl:#6f8b98;--model:#c4b0ff;--hatch:#2a414c;--obs:var(--green);--est:var(--amber);--err:var(--alert);--av-amarillo:#e8be33;--av-naranja:#ff9447;--av-rojo:#ff5f5f;--on-av:#0b151b;--tap:44px;
+--trama:repeating-linear-gradient(135deg,var(--hatch) 0 2px,transparent 2px 7px)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-button,select{font:inherit;color:inherit}a{color:inherit}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--mount);outline-offset:3px}
+button,select{font:inherit;color:inherit}a{color:inherit}button:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 .wrap{max-width:1170px;margin:auto;padding:20px clamp(16px,4vw,48px) 48px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:4px 0 20px}
-.brand{text-decoration:none;font-weight:800;letter-spacing:.02em}.brand span{color:var(--sea)}.toplinks{display:flex;gap:16px;font-size:.84rem;color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0 16px;border-bottom:1px solid var(--line);padding:0 0 8px}
+.top .brand,.top label,.toplinks a{display:inline-flex;align-items:center;min-height:var(--tap)}.top .brand{gap:0 10px}.top label{gap:8px;font-size:.84rem;color:var(--muted)}.top select{min-height:var(--tap);background:var(--surface2);border:1px solid var(--line-ctl);border-radius:4px;padding:0 8px}
+.exp{font-size:.72rem;font-weight:400;letter-spacing:0;color:var(--muted);border:1px dashed var(--line-ctl);border-radius:4px;padding:1px 8px;white-space:nowrap}
+.brand{text-decoration:none;font-weight:800;letter-spacing:.02em}.brand b{font-weight:inherit}.brand span{color:var(--sea)}.toplinks{display:flex;flex-wrap:wrap;gap:0 16px;font-size:.84rem;color:var(--muted)}
 .eyebrow{color:var(--mount);font-size:.72rem;font-weight:800;letter-spacing:.17em;text-transform:uppercase}
-h1{font-size:clamp(2rem,5vw,3.8rem);letter-spacing:-.055em;line-height:1.12;margin:12px 0}h2,h3{line-height:1.25;letter-spacing:-.02em}.lede{max-width:65ch;color:var(--muted);font-size:1.04rem}
-.modes{display:flex;gap:6px;flex-wrap:wrap;margin-top:28px}.modes>*{padding:9px 16px;border:1px solid var(--line);border-radius:8px;text-decoration:none;font-size:.9rem}.modes .active{background:var(--surface2);border-color:#729aaa;font-weight:800}
-.selector{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0}.profile{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:10px 16px;cursor:pointer}.profile[aria-pressed=true]{background:var(--ink);color:var(--bg);font-weight:800;border-color:var(--ink)}
+h1{font-size:clamp(1.6rem,3.4vw,2.25rem);letter-spacing:-.04em;line-height:1.12;margin:16px 0 6px}h2,h3{line-height:1.25;letter-spacing:-.02em}.lede{max-width:78ch;color:var(--muted);font-size:.95rem;margin:0}
+.modes{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}.modes>*{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 16px;border:1px solid var(--line-ctl);border-radius:8px;text-decoration:none;font-size:.9rem}.modes .active{background:var(--surface2);border-color:#729aaa;font-weight:800}
+.selector{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 16px}.profile{min-height:var(--tap);background:var(--surface);border:1px solid var(--line-ctl);border-radius:999px;padding:0 16px;cursor:pointer}.profile[aria-pressed=true]{background:var(--ink);color:var(--bg);font-weight:800;border-color:var(--ink)}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:clamp(20px,3vw,34px)}
 .hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,1fr);gap:32px}.question{font-size:clamp(1.75rem,3.4vw,2.6rem);line-height:1.18;letter-spacing:-.045em;margin:10px 0 16px}.answer{font-size:1.05rem;font-weight:700;max-width:54ch}.facts{margin:0;display:grid;gap:10px}.facts div{border-bottom:1px solid var(--line);padding-bottom:8px}.facts dt{font-size:.78rem;color:var(--muted)}.facts dd{margin:3px 0 0;font-size:.9rem;overflow-wrap:anywhere}
-.tag{display:inline-flex;gap:5px;align-items:center;padding:4px 9px;border-radius:999px;font-size:.75rem;border:1px solid var(--line);font-weight:750}.tag.recent{color:var(--green);border-color:#34624d}.tag.stale,.tag.unknown{color:var(--amber);border-color:#6d5b39}
+.tag{display:inline-flex;gap:5px;align-items:center;padding:4px 9px;border-radius:999px;font-size:.75rem;border:1px solid var(--line);font-weight:750}.tag.recent{color:var(--ink);border-color:var(--line-ctl)}.tag.stale,.tag.unknown{color:var(--amber);border-color:#6d5b39}
 .work{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}.axis{min-height:200px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}.axis h3{font-size:.81rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}.signal{font-size:1.14rem;font-weight:750;margin:0 0 9px;overflow-wrap:anywhere}.axis .extra{font-size:.86rem;color:var(--muted);margin:0}.axis[data-status=unknown]{border-style:dashed}.axis[data-status=official]{border-left:3px solid var(--amber)}
 .evidence{margin-top:20px;border-top:1px solid var(--line);padding-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:28px}.evidence h3{margin:0 0 8px;font-size:1rem}.evidence ul{margin:0;padding:0;list-style:none;display:grid;gap:9px}.evidence li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:6px 0;font-size:.88rem}.evidence li em{font-style:normal;color:var(--muted);text-align:right}.label-est{color:var(--amber);font-weight:750}.steps{font-size:.93rem;color:var(--ink);max-width:58ch}
-.ctrls{margin:16px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}.ctrls[hidden]{display:none}.ctrls select{background:var(--surface2);border:1px solid var(--line);padding:8px 12px;border-radius:8px;max-width:100%}.subtle{color:var(--muted);font-size:.82rem}
-.links{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 0}.action{display:inline-block;text-decoration:none;border:1px solid #618a9b;border-radius:9px;padding:11px 16px;font-weight:750;background:#1e3945}.action.secondary{border-color:var(--line);background:var(--surface)}.update{border-radius:9px;background:none;border:1px solid var(--line);padding:9px 13px;cursor:pointer}.update:disabled{opacity:.6}
+.ctrls{margin:16px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}.ctrls[hidden]{display:none}.ctrls select{min-height:var(--tap);background:var(--surface2);border:1px solid var(--line-ctl);padding:0 12px;border-radius:8px;max-width:100%}.subtle{color:var(--muted);font-size:.82rem}
+.links{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 0}.action{display:inline-block;text-decoration:none;border:1px solid #618a9b;border-radius:9px;padding:11px 16px;font-weight:750;background:#1e3945}.action.secondary{border-color:var(--line-ctl);background:var(--surface)}.update{min-height:var(--tap);border-radius:9px;background:none;border:1px solid var(--line-ctl);padding:0 13px;cursor:pointer}.update:disabled{opacity:.6}
 .notice{margin-top:23px;padding:15px 19px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:.84rem;line-height:1.6}
-@media(max-width:780px){.hero,.work,.evidence{grid-template-columns:1fr}.hero{gap:18px}.axis{min-height:0}.toplinks{gap:9px}}
+
+/* ── Ficha «Investigar el episodio»: la procedencia se lee por borde, signo y palabra; el color solo refuerza ── */
+.panel[data-view=episode] .work,.panel[data-view=episode] #signals-box{display:none}.panel[data-view=episode] .evidence{grid-template-columns:1fr}.panel[data-view=episode] .hero{grid-template-columns:1fr;gap:14px}.panel[data-view=episode] .facts{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px 24px}
+.ep{display:grid;gap:24px;margin-top:20px}.ep[hidden]{display:none}.ep,.ep *{min-width:0}.ep ul,.ep ol{margin:0;padding:0;list-style:none}
+.ep h3{font-size:1.06rem;margin:0 0 4px;letter-spacing:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.ep .sub{font-size:.84rem;color:var(--muted);margin:0 0 10px;max-width:80ch}.ep .more{font-size:.84rem;color:var(--muted);margin:10px 0 0;max-width:80ch}.ep .more a{display:inline-flex;align-items:center;min-height:var(--tap)}
+.ep .lvl,.ep .age,.ep time,.ep .num{font-variant-numeric:tabular-nums}
+.src{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border:1px solid currentColor;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;line-height:1.5}
+.src::before{font-weight:400}.src--oficial{color:var(--ink);border:3px double currentColor}.src--oficial::before{content:"◆"}
+.src--medido{color:var(--obs)}.src--medido::before{content:"●"}.src--modelo{color:var(--model);border-style:dashed}.src--modelo::before{content:"◇"}
+.src--motor{color:var(--est);border-style:dotted;border-width:2px}.src--motor::before{content:"△"}
+.ep-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ep-card{display:grid;align-content:start;gap:8px;justify-items:start;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);text-decoration:none;font-size:.92rem;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.ep-card .src{white-space:normal}.ep-card[data-kind=oficial]{border:3px double var(--ink)}.ep-card[data-kind=modelo]{border-style:dashed;border-color:var(--model)}.ep-card[data-kind=motor]{border:2px dotted var(--est)}.ep-card[data-kind=medido]{border-color:var(--obs)}
+.lvl{display:inline-flex;align-items:center;gap:8px;font-size:.84rem;color:var(--ink)}.lvl-pips{display:inline-flex;align-items:flex-end;gap:2px;height:16px;flex:none}
+.lvl-pips i{width:7px;border:1px solid var(--line-ctl)}.lvl-pips i:nth-child(1){height:8px}.lvl-pips i:nth-child(2){height:12px}.lvl-pips i:nth-child(3){height:16px}
+.lvl[data-n="1"] i:nth-child(-n+1),.lvl[data-n="2"] i:nth-child(-n+2),.lvl[data-n="3"] i{background:var(--ink);border-color:var(--ink)}
+.lvl[data-n=nd]{color:var(--muted)}.lvl[data-n=nd] i{border-style:dashed;background:var(--trama)}
+.fold{margin-top:8px}.fold>summary{display:flex;align-items:center;min-height:var(--tap);cursor:pointer;font-size:.9rem;font-weight:700}.fold>ul{margin-top:4px}
+.ch{border:1px solid var(--line);border-left:4px solid var(--obs);border-radius:4px;background:var(--surface)}.ch+.ch{margin-top:8px}
+.ch[data-kind=modelo]{border-left:4px dashed var(--model)}.ch[data-status=nodata]{border-left:4px dashed var(--line-ctl);background:var(--trama),var(--surface)}
+.ch summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;min-height:var(--tap);padding:8px 12px;cursor:pointer;list-style:none}
+.ch summary::-webkit-details-marker{display:none}.ch summary::after{content:"+";margin-left:auto;color:var(--muted);font-size:1.06rem;width:1ch;text-align:center}.ch details[open] summary::after{content:"−"}
+.ch-name{flex:1 1 11rem;font-weight:700;overflow-wrap:anywhere}.age{font-size:.8rem;color:var(--muted)}
+.ev{padding:0 12px 12px;display:grid;gap:4px}.ev li{font-size:.82rem;overflow-wrap:anywhere;padding-left:12px;border-left:1px solid var(--line)}.ev .nd{color:var(--muted)}
+.av{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.av-niv{display:inline-flex;align-items:center;gap:4px;padding:2px 12px;border-radius:999px;font-size:.82rem;font-weight:700;color:var(--on-av);background:var(--av-amarillo)}.av-niv::before{content:"◆"}
+.av[data-nivel=naranja] .av-niv{background:var(--av-naranja)}.av[data-nivel=rojo] .av-niv{background:var(--av-rojo)}.av[data-nivel=nd] .av-niv,.av[data-nivel=verde] .av-niv{color:var(--ink);background:var(--trama);border:1px dashed var(--line-ctl)}
+.av-txt{flex:1 1 12rem;font-weight:700;overflow-wrap:anywhere}.av-vig{font-size:.82rem;color:var(--muted)}.av-umb{flex-basis:100%;font-size:.82rem;color:var(--muted)}
+.spread{display:grid;gap:4px;margin:0 0 12px;padding:10px 12px;border:1px dashed var(--model);border-radius:4px;font-size:.9rem}.spread small{color:var(--muted);font-size:.8rem}
+.motor{border:2px dotted var(--est);border-radius:12px;padding:16px;background:var(--surface2)}.motor-st{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px 24px;margin:8px 0 12px}.motor-st div{display:grid;gap:4px}.motor-st .when{font-size:.8rem;color:var(--muted)}.motor-st strong{font-size:1.3rem;line-height:1.2}
+.motor-why{counter-reset:r;display:grid;gap:4px}.motor-why li{counter-increment:r;padding-left:24px;position:relative;font-size:.92rem;overflow-wrap:anywhere}.motor-why li::before{content:counter(r);position:absolute;left:0;color:var(--muted)}
+.fu li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}.fu code{font:inherit;font-weight:700;overflow-wrap:anywhere}.fu .st{color:var(--muted)}.fu .st[data-error]{color:var(--err);font-weight:700}.fu .st[data-error]::before{content:"✕ "}
+@media(max-width:900px){.ep-sum{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:780px){.ep{gap:20px}.ep-card{padding:10px;font-size:.84rem}.panel[data-view=episode] .answer{font-size:.98rem}}@media(max-width:420px){.links>*{flex:1 1 100%;text-align:center}}@media(max-width:339px){.ep-sum{grid-template-columns:1fr}}
+@media(max-width:780px){.brand{flex-wrap:wrap}.lede{font-size:.88rem}.modes,.selector{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}.modes>*,.profile{flex:none;white-space:nowrap}.modes>*{padding:0 12px}.hero,.work,.evidence{grid-template-columns:1fr}.hero{gap:18px}.axis{min-height:0}.toplinks{gap:9px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body><div class="wrap">
-<header class="top"><a class="brand" href="../">METEO<span>PORTINATX</span></a><label for="decision-language">Idioma / Language <select id="decision-language"><option value="es">Español</option><option value="en">English</option></select></label><nav class="toplinks" aria-label="Exploración"><a href="../">Observatorios</a><a href="../portinatx/">Ibiza</a><a href="../pirineo/">Pirineo</a></nav></header>
+<header class="top"><a class="brand" href="../"><b>METEO<span>PORTINATX</span></b><em class="exp">Experimental · no oficial</em></a><label for="decision-language">Idioma / Language <select id="decision-language"><option value="es">Español</option><option value="en">English</option></select></label><nav class="toplinks" aria-label="Exploración"><a href="../">Observatorios</a><a href="../portinatx/">Ibiza</a><a href="../pirineo/">Pirineo</a></nav></header>
 <main>
 <p id="decision-language-notice" lang="en" class="subtle" hidden>Official warnings and other third-party source text are shown in their original language. Consult the issuing authority.</p>
-<section aria-labelledby="page-title"><p class="eyebrow">Interfaz de decisión · Fase P0</p><h1 id="page-title">La información relevante.<br>Sin buscarla entre 60 gráficos.</h1>
-<p class="lede">Selecciona para qué consultas el tiempo. Cada vista distingue aviso oficial, medición y estimación. Una instantánea antigua nunca se interpreta como ausencia de peligro.</p>
+<section aria-labelledby="page-title"><h1 id="page-title">Decidir</h1>
+<p class="lede">Elige para qué consultas el tiempo. Cada vista separa aviso oficial, medición y estimación. Una instantánea antigua nunca se interpreta como ausencia de peligro.</p>
 <div class="modes" aria-label="Niveles de profundidad"><span class="active" aria-current="page">01 · Decidir</span><a id="follow" href="../portinatx/#vigilancia">02 · Seguir datos</a><a id="investigate" href="../portinatx/#forense">03 · Investigar</a></div></section>
 <nav class="selector" id="profiles" aria-label="Elige tu perfil"></nav>
-<section class="panel" aria-live="polite" aria-atomic="true" aria-labelledby="question">
-<div class="hero"><div><span id="freshness" class="tag unknown">Comprobando datos</span><h2 class="question" id="question">Selecciona tu situación</h2><p id="answer" class="answer">Buscando la última información disponible…</p></div>
+<section class="panel" id="panel" aria-labelledby="question">
+<div class="hero"><div><span id="freshness" class="tag unknown">Comprobando datos</span><h2 class="question" id="question">Selecciona tu situación</h2><p id="answer" class="answer" role="status">Buscando la última información disponible…</p></div>
 <dl class="facts"><div><dt>Última captura</dt><dd id="issued">—</dd></div><div><dt>Origen del dato</dt><dd id="provenance">—</dd></div><div><dt>Zona o punto</dt><dd id="location">—</dd></div><div><dt>Estado del servicio</dt><dd id="service-note">Consulta bajo demanda, no vigilancia continua</dd></div></dl></div>
 <div class="ctrls" id="place-controls" hidden><label for="place">Punto de referencia</label><select id="place"></select><span class="subtle">Ubicaciones del motor; no es la dirección personal de una vivienda.</span></div>
+<div class="ep" id="episode" hidden></div>
 <div class="work" aria-label="Separación de fuentes">
 <article class="axis" id="official-card" data-status="unknown"><h3>01 · Avisos institucionales</h3><p class="signal" id="official-title">Sin verificar</p><p class="extra" id="official-detail">Consulta el organismo oficial</p></article>
 <article class="axis" id="observed-card" data-status="unknown"><h3 id="observed-label">02 · Peligro observado</h3><p class="signal" id="observed-title">Sin datos</p><p class="extra" id="observed-detail">Solo mediciones disponibles y recientes</p></article>
 <article class="axis" id="operational-card" data-status="unknown"><h3 id="operational-label">03 · Precaución / estimación</h3><p class="signal" id="operational-title">Sin calcular</p><p class="extra" id="operational-detail">No es una instrucción de emergencia</p></article>
 </div>
-<div class="evidence"><section><h3>Señales consultadas</h3><ul id="signals"><li>Sin datos comprobados</li></ul></section><section><h3>Cómo interpretarlo</h3><p class="steps" id="guidance">Los avisos oficiales prevalecen. No usar datos desactualizados para decidir.</p><p class="subtle" id="qualification">Las fracciones de ensemble no son probabilidades calibradas.</p></section></div>
+<div class="evidence"><section id="signals-box"><h3>Señales consultadas</h3><ul id="signals"><li>Sin datos comprobados</li></ul></section><section><h3>Cómo interpretarlo</h3><p class="steps" id="guidance">Los avisos oficiales prevalecen. No usar datos desactualizados para decidir.</p><p class="subtle" id="qualification">Las fracciones de ensemble no son probabilidades calibradas.</p></section></div>
 <div class="links"><a class="action" id="deep-link" href="../portinatx/">Ver el observatorio completo</a><a class="action secondary" id="official-link" href="https://www.aemet.es/" rel="noopener noreferrer" target="_blank">Consultar avisos oficiales</a><button class="update" id="reload" type="button">Volver a consultar</button></div>
 </section>
 <p class="notice"><strong>Límites de seguridad.</strong> Esta pantalla no conoce las condiciones de una vivienda, embarcación, carretera, pista o itinerario ni envía alertas push. Render Free puede suspenderse; GitHub Pages ofrece instantáneas de periodicidad aproximada de seis horas. La ausencia de dato no significa calma. Ante riesgo, prevalecen protección civil, servicios de emergencia y organismos meteorológicos oficiales. Ninguna probabilidad o modelo aquí está acreditado como predicción calibrada.</p>
@@ -62,10 +99,118 @@ const locale=()=>{try{return localStorage.getItem('meteo-language')==='en'?'en-G
 const fmt=(n,unit)=>Number.isFinite(n)?`${new Intl.NumberFormat(locale(),{maximumFractionDigits:1}).format(n)} ${unit}`:'UNKNOWN';
 function set(id,value){$(id).textContent=String(value??'—');}
 function axis(id,status,title,detail){$(id+'-card').dataset.status=status||'unknown';set(id+'-title',title);set(id+'-detail',detail);}
+/* ── Ficha del episodio: todo se inserta como texto; las etiquetas fijas van en nodos propios
+      para que la capa de idioma las traduzca, y las frases con cifras se componen con L(). ── */
+const en=()=>locale()==='en-GB', L=(es,eng)=>en()?eng:es, T=s=>en()&&window.meteoTranslate?window.meteoTranslate(s):s;
+const TABS={oficial:'vigilancia',medido:'superficie',modelo:'modelos',motor:'gobernanza',fuentes:'gobernanza'};
+const AVISO={verde:['verde','green'],amarillo:['amarillo','yellow'],naranja:['naranja','orange'],rojo:['rojo','red']};
+function el(tag,cls,...kids){const n=document.createElement(tag);if(cls)n.className=cls;for(const k of kids){if(k===null||k===undefined||k===false)continue;n.append(typeof k==='string'?document.createTextNode(k):k);}return n;}
+function until(iso){const d=new Date(iso);if(Number.isNaN(d.getTime()))return null;
+ const t=el('time','av-vig',L('hasta ','until ')+new Intl.DateTimeFormat(locale(),{weekday:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}).format(d)+L(' (hora peninsular)',' (Madrid time)'));t.dateTime=iso;return t;}
+function levelMark(row){const n=row.level===null||row.level===undefined?'nd':String(row.level);
+ const pips=el('span','lvl-pips',el('i'),el('i'),el('i'));pips.setAttribute('aria-hidden','true');
+ const out=el('span','lvl',pips,n==='nd'?null:L(`Nivel interno ${n} de 3 · `,`Internal level ${n} of 3 · `),el('span',null,row.levelLabel));out.dataset.n=n;return out;}
+function ageText(r){if(r.group!=='measured')return L('hora de la pasada no publicada','model run time not published');
+ if(r.ageMin!==null)return L(`dato más reciente: hace ${r.ageMin} min`,`latest datum: ${r.ageMin} min ago`)+(r.status==='nodata'?L(' · caducado, no se usa',' · expired, not used'):'');
+ return r.justMeasured?L('dato recién recibido','just received'):L('sin hora de dato','no data time');}
+function channelItem(r){const kind=r.group==='measured'?'medido':'modelo';
+ const sum=el('summary',null,el('span','ch-name',r.label),levelMark(r),el('span','age',ageText(r)));
+ const ev=el('ul','ev');
+ if(r.evidence.length)for(const line of r.evidence)ev.append(el('li',null,line));
+ else ev.append(el('li','nd',r.evidencePublished?'Sin detalle mostrable para este canal.':'Detalle no publicado por este origen de datos.'));
+ const d=el('details',null,sum,ev);d.open=r.status==='signal'||(r.status==='nodata'&&matchMedia('(min-width:781px)').matches);
+ const li=el('li','ch',d);li.dataset.kind=kind;li.dataset.status=r.status;return li;}
+function fold(rows,es,eng){const wide=matchMedia('(min-width:781px)').matches;if(!rows.length)return null;
+ const d=el('details','fold',el('summary',null,L(es,eng).replace('{n}',rows.length)),el('ul',null,...rows.map(channelItem)));d.open=wide;return d;}
+function names(rows){return rows.map(r=>T(r.label)).join(', ');}
+function section(id,srcCls,srcText,title,sub){const h=el('h3',null,el('span','src src--'+srcCls,srcText),el('span',null,title));
+ const sec=el('section',null,h,sub?el('p','sub',sub):null);sec.id='ep-'+id;return sec;}
+function more(tab,textEs,textEn){const a=el('a',null,L(textEs,textEn)+' →');a.href='../portinatx/#'+tab;return el('p','more',a);}
+function officialSentence(w){if(!w.verified)return L('Avisos no comprobados en este ciclo: consultar AEMET.','Warnings not verified in this cycle: check AEMET.');
+ if(!w.items.length)return L('No constan avisos vigentes en este ciclo. No equivale a ausencia de peligro.','No active warnings recorded in this cycle. This does not mean there is no danger.');
+ const lv=[...new Set(w.items.map(i=>i.level?L(...AVISO[i.level]):L('nivel no reconocido','unrecognised level')))].join(', ');
+ return L(`AEMET: ${w.items.length} aviso(s) vigente(s) · ${lv}.`,`AEMET: ${w.items.length} active warning(s) · ${lv}.`);}
+function measuredSentence(e){const c=e.counts,sig=e.measured.filter(r=>r.status==='signal');
+ if(!c.available)return L('Ninguna medición disponible: no se puede valorar la situación.','No measurement available: conditions cannot be assessed.');
+ const base=sig.length?L(`Señal en ${c.signal} de ${c.available} mediciones disponibles (${names(sig)})`,`Signal in ${c.signal} of ${c.available} available measurements (${names(sig)})`):
+   L(`Ninguna de las ${c.available} mediciones disponibles supera su umbral interno`,`None of the ${c.available} available measurements exceeds its internal threshold`);
+ return base+(c.nodata?L(`; ${c.nodata} sin dato, que no equivale a calma.`,`; ${c.nodata} without data, which does not mean calm.`):'.');}
+function modelSentence(e){const m=e.models.filter(r=>/^modelo_/.test(r.name)),sig=m.filter(r=>r.status==='signal').length;
+ if(!m.length)return L('Sin estimaciones de modelo en este ciclo.','No model estimates in this cycle.');
+ return L(`${sig} de ${m.length} modelos con señal sobre sus umbrales internos.`,`${sig} of ${m.length} models with a signal above their internal thresholds.`)+
+  (e.spread?L(` Racha máxima a 48 h: de ${e.spread.gust.min} a ${e.spread.gust.max} km/h.`,` Maximum 48 h gust: ${e.spread.gust.min} to ${e.spread.gust.max} km/h.`):'');}
+function engineSentence(g){if(g.insufficient)return [L('Cobertura insuficiente: el nivel no es fiable y no se muestra.','Insufficient coverage: the level is unreliable and is not shown.')];
+ if(!g.now.levelLabel)return [L('El análisis no publicó nivel en este ciclo.','The analysis published no level in this cycle.')];
+ return [L('Ahora: ','Now: '),el('span',null,g.now.levelLabel),'. ',L('Estimación propia, no aviso.','Own estimate, not a warning.')];}
+function renderEpisode(e){
+ const box=$('episode');box.replaceChildren();
+ const card=(kind,cls,label,target,...kids)=>{const a=el('a','ep-card',el('span','src src--'+cls,label),el('span',null,...kids));a.href='#ep-'+target;a.dataset.kind=kind;
+   a.addEventListener('click',ev=>{ev.preventDefault();const t=$('ep-'+target);if(t){t.scrollIntoView({block:'start'});t.querySelector('h3').focus?.();}});return a;};
+ box.append(el('div','ep-sum',card('oficial','oficial','Oficial','oficial',officialSentence(e.warnings)),card('medido','medido','Medido','medido',measuredSentence(e)),
+   card('modelo','modelo','Modelo','modelo',modelSentence(e)),card('motor','motor','Estimación del motor','motor',...engineSentence(e.engine))));
+ // 1 · Oficial
+ const of=section('oficial','oficial','Oficial','Avisos oficiales vigentes','Texto literal del organismo emisor. Es lo único de esta página que es un aviso.');
+ if(!e.warnings.verified)of.append(el('p','sub','Avisos no comprobados en este ciclo. Consulta AEMET directamente.'));
+ else if(!e.warnings.items.length)of.append(el('p','sub','No constan avisos vigentes en este ciclo. No equivale a ausencia de peligro.'));
+ for(const w of e.warnings.items){const lv=w.level||'nd';
+   const row=el('div','av',el('span','av-niv',w.level?L(`Aviso ${AVISO[w.level][0]}`,`${AVISO[w.level][1][0].toUpperCase()+AVISO[w.level][1].slice(1)} warning`):L('Nivel no reconocido','Unrecognised level')),
+     el('span','av-txt',w.event||L('Aviso sin descripción','Warning without description')),w.until?until(w.until):null,w.threshold?el('span','av-umb',w.threshold):null);row.dataset.nivel=lv;of.append(row);}
+ if(e.warnings.note)of.append(el('p','more',e.warnings.note));
+ if(e.warnings.expired)of.append(el('p','more',L(`${e.warnings.expired} aviso(s) del ciclo ya han vencido y no se muestran.`,`${e.warnings.expired} warning(s) in this cycle have already expired and are not shown.`)));
+ if(e.warnings.later)of.append(el('p','more',L(`${e.warnings.later} entrada(s) más en el boletín que no están activas ahora (otros periodos o nivel verde).`,`${e.warnings.later} further bulletin entr(ies) not active now (other periods or green level).`)));
+ of.append(more(TABS.oficial,'Avisos y radar en el observatorio','Warnings and radar in the observatory'));
+ // 2 · Medido
+ const me=section('medido','medido','Medido','Mediciones',L(`${e.counts.available} de ${e.counts.total} mediciones disponibles. «Sin dato» nunca cuenta como cero. Las estaciones y boyas están a kilómetros de la cala: describen el entorno, no el punto.`,
+   `${e.counts.available} of ${e.counts.total} measurements available. “No data” never counts as zero. Stations and buoys are kilometres from the cove: they describe the surroundings, not the point.`));
+ const hot=e.measured.filter(r=>r.status!=='none'),calm=e.measured.filter(r=>r.status==='none');
+ if(hot.length)me.append(el('ul',null,...hot.map(channelItem)));
+ if(calm.length)me.append(fold(calm,'{n} mediciones sin señal sobre su umbral interno','{n} measurements with no signal above their internal threshold'));
+ if(!e.measured.length)me.append(el('p','sub','Este origen de datos no publicó mediciones por canal.'));
+ me.append(more(TABS.medido,'Estaciones, pluviómetros y viento en el observatorio','Stations, rain gauges and wind in the observatory'));
+ // 3 · Modelos
+ const mo=section('modelos','modelo','Modelo','Modelos y conjunto de simulaciones','Estimaciones, no mediciones. Cada modelo se evalúa contra umbrales internos; nada aquí está calibrado.');mo.id='ep-modelo';
+ if(e.spread){const g=e.spread.gust,c=e.spread.cape;
+   mo.append(el('div','spread',el('span',null,L(`Racha máxima prevista: de ${g.min} km/h (${g.minModel}) a ${g.max} km/h (${g.maxModel}).`,`Maximum forecast gust: ${g.min} km/h (${g.minModel}) to ${g.max} km/h (${g.maxModel}).`)),
+     el('span',null,L(`CAPE máximo previsto: de ${c.min} J/kg (${c.minModel}) a ${c.max} J/kg (${c.maxModel}).`,`Maximum forecast CAPE: ${c.min} J/kg (${c.minModel}) to ${c.max} J/kg (${c.maxModel}).`)),
+     el('small',null,'Máximos de las próximas 48 h en el punto, sin hora asignada. CAPE es energía disponible, no probabilidad de tormenta. No se calcula media ni consenso.')));}
+ if(e.models.length)mo.append(fold(e.models,'Detalle de {n} estimaciones de modelo','Detail of {n} model estimates'));
+ if(e.ensemble.length){mo.append(el('p','sub','Conjunto: fracción de miembros de un único sistema, no una probabilidad calibrada. Solo evalúa umbrales de lluvia extrema; no dice nada del viento ni del oleaje.'));
+   mo.lastChild.style.marginTop='14px';mo.append(fold(e.ensemble,'Detalle del conjunto ({n})','Ensemble detail ({n})'));}
+ if(!e.models.length&&!e.ensemble.length)mo.append(el('p','sub','Este origen de datos no publicó estimaciones por modelo.'));
+ mo.append(more(TABS.modelo,'Comparación de modelos en el observatorio','Model comparison in the observatory'));
+ // 4 · Análisis propio
+ const g=e.engine,an=el('section','motor',el('h3',null,el('span','src src--motor','Estimación del motor'),el('span',null,'Análisis propio: qué concluye y por qué')));an.id='ep-motor';
+ if(g.insufficient)an.append(el('p','sub','Cobertura insuficiente: el nivel no es fiable y no se muestra.'));
+ else{const st=el('div','motor-st');for(const [when,x] of [['Ahora',g.now],['Próximas 36 h',g.next]]){
+     st.append(el('div',null,el('span','when',when),x.levelLabel?el('strong',null,x.levelLabel):el('strong',null,'Nivel no publicado'),x.levelLabel?levelMark({level:x.level,levelLabel:x.levelLabel}):null));}
+   an.append(st);}
+ const seen=new Set(),why=el('ol','motor-why');
+ for(const r of [...g.now.reasons,...g.next.reasons]){const key=JSON.stringify(r);if(seen.has(key))continue;seen.add(key);
+   why.append(r.kind==='floor'?el('li',null,'El aviso oficial fija el nivel mínimo en',' «',el('span',null,r.level),'»'):
+     el('li',null,el('span',null,r.kind==='official'?'Aviso oficial vigente':r.label),' → «',el('span',null,r.level),'»'));}
+ if(why.children.length)an.append(el('p','sub','Motivos que declara el motor (lista como máximo sus tres señales de mayor nivel):'),why);
+ else an.append(el('p','sub',g.now.published||g.next.published?'El motor no declaró motivos mostrables en este ciclo.':'Motivos no publicados por este origen de datos.'));
+ const hidden=g.now.hidden+g.next.hidden;if(hidden)an.append(el('p','more',L(`${hidden} motivo(s) en texto libre no se muestran aquí.`,`${hidden} free-text reason(s) are not shown here.`)));
+ if(g.change)an.append(el('p','more',g.change.up?'Sube respecto a la actualización anterior:':'Baja respecto a la actualización anterior:',' ',el('span',null,g.change.from),' → ',el('span',null,g.change.to)));
+ else if(!g.comparable)an.append(el('p','more','Sin comparación con la actualización anterior: este origen arranca cada ciclo sin historial.'));
+ if(g.rainCoverage)an.append(el('p','more',L(`Cobertura de lluvia observada: ${g.rainCoverage} canales.`,`Observed rainfall coverage: ${g.rainCoverage} channels.`)));
+ if(e.claims)an.append(el('p','more',L(`Afirmaciones del análisis: ${e.claims.evidence} con evidencia · ${e.claims.hypothesis} hipótesis · ${e.claims.assumption} supuestos · ${e.claims.unknown} sin comprobar.`,
+   `Analysis claims: ${e.claims.evidence} with evidence · ${e.claims.hypothesis} hypotheses · ${e.claims.assumption} assumptions · ${e.claims.unknown} unverified.`)));
+ an.append(el('p','more','Estimación propia sin calibrar. No es un aviso oficial ni una instrucción.'),more(TABS.motor,'Afirmaciones, canales y fuentes en el observatorio','Claims, channels and sources in the observatory'));
+ // 5 · Fuentes
+ const fu=section('fuentes','motor','Metadato','Fuentes de datos',e.sources.total?L(`${e.sources.ok} de ${e.sources.total} fuentes responden. «Responde» no garantiza un dato reciente.`,`${e.sources.ok} of ${e.sources.total} sources respond. “Responds” does not guarantee recent data.`):'Este origen de datos no publicó el estado de las fuentes.');
+ fu.querySelector('.src').className='src';
+ if(e.sources.failing.length){const ul=el('ul','fu');for(const f of e.sources.failing){const st=el('span','st',f.state);if(f.error)st.dataset.error='1';ul.append(el('li',null,el('code',null,f.name),st));}fu.append(ul);}
+ if(e.cycle.id||e.cycle.engine)fu.append(el('p','more',L('Ciclo ','Cycle ')+(e.cycle.id||'—')+L(' · versión del análisis ',' · analysis version ')+(e.cycle.engine||'—')));
+ box.append(of,me,mo,an,fu);
+ for(const h of box.querySelectorAll('section>h3'))h.tabIndex=-1;
+ return officialSentence(e.warnings)+' '+measuredSentence(e)+(g.insufficient||!g.now.levelLabel?'':' '+L('Análisis propio: ','Own analysis: ')+T(g.now.levelLabel)+L(' (estimación, no aviso).',' (estimate, not a warning).'));
+}
 function render(profile, packet){
  const kind=M.profiles[profile],place=$('place').value||'font_romeu';
  const x=M.project(profile,packet?.data,packet?.source||'sin datos',place);
- set('question',x.question);set('answer',x.heading);
+ const ep=x.available&&x.episode?x.episode:null;$('panel').dataset.view=ep?'episode':'cards';$('episode').hidden=!ep;
+ set('question',x.question);set('answer',ep?renderEpisode(ep):x.heading);if(!ep)$('episode').replaceChildren();
  $('freshness').className='tag '+x.state;
  set('freshness', x.state==='recent'?'Ciclo reciente':x.state==='stale'?'Datos antiguos':'Datos no verificables');
  set('issued',x.issued?new Date(x.issued).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}):'Desconocida');
@@ -99,7 +244,7 @@ function render(profile, packet){
  $('official-link').href=official[kind.domain];
  $('follow').href=pages[kind.domain]+(kind.domain==='portinatx'?'#vigilancia':'#puntos');
  $('investigate').href=pages[kind.domain]+(kind.domain==='portinatx'?'#forense':'#diagnostico');
- for(const b of document.querySelectorAll('.profile'))b.setAttribute('aria-pressed',String(b.dataset.profile===profile));
+ for(const b of document.querySelectorAll('.profile')){const on=b.dataset.profile===profile;b.setAttribute('aria-pressed',String(on));if(on&&b.parentElement.scrollWidth>b.parentElement.clientWidth)b.parentElement.scrollLeft=Math.max(0,b.offsetLeft-b.parentElement.offsetLeft-12);}
 }
 async function show(profile,refresh=false){
  current=profile;location.hash=profile;const domain=M.profiles[profile].domain;
@@ -158,8 +303,63 @@ const dict={
 'Estimación operativa, no instrucción individual ni aviso oficial.':'Operational estimate, not individual guidance or an official warning.',
 'Situación del último ciclo verificado; comprobar AEMET.':'Conditions in the latest verified cycle; check AEMET.',
 'Fuente: solo MeteoAlarm (sin CAP directo de AEMET).':'Source: MeteoAlarm only (no direct AEMET CAP).',
-'Sin fuente oficial disponible en este ciclo.':'No official source available in this cycle.'
+'Sin fuente oficial disponible en este ciclo.':'No official source available in this cycle.',
+"Decidir":"Decide",
+"Experimental · no oficial":"Experimental · unofficial",
+"Elige para qué consultas el tiempo. Cada vista separa aviso oficial, medición y estimación. Una instantánea antigua nunca se interpreta como ausencia de peligro.":"Choose why you are checking the weather. Each view separates official warnings, measurements and estimates. An old snapshot must never be interpreted as absence of danger.",
+"Oficial":"Official",
+"Medido":"Measured",
+"Modelo":"Model",
+"Estimación del motor":"Engine estimate",
+"Metadato":"Metadata",
+"Avisos oficiales vigentes":"Active official warnings",
+"Texto literal del organismo emisor. Es lo único de esta página que es un aviso.":"Verbatim text from the issuing authority. This is the only part of this page that is a warning.",
+"Avisos no comprobados en este ciclo. Consulta AEMET directamente.":"Warnings not verified in this cycle. Check AEMET directly.",
+"No constan avisos vigentes en este ciclo. No equivale a ausencia de peligro.":"No active warnings recorded in this cycle. This does not mean there is no danger.",
+"Mediciones":"Measurements",
+"Este origen de datos no publicó mediciones por canal.":"This data source did not publish per-channel measurements.",
+"Modelos y conjunto de simulaciones":"Models and ensemble",
+"Estimaciones, no mediciones. Cada modelo se evalúa contra umbrales internos; nada aquí está calibrado.":"Estimates, not measurements. Each model is checked against internal thresholds; nothing here is calibrated.",
+"Máximos de las próximas 48 h en el punto, sin hora asignada. CAPE es energía disponible, no probabilidad de tormenta. No se calcula media ni consenso.":"Maxima over the next 48 h at the point, with no time attached. CAPE is available energy, not thunderstorm probability. No mean or consensus is computed.",
+"Conjunto: fracción de miembros de un único sistema, no una probabilidad calibrada. Solo evalúa umbrales de lluvia extrema; no dice nada del viento ni del oleaje.":"Ensemble: fraction of members of a single system, not a calibrated probability. It only checks extreme-rainfall thresholds; it says nothing about wind or waves.",
+"Este origen de datos no publicó estimaciones por modelo.":"This data source did not publish per-model estimates.",
+"Análisis propio: qué concluye y por qué":"Own analysis: what it concludes and why",
+"Cobertura insuficiente: el nivel no es fiable y no se muestra.":"Insufficient coverage: the level is unreliable and is not shown.",
+"Ahora":"Now",
+"Próximas 36 h":"Next 36 h",
+"Nivel no publicado":"Level not published",
+"El aviso oficial fija el nivel mínimo en":"The official warning sets the minimum level at",
+"Aviso oficial vigente":"Active official warning",
+"Motivos que declara el motor (lista como máximo sus tres señales de mayor nivel):":"Reasons stated by the engine (it lists at most its three highest-level signals):",
+"El motor no declaró motivos mostrables en este ciclo.":"The engine stated no displayable reasons in this cycle.",
+"Motivos no publicados por este origen de datos.":"Reasons not published by this data source.",
+"Sube respecto a la actualización anterior:":"Up from the previous update:",
+"Baja respecto a la actualización anterior:":"Down from the previous update:",
+"Sin comparación con la actualización anterior: este origen arranca cada ciclo sin historial.":"No comparison with the previous update: this source starts each cycle without history.",
+"Estimación propia sin calibrar. No es un aviso oficial ni una instrucción.":"Uncalibrated own estimate. Not an official warning or an instruction.",
+"Fuentes de datos":"Data sources",
+"Este origen de datos no publicó el estado de las fuentes.":"This data source did not publish source status.",
+"Sin detalle mostrable para este canal.":"No displayable detail for this channel.",
+"Detalle no publicado por este origen de datos.":"Detail not published by this data source.",
+"sin dato · no equivale a calma":"no data · does not mean calm",
+"falló en esta actualización":"failed in this update",
+"sin credencial configurada":"no credential configured",
+"desactivada":"disabled",
+"estado no reconocido":"unrecognised status",
+"Lluvia en estaciones AEMET y METAR":"Rainfall at AEMET and METAR stations",
+"Pluviómetros vecinos":"Nearby rain gauges",
+"Frente de racha en estaciones":"Gust front at stations",
+"Viento en estaciones":"Wind at stations",
+"Oleaje en boyas":"Waves at buoys",
+"Escorrentía: indicio por pluviómetro, no medida":"Runoff: rain-gauge proxy, not a measurement",
+"Modelo AROME HD":"AROME HD model",
+"Modelo ECMWF IFS":"ECMWF IFS model",
+"Modelo ICON-EU":"ICON-EU model",
+"Trayectoria del núcleo de lluvia en modelos":"Rain-core track in models",
+"Oleaje modelado en la bahía":"Modelled waves in the bay",
+"Conjunto ECMWF de simulaciones":"ECMWF ensemble"
 };
+window.meteoTranslate=s=>dict[s]||s;
 const fixed=new WeakMap(), selector=document.getElementById('decision-language'), notice=document.getElementById('decision-language-notice');
 let lang='es';try{lang=localStorage.getItem('meteo-language')==='en'?'en':'es';}catch(_){}
 function dynamic(s){

@@ -114,4 +114,106 @@ test('#8: point reports its slope snow level and freezing-rain risk; unknown sta
   const g=M.project('esqui',x,'snapshot','font_romeu',NOW).forecast;
   assert.equal(g.snowLevel,null);assert.equal(g.aboveSnowLevel,null);assert.equal(g.freezingRain,false);
 });
+// ── «Investigar el episodio»: ficha de un ciclo, solo desde core.json ──
+const episodeCore = () => ({...base(), cycle_id: 'NWC-20261111T094000Z', engine: '0.6.1', history: [{id: 'a'}],
+  official: {verificado: true, level_now: 'watch', fuente_oficial: 'AEMET_CAP+METEOALARM', all: [
+    {nivel: 'amarillo', tipo: 'terrestre', evento: 'Aviso de vientos', desde: '2026-11-11T08:00:00+01:00', hasta: '2026-11-11T20:00:00+01:00', activo: true, umbral: 'Rachas 70 km/h', private: 'SECRET_OWNER_QUOTE'},
+    {nivel: 'amarillo', tipo: 'terrestre', evento: 'Aviso de vientos', desde: '2026-11-11T08:00:00+01:00', hasta: '2026-11-11T20:00:00+01:00', activo: true, umbral: 'Rachas 70 km/h'},
+    {nivel: 'naranja', tipo: 'costero', evento: 'Aviso ya vencido', desde: '2026-11-11T00:00:00+01:00', hasta: '2026-11-11T09:00:00+01:00', activo: true},
+    {nivel: 'verde', tipo: 'terrestre', evento: 'Futuro', desde: '2026-11-12T00:00:00+01:00', hasta: '2026-11-12T23:00:00+01:00', activo: false}]},
+  channels: [
+    {name: 'radar', level: 1, kind: 'obs', available: true, age_min: 7, evidence: ['eco más cercano 55 km', 'MOTION_UNKNOWN']},
+    {name: 'rayos', level: 0, kind: 'obs', available: false, age_min: null, evidence: ['rayos no disponibles (sin_clave)']},
+    {name: 'mar_boyas', level: 0, kind: 'obs', available: true, age_min: -1, evidence: ['Boya: Hs 1.88 m, Hmax nan m']},
+    {name: 'lluvia_observada', level: 0, kind: 'obs', available: true, age_min: 7, evidence: ['METAR 2330Z METAR LEIB 102330Z AUTO CAVOK']},
+    {name: 'modelo_icon_eu', level: 1, kind: 'model', available: true, age_min: -1, evidence: ['punto: máx 0.0 mm/1h · racha 66 km/h · CAPE 700 J/kg']},
+    {name: 'modelo_ecmwf_ifs025', level: 1, kind: 'model', available: true, age_min: -1, evidence: ['1 horas sin valor', 'punto: máx 0.0 mm/1h · racha 62 km/h · CAPE 1130 J/kg']},
+    {name: 'ensemble_ecmwf', level: 0, kind: 'ensemble', available: true, evidence: ['51 miembros · P(24h≥50)=0% · P(1h≥30)=0%']},
+    {name: 'manual', level: 3, kind: 'obs', available: true, evidence: ['SECRET_OWNER_QUOTE']},
+    {name: 'canal_futuro', level: 2, kind: 'obs', available: true, evidence: ['SECRET_OWNER_QUOTE']},
+    {name: 'viento_estaciones', level: 0, kind: 'obs', available: true, age_min: 3, evidence: ['observación manual del propietario: SECRET_OWNER_QUOTE', 'Puerto: racha 50 km/h']}],
+  nowcast: {level: 'watch', transition: 'ESCALADA quiet→watch', reasons: ['anegamiento observado (manual) → alarm', 'suelo institucional = watch', 'radar=watch', 'manual=alarm', 'texto libre SECRET_OWNER_QUOTE']},
+  outlook: {level: 'watch', reasons: ['modelo_icon_eu=watch', 'radar=watch']},
+  precaution: {level: 'watch', insufficient: false, rain_coverage: '3/3', hold: 'SECRET_OWNER_QUOTE', exit_conditions: ['SECRET_OWNER_QUOTE'], decision: {overridden: [{motivo: 'SECRET_OWNER_QUOTE'}]}},
+  sources: [{name: 'radar', status: 'ok', detail: 'SECRET_OWNER_QUOTE'}, {name: 'rayos_mtg_li', status: 'sin_clave', detail: 'EUMETSAT_KEY'}, {name: 'radar_hf', status: 'error', detail: 'RuntimeError https://x'}, {name: '<b>x</b>', status: 'error'}],
+  governance: {claims: [
+    {id: 'C-OFF0', text: 'AEMET mantiene aviso', epistemic: 'EVIDENCE', source_root: 'aemet'},
+    {id: 'C-OFF2', text: 'AEMET mantiene aviso', epistemic: 'EVIDENCE', source_root: 'aemet'},
+    {id: 'C-man-1', text: 'SECRET_OWNER_QUOTE', epistemic: 'EVIDENCE', source_root: 'owner', label: 'OWNER'},
+    {id: 'C-1', text: 'modelo', epistemic: 'HYPOTHESIS', source_root: 'nwp'}],
+    dissent: ['SECRET_OWNER_QUOTE'], anomalies: ['SECRET_OWNER_QUOTE'], overrides: {x: 'SECRET_OWNER_QUOTE'},
+    episode: {closure_record: 'SECRET_OWNER_QUOTE'}}
+});
+test('episode: only the meteo profile gets it, and the six hazard axes stay',()=>{
+  const x=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW);
+  assert.ok(x.episode);assert.equal(x.observed.length,6);
+  for(const p of ['casa','barca'])assert.equal(M.project(p,episodeCore(),'snapshot','font_romeu',NOW).episode,null);
+  assert.equal(M.project('esqui',mountain(),'snapshot','font_romeu',NOW).episode,undefined);
+});
+test('episode: owner text, manual channels and unknown channels never surface',()=>{
+  const x=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW);
+  assert.doesNotMatch(JSON.stringify(x),/SECRET_OWNER_QUOTE|EUMETSAT_KEY|RuntimeError|manual|propietario|<b>/);
+  const all=[...x.episode.measured,...x.episode.models,...x.episode.ensemble].map(r=>r.name);
+  assert.ok(!all.includes('manual')&&!all.includes('canal_futuro'));
+  assert.deepEqual(x.episode.measured.find(r=>r.name==='viento_estaciones').evidence,['Puerto: racha 50 km/h']);
+});
+test('episode: unavailable channel is no data, never level 0',()=>{
+  const e=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode;
+  const rayos=e.measured.find(r=>r.name==='rayos');
+  assert.equal(rayos.status,'nodata');assert.equal(rayos.level,null);assert.match(rayos.levelLabel,/no equivale a calma/);
+  assert.deepEqual(e.counts,{total:5,available:4,signal:1,nodata:1});
+  assert.equal(e.measured[0].name,'radar');   // la señal primero, después lo que no se ve
+});
+test('episode: negative or model ages are not printed as minutes',()=>{
+  const e=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode;
+  const buoy=e.measured.find(r=>r.name==='mar_boyas');
+  assert.equal(buoy.ageMin,null);assert.equal(buoy.justMeasured,true);
+  assert.equal(e.models[0].ageMin,null);assert.equal(e.models[0].justMeasured,false);
+});
+test('episode: warnings deduplicated, expired dropped, level literal, later counted',()=>{
+  const w=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode.warnings;
+  assert.equal(w.verified,true);assert.equal(w.items.length,1);assert.equal(w.items[0].level,'amarillo');
+  assert.equal(w.items[0].threshold,'Rachas 70 km/h');assert.equal(w.expired,1);assert.equal(w.later,1);
+  const c=episodeCore();c.official.verificado=false;
+  const u=M.project('meteo',c,'snapshot','font_romeu',NOW).episode.warnings;
+  assert.equal(u.verified,false);assert.equal(u.items.length,0);
+});
+test('episode: ensemble fractions are never written as P(), engine artefacts are cleaned',()=>{
+  const e=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode;
+  assert.doesNotMatch(JSON.stringify(e),/P\(|\bnan\b|MOTION_UNKNOWN/);
+  assert.match(e.ensemble[0].evidence[0],/0 % de miembros ≥50 mm\/24 h/);
+  assert.match(e.measured.find(r=>r.name==='lluvia_observada').evidence[0],/parte fechado otro día/);
+});
+test('episode: engine reasons are allow-listed and a cold start shows no transition',()=>{
+  const g=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode.engine;
+  assert.deepEqual(g.now.reasons,[{kind:'floor',level:'seguimiento'},{kind:'channel',label:'Radar',level:'seguimiento'}]);
+  assert.equal(g.now.hidden,3);assert.equal(g.comparable,false);assert.equal(g.change,null);
+  const c=episodeCore();c.history=[{id:'a'},{id:'b'}];
+  assert.deepEqual(M.project('meteo',c,'snapshot','font_romeu',NOW).episode.engine.change,{up:true,from:'sin señal destacada en este canal',to:'seguimiento'});
+});
+test('episode: model spread only when every model parses; no average',()=>{
+  const e=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode;
+  assert.deepEqual(e.spread.gust,{min:62,minModel:'ECMWF',max:66,maxModel:'ICON'});assert.equal(e.spread.cape.max,1130);
+  const c=episodeCore();c.channels[4].evidence=['punto: sin datos (¿fuera de dominio?)'];
+  assert.equal(M.project('meteo',c,'snapshot','font_romeu',NOW).episode.spread,null);
+});
+test('episode: sources and claims are counted without free text',()=>{
+  const e=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode;
+  assert.deepEqual(e.sources,{total:3,ok:1,failing:[{name:'rayos_mtg_li',state:'sin credencial configurada',error:false},{name:'radar_hf',state:'falló en esta actualización',error:true}]});
+  assert.deepEqual(e.claims,{evidence:1,hypothesis:1,assumption:0,unknown:0,total:2});
+});
+test('episode: backend projection without evidence or reasons degrades, never invents',()=>{
+  const c=episodeCore();c.channels=c.channels.map(x=>({...x,evidence:[]}));c.nowcast={level:'watch'};c.outlook={level:'watch',reasons:[]};
+  c.governance={claims:[]};c.sources=[];
+  const e=M.project('meteo',c,'backend','font_romeu',NOW).episode;
+  assert.equal(e.measured[0].evidencePublished,false);assert.equal(e.spread,null);assert.equal(e.claims,null);
+  assert.equal(e.engine.now.published,false);assert.equal(e.engine.now.levelLabel,'seguimiento');assert.equal(e.sources.total,0);
+  const empty=M.project('meteo',base(),'snapshot','font_romeu',NOW).episode;
+  assert.equal(empty.counts.total,0);assert.equal(empty.engine.now.level,null);
+});
+test('episode: stale or insufficient cycles expose no values or level',()=>{
+  assert.equal(M.project('meteo',{...episodeCore(),issued:'2026-11-11T07:10:00Z'},'snapshot','font_romeu',NOW).episode,undefined);
+  const c=episodeCore();c.precaution.insufficient=true;
+  assert.equal(M.project('meteo',c,'snapshot','font_romeu',NOW).episode.engine.insufficient,true);
+});
 console.log(`PASS ${n} decision tests`);
