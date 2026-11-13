@@ -178,11 +178,43 @@ test('episode: warnings deduplicated, expired dropped, level literal, later coun
   const u=M.project('meteo',c,'snapshot','font_romeu',NOW).episode.warnings;
   assert.equal(u.verified,false);assert.equal(u.items.length,0);
 });
+test('episode: a hand-entered floor is never listed as the authority\'s warning',()=>{
+  const c=episodeCore();c.official.all.push({nivel:'naranja',tipo:'terrestre',evento:'aviso introducido a mano',desde:'',hasta:'',activo:true,umbral:'verificado por el usuario'});
+  const w=M.project('meteo',c,'snapshot','font_romeu',NOW).episode.warnings;
+  assert.equal(w.items.length,1);assert.equal(w.byHand,1);assert.doesNotMatch(JSON.stringify(w.items),/a mano|usuario|naranja/);
+});
+test('episode: incoherent or zoneless official data never reads as no warnings',()=>{
+  const c=episodeCore();c.official.all='roto';
+  assert.equal(M.project('meteo',c,'snapshot','font_romeu',NOW).episode.warnings.verified,false);
+  const d=episodeCore();d.official.all=[];d.official.level_now='alert';
+  assert.equal(M.project('meteo',d,'snapshot','font_romeu',NOW).episode.warnings.verified,false);
+  const q=episodeCore();q.official.all=[];q.official.level_now='quiet';
+  assert.equal(M.project('meteo',q,'snapshot','font_romeu',NOW).episode.warnings.verified,true);
+  const z=episodeCore();z.official.all=[{nivel:'amarillo',tipo:'t',evento:'Sin zona',desde:'2026-11-11T08:00:00',hasta:'2026-11-11T20:00:00',activo:true}];
+  assert.equal(M.project('meteo',z,'snapshot','font_romeu',NOW).episode.warnings.items[0].until,null);
+  const m=episodeCore();m.official.fuente_oficial='SOLO_METEOALARM';
+  assert.equal(M.project('meteo',m,'snapshot','font_romeu',NOW).episode.warnings.source,'MeteoAlarm');
+});
+test('episode: a channel is available only when the engine says so',()=>{
+  for(const value of [undefined,null,0,'false','true']){
+    const c=episodeCore();c.channels[0]={name:'radar',level:0,kind:'obs',available:value,age_min:-1,evidence:[]};
+    const r=M.project('meteo',c,'snapshot','font_romeu',NOW).episode.measured.find(x=>x.name==='radar');
+    assert.equal(r.status,'nodata');assert.equal(r.level,null);assert.equal(r.justMeasured,false);
+  }
+});
+test('episode: a METAR across midnight is current, an old one is flagged',()=>{
+  const c=episodeCore();
+  c.channels[3].evidence=['METAR LEIB 110920Z AUTO','METAR LEIB 102350Z AUTO','METAR LEIB 110100Z AUTO'];
+  const ev=M.project('meteo',c,'snapshot','font_romeu',NOW).episode.measured.find(r=>r.name==='lluvia_observada').evidence;
+  assert.doesNotMatch(ev[0],/no es actual/);assert.match(ev[1],/no es actual/);assert.match(ev[2],/no es actual/);
+  const n=episodeCore();n.issued='2026-11-11T00:20:00Z';n.channels[3].evidence=['METAR LEIB 102350Z AUTO'];
+  assert.doesNotMatch(M.project('meteo',n,'snapshot','font_romeu',Date.parse('2026-11-11T00:30:00Z')).episode.measured.find(r=>r.name==='lluvia_observada').evidence[0],/no es actual/);
+});
 test('episode: ensemble fractions are never written as P(), engine artefacts are cleaned',()=>{
   const e=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode;
   assert.doesNotMatch(JSON.stringify(e),/P\(|\bnan\b|MOTION_UNKNOWN/);
   assert.match(e.ensemble[0].evidence[0],/0 % de miembros ≥50 mm\/24 h/);
-  assert.match(e.measured.find(r=>r.name==='lluvia_observada').evidence[0],/parte fechado otro día/);
+  assert.match(e.measured.find(r=>r.name==='lluvia_observada').evidence[0],/hace más de 6 h/);
 });
 test('episode: engine reasons are allow-listed and a cold start shows no transition',()=>{
   const g=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode.engine;
@@ -200,7 +232,7 @@ test('episode: model spread only when every model parses; no average',()=>{
 test('episode: sources and claims are counted without free text',()=>{
   const e=M.project('meteo',episodeCore(),'snapshot','font_romeu',NOW).episode;
   assert.deepEqual(e.sources,{total:3,ok:1,failing:[{name:'rayos_mtg_li',state:'sin credencial configurada',error:false},{name:'radar_hf',state:'falló en esta actualización',error:true}]});
-  assert.deepEqual(e.claims,{evidence:1,hypothesis:1,assumption:0,unknown:0,total:2});
+  assert.deepEqual(e.claims,{evidence:1,hypothesis:1,assumption:0,unknown:0,total:2,deduplicated:true});
 });
 test('episode: backend projection without evidence or reasons degrades, never invents',()=>{
   const c=episodeCore();c.channels=c.channels.map(x=>({...x,evidence:[]}));c.nowcast={level:'watch'};c.outlook={level:'watch',reasons:[]};

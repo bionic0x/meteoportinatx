@@ -129,30 +129,41 @@
   function channelRow(c, issuedMs) {
     const known = Object.prototype.hasOwnProperty.call(CHANNELS, c.name) ? CHANNELS[c.name] : null;
     if (!known) return null;
-    const level = c.available !== false && Number.isInteger(c.level) && c.level >= 0 && c.level <= 3 ? c.level : null;
+    const live = c.available === true;   // ausente o de otro tipo = esquema desconocido = sin dato
+    const level = live && Number.isInteger(c.level) && c.level >= 0 && c.level <= 3 ? c.level : null;
     const raw = Array.isArray(c.evidence) ? c.evidence : [];
     const evidence = raw.map(e => text(e, 320)).filter(e => e && !OWNER_TEXT.test(e)).slice(0, 14).map(e => {
       // un parte METAR fechado otro día no describe el ciclo actual
-      const m = e.match(/\b[A-Z]{4} (\d{2})\d{4}Z\b/);
-      const day = Number.isFinite(issuedMs) ? new Date(issuedMs).getUTCDate() : null;
-      return cleanEvidence(e) + (m && day !== null && Number(m[1]) !== day ? ' · parte fechado otro día: no es actual' : '');
+      const m = e.match(/\b[A-Z]{4} (\d{2})(\d{2})(\d{2})Z\b/);
+      let old = false;
+      if (m && Number.isFinite(issuedMs)) {
+        const d = new Date(issuedMs);
+        let t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), Number(m[1]), Number(m[2]), Number(m[3]));
+        if (t > issuedMs + 864e5) t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, Number(m[1]), Number(m[2]), Number(m[3]));
+        old = issuedMs - t > 6 * 36e5;
+      }
+      return cleanEvidence(e) + (old ? ' · parte de hace más de 6 h: no es actual' : '');
     });
     return {name: c.name, group: known.group, label: known.label, short: known.short || null,
             status: level === null ? 'nodata' : level >= 1 ? 'signal' : 'none', level,
             levelLabel: level === null ? 'sin dato · no equivale a calma' : LEVELS[LEVEL_NAMES[level]],
             // la edad publicada es la del dato MÁS reciente del canal; en modelos es la hora de descarga
             ageMin: known.group === 'measured' && finite(c.age_min) && c.age_min >= 0 ? Math.round(c.age_min) : null,
-            justMeasured: known.group === 'measured' && finite(c.age_min) && c.age_min < 0 && c.available !== false,
+            justMeasured: known.group === 'measured' && finite(c.age_min) && c.age_min < 0 && live,
             local: c.local === true, evidence, evidencePublished: raw.length > 0};
   }
   function activeWarnings(core, nowMs) {
     const v = core && core.official;
-    if (!v || v.verificado !== true) return {verified: false, items: [], later: 0, expired: 0, note: ''};
-    const seen = new Set(); const items = []; let later = 0, expired = 0;
+    if (!v || v.verificado !== true) return {verified: false, items: [], later: 0, expired: 0, byHand: 0, note: '', source: null};
+    const seen = new Set(); const items = []; let later = 0, expired = 0, byHand = 0;
+    if (!Array.isArray(v.all)) return {verified: false, items: [], later: 0, expired: 0, byHand: 0, note: '', source: null};
     for (const w of Array.isArray(v.all) ? v.all : []) {
       if (!w || typeof w !== 'object') continue;
-      const until = typeof w.hasta === 'string' ? Date.parse(w.hasta) : NaN;
+      const zoned = typeof w.hasta === 'string' && /(?:Z|[+-]\d{2}:\d{2})$/.test(w.hasta);
+      const until = zoned ? Date.parse(w.hasta) : NaN;
       if (w.activo !== true) { later++; continue; }
+      // un suelo introducido a mano por el propietario no es texto del organismo: no se lista ni se cuenta
+      if (!text(w.desde, 40) || !text(w.hasta, 40) || /a mano|usuario/i.test(`${w.evento} ${w.umbral}`) || OWNER_TEXT.test(`${w.evento} ${w.umbral}`)) { byHand++; continue; }
       // «activo» se fija al emitir el ciclo: un aviso ya vencido al consultar no cuenta como vigente
       if (Number.isFinite(until) && until < nowMs) { expired++; continue; }
       const key = [w.nivel, w.tipo, w.evento, w.desde, w.hasta].join('|');
@@ -163,7 +174,9 @@
                   threshold: text(w.umbral, 260)});
     }
     const note = {SOLO_METEOALARM: 'Fuente: solo MeteoAlarm (sin CAP directo de AEMET).', NINGUNA: 'Sin fuente oficial disponible en este ciclo.'}[v.fuente_oficial] || '';
-    return {verified: true, items, later, expired, note};
+    // «verificado» sin avisos activos pero con nivel oficial distinto de «quiet» es incoherente: no afirmar que no hay avisos
+    const coherent = items.length > 0 || expired > 0 || byHand > 0 || v.level_now === 'quiet';
+    return {verified: coherent, items, later, expired, byHand, note, source: v.fuente_oficial === 'SOLO_METEOALARM' ? 'MeteoAlarm' : 'AEMET'};
   }
   function engineReason(r) {
     let m;
@@ -222,7 +235,7 @@
       if (!Object.prototype.hasOwnProperty.call(kinds, c.epistemic) || seen.has(c.text)) continue;   // los avisos llegan duplicados (CAP + MeteoAlarm)
       seen.add(c.text); kinds[c.epistemic]++; n++;
     }
-    return n ? {evidence: kinds.EVIDENCE, hypothesis: kinds.HYPOTHESIS, assumption: kinds.ASSUMPTION, unknown: kinds.UNKNOWN, total: n} : null;
+    return n ? {evidence: kinds.EVIDENCE, hypothesis: kinds.HYPOTHESIS, assumption: kinds.ASSUMPTION, unknown: kinds.UNKNOWN, total: n, deduplicated: true} : null;
   }
   function investigation(core, nowMs = Date.now()) {
     const issuedMs = core && typeof core.issued === 'string' ? Date.parse(core.issued) : NaN;

@@ -34,32 +34,32 @@ h1{font-size:clamp(1.6rem,3.4vw,2.25rem);letter-spacing:-.04em;line-height:1.12;
 .ep h3{font-size:1.06rem;margin:0 0 4px;letter-spacing:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.ep .sub{font-size:.84rem;color:var(--muted);margin:0 0 10px;max-width:80ch}.ep .more{font-size:.84rem;color:var(--muted);margin:10px 0 0;max-width:80ch}.ep .more a{display:inline-flex;align-items:center;min-height:var(--tap)}
 .ep .lvl,.ep .age,.ep time,.ep .num{font-variant-numeric:tabular-nums}
 .src{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border:1px solid currentColor;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;line-height:1.5}
-.src::before{font-weight:400}.src--oficial{color:var(--ink);border:3px double currentColor}.src--oficial::before{content:"◆"}
-.src--medido{color:var(--obs)}.src--medido::before{content:"●"}.src--modelo{color:var(--model);border-style:dashed}.src--modelo::before{content:"◇"}
-.src--motor{color:var(--est);border-style:dotted;border-width:2px}.src--motor::before{content:"△"}
+.src::before{font-weight:400}.src--oficial{color:var(--ink);border:3px double currentColor}.src--oficial::before{content:"◆" / ""}
+.src--medido{color:var(--obs)}.src--medido::before{content:"●" / ""}.src--modelo{color:var(--model);border-style:dashed}.src--modelo::before{content:"◇" / ""}
+.src--motor{color:var(--est);border-style:dotted;border-width:2px}.src--motor::before{content:"△" / ""}
 .ep-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ep-card{display:grid;align-content:start;gap:8px;justify-items:start;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);text-decoration:none;font-size:.92rem;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
 .ep-card .src{white-space:normal}.ep-card[data-kind=oficial]{border:3px double var(--ink)}.ep-card[data-kind=modelo]{border-style:dashed;border-color:var(--model)}.ep-card[data-kind=motor]{border:2px dotted var(--est)}.ep-card[data-kind=medido]{border-color:var(--obs)}
 .lvl{display:inline-flex;align-items:center;gap:8px;font-size:.84rem;color:var(--ink)}.lvl-pips{display:inline-flex;align-items:flex-end;gap:2px;height:16px;flex:none}
 .lvl-pips i{width:7px;border:1px solid var(--line-ctl)}.lvl-pips i:nth-child(1){height:8px}.lvl-pips i:nth-child(2){height:12px}.lvl-pips i:nth-child(3){height:16px}
 .lvl[data-n="1"] i:nth-child(-n+1),.lvl[data-n="2"] i:nth-child(-n+2),.lvl[data-n="3"] i{background:var(--ink);border-color:var(--ink)}
 .lvl[data-n=nd]{color:var(--muted)}.lvl[data-n=nd] i{border-style:dashed;background:var(--trama)}
-.fold{margin-top:8px}.fold>summary{display:flex;align-items:center;min-height:var(--tap);cursor:pointer;font-size:.9rem;font-weight:700}.fold>ul{margin-top:4px}
+.fold{margin-top:8px}.fold>summary{display:flex;align-items:center;gap:8px;min-height:var(--tap);cursor:pointer;font-size:.9rem;font-weight:700;list-style:none}.fold>summary::-webkit-details-marker{display:none}.fold>summary::before{content:"+" / "";color:var(--muted);width:1ch;text-align:center}.fold[open]>summary::before{content:"−" / ""}.fold>ul{margin-top:4px}
 .ch{border:1px solid var(--line);border-left:4px solid var(--obs);border-radius:4px;background:var(--surface)}.ch+.ch{margin-top:8px}
 .ch[data-kind=modelo]{border-left:4px dashed var(--model)}.ch[data-status=nodata]{border-left:4px dashed var(--line-ctl);background:var(--trama),var(--surface)}
 .ch summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;min-height:var(--tap);padding:8px 12px;cursor:pointer;list-style:none}
-.ch summary::-webkit-details-marker{display:none}.ch summary::after{content:"+";margin-left:auto;color:var(--muted);font-size:1.06rem;width:1ch;text-align:center}.ch details[open] summary::after{content:"−"}
+.ch summary::-webkit-details-marker{display:none}.ch summary::after{content:"+" / "";margin-left:auto;color:var(--muted);font-size:1.06rem;width:1ch;text-align:center}.ch details[open] summary::after{content:"−" / ""}
 .ch-name{flex:1 1 11rem;font-weight:700;overflow-wrap:anywhere}.age{font-size:.8rem;color:var(--muted)}
 .ev{padding:0 12px 12px;display:grid;gap:4px}.ev li{font-size:.82rem;overflow-wrap:anywhere;padding-left:12px;border-left:1px solid var(--line)}.ev .nd{color:var(--muted)}
 .av{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.av-niv{display:inline-flex;align-items:center;gap:4px;padding:2px 12px;border-radius:999px;font-size:.82rem;font-weight:700;color:var(--on-av);background:var(--av-amarillo)}.av-niv::before{content:"◆"}
+.av-niv{display:inline-flex;align-items:center;gap:4px;padding:2px 12px;border-radius:999px;font-size:.82rem;font-weight:700;color:var(--on-av);background:var(--av-amarillo)}.av-niv::before{content:"◆" / ""}
 .av[data-nivel=naranja] .av-niv{background:var(--av-naranja)}.av[data-nivel=rojo] .av-niv{background:var(--av-rojo)}.av[data-nivel=nd] .av-niv,.av[data-nivel=verde] .av-niv{color:var(--ink);background:var(--trama);border:1px dashed var(--line-ctl)}
 .av-txt{flex:1 1 12rem;font-weight:700;overflow-wrap:anywhere}.av-vig{font-size:.82rem;color:var(--muted)}.av-umb{flex-basis:100%;font-size:.82rem;color:var(--muted)}
 .spread{display:grid;gap:4px;margin:0 0 12px;padding:10px 12px;border:1px dashed var(--model);border-radius:4px;font-size:.9rem}.spread small{color:var(--muted);font-size:.8rem}
-.motor{border:2px dotted var(--est);border-radius:12px;padding:16px;background:var(--surface2)}.motor-st{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px 24px;margin:8px 0 12px}.motor-st div{display:grid;gap:4px}.motor-st .when{font-size:.8rem;color:var(--muted)}.motor-st strong{font-size:1.3rem;line-height:1.2}
+.motor{border:2px dotted var(--est);border-radius:12px;padding:16px;background:var(--surface2)}.motor-st{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px 24px;margin:8px 0 12px}.motor-st div{display:grid;gap:4px}.motor-st .when,.motor>.when{font-size:.8rem;color:var(--muted);margin:10px 0 4px}.motor-st .when{margin:0}.motor-st strong{font-size:1.3rem;line-height:1.2}
 .motor-why{counter-reset:r;display:grid;gap:4px}.motor-why li{counter-increment:r;padding-left:24px;position:relative;font-size:.92rem;overflow-wrap:anywhere}.motor-why li::before{content:counter(r);position:absolute;left:0;color:var(--muted)}
 .fu li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}.fu code{font:inherit;font-weight:700;overflow-wrap:anywhere}.fu .st{color:var(--muted)}.fu .st[data-error]{color:var(--err);font-weight:700}.fu .st[data-error]::before{content:"✕ "}
 @media(max-width:900px){.ep-sum{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:780px){.ep{gap:20px}.ep-card{padding:10px;font-size:.84rem}.panel[data-view=episode] .answer{font-size:.98rem}}@media(max-width:420px){.links>*{flex:1 1 100%;text-align:center}}@media(max-width:339px){.ep-sum{grid-template-columns:1fr}}
-@media(max-width:780px){.brand{flex-wrap:wrap}.lede{font-size:.88rem}.modes,.selector{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}.modes>*,.profile{flex:none;white-space:nowrap}.modes>*{padding:0 12px}.hero,.work,.evidence{grid-template-columns:1fr}.hero{gap:18px}.axis{min-height:0}.toplinks{gap:9px}}
+@media(max-width:780px){.brand{flex-wrap:wrap}.lede{font-size:.88rem}.selector{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:6px 6px 8px;margin-inline:-6px}.profile{flex:none;white-space:nowrap}.modes>*{padding:0 12px}.hero,.work,.evidence{grid-template-columns:1fr}.hero{gap:18px}.axis{min-height:0}.toplinks{gap:9px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
@@ -69,14 +69,14 @@ h1{font-size:clamp(1.6rem,3.4vw,2.25rem);letter-spacing:-.04em;line-height:1.12;
 <p id="decision-language-notice" lang="en" class="subtle" hidden>Official warnings and other third-party source text are shown in their original language. Consult the issuing authority.</p>
 <section aria-labelledby="page-title"><h1 id="page-title">Decidir</h1>
 <p class="lede">Elige para qué consultas el tiempo. Cada vista separa aviso oficial, medición y estimación. Una instantánea antigua nunca se interpreta como ausencia de peligro.</p>
-<div class="modes" aria-label="Niveles de profundidad"><span class="active" aria-current="page">01 · Decidir</span><a id="follow" href="../portinatx/#vigilancia">02 · Seguir datos</a><a id="investigate" href="../portinatx/#forense">03 · Investigar</a></div></section>
+<div class="modes" role="group" aria-label="Niveles de profundidad"><span class="active" aria-current="page">01 · Decidir</span><a id="follow" href="../portinatx/#vigilancia">02 · Seguir datos</a><a id="investigate" href="../portinatx/#forense">03 · Investigar</a></div></section>
 <nav class="selector" id="profiles" aria-label="Elige tu perfil"></nav>
 <section class="panel" id="panel" aria-labelledby="question">
 <div class="hero"><div><span id="freshness" class="tag unknown">Comprobando datos</span><h2 class="question" id="question">Selecciona tu situación</h2><p id="answer" class="answer" role="status">Buscando la última información disponible…</p></div>
 <dl class="facts"><div><dt>Última captura</dt><dd id="issued">—</dd></div><div><dt>Origen del dato</dt><dd id="provenance">—</dd></div><div><dt>Zona o punto</dt><dd id="location">—</dd></div><div><dt>Estado del servicio</dt><dd id="service-note">Consulta bajo demanda, no vigilancia continua</dd></div></dl></div>
 <div class="ctrls" id="place-controls" hidden><label for="place">Punto de referencia</label><select id="place"></select><span class="subtle">Ubicaciones del motor; no es la dirección personal de una vivienda.</span></div>
 <div class="ep" id="episode" hidden></div>
-<div class="work" aria-label="Separación de fuentes">
+<div class="work" role="group" aria-label="Separación de fuentes">
 <article class="axis" id="official-card" data-status="unknown"><h3>01 · Avisos institucionales</h3><p class="signal" id="official-title">Sin verificar</p><p class="extra" id="official-detail">Consulta el organismo oficial</p></article>
 <article class="axis" id="observed-card" data-status="unknown"><h3 id="observed-label">02 · Peligro observado</h3><p class="signal" id="observed-title">Sin datos</p><p class="extra" id="observed-detail">Solo mediciones disponibles y recientes</p></article>
 <article class="axis" id="operational-card" data-status="unknown"><h3 id="operational-label">03 · Precaución / estimación</h3><p class="signal" id="operational-title">Sin calcular</p><p class="extra" id="operational-detail">No es una instrucción de emergencia</p></article>
@@ -96,7 +96,7 @@ const pages={portinatx:'../portinatx/',pirineo:'../pirineo/'};
 const official={portinatx:'https://www.aemet.es/',pirineo:'https://meteofrance.com/meteo-montagne'};
 const cache={};let current='casa', seq=0;
 const locale=()=>{try{return localStorage.getItem('meteo-language')==='en'?'en-GB':'es-ES';}catch(_){return 'es-ES';}};
-const fmt=(n,unit)=>Number.isFinite(n)?`${new Intl.NumberFormat(locale(),{maximumFractionDigits:1}).format(n)} ${unit}`:'UNKNOWN';
+const fmt=(n,unit)=>Number.isFinite(n)?`${new Intl.NumberFormat(locale(),{maximumFractionDigits:1}).format(n)} ${unit}`:(locale()==='en-GB'?'no data':'sin dato');
 function set(id,value){$(id).textContent=String(value??'—');}
 function axis(id,status,title,detail){$(id+'-card').dataset.status=status||'unknown';set(id+'-title',title);set(id+'-detail',detail);}
 /* ── Ficha del episodio: todo se inserta como texto; las etiquetas fijas van en nodos propios
@@ -118,6 +118,7 @@ function channelItem(r){const kind=r.group==='measured'?'medido':'modelo';
  const ev=el('ul','ev');
  if(r.evidence.length)for(const line of r.evidence)ev.append(el('li',null,line));
  else ev.append(el('li','nd',r.evidencePublished?'Sin detalle mostrable para este canal.':'Detalle no publicado por este origen de datos.'));
+ if(r.evidence.length)ev.lang='es';
  const d=el('details',null,sum,ev);d.open=r.status==='signal'||(r.status==='nodata'&&matchMedia('(min-width:781px)').matches);
  const li=el('li','ch',d);li.dataset.kind=kind;li.dataset.status=r.status;return li;}
 function fold(rows,es,eng){const wide=matchMedia('(min-width:781px)').matches;if(!rows.length)return null;
@@ -129,7 +130,7 @@ function more(tab,textEs,textEn){const a=el('a',null,L(textEs,textEn)+' →');a.
 function officialSentence(w){if(!w.verified)return L('Avisos no comprobados en este ciclo: consultar AEMET.','Warnings not verified in this cycle: check AEMET.');
  if(!w.items.length)return L('No constan avisos vigentes en este ciclo. No equivale a ausencia de peligro.','No active warnings recorded in this cycle. This does not mean there is no danger.');
  const lv=[...new Set(w.items.map(i=>i.level?L(...AVISO[i.level]):L('nivel no reconocido','unrecognised level')))].join(', ');
- return L(`AEMET: ${w.items.length} aviso(s) vigente(s) · ${lv}.`,`AEMET: ${w.items.length} active warning(s) · ${lv}.`);}
+ return L(`${w.source}: ${w.items.length} aviso(s) vigente(s) · ${lv}.`,`${w.source}: ${w.items.length} active warning(s) · ${lv}.`);}
 function measuredSentence(e){const c=e.counts,sig=e.measured.filter(r=>r.status==='signal');
  if(!c.available)return L('Ninguna medición disponible: no se puede valorar la situación.','No measurement available: conditions cannot be assessed.');
  const base=sig.length?L(`Señal en ${c.signal} de ${c.available} mediciones disponibles (${names(sig)})`,`Signal in ${c.signal} of ${c.available} available measurements (${names(sig)})`):
@@ -154,8 +155,10 @@ function renderEpisode(e){
  else if(!e.warnings.items.length)of.append(el('p','sub','No constan avisos vigentes en este ciclo. No equivale a ausencia de peligro.'));
  for(const w of e.warnings.items){const lv=w.level||'nd';
    const row=el('div','av',el('span','av-niv',w.level?L(`Aviso ${AVISO[w.level][0]}`,`${AVISO[w.level][1][0].toUpperCase()+AVISO[w.level][1].slice(1)} warning`):L('Nivel no reconocido','Unrecognised level')),
-     el('span','av-txt',w.event||L('Aviso sin descripción','Warning without description')),w.until?until(w.until):null,w.threshold?el('span','av-umb',w.threshold):null);row.dataset.nivel=lv;of.append(row);}
+     el('span','av-txt',w.event||L('Aviso sin descripción','Warning without description')),w.until?until(w.until):null,w.threshold?el('span','av-umb',w.threshold):null);row.dataset.nivel=lv;
+   for(const q of row.querySelectorAll('.av-txt,.av-umb'))q.lang='es';of.append(row);}
  if(e.warnings.note)of.append(el('p','more',e.warnings.note));
+ if(e.warnings.byHand)of.append(el('p','more',L(`${e.warnings.byHand} entrada(s) introducida(s) a mano en el motor no se muestran: no son texto del organismo.`,`${e.warnings.byHand} entr(ies) entered by hand in the engine are not shown: they are not the authority’s text.`)));
  if(e.warnings.expired)of.append(el('p','more',L(`${e.warnings.expired} aviso(s) del ciclo ya han vencido y no se muestran.`,`${e.warnings.expired} warning(s) in this cycle have already expired and are not shown.`)));
  if(e.warnings.later)of.append(el('p','more',L(`${e.warnings.later} entrada(s) más en el boletín que no están activas ahora (otros periodos o nivel verde).`,`${e.warnings.later} further bulletin entr(ies) not active now (other periods or green level).`)));
  of.append(more(TABS.oficial,'Avisos y radar en el observatorio','Warnings and radar in the observatory'));
@@ -184,18 +187,20 @@ function renderEpisode(e){
  else{const st=el('div','motor-st');for(const [when,x] of [['Ahora',g.now],['Próximas 36 h',g.next]]){
      st.append(el('div',null,el('span','when',when),x.levelLabel?el('strong',null,x.levelLabel):el('strong',null,'Nivel no publicado'),x.levelLabel?levelMark({level:x.level,levelLabel:x.levelLabel}):null));}
    an.append(st);}
- const seen=new Set(),why=el('ol','motor-why');
- for(const r of [...g.now.reasons,...g.next.reasons]){const key=JSON.stringify(r);if(seen.has(key))continue;seen.add(key);
-   why.append(r.kind==='floor'?el('li',null,'El aviso oficial fija el nivel mínimo en',' «',el('span',null,r.level),'»'):
-     el('li',null,el('span',null,r.kind==='official'?'Aviso oficial vigente':r.label),' → «',el('span',null,r.level),'»'));}
- if(why.children.length)an.append(el('p','sub','Motivos que declara el motor (lista como máximo sus tres señales de mayor nivel):'),why);
+ const whyList=x=>{const ol=el('ol','motor-why');for(const r of x.reasons)ol.append(r.kind==='floor'?el('li',null,'El aviso oficial fija el nivel mínimo en',' «',el('span',null,r.level),'»'):
+     el('li',null,el('span',null,r.kind==='official'?'Aviso oficial vigente':r.label),' → «',el('span',null,r.level),'»'));return ol;};
+ const any=g.now.reasons.length+g.next.reasons.length;
+ if(any){an.append(el('p','sub','Motivos que declara el motor para cada horizonte (como máximo, su suelo oficial y sus tres señales de mayor nivel):'));
+   for(const [when,x] of [['Ahora',g.now],['Próximas 36 h',g.next]])if(x.reasons.length)an.append(el('p','when',when),whyList(x));
+   if(e.warnings.expired)an.append(el('p','more','Estos motivos son los del momento en que se emitió el ciclo; algún aviso oficial ha vencido después.'));
+   an.append(el('p','more','El horizonte «Próximas 36 h» es el de los avisos; los modelos que lo alimentan llegan a 48 h y el conjunto a 72 h.'));}
  else an.append(el('p','sub',g.now.published||g.next.published?'El motor no declaró motivos mostrables en este ciclo.':'Motivos no publicados por este origen de datos.'));
  const hidden=g.now.hidden+g.next.hidden;if(hidden)an.append(el('p','more',L(`${hidden} motivo(s) en texto libre no se muestran aquí.`,`${hidden} free-text reason(s) are not shown here.`)));
  if(g.change)an.append(el('p','more',g.change.up?'Sube respecto a la actualización anterior:':'Baja respecto a la actualización anterior:',' ',el('span',null,g.change.from),' → ',el('span',null,g.change.to)));
- else if(!g.comparable)an.append(el('p','more','Sin comparación con la actualización anterior: este origen arranca cada ciclo sin historial.'));
+ else if(!g.comparable)an.append(el('p','more','Sin comparación con la actualización anterior: este ciclo no trae historial previo.'));
  if(g.rainCoverage)an.append(el('p','more',L(`Cobertura de lluvia observada: ${g.rainCoverage} canales.`,`Observed rainfall coverage: ${g.rainCoverage} channels.`)));
- if(e.claims)an.append(el('p','more',L(`Afirmaciones del análisis: ${e.claims.evidence} con evidencia · ${e.claims.hypothesis} hipótesis · ${e.claims.assumption} supuestos · ${e.claims.unknown} sin comprobar.`,
-   `Analysis claims: ${e.claims.evidence} with evidence · ${e.claims.hypothesis} hypotheses · ${e.claims.assumption} assumptions · ${e.claims.unknown} unverified.`)));
+ if(e.claims)an.append(el('p','more',L(`Afirmaciones del análisis: ${e.claims.evidence} con evidencia · ${e.claims.hypothesis} hipótesis · ${e.claims.assumption} supuestos · ${e.claims.unknown} sin comprobar (sin duplicados).`,
+   `Analysis claims: ${e.claims.evidence} with evidence · ${e.claims.hypothesis} hypotheses · ${e.claims.assumption} assumptions · ${e.claims.unknown} unverified (duplicates removed).`)));
  an.append(el('p','more','Estimación propia sin calibrar. No es un aviso oficial ni una instrucción.'),more(TABS.motor,'Afirmaciones, canales y fuentes en el observatorio','Claims, channels and sources in the observatory'));
  // 5 · Fuentes
  const fu=section('fuentes','motor','Metadato','Fuentes de datos',e.sources.total?L(`${e.sources.ok} de ${e.sources.total} fuentes responden. «Responde» no garantiza un dato reciente.`,`${e.sources.ok} of ${e.sources.total} sources respond. “Responds” does not guarantee recent data.`):'Este origen de datos no publicó el estado de las fuentes.');
@@ -237,7 +242,7 @@ function render(profile, packet){
    x.forecast?[['Cota de copo (vertiente '+(x.forecast.side||'—')+')',x.forecast.snowLevel===null?'—':fmt(x.forecast.snowLevel,'m')+(x.forecast.aboveSnowLevel===true?' · el punto está por encima':x.forecast.aboveSnowLevel===false?' · el punto está por debajo':'')],
      ...(x.forecast.freezingRain?[['Fase en el fondo','⚠ capa cálida sobre aire bajo cero: riesgo de lluvia engelante']]:[]),
      ['Nieve 24 h (modelo)',fmt(x.forecast.snow24,'cm')],['Precipitación 24 h (modelo)',fmt(x.forecast.pr24,'mm')],['Racha 24 h (modelo)',fmt(x.forecast.gust24,'km/h')],['Temperatura (modelo)',fmt(x.forecast.temp,'°C')]]:
-   [['Datos disponibles','UNKNOWN']];
+   [['Datos disponibles','sin dato']];
  details.forEach(([name,value])=>{const li=document.createElement('li'),s=document.createElement('span'),v=document.createElement('em');s.textContent=name;v.textContent=value;li.append(s,v);list.appendChild(li)});
  set('guidance',x.guidance);set('qualification',x.available?'Diagnóstico del último ciclo; el estado de cada sensor debe revisarse en su fuente.':'Datos obsoletos o ausentes: consultar boletines oficiales vigentes.');
  $('deep-link').href=pages[kind.domain]+(profile==='barca'?'#mar':profile==='meteo'?'#forense':profile==='esqui'?'#corte':'');
@@ -257,6 +262,7 @@ async function show(profile,refresh=false){
 }
 for(const [id,p] of Object.entries(M.profiles)){const b=document.createElement('button');b.type='button';b.className='profile';b.dataset.profile=id;b.textContent=p.label;b.addEventListener('click',()=>show(id));$('profiles').appendChild(b)}
 for(const [id,txt] of Object.entries(M.places)){const o=document.createElement('option');o.value=id;o.textContent=txt;$('place').appendChild(o)}
+$('profiles').addEventListener('focusin',e=>e.target.scrollIntoView?.({block:'nearest',inline:'nearest'}));
 $('place').addEventListener('change',()=>{if(cache.pirineo)cache.pirineo.then(p=>render(current,p));});
 $('reload').addEventListener('click',()=>show(current,true));
 window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);if(M.profiles[p]&&p!==current)show(p)});
@@ -330,12 +336,12 @@ const dict={
 "Nivel no publicado":"Level not published",
 "El aviso oficial fija el nivel mínimo en":"The official warning sets the minimum level at",
 "Aviso oficial vigente":"Active official warning",
-"Motivos que declara el motor (lista como máximo sus tres señales de mayor nivel):":"Reasons stated by the engine (it lists at most its three highest-level signals):",
+"Motivos que declara el motor para cada horizonte (como máximo, su suelo oficial y sus tres señales de mayor nivel):":"Reasons stated by the engine for each horizon (at most its official floor and its three highest-level signals):","Estos motivos son los del momento en que se emitió el ciclo; algún aviso oficial ha vencido después.":"These reasons date from when the cycle was issued; an official warning has expired since.","El horizonte «Próximas 36 h» es el de los avisos; los modelos que lo alimentan llegan a 48 h y el conjunto a 72 h.":"The “Next 36 h” horizon is that of the warnings; the models feeding it reach 48 h and the ensemble 72 h.",
 "El motor no declaró motivos mostrables en este ciclo.":"The engine stated no displayable reasons in this cycle.",
 "Motivos no publicados por este origen de datos.":"Reasons not published by this data source.",
 "Sube respecto a la actualización anterior:":"Up from the previous update:",
 "Baja respecto a la actualización anterior:":"Down from the previous update:",
-"Sin comparación con la actualización anterior: este origen arranca cada ciclo sin historial.":"No comparison with the previous update: this source starts each cycle without history.",
+"Sin comparación con la actualización anterior: este ciclo no trae historial previo.":"No comparison with the previous update: this cycle carries no earlier history.",
 "Estimación propia sin calibrar. No es un aviso oficial ni una instrucción.":"Uncalibrated own estimate. Not an official warning or an instruction.",
 "Fuentes de datos":"Data sources",
 "Este origen de datos no publicó el estado de las fuentes.":"This data source did not publish source status.",
@@ -359,6 +365,7 @@ const dict={
 "Oleaje modelado en la bahía":"Modelled waves in the bay",
 "Conjunto ECMWF de simulaciones":"ECMWF ensemble"
 };
+dict['sin dato']='no data';
 window.meteoTranslate=s=>dict[s]||s;
 const fixed=new WeakMap(), selector=document.getElementById('decision-language'), notice=document.getElementById('decision-language-notice');
 let lang='es';try{lang=localStorage.getItem('meteo-language')==='en'?'en':'es';}catch(_){}
