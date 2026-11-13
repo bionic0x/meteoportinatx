@@ -56,6 +56,14 @@ const [chrome, file] = process.argv.slice(1);
   await page.waitForFunction(()=>document.querySelector('#aemet-mt p')?.textContent.includes('freezing level 1800 m'));
   await page.locator('[data-tab="modelos"]').evaluate(e=>e.click());
   await page.waitForFunction(()=>document.querySelector('#other-sections summary')?.textContent.includes('Models'));
+  // Synthetic contents exist only until reload: verify their reversal first.
+  await page.selectOption('#pir-language','es');
+  assert.match(await page.locator('#srcs li').nth(1).textContent(),/archivo diario, no tiempo real · datos hasta 12:00/);
+  assert.equal(await page.locator('#srcs [data-source-text]').textContent(),'lluvia 24 h · sin validar');
+  assert.match(await page.locator('#aemet-mt p').textContent(),/isocero 1800 m/);
+  assert.match(await page.locator('#other-sections summary').textContent(),/Modelos/);
+  // A fresh load must retain the chosen language independently of the fixtures.
+  await page.selectOption('#pir-language','en');
   await page.reload();
   assert.equal(await page.locator('#pir-language').inputValue(),'en');
   await page.selectOption('#pir-language','es');
@@ -64,10 +72,6 @@ const [chrome, file] = process.argv.slice(1);
   assert.equal(await page.evaluate(() => chatEnglish()),false);
   assert.equal(await page.evaluate(() => window.meteoLocale()),'es-ES');
   assert.equal(await page.locator('nav.tabs').getAttribute('aria-label'),'Secciones del observatorio');
-  assert.match(await page.locator('#srcs li').nth(1).textContent(),/archivo diario, no tiempo real · datos hasta 12:00/);
-  assert.equal(await page.locator('#srcs [data-source-text]').textContent(),'lluvia 24 h · sin validar');
-  assert.match(await page.locator('#aemet-mt p').textContent(),/isocero 1800 m/);
-
   assert.match(await page.locator('#other-sections summary').textContent(),/Modelos/);
  } finally { await browser.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});
