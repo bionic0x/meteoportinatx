@@ -12,6 +12,7 @@ Dirección fijada el 11 de noviembre de 2026: Portinatx y Pirineo son dos zonas 
 |---|---|---|
 | `forecast` | Temperatura, rocío, precipitación, nieve, viento y rachas, 7 días | Igual para cualquier punto; diagnóstico diario UTC con cobertura y bulbo húmedo aproximado |
 | `ensemble` | Temperatura, precipitación y nieve por miembros de ECMWF/NCEP/DWD, 7 días solicitados | Mismo conector en ambas zonas; disponibilidad y alcance reales dependen del proveedor |
+| `atmosphere` | Perfil vertical, presión superficial e ingredientes convectivos, 3 días | Núcleo atmosférico común; unidades explícitas y niveles bajo terreno excluidos |
 | `terrain` | Elevación puntual | Igual para cualquier punto; todavía no descarga un DEM regional |
 | `marine` | Altura, dirección y periodo de ola, 7 días | Solo perfiles costeros o mixtos; excluido de Pirineo y de perfiles interiores |
 
@@ -79,7 +80,7 @@ python3 src/nowcast.py zone compare /tmp/consulta-anterior.zip /tmp/consulta-nue
 
 El informe muestra puntos, fuentes, cobertura por variable, escenarios por familias y mar únicamente en los perfiles que lo incluyen. La etiqueta de instantánea y las fechas son visibles: el HTML no se convierte en información actual al abrirlo. El filtro de puntos funciona sin conectividad. Se recalculan los diagnósticos con el código local a partir de los datos verificados, sin ejecutar contenido del paquete.
 
-El verificador rechaza duplicados, rutas no previstas, inventarios incompletos, valores numéricos inválidos y hashes discordantes. No extrae el ZIP ni carga código del paquete. Límite: 128 MiB comprimidos/descomprimidos, 25 MB por entrada y 256 entradas. Los checksums permiten detectar corrupción; no son firma de autoría ni validación meteorológica.
+El verificador rechaza duplicados, rutas no previstas, inventarios incompletos, valores numéricos inválidos y hashes discordantes. No extrae el ZIP ni carga código del paquete. Límite: 128 MiB comprimidos/descomprimidos, 25 MB por entrada y 512 entradas. Los checksums permiten detectar corrupción; no son firma de autoría ni validación meteorológica.
 
 El archivo conserva cada ZIP por su SHA-256. Solo un paquete `AVAILABLE` puede activar `CURRENT`, y una captura anterior no reemplaza a otra posterior. Un paquete parcial o fallido queda archivado para revisión y conserva el último completo. Los campos ausentes siguen teniendo cobertura incompleta aunque un paquete sea `AVAILABLE`. El archivo se usa con un único instalador a la vez; no es un servicio multiusuario.
 
@@ -195,3 +196,23 @@ Las vistas `/decidir/` y sus cinco perfiles de uso se conservan. Las descargas e
 La consola pública ofrece visores oficiales externos y no ingiere ráster de radar ni satélite. El comando `zone fetch pirineo` obtiene bajo demanda teselas RainViewer para los puntos del perfil y `zone report` las muestra fuera de línea con atribución y un marcador. Esto es una capacidad separada de la consola; tampoco acredita cobertura ni calidad instrumental en cada valle. [RainViewer documenta](https://www.rainviewer.com/api/weather-maps-api.html) que el tiempo de la composición no es necesariamente el de los datos de los radares que la forman. La antigüedad mostrada es del fotograma y no sirve para afirmar que una medición individual sea fresca. Revisar condiciones y cobertura antes de aumentar distribución; la API gratuita se describe para uso personal o educativo.
 
 El satélite continúa como visor EUMETView externo: no se simula integración, fecha de adquisición ni cobertura. Antes de incorporarlo al motor se necesita selección y documentación del producto y su licencia, metadatos de adquisición verificables, proyección y cobertura, gestión de caducidad y pruebas con datos reales. [EUMETSAT indica](https://www.eumetsat.int/about-us/terms-use) que sus productos satelitales están sujetos a su política de datos, no automáticamente a Creative Commons.
+
+
+## Paridad atmosférica — 13 noviembre 2026
+
+Las dos consolas y los paquetes ejecutan `atmospheric_core.derive`. La misma entrada produce los mismos diagnósticos, independientemente de ser costa o montaña. Se incluyen termodinámica, K/TT, gradiente térmico, viento, cizalladura por nivel de presión, bulbo húmedo y su nivel cero. Cada índice exige sus datos y unidades; CAPE/CIN se leen del modelo, no se calculan a partir de una parcela observada. Las componentes ICC/IPP siguen experimentales sin calibrar.
+
+Las plantillas seleccionan `atmosphere`. Para descargar solo ese módulo en otro territorio:
+
+```bash
+python3 MeteoPortinatx.pyz zone init --id mi_perfil --name 'Mi perfil' \
+  --latitude 42.35 --longitude 1.9 --setting inland --modules atmosphere --output mi-perfil.json
+python3 MeteoPortinatx.pyz zone fetch mi-perfil.json --output atmosfera.zip
+python3 MeteoPortinatx.pyz zone report --pack atmosfera.zip --output atmosfera.html
+```
+
+El proveedor puede omitir variables; se conservan los campos disponibles y los índices dependientes quedan desconocidos. Elevación de celda, presión superficial y alturas determinan qué niveles están sobre terreno. No se sustituye presión superficial por presión reducida al nivel del mar. Pa/s no se interpreta como m/s invirtiendo el signo. La convención vertical debe verificarse antes de habilitar ICC.
+
+El módulo puntual no inventa gradientes, föhn, DEM regional ni alturas de obstáculo. Un informe puede contener valores ausentes aun cuando la descarga sea `AVAILABLE`. Los ZIP antiguos siguen leyéndose; el límite de inventario sube a 512 entradas para admitir 25 puntos con todos los módulos, manteniendo los límites de bytes. Las versiones antiguas del lector pueden rechazar paquetes nuevos de más de 256 entradas.
+
+[Alcance real de paridad y próximos bloques](PARIDAD-ALGORITMOS.md).

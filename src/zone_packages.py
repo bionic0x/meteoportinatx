@@ -38,7 +38,7 @@ def read_pack(path):
         with zipfile.ZipFile(io.BytesIO(raw)) as archive:
             members = archive.infolist()
             names = [m.filename for m in members]
-            if len(names) > 256 or len(names) != len(set(names)):
+            if len(names) > 512 or len(names) != len(set(names)):
                 raise ValueError('duplicate or excessive pack entries')
             if sum(m.file_size for m in members) > MAX_BYTES or any(m.file_size > MAX_MEMBER for m in members):
                 raise ValueError('expanded pack exceeds size limit')
@@ -89,7 +89,7 @@ def read_pack(path):
                 inventory.add(name)
                 diagnostic = entry.get('diagnostic')
                 if diagnostic is not None:
-                    label = {'forecast':'daily','ensemble':'ensemble','marine':'marine'}.get(module)
+                    label = {'forecast':'daily','ensemble':'ensemble','marine':'marine','atmosphere':'atmosphere'}.get(module)
                     dpath = f'diagnostics/{point}/{label}.json'
                     if not label or not isinstance(diagnostic,dict) or diagnostic.get('path') != dpath:
                         raise ValueError('invalid diagnostic path')
@@ -184,9 +184,9 @@ def history(root, zone):
 
 
 def analysis(pack):
-    from zone_engine import daily_diagnostics
+    from zone_engine import daily_diagnostics, atmosphere_diagnostics
     from weather_core import ensemble_daily, marine_daily
-    functions = {'forecast':daily_diagnostics,'ensemble':ensemble_daily,'marine':marine_daily}
+    functions = {'forecast':daily_diagnostics,'ensemble':ensemble_daily,'marine':marine_daily,'atmosphere':atmosphere_diagnostics}
     # Recompute from verified source data, not imported executable code or claims.
     return {point['id']:{m:functions[m](pack['data'][(point['id'],m)])
                         for m in functions if (point['id'],m) in pack['data']}

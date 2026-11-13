@@ -17,7 +17,7 @@ Una tormenta puede pasar a pocos kilómetros de Portinatx y cambiar el mar sin d
 | Radar, lluvia, tormentas, viento, avisos y condiciones marinas para la costa norte de Ibiza. | Cerdanya, Capcir y Andorra: relieve, cotas, nieve, estaciones, modelos y ensembles. |
 | La geografía de una cala importa: una célula cercana o un frente de racha pueden tener impactos distintos en pocos kilómetros. | El fondo del valle, las laderas y las divisorias no viven la misma meteorología. El perfil pirenaico excluye el módulo marino. |
 
-Ambos perfiles comparten adquisición modular, diagnósticos, indicadores de cobertura e informes. Cada territorio conserva algoritmos especializados; su paridad completa sigue en desarrollo. La aplicación y la web están en **0.6.0**; los motores costero y pirenaico, en **0.6.1**. [Ver perfiles y zonas](docs/ZONAS-MODULARES.md).
+Ambos perfiles comparten adquisición modular, diagnósticos, indicadores de cobertura e informes. El perfil atmosférico ya utiliza un único núcleo con controles de terreno y unidades en ambas consolas y en los paquetes de zona. Otros algoritmos especializados mantienen requisitos territoriales; [matriz de paridad](docs/PARIDAD-ALGORITMOS.md). La aplicación y la web están en **0.6.0**; los motores costero y pirenaico, en **0.6.1**. [Ver perfiles y zonas](docs/ZONAS-MODULARES.md).
 
 ## De la evidencia a la decisión
 

@@ -1,4 +1,4 @@
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit,parse_qs
 from datetime import datetime,timezone,timedelta
 import base64,struct,zlib
 from weather_core import ENSEMBLE_FAMILIES
@@ -22,6 +22,15 @@ def provider(url, *, rain=1, partial_snow=False):
 
     if '/elevation?' in url:
         return {'elevation':[1600.0]}
+    query=parse_qs(urlsplit(url).query)
+    if 'surface_pressure' in query.get('hourly',[''])[0]:
+        h={'time':[f'2026-11-11T{k:02d}:00' for k in range(24)]};units={}
+        for key,unit,v in [('surface_pressure','hPa',850),('temperature_2m','°C',5),('dew_point_2m','°C',2),('wind_speed_10m','m/s',5),('wind_direction_10m','°',270),('cape','J/kg',0),('convective_inhibition','J/kg',0)]:
+            h[key]=[v]*24;units[key]=unit
+        for pressure,z,t in [(1000,100,18),(925,800,12),(850,1500,5),(700,3000,-5),(500,5500,-20),(300,9000,-45)]:
+            for key,unit,v in [('temperature','°C',t),('relative_humidity','%',80),('wind_speed','m/s',10),('wind_direction','°',270),('geopotential_height','m',z)]:
+                field=f'{key}_{pressure}hPa';h[field]=[v]*24;units[field]=unit
+        return {'hourly':h,'hourly_units':units,'elevation':1600,'latitude':float(query['latitude'][0]),'longitude':float(query['longitude'][0])}
     h = {'time':[f'2026-11-11T{k:02d}:00' for k in range(24)]}
     units = {}
     if host == 'ensemble-api.open-meteo.com':

@@ -114,3 +114,12 @@ Véase [Arquitectura unificada](ARQUITECTURA-UNIFICADA.md) para decisiones y lim
 - Cobertura completa requerida para acumulados diarios y soporte por métrica; paquetes públicos del backend identificados por manifiesto completo, conservando proyección de privacidad y carga web de una misma instantánea.
 - El despliegue exige previsión útil en cada punto; las fuentes complementarias fallidas se muestran como desconocidas. No se publican datos de pruebas ni observaciones forenses privadas.
 - Validación local con respuestas de prueba y navegador real. Los proveedores en vivo no se han verificado desde el entorno de desarrollo por restricciones de red. La ejecución de Actions y el despliegue de Pages se verifican por separado; Render requiere su propio despliegue.
+
+## 13 noviembre 2026 — Paridad atmosférica dirigida por Ingeniería
+
+- Núcleo puro `atmospheric_core` usado por Portinatx, Pirineo y el módulo descargable `atmosphere`; mismo perfil implica mismos niveles, índices, bulbo húmedo y cizalladura.
+- Se excluyen niveles bajo terreno y campos con unidades desconocidas. Presión superficial real para termodinámica; alturas de cizalladura sobre el terreno. Pa/s no se convierte en m/s invirtiendo el signo. ICC exige convención vertical verificada y todos los componentes; el laboratorio web conserva las mismas restricciones.
+- Conector costero conserva elevación y contexto de vecinos. Las derivadas espaciales exigen geometría y tiempos compatibles y usan separación de celdas devueltas; sin evidencia no se inventan. Froude carece de altura de obstáculo predeterminada.
+- Ambas plantillas incluyen `atmosphere`; zonas personalizadas pueden descargarlo por separado. ZIP, hashes, informe y ejecutable portable admiten el módulo; lectores actuales admiten 512 entradas manteniendo límites de tamaño.
+- Validación local: 357 pruebas de integración con navegador obligatorio, autotests meteorológicos, suites Node, Ruff e integridad SHA-256. Perfiles sintéticos; no acreditan calibración ni disponibilidad del proveedor en vivo.
+- Agency Agents Backend, Geoespacial y Calidad aportaron revisión y código inicial; la ejecución paralela alcanzó su límite. El coordinador completó el trabajo siguiendo los perfiles de Ingeniería Backend y Frontend. Estado y pendientes en `docs/PARIDAD-ALGORITMOS.md`.

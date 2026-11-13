@@ -592,14 +592,14 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
  "Temperatura potencial equivalente a 850 hPa (K, Bolton 1980). Masa de aire cálida y húmeda.": "Equivalent potential temperature at 850 hPa (K, Bolton 1980). Warm, moist air mass.",
  "Agua precipitable (columna total de vapor, mm) del modelo.": "Model precipitable water (total column water vapour, mm).",
  "Altura de la isoterma 0 °C del modelo (m).": "Model 0 °C isotherm height (m).",
- "Cizalladura 0–6 km aproximada: |V500 − V10m| (m/s). Aproximación por niveles, no capa integrada.": "Approximate 0–6 km wind shear: |V500 − V10m| (m/s). A pressure-level approximation, not an integrated layer.",
- "Cizalladura 0–1 km aproximada: |V925 − V10m| (m/s).": "Approximate 0–1 km wind shear: |V925 − V10m| (m/s).",
+ "Cizalladura superficie–500 hPa aproximada: |V500 − V10m| (m/s). Aproximación por niveles, no capa integrada.": "Approximate 0–6 km wind shear: |V500 − V10m| (m/s). A pressure-level approximation, not an integrated layer.",
+ "Cizalladura superficie–925 hPa aproximada: |V925 − V10m| (m/s).": "Approximate 0–1 km wind shear: |V925 − V10m| (m/s).",
  "Velocidad vertical a 700 hPa del modelo (positivo = ascenso).": "Model vertical velocity at 700 hPa (positive = ascent).",
  "Temperatura de bulbo húmedo en superficie (°C), ecuación psicrométrica.": "Surface wet-bulb temperature (°C), psychrometric equation.",
  "Altura del cero de bulbo húmedo (m) interpolada en el perfil.": "Wet-bulb zero height (m), interpolated in the profile.",
  "Velocidad vertical a 850 hPa del modelo (positivo = ascenso).": "Model vertical velocity at 850 hPa (positive = ascent).",
  "Velocidad vertical a 500 hPa del modelo (positivo = ascenso).": "Model vertical velocity at 500 hPa (positive = ascent).",
- "Cizalladura 0–3 km aproximada: |V700 − V10m| (m/s).": "Approximate 0–3 km wind shear: |V700 − V10m| (m/s).",
+ "Cizalladura superficie–700 hPa aproximada: |V700 − V10m| (m/s).": "Approximate 0–3 km wind shear: |V700 − V10m| (m/s).",
  "Divergencia a 925 hPa (10⁻⁵ s⁻¹) por diferencias finitas en una malla de ±0,25°: negativa = convergencia. Escala de ~50 km.": "925 hPa divergence (10⁻⁵ s⁻¹) using finite differences on a ±0.25° grid: negative = convergence. Scale ~50 km.",
  "Divergencia a 850 hPa (10⁻⁵ s⁻¹), malla ±0,25°.": "850 hPa divergence (10⁻⁵ s⁻¹), ±0.25° grid.",
  "Vorticidad relativa a 850 hPa (10⁻⁵ s⁻¹), malla ±0,25°: positiva = ciclónica.": "Relative vorticity at 850 hPa (10⁻⁵ s⁻¹), ±0.25° grid: positive = cyclonic.",
@@ -623,11 +623,11 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
  "Umbrales de pluviómetro rebajados con suelo saturado (≥60 mm ayer+hoy): 10/20/40 mm/h. n=2.": "Reduced rain-gauge thresholds with saturated ground (≥60 mm yesterday + today): 10/20/40 mm/h. n=2."
 });
  Object.assign(dict, {
- "Perfil no disponible en este ciclo.":"Profile unavailable in this cycle.", "temperatura":"temperature", "punto de rocío":"dew point", "bulbo húmedo":"wet bulb", "Gradiente 700–500":"700–500 lapse rate", "Agua precipitable":"Precipitable water", "Isoterma 0 °C":"0 °C isotherm", "Cizalladura 0–6 km":"0–6 km shear", "Cizalladura 0–1 km":"0–1 km shear", "Ascenso 700 hPa":"700 hPa ascent", "Viento medio 850–300":"850–300 mean wind", "Flujo de humedad 850":"850 moisture flux", "Capa límite":"Boundary layer", "θe (K). Si disminuye con la altura entre 1000 y 700 hPa la columna es potencialmente inestable: al ascender en bloque se desestabiliza.":"θe (K). If it decreases with height between 1000 and 700 hPa, the column is potentially unstable: lifting it as a whole destabilises it.", "Si falta un componente, el valor se calcula con los demás.":"If a component is missing, the value is calculated from the others.", "Campo no disponible: se rellenará con el próximo run del modelo.":"Field unavailable: it will be filled with the next model run.", "Sin malla del modelo para ese día y antelación.":"No model grid for this day and lead time."
+ "Perfil no disponible en este ciclo.":"Profile unavailable in this cycle.", "temperatura":"temperature", "punto de rocío":"dew point", "bulbo húmedo":"wet bulb", "Gradiente 700–500":"700–500 lapse rate", "Agua precipitable":"Precipitable water", "Isoterma 0 °C":"0 °C isotherm", "Cizalladura superficie–500 hPa":"Surface–500 hPa shear", "Cizalladura superficie–925 hPa":"Surface–925 hPa shear", "Velocidad vertical 700 hPa":"700 hPa vertical velocity", "Viento medio 850–300":"850–300 mean wind", "Flujo de humedad 850":"850 moisture flux", "Capa límite":"Boundary layer", "θe (K). Si disminuye con la altura entre 1000 y 700 hPa la columna es potencialmente inestable: al ascender en bloque se desestabiliza.":"θe (K). If it decreases with height between 1000 and 700 hPa, the column is potentially unstable: lifting it as a whole destabilises it.", "Si falta un componente o la convención vertical, el índice queda sin datos.":"Missing components or an unverified vertical convention leave the index unavailable.", "Campo no disponible en este ciclo.":"Field unavailable in this cycle.", "Sin malla del modelo para ese día y antelación.":"No model grid for this day and lead time."
  });
  Object.assign(dict, {
  "inestabilidad":"instability", "humedad":"moisture", "ascenso":"ascent", "organizacion":"organisation", "alimentacion":"supply", "lentitud":"slowness", "antecedente":"antecedent rainfall", "intensidad":"intensity", "prevista 3h":"forecast 3 h", "penalización":"penalty", "ahora":"now",
- "18/10: escorrentía con ~20–30 mm/h y >60 mm de antecedente · 19/10 10:16: agua en la puerta con 20,8 mm/h y 145 mm de antecedente (IRH ≈ 0,66 sin lluvia prevista; ≈ 0,83 sin el componente previsto). Si falta un componente, el valor se calcula con los demás.":"18 October: runoff at ~20–30 mm/h with >60 mm antecedent rainfall · 19 October 10:16: water at the door at 20.8 mm/h with 145 mm antecedent rainfall (IRH ≈ 0.66 without forecast rain; ≈ 0.83 without the forecast component). If a component is missing, the value is calculated from the others."
+ "18/10: escorrentía con ~20–30 mm/h y >60 mm de antecedente · 19/10 10:16: agua en la puerta con 20,8 mm/h y 145 mm de antecedente (IRH ≈ 0,66 sin lluvia prevista; ≈ 0,83 sin el componente previsto). Si falta un componente o la convención vertical, el índice queda sin datos.":"18 October: runoff at ~20–30 mm/h with >60 mm antecedent rainfall · 19 October 10:16: water at the door at 20.8 mm/h with 145 mm antecedent rainfall (IRH ≈ 0.66 without forecast rain; ≈ 0.83 without the forecast component). Missing components or an unverified vertical convention leave the index unavailable."
  });
  const dynamic = [
    [/^No se pudo pedir el ciclo: (.+)$/, (_, detail) => `Could not request the cycle: ${detail}`],
@@ -1198,7 +1198,7 @@ const tOf = t => +new Date(/Z|[+-]\d\d:?\d\d$/.test(t) ? t : t+"Z");
 const IDX = [
   ["cape","CAPE","J/kg",0],["cin","CIN","J/kg",0],["li","Lifted Index","°C",1],["ki","K-Index","",1],["tt","Total Totals","",1],
   ["lr75","Gradiente 700–500","°C/km",1],["thetae850","θe 850 hPa","K",1],["tcwv","Agua precipitable","mm",1],["fzl","Isoterma 0 °C","m",0],
-  ["shr06","Cizalladura 0–6 km","m/s",1],["shr01","Cizalladura 0–1 km","m/s",1],["w700","Ascenso 700 hPa","m/s",2],
+  ["shr06","Cizalladura superficie–500 hPa","m/s",1],["shr01","Cizalladura superficie–925 hPa","m/s",1],["w700","Velocidad vertical 700 hPa","m/s",2],
   ["mw","Viento medio 850–300","m/s",1],["flux850","Flujo de humedad 850","g/kg·m/s",0],["blh","Capa límite","m",0]];
 function hourIndex(){ const p=S.atmos?.profile; if(!p) return 0; if(S.hour==null){ const now=Date.now(); let k=0; p.time.forEach((t,i)=>{ if(tOf(t)<=now) k=i; }); S.hour=k; } return Math.min(S.hour, p.time.length-1); }
 function spark(vals, i, w=180, h=34){
@@ -1255,7 +1255,7 @@ function renderAtmos(){
   if (r) cards.push(`<article class="card"><div style="display:flex;justify-content:space-between;gap:8px"><h2>IRH · respuesta hidrológica de la cala</h2>${ST("irh")}</div>
       <div style="font-family:var(--f-mono);font-size:2rem;margin:4px 0">${r.value==null?"—":r.value.toFixed(2)}<small style="font-size:.8rem;color:var(--muted)"> / 1 · ahora</small></div>
       <div class="comp">${Object.keys(r.weights).map(k=>{ const v=r.components[k], raw={antecedente:r.raw.antecedente_mm,intensidad:r.raw.intensidad_mmh,prevista_3h:r.raw.prevista_3h_mm}[k]; return `<span>${esc(k.replace("_"," "))} <span class="ev">(${raw==null?"sin dato":n1(raw)} · ${r.ranges[k][0]}→${r.ranges[k][1]})</span></span><span class="bar"><i style="width:${(v||0)*100}%;background:var(--diag)"></i></span><span class="mono">${v==null?"—":v.toFixed(2)} × ${r.weights[k]}</span>`; }).join("")}</div>
-      <p class="nt" style="font-size:.75rem;color:var(--muted)">${esc(r.reference)}. Si falta un componente, el valor se calcula con los demás.</p></article>`);
+      <p class="nt" style="font-size:.75rem;color:var(--muted)">${esc(r.reference)}. Si falta un componente o la convención vertical, el índice queda sin datos.</p></article>`);
   $("composites").innerHTML = cards.join("");
 }
 $("hour").addEventListener("input", e => { S.hour=+e.target.value; renderAtmos(); if(S.tab==="atmosfera") renderPhysics(); if(S.tab==="laboratorio") renderLab(); });
@@ -1310,15 +1310,30 @@ const zr = (dbz,a,b) => dbz==null||dbz<15 ? 0 : Math.pow(Math.pow(10,Math.min(db
 const QPE_SC = [[0.5,"#3a7fd6"],[2,"#2350b8"],[5,"#f0d723"],[10,"#f3a21c"],[20,"#e8541b"],[40,"#c4161c"],[80,"#d23ad2"]];
 const qpeColor = v => { let c=null; for(const [t,col] of QPE_SC) if(v>=t) c=col; return c; };
 $("qpe-legend").innerHTML = QPE_SC.map(([t,c])=>`<i style="background:${c}"></i><span>&nbsp;${t}&nbsp;</span>`).join("")+"<span>mm/h</span>";
-function compositeJS(name, idx, w, spec){
-  let val=0, ws=0; const comps={};
-  for (const [k,[v,lo,hi]] of Object.entries(spec.ranges)) { const x=idx[v]; const nn = x==null?null:Math.max(0,Math.min(1,(x-lo)/(hi-lo))); comps[k]=nn; if(nn!=null){ val+=w[k]*nn; ws+=w[k]; } }
-  if(!ws) return {value:null, comps};
-  val/=ws; let pen=null;
-  if (spec.penalty){ const [v,lo,hi,f]=spec.penalty, x=idx[v]; if(x!=null){ pen=Math.max(0,Math.min(1,(x-lo)/(hi-lo))); val*=(1-f*pen); } }
-  return {value:val, comps, pen};
+function compositeJS(name, idx, w, spec, upwardVerified=false){
+  let val=0, ws=0, missing=false; const comps={};
+  for (const [k,[v,lo,hi]] of Object.entries(spec.ranges)) {
+    const x=idx[v], weight=w[k];
+    const nn=typeof x==='number'&&Number.isFinite(x)?Math.max(0,Math.min(1,(x-lo)/(hi-lo))):null;
+    comps[k]=nn;
+    if(nn===null||typeof weight!=='number'||!Number.isFinite(weight)||weight<0) missing=true;
+    else {val+=weight*nn;ws+=weight;}
+  }
+  let pen=null;
+  if(spec.penalty){const [v,lo,hi]=spec.penalty, x=idx[v];if(typeof x==='number'&&Number.isFinite(x))pen=Math.max(0,Math.min(1,(x-lo)/(hi-lo)));else missing=true;}
+  if(missing||!ws||(name==='icc'&&!upwardVerified))return {value:null,comps,pen};
+  val/=ws;if(spec.penalty)val*=1-spec.penalty[3]*pen;
+  return {value:val,comps,pen};
 }
-function fromComps(comps, w, pen, spec){ let v=0, ws=0; for(const k in comps){ if(comps[k]!=null){ v+=w[k]*comps[k]; ws+=w[k]; } } if(!ws) return null; v/=ws; if(spec.penalty&&pen!=null) v*=(1-spec.penalty[3]*pen); return v; }
+function fromComps(comps,w,pen,spec){
+  let v=0,ws=0;
+  for(const k of Object.keys(spec.weights)){
+    if(typeof comps[k]!=='number'||!Number.isFinite(comps[k])||typeof w[k]!=='number'||!Number.isFinite(w[k])||w[k]<0)return null;
+    v+=w[k]*comps[k];ws+=w[k];
+  }
+  if(!ws||(spec.penalty&&!Number.isFinite(pen)))return null;
+  v/=ws;if(spec.penalty)v*=1-spec.penalty[3]*pen;return v;
+}
 function renderLab(){
   const A=S.atmos, R=S.radar; if(!A) return;
   // Z–R
@@ -1351,15 +1366,15 @@ function renderLab(){
   }
   keys.forEach(k=>{ $(`w-${k}`).value=LAB.w[k]; $(`w-${k}-o`).textContent=(+LAB.w[k]).toFixed(2); });
   const hours=p.time.map((t,i)=>{ const idx={}; for(const k in p.indices) idx[k]=p.indices[k][i]; return idx; });
-  const labVals=hours.map(idx=>compositeJS(LAB.ci, idx, LAB.w, spec).value), engVals=p.composites[LAB.ci].map(c=>c?.value);
+  const labVals=hours.map(idx=>compositeJS(LAB.ci, idx, LAB.w, spec, p.quality?.vertical_velocity_positive==="up").value), engVals=p.composites[LAB.ci].map(c=>c?.value);
   const T0=p.time.map(tOf);
   $("ch-ci").innerHTML = lineChart({series:[{pts:T0.map((t,k)=>[t,engVals[k]]),color:"var(--muted)",w:1.4,dash:"4 3"},{pts:T0.map((t,k)=>[t,labVals[k]]),color:"var(--exp)",w:2.2,end:true}], xmin:T0[0], xmax:T0[T0.length-1], ymax:1, yfmt:v=>v.toFixed(1)})+legend([["var(--muted)","motor (pesos por defecto)",1],["var(--exp)","laboratorio (tus pesos)"]]);
   // tornado en la hora elegida
-  const i=hourIndex(), base=compositeJS(LAB.ci, hours[i], LAB.w, spec), bars=[];
-  for(const k of keys){ if(base.comps[k]==null){ bars.push([k,null,null]); continue; }
+  const i=hourIndex(), base=compositeJS(LAB.ci, hours[i], LAB.w, spec, p.quality?.vertical_velocity_positive==="up"), bars=[];
+  for(const k of keys){ if(base.value==null||base.comps[k]==null){ bars.push([k,null,null]); continue; }
     const up={...base.comps,[k]:Math.min(1,base.comps[k]+0.2)}, dn={...base.comps,[k]:Math.max(0,base.comps[k]-0.2)};
     bars.push([k, fromComps(dn,LAB.w,base.pen,spec)-base.value, fromComps(up,LAB.w,base.pen,spec)-base.value]); }
-  if(spec.penalty && base.pen!=null){ const f=spec.penalty[3], raw=base.value/(1-f*base.pen); bars.push(["penalización "+spec.penalty[0], raw*(1-f*Math.min(1,base.pen+0.2))-base.value, raw*(1-f*Math.max(0,base.pen-0.2))-base.value]); }
+  if(base.value!=null && spec.penalty && base.pen!=null){ const f=spec.penalty[3], raw=base.value/(1-f*base.pen); bars.push(["penalización "+spec.penalty[0], raw*(1-f*Math.min(1,base.pen+0.2))-base.value, raw*(1-f*Math.max(0,base.pen-0.2))-base.value]); }
   const mx=Math.max(0.05,...bars.flatMap(b=>[Math.abs(b[1]||0),Math.abs(b[2]||0)])), W=600, rh=26, Pt={l:150,r:40}, Ht=rh*bars.length+24, cx=Pt.l+(W-Pt.l-Pt.r)/2, sx=v=>v/mx*(W-Pt.l-Pt.r)/2;
   let s=`<svg class="ch" viewBox="0 0 ${W} ${Ht}"><line x1="${cx}" x2="${cx}" y1="0" y2="${Ht-20}" stroke="var(--line)"/>`;
   bars.forEach(([k,lo,hi],r)=>{ const y=r*rh+4; s+=`<text x="${Pt.l-8}" y="${y+13}" text-anchor="end">${esc(k)}</text>`; if(lo==null){ s+=`<text x="${cx+4}" y="${y+13}">sin dato</text>`; return; }
@@ -1390,7 +1405,7 @@ document.querySelectorAll("[data-ci]").forEach(b=>b.addEventListener("click",()=
 
 /* ══ capa 2: satélite, territorio, modelos, física ══ */
 IDX.push(["tw2m","Bulbo húmedo 2 m","°C",1],["wbz","Cero de bulbo húmedo","m",0],["u925","Viento 925 hPa","m/s",1],
-  ["w850","Ascenso 850 hPa","m/s",2],["w500","Ascenso 500 hPa","m/s",2],["shr03","Cizalladura 0–3 km","m/s",1],
+  ["w850","Velocidad vertical 850 hPa","m/s",2],["w500","Velocidad vertical 500 hPa","m/s",2],["shr03","Cizalladura superficie–700 hPa","m/s",1],
   ["div925","Divergencia 925","10⁻⁵ s⁻¹",1],["div850","Divergencia 850","10⁻⁵ s⁻¹",1],["vort850","Vorticidad 850","10⁻⁵ s⁻¹",1],
   ["vort500","Vorticidad 500","10⁻⁵ s⁻¹",1],["froude","Froude (relieve)","",2]);
 
@@ -1506,7 +1521,7 @@ function renderModels(){
     g.ctx.globalAlpha=1; let mx=-1,km=-1; v.forEach((x,k)=>{ if(x>mx){mx=x;km=k;} });
     if(km>=0){ const [la,lo]=F.cells[km]; g.ctx.strokeStyle=css("--ink"); g.ctx.lineWidth=2; g.ctx.strokeRect(g.X(lo-0.075),g.Y(la+0.075),g.X(lo+0.075)-g.X(lo-0.075),g.Y(la-0.075)-g.Y(la+0.075)); }
     $("fld-note").textContent=uiText(`${MLAB(FLD.m)} · run ${fmtDT(F.init)} · celdas de 0,15° · máximo de la ventana ${n0(mx)} mm (recuadro). Hipótesis del modelo: en este episodio el máximo real cayó al E del modelizado.`,`${MLAB(FLD.m)} · run ${fmtDT(F.init)} · 0.15° grid cells · window maximum ${n0(mx)} mm (box). Model hypothesis: in this episode the observed maximum fell east of the modelled one.`);
-  } else $("fld-note").textContent="Campo no disponible: se rellenará con el próximo run del modelo.";
+  } else $("fld-note").textContent="Campo no disponible en este ciclo.";
   drawCoast(g); drawSite(g);
   const V=se.verif; if(!V) return;
   const P=V.filas.find(r=>r.nombre==="Portinatx");

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from zone_packages import read_pack, analysis
 
-LABELS = {'forecast':'Previsión', 'ensemble':'Ensembles', 'terrain':'Elevación', 'marine':'Mar', 'radar':'Radar', 'warnings':'Avisos oficiales', 'observations':'Observaciones'}
+LABELS = {'atmosphere':'Atmósfera', 'forecast':'Previsión', 'ensemble':'Ensembles', 'terrain':'Elevación', 'marine':'Mar', 'radar':'Radar', 'warnings':'Avisos oficiales', 'observations':'Observaciones'}
 
 
 def text(value):
@@ -59,6 +59,26 @@ def source_sections(pack, pid):
         if not frames:
             rows.append('<p class="missing">Sin imágenes de radar utilizables.</p>')
         rows.append('</div>')
+    return ''.join(rows)
+
+
+def atmosphere_section(data):
+    rows=['<h3>Atmósfera · perfil modelizado</h3><p>Mismo cálculo en Portinatx, Pirineo y zonas personalizadas. Los niveles bajo terreno, sin unidades o sin presión/elevación verificables quedan sin diagnóstico. No son mediciones ni probabilidades de impacto calibradas.</p>']
+    if not data or not data.get('time'):
+        return ''.join(rows)+'<p class="missing">Perfil atmosférico no disponible.</p>'
+    rows.append(f'<p>Elevación de la celda del modelo: {value(data.get("elevacion_m"),"m")}. El perfil puede representar una altitud distinta a la del lugar real.</p>')
+    location=data.get('ubicacion') or {}
+    if location.get('lat') is not None and location.get('lon') is not None:
+        rows.append(f'<p>Celda del modelo: {text(location["lat"])}, {text(location["lon"])}.</p>')
+    columns=[('cape','CAPE','J/kg'),('ki','Índice K','°C'),('tw2m','Bulbo húmedo superficial','°C'),('wbz','Nivel de bulbo húmedo 0 °C','m'),('shr06','Cizalladura superficie–500 hPa','m/s'),('w700','Velocidad vertical 700 hPa','m/s')]
+    rows.append('<div class="table"><table><caption>Horas UTC · cizalladura entre superficie y nivel de presión, no una capa fija de 6 km</caption><thead><tr><th>Hora UTC</th>'+''.join('<th>'+label+'</th>' for _,label,_ in columns)+'</tr></thead><tbody>')
+    for i,t in enumerate(data['time']):
+        cells=[]
+        for key,_,unit in columns:
+            values=data.get('indices',{}).get(key,[])
+            cells.append('<td>'+value(values[i] if i<len(values) else None,unit)+'</td>')
+        rows.append('<tr><th scope="row">'+text(t)+'</th>'+''.join(cells)+'</tr>')
+    rows.append('</tbody></table></div><p>La altura de bulbo húmedo cero se refiere al nivel del mar; las alturas de cizalladura del paquete son sobre el terreno del modelo. No se convierten Pa/s en m/s cambiando el signo. Sin una convención verificada del proveedor no se interpreta el signo como ascenso. Los índices compuestos requieren todos sus componentes y las convenciones verificadas.</p>')
     return ''.join(rows)
 
 
@@ -123,6 +143,8 @@ def render_report(path):
             rows.append('</tbody></table></div>')
             if not marine:
                 rows.append('<p class="missing">No hay datos marinos disponibles.</p>')
+        if 'atmosphere' in profile['modules']:
+            rows.append(atmosphere_section(computed[pid].get('atmosphere')))
         rows.append(source_sections(pack,pid))
         rows.append('</section>')
         blocks.append(''.join(rows))

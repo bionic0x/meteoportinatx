@@ -116,3 +116,7 @@ See [Unified architecture](ARQUITECTURA-UNIFICADA.en.md) for decisions and limit
 - Full coverage required for daily accumulations and per-metric support; public backend packages identified by full manifest while retaining privacy projection and same-snapshot web loading.
 - Deployment requires a useful forecast at each point; failed supplementary sources are shown as unknown. No test data or private forensic observations are published.
 - Local validation with test responses and real browser. Live providers were not verified from the development environment due to network restrictions. Actions execution and Pages deployment are verified separately; Render requires its own deployment.
+
+## 13 November 2026 — Shared atmospheric diagnostics
+
+Coastal, mountain and downloadable regional profiles now execute the same pure atmospheric core. Terrain, explicit units, actual surface pressure and verified vertical conventions gate the results. Missing components remain unknown in both the engine and browser laboratory. Both templates include the optional-per-user `atmosphere` module; marine remains excluded from inland profiles. Local validation: 357 integration tests with required browser execution, domain selftests, Node suites, Ruff and checksums. These are synthetic regressions, not calibrated meteorological skill. See `PARIDAD-ALGORITMOS.md` for remaining specialized algorithms and the scope of Agency Agents engineering work.
