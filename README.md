@@ -17,7 +17,7 @@ Una tormenta puede pasar a pocos kilómetros de Portinatx y cambiar el mar sin d
 | Radar, lluvia, tormentas, viento, avisos y condiciones marinas para la costa norte de Ibiza. | Cerdanya, Capcir y Andorra: relieve, cotas, nieve, estaciones, modelos y ensembles. |
 | La geografía de una cala importa: una célula cercana o un frente de racha pueden tener impactos distintos en pocos kilómetros. | El fondo del valle, las laderas y las divisorias no viven la misma meteorología. El perfil pirenaico excluye el módulo marino. |
 
-Ambos perfiles comparten adquisición modular, diagnósticos, indicadores de cobertura e informes. Cada territorio conserva algoritmos especializados; su paridad completa sigue en desarrollo. La aplicación y la web están en **0.6.0**; los motores costero y pirenaico, en **0.6.1**. [Ver perfiles y zonas](docs/ZONAS-MODULARES.md).
+Ambos perfiles comparten adquisición modular, diagnósticos, indicadores de cobertura e informes. El perfil atmosférico ya utiliza un único núcleo con controles de terreno y unidades en ambas consolas y en los paquetes de zona. Otros algoritmos especializados mantienen requisitos territoriales; [matriz de paridad](docs/PARIDAD-ALGORITMOS.md). La aplicación y la web están en **0.6.0**; los motores costero y pirenaico, en **0.6.1**. [Ver perfiles y zonas](docs/ZONAS-MODULARES.md).
 
 ## De la evidencia a la decisión
 
@@ -92,6 +92,7 @@ El ciclo supervisado para el archivo prospectivo de Portinatx incluye plantillas
 |---|---|
 | `src/portinatx_degen.py` | Motor costero: radar, observaciones, avisos, mar, modelos y forense privado. |
 | `src/pirineo.py` y `src/pirineo_meta.py` | Motor de montaña: relieve, perfiles, nieve y ensembles. |
+| `src/atmospheric_core.py` | Núcleo atmosférico compartido; la paridad cubre solo el bloque probado con entradas sintéticas. |
 | `src/nowcast.py` y `src/nowcast_backend.py` | Orquestación, servidor local y backend de lectura. |
 | `src/public_fetch.js` | Carga coherente por dominio y alternativa estática. |
 | `src/route_engine.js` y `src/pirineo_ruta.html` | Planificador GPX privado en navegador. |
@@ -102,4 +103,4 @@ CI comprueba Python 3.10 y 3.11, pruebas JavaScript, integridad y construcción 
 
 El repositorio también configura siete [divisiones de agentes Codex](docs/agency-agents.md): datos, geoespacial, backend, operaciones, calidad, interfaz y seguridad. Son perfiles para sesiones compatibles; no crean agentes persistentes ni programan trabajo por sí solos.
 
-[Arquitectura](docs/ARQUITECTURA-UNIFICADA.md) · [Notas de versión](docs/RELEASE-NOTES.md) · [Evaluación y hoja de ruta](docs/EVALUACION-MODELO-USOS-POTENCIAL.md) · [Zonas modulares](docs/ZONAS-MODULARES.md)
+[Arquitectura](docs/ARQUITECTURA-UNIFICADA.md) · [Notas de versión](docs/RELEASE-NOTES.md) · [Evaluación y hoja de ruta](docs/EVALUACION-MODELO-USOS-POTENCIAL.md) · [Zonas modulares](docs/ZONAS-MODULARES.md) · [Paridad de algoritmos](docs/PARIDAD-ALGORITMOS.md)

@@ -116,3 +116,12 @@ See [Unified architecture](ARQUITECTURA-UNIFICADA.en.md) for decisions and limit
 - Full coverage required for daily accumulations and per-metric support; public backend packages identified by full manifest while retaining privacy projection and same-snapshot web loading.
 - Deployment requires a useful forecast at each point; failed supplementary sources are shown as unknown. No test data or private forensic observations are published.
 - Local validation with test responses and real browser. Live providers were not verified from the development environment due to network restrictions. Actions execution and Pages deployment are verified separately; Render requires its own deployment.
+
+## 13 November 2026 — Engineering-led atmospheric parity
+
+- Pure `atmospheric_core` used by Portinatx, the Pyrenees and the downloadable `atmosphere` module; the same profile yields the same levels, indices, wet bulb and shear.
+- Levels below terrain and fields with unknown units are excluded. Actual surface pressure is used for thermodynamics; shear heights are above terrain. Pa/s is not converted to m/s by reversing its sign. ICC requires a verified vertical convention and every component; the web laboratory preserves the same restrictions.
+- The coastal connector preserves elevation and neighbour context. Spatial derivatives require compatible geometry and times and use the returned cell separation; they are not invented without evidence. Froude has no default obstacle height.
+- Both templates include `atmosphere`; custom zones can download it separately. ZIP, hashes, report and portable executable support the module; current readers support 512 entries while maintaining size limits.
+- Local validation: 357 integration tests with mandatory browser execution, weather self-tests, Node suites, Ruff and SHA-256 integrity. Synthetic profiles do not establish calibration or live provider availability.
+- Agency Agents Backend, Geospatial and Quality contributed review and initial code; parallel execution reached its limit. The coordinator completed the work following the Backend and Frontend Engineering profiles. See [algorithm parity: scope and evidence](PARIDAD-ALGORITMOS.en.md) for status and outstanding work.

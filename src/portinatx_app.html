@@ -1,4 +1,4 @@
-<meta charset="utf-8">
+<!doctype html><html lang="es"><head><meta charset="utf-8">
 <title>Portinatx Nowcast</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,7 +147,7 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:980px){.grid3{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+</style></head><body>
 
 <header>
   <a href="../decidir/#casa" style="color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:4px;padding:2px 9px">Decidir</a>
@@ -592,14 +592,14 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
  "Temperatura potencial equivalente a 850 hPa (K, Bolton 1980). Masa de aire cálida y húmeda.": "Equivalent potential temperature at 850 hPa (K, Bolton 1980). Warm, moist air mass.",
  "Agua precipitable (columna total de vapor, mm) del modelo.": "Model precipitable water (total column water vapour, mm).",
  "Altura de la isoterma 0 °C del modelo (m).": "Model 0 °C isotherm height (m).",
- "Cizalladura 0–6 km aproximada: |V500 − V10m| (m/s). Aproximación por niveles, no capa integrada.": "Approximate 0–6 km wind shear: |V500 − V10m| (m/s). A pressure-level approximation, not an integrated layer.",
- "Cizalladura 0–1 km aproximada: |V925 − V10m| (m/s).": "Approximate 0–1 km wind shear: |V925 − V10m| (m/s).",
+ "Cizalladura superficie–500 hPa aproximada: |V500 − V10m| (m/s). Aproximación por niveles, no capa integrada.": "Approximate 0–6 km wind shear: |V500 − V10m| (m/s). A pressure-level approximation, not an integrated layer.",
+ "Cizalladura superficie–925 hPa aproximada: |V925 − V10m| (m/s).": "Approximate 0–1 km wind shear: |V925 − V10m| (m/s).",
  "Velocidad vertical a 700 hPa del modelo (positivo = ascenso).": "Model vertical velocity at 700 hPa (positive = ascent).",
  "Temperatura de bulbo húmedo en superficie (°C), ecuación psicrométrica.": "Surface wet-bulb temperature (°C), psychrometric equation.",
  "Altura del cero de bulbo húmedo (m) interpolada en el perfil.": "Wet-bulb zero height (m), interpolated in the profile.",
  "Velocidad vertical a 850 hPa del modelo (positivo = ascenso).": "Model vertical velocity at 850 hPa (positive = ascent).",
  "Velocidad vertical a 500 hPa del modelo (positivo = ascenso).": "Model vertical velocity at 500 hPa (positive = ascent).",
- "Cizalladura 0–3 km aproximada: |V700 − V10m| (m/s).": "Approximate 0–3 km wind shear: |V700 − V10m| (m/s).",
+ "Cizalladura superficie–700 hPa aproximada: |V700 − V10m| (m/s).": "Approximate 0–3 km wind shear: |V700 − V10m| (m/s).",
  "Divergencia a 925 hPa (10⁻⁵ s⁻¹) por diferencias finitas en una malla de ±0,25°: negativa = convergencia. Escala de ~50 km.": "925 hPa divergence (10⁻⁵ s⁻¹) using finite differences on a ±0.25° grid: negative = convergence. Scale ~50 km.",
  "Divergencia a 850 hPa (10⁻⁵ s⁻¹), malla ±0,25°.": "850 hPa divergence (10⁻⁵ s⁻¹), ±0.25° grid.",
  "Vorticidad relativa a 850 hPa (10⁻⁵ s⁻¹), malla ±0,25°: positiva = ciclónica.": "Relative vorticity at 850 hPa (10⁻⁵ s⁻¹), ±0.25° grid: positive = cyclonic.",
@@ -623,11 +623,11 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
  "Umbrales de pluviómetro rebajados con suelo saturado (≥60 mm ayer+hoy): 10/20/40 mm/h. n=2.": "Reduced rain-gauge thresholds with saturated ground (≥60 mm yesterday + today): 10/20/40 mm/h. n=2."
 });
  Object.assign(dict, {
- "Perfil no disponible en este ciclo.":"Profile unavailable in this cycle.", "temperatura":"temperature", "punto de rocío":"dew point", "bulbo húmedo":"wet bulb", "Gradiente 700–500":"700–500 lapse rate", "Agua precipitable":"Precipitable water", "Isoterma 0 °C":"0 °C isotherm", "Cizalladura 0–6 km":"0–6 km shear", "Cizalladura 0–1 km":"0–1 km shear", "Ascenso 700 hPa":"700 hPa ascent", "Viento medio 850–300":"850–300 mean wind", "Flujo de humedad 850":"850 moisture flux", "Capa límite":"Boundary layer", "θe (K). Si disminuye con la altura entre 1000 y 700 hPa la columna es potencialmente inestable: al ascender en bloque se desestabiliza.":"θe (K). If it decreases with height between 1000 and 700 hPa, the column is potentially unstable: lifting it as a whole destabilises it.", "Si falta un componente, el valor se calcula con los demás.":"If a component is missing, the value is calculated from the others.", "Campo no disponible: se rellenará con el próximo run del modelo.":"Field unavailable: it will be filled with the next model run.", "Sin malla del modelo para ese día y antelación.":"No model grid for this day and lead time."
+ "Perfil no disponible en este ciclo.":"Profile unavailable in this cycle.", "temperatura":"temperature", "punto de rocío":"dew point", "bulbo húmedo":"wet bulb", "Gradiente 700–500":"700–500 lapse rate", "Agua precipitable":"Precipitable water", "Isoterma 0 °C":"0 °C isotherm", "Cizalladura superficie–500 hPa":"Surface–500 hPa shear", "Cizalladura superficie–925 hPa":"Surface–925 hPa shear", "Velocidad vertical 700 hPa":"700 hPa vertical velocity", "Viento medio 850–300":"850–300 mean wind", "Flujo de humedad 850":"850 moisture flux", "Capa límite":"Boundary layer", "θe (K). Si disminuye con la altura entre 1000 y 700 hPa la columna es potencialmente inestable: al ascender en bloque se desestabiliza.":"θe (K). If it decreases with height between 1000 and 700 hPa, the column is potentially unstable: lifting it as a whole destabilises it.", "Si falta un componente o la convención vertical, el índice queda sin datos.":"Missing components or an unverified vertical convention leave the index unavailable.", "Campo no disponible en este ciclo.":"Field unavailable in this cycle.", "Sin malla del modelo para ese día y antelación.":"No model grid for this day and lead time."
  });
  Object.assign(dict, {
  "inestabilidad":"instability", "humedad":"moisture", "ascenso":"ascent", "organizacion":"organisation", "alimentacion":"supply", "lentitud":"slowness", "antecedente":"antecedent rainfall", "intensidad":"intensity", "prevista 3h":"forecast 3 h", "penalización":"penalty", "ahora":"now",
- "18/10: escorrentía con ~20–30 mm/h y >60 mm de antecedente · 19/10 10:16: agua en la puerta con 20,8 mm/h y 145 mm de antecedente (IRH ≈ 0,66 sin lluvia prevista; ≈ 0,83 sin el componente previsto). Si falta un componente, el valor se calcula con los demás.":"18 October: runoff at ~20–30 mm/h with >60 mm antecedent rainfall · 19 October 10:16: water at the door at 20.8 mm/h with 145 mm antecedent rainfall (IRH ≈ 0.66 without forecast rain; ≈ 0.83 without the forecast component). If a component is missing, the value is calculated from the others."
+ "18/10: escorrentía con ~20–30 mm/h y >60 mm de antecedente · 19/10 10:16: agua en la puerta con 20,8 mm/h y 145 mm de antecedente (IRH ≈ 0,66 sin lluvia prevista; ≈ 0,83 sin el componente previsto). Si falta un componente o la convención vertical, el índice queda sin datos.":"18 October: runoff at ~20–30 mm/h with >60 mm antecedent rainfall · 19 October 10:16: water at the door at 20.8 mm/h with 145 mm antecedent rainfall (IRH ≈ 0.66 without forecast rain; ≈ 0.83 without the forecast component). Missing components or an unverified vertical convention leave the index unavailable."
  });
  const dynamic = [
    [/^No se pudo pedir el ciclo: (.+)$/, (_, detail) => `Could not request the cycle: ${detail}`],
@@ -674,7 +674,7 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
  Object.assign(dict, {
  "No se pudo lanzar: no has dado permiso a esta página para usar el conector":"Could not start: you have not allowed this page to use the connector", "No se pudo lanzar: el conector de Claude Code no está disponible en esta vista":"Could not start: the Claude Code connector is unavailable in this view", "No se pudo lanzar: demasiadas peticiones; espera unos minutos":"Could not start: too many requests; wait a few minutes", "No se pudo lanzar: la tarea programada rechazó la petición":"Could not start: the scheduled task rejected the request"
  });
- const originals=new WeakMap(), attributeOriginals=new WeakMap(), selector=document.getElementById('portinatx-language'), note=document.getElementById('portinatx-language-note');
+ const originals=new WeakMap(), rendered=new WeakMap(), attributeOriginals=new WeakMap(), selector=document.getElementById('portinatx-language'), note=document.getElementById('portinatx-language-note');
  let language='es', scheduled=false;
  window.portinatxLanguage=()=>language;
  try { language=localStorage.getItem('meteo-language')==='en'?'en':'es'; } catch (_) {}
@@ -684,14 +684,15 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
    let node;
    while ((node=walker.nextNode())) {
      const parent=node.parentElement;
-     if(!parent||parent.closest('script,style,#portinatx-language,#portinatx-language-note,#off-list .warn')) continue;
+     if(!parent||parent.closest('script,style,#portinatx-language,#portinatx-language-note,#off-list .warn,#chat-live,[data-source-text]')) continue;
      let source=originals.get(node);
-     if(source===undefined){source=node.nodeValue;originals.set(node,source);}
+     if(source===undefined || node.nodeValue!==(rendered.has(node)?rendered.get(node):source)){source=node.nodeValue;originals.set(node,source);}
      const key=source.trim();
      let translation=Object.prototype.hasOwnProperty.call(dict,key)?dict[key]:null;
      if(translation===null) for(const [pattern,format] of dynamic) { const match=key.match(pattern); if(match){translation=format(...match);break;} }
      if(translation!==null){
        const result=language==='en'?source.replace(key,translation):source;
+       rendered.set(node,result);
        if(node.nodeValue!==result) node.nodeValue=result;
        if(language==='en') parent.setAttribute('lang','en'); else parent.removeAttribute('lang');
      }
@@ -711,7 +712,7 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
    note.hidden=language!=='en';
  }
  selector.addEventListener('change',()=>{language=selector.value;try{localStorage.setItem('meteo-language',language);}catch(_){}renderLanguage();if(typeof window.renderAll==='function')window.renderAll();});
- new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(renderLanguage);}}).observe(document.body,{childList:true,subtree:true});
+ new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(renderLanguage);}}).observe(document.body,{childList:true,subtree:true,characterData:true});
  renderLanguage();
 })();
 </script>
@@ -1059,7 +1060,7 @@ function renderCharts(){
     const tt = winds.flatMap(([,v])=>v.rows.map(r=>+new Date(r.t)));
     const xmin=Math.max(Math.min(...tt), Date.now()-24*3600e3), xmax=Math.max(...tt);
     const ser=[], lg=[];
-    winds.forEach(([n,v],i)=>{ const col=PAL[(i+3)%PAL.length]; ser.push({pts:v.rows.map(r=>[+new Date(r.t), (r.vv_mx??r.vv_md)!=null?(r.vv_mx??r.vv_md)*3.6:null]), color:col, end:true, w:1.4}); const L=v.rows[v.rows.length-1]||{}; lg.push([col, `${n} ${n0((L.vv_mx??L.vv_md)*3.6)} km/h de ${n0(L.dv_md)}°`]); });
+    winds.forEach(([n,v],i)=>{ const col=PAL[(i+3)%PAL.length]; ser.push({pts:v.rows.map(r=>[+new Date(r.t), (r.vv_mx??r.vv_md)!=null?(r.vv_mx??r.vv_md)*3.6:null]), color:col, end:true, w:1.4}); const L=v.rows[v.rows.length-1]||{}; lg.push([col, `${n} ${n0((L.vv_mx??L.vv_md)*3.6)} km/h ${uiText('de','from')} ${n0(L.dv_md)}°`]); });
     $("ch-wind").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>Math.round(v)}) + legend(lg);
   } else $("ch-wind").innerHTML = '<p class="empty">PORTUS sin datos de viento.</p>';
   // avisos (Gantt)
@@ -1080,7 +1081,7 @@ function renderCharts(){
     const xmin=Date.now()-3*3600e3, xmax=Date.now()+42*3600e3, ser=[], lg=[];
     const lab = m => m.includes("arome")?"AROME HD":m.includes("ecmwf")?"ECMWF IFS":m.includes("icon")?"ICON-EU":m;
     ms.forEach(([m,v],i)=>{ const col=PAL[i]; const T=v.time.map(t=>+new Date(t+"Z")); ser.push({pts:T.map((t,k)=>[t,v.pr[k]]), color:col, end:false}); ser.push({pts:T.map((t,k)=>[t,v.pr_neigh_max?.[k]]), color:col, w:.8, dash:"2 3"});
-      const fut=T.map((t,k)=>t>=Date.now()?v.pr[k]||0:0); lg.push([col, `${lab(m)} · 12 h: ${n0(fut.slice(0).reduce((a,b,k)=>a+(T[k]>=Date.now()&&T[k]<Date.now()+12*3600e3?b:0),0))} mm · máx ${n1(Math.max(...fut))} mm/h`]); });
+      const fut=T.map((t,k)=>t>=Date.now()?v.pr[k]||0:0); lg.push([col, `${lab(m)} · 12 h: ${n0(fut.slice(0).reduce((a,b,k)=>a+(T[k]>=Date.now()&&T[k]<Date.now()+12*3600e3?b:0),0))} mm · ${uiText('máx','max')} ${n1(Math.max(...fut))} mm/h`]); });
     $("ch-models").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>v.toFixed(0)}) + legend(lg);
   }
   const e = se.ensemble;
@@ -1089,7 +1090,7 @@ function renderCharts(){
     const xmin=Date.now()-3*3600e3, xmax=Math.min(T[T.length-1], Date.now()+66*3600e3);
     $("ch-ens").innerHTML = lineChart({series:[{pts:T.map((t,k)=>[t,e.p50[k]]),color:"var(--ink)",w:1.6},{pts:T.map((t,k)=>[t,e.max[k]]),color:"var(--x)",w:.9,dash:"3 3"}], bands:[{pts:T.map((t,k)=>[t,e.p10[k],e.p90[k]]),color:"#1f77b4"}], xmin, xmax, yfmt:v=>v.toFixed(1)})
       + legend([["#1f77b4","p10–p90"],["var(--ink)","mediana"],["var(--x)","máximo de los miembros",1]]);
-    $("ens-sub").textContent = `mm/h · ${e.n} miembros · total 72 h: p10 ${n0(e.total72.p10)} · mediana ${n0(e.total72.p50)} · p90 ${n0(e.total72.p90)} · máx ${n0(e.total72.max)} mm (0,25°: cota inferior en convección)`;
+    $("ens-sub").textContent = uiText(`mm/h · ${e.n} miembros · total 72 h: p10 ${n0(e.total72.p10)} · mediana ${n0(e.total72.p50)} · p90 ${n0(e.total72.p90)} · máx ${n0(e.total72.max)} mm (0,25°: cota inferior en convección)`, `mm/h · ${e.n} members · 72 h total: p10 ${n0(e.total72.p10)} · median ${n0(e.total72.p50)} · p90 ${n0(e.total72.p90)} · max ${n0(e.total72.max)} mm (0.25°: lower bound in convection)`);
   }
   // trayectorias
   const tr = Object.entries(se.tracks||{});
@@ -1107,7 +1108,7 @@ function renderCharts(){
         s+=`<polyline points="${pts.map(x=>`${X(+new Date(x.init))},${Y(x.max_dist_km)}`).join(" ")}" fill="none" stroke="${col}" stroke-width="1.6"/>`;
         s+=pts.map(x=>`<circle cx="${X(+new Date(x.init))}" cy="${Y(x.max_dist_km)}" r="3.5" fill="${x.centered?col:"var(--panel)"}" stroke="${col}"><title>${esc(m)} ${fmtDT(x.init)}: ${n0(x.max_dist_km)} km, ${n0(x.max12)} mm/12h</title></circle>`).join(""); });
       const step=6*3600e3; for(let t=Math.ceil(xmin/step)*step;t<=xmax;t+=step) s+=`<text x="${X(t)}" y="${H-5}" text-anchor="middle">${fmtT(new Date(t).toISOString(),{day:"2-digit",hour:"2-digit"})}</text>`;
-      $("ch-tracks").innerHTML = s+"</svg>"+legend(tr.map(([m,r])=>{const L=r[r.length-1]||{};return [m.includes("arome")?"#b23ad8":"#2a9d8f", `${m.includes("arome")?"AROME HD":"ICON-EU"}: ${n0(L.max_dist_km)} km, núcleo ${n0(L.max12)} mm/12h (run ${fmtDT(L.init)})`];}));
+      $("ch-tracks").innerHTML = s+"</svg>"+legend(tr.map(([m,r])=>{const L=r[r.length-1]||{};return [m.includes("arome")?"#b23ad8":"#2a9d8f", `${m.includes("arome")?"AROME HD":"ICON-EU"}: ${n0(L.max_dist_km)} km, ${uiText('núcleo','core')} ${n0(L.max12)} mm/12h (run ${fmtDT(L.init)})`];}));
     }
   }
   const mr = se.marine;
@@ -1115,7 +1116,7 @@ function renderCharts(){
     const T=mr.time.map(t=>+new Date(t+"Z")), xmin=Date.now()-3*3600e3, xmax=Date.now()+60*3600e3;
     const buoyLast = buoys.map(([n,v])=>[n,(v.rows[v.rows.length-1]||{}).hm0]);
     $("ch-marine").innerHTML = lineChart({series:[{pts:T.map((t,k)=>[t,mr.hs[k]]),color:"#1f77b4",w:1.8}], xmin, xmax, yfmt:v=>v.toFixed(1), ymax:Math.max(3.5,...buoyLast.map(b=>b[1]||0), ...mr.hs.filter(x=>x!=null))})
-      + `<div class="sub">Boyas ahora: ${buoyLast.map(([n,v])=>`${esc(n.replace("Boya ",""))} ${n1(v)} m`).join(" · ")}</div>`;
+      + `<div class="sub">${uiText("Boyas ahora:","Buoys now:")} ${buoyLast.map(([n,v])=>`${esc(n.replace("Boya ",""))} ${n1(v)} m`).join(" · ")}</div>`;
   }
 }
 
@@ -1128,7 +1129,7 @@ function renderGauges(){
     if(h.length>=2){ const a=h[h.length-2], b=h[h.length-1], dt=(new Date(b.t)-new Date(a.t))/3600e3; if(dt>=8/60&&dt<=1.5&&new Date(a.t).toDateString()===new Date(b.t).toDateString()) rate=Math.max(0,(b.total-a.total)/dt); }
     const tot=h.map(x=>x.total), mx=Math.max(1,...tot);
     const spark = tot.length>1 ? `<svg viewBox="0 0 80 18" width="80" height="18" aria-hidden="true"><polyline points="${tot.map((v,k)=>`${k/(tot.length-1)*80},${17-v/mx*16}`).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="1.4"/></svg>` : "";
-    return `<tr><td>${g.near?"<b>":""}${esc(g.nombre)}${g.near?"</b>":""}</td><td class="num">${n0(g.dist_km)}</td><td class="num">${n1(g.total)}</td><td class="num">${rate==null?"—":n1(rate)}</td><td>${spark}</td><td class="num ${g.edad_min>45?"stale":""}">${n0(g.edad_min)} min</td></tr>`;
+    return `<tr><td>${g.near?"<b>":""}<span data-source-text lang="und">${esc(g.nombre)}</span>${g.near?"</b>":""}</td><td class="num">${n0(g.dist_km)}</td><td class="num">${n1(g.total)}</td><td class="num">${rate==null?"—":n1(rate)}</td><td>${spark}</td><td class="num ${g.edad_min>45?"stale":""}">${n0(g.edad_min)} min</td></tr>`;
   }).join("") || '<tr><td colspan="6" class="empty">Meteoclimatic sin datos.</td></tr>';
   const b=c?.governance?.bias;
   $("bias").innerHTML = b ? `<p style="font-size:.8rem;margin:8px 0 0"><b>Sesgo radar–pluviómetro</b> (n=${b.n}): ${Object.entries(b).filter(([k])=>k.startsWith("ratio_")).map(([k,v])=>`${k.replace("ratio_","").replace("_","–")} ${v}×`).join(" · ")||"sin pares"}${b.flag?` · <b style="color:var(--x)">${esc(b.flag)}</b>`:""}. El motor nunca cambia de relación Z–R por su cuenta.</p>` : "";
@@ -1156,13 +1157,13 @@ function renderGov(){
   $("claim-filters").innerHTML=states.map(s=>`<button class="btn" data-f="${s}" aria-pressed="${S.claimFilter===s}">${s==="ALL"?"Todas":s} <span class="num">${s==="ALL"?g.claims.length:(counts[s]||0)}</span></button>`).join("");
   $("claim-filters").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.claimFilter=b.dataset.f; renderGov();});
   const cl=g.claims.filter(x=>S.claimFilter==="ALL"||x.epistemic===S.claimFilter);
-  $("t-claims").querySelector("tbody").innerHTML=cl.map(x=>`<tr><td><span class="ep ep-${x.epistemic}">${x.epistemic}</span>${x.label?`<div class="ev">${esc(x.label)}</div>`:""}</td><td>${esc(x.text)}</td><td class="mono">${esc(x.source_root)}</td><td>${esc(x.scope)}</td><td class="mono">${fmtDT(x.expires)}</td></tr>`).join("");
+  $("t-claims").querySelector("tbody").innerHTML=cl.map(x=>`<tr><td><span class="ep ep-${x.epistemic}">${x.epistemic}</span>${x.label?`<div class="ev" data-source-text lang="und">${esc(x.label)}</div>`:""}</td><td data-source-text lang="und">${esc(x.text)}</td><td class="mono" data-source-text lang="und">${esc(x.source_root)}</td><td data-source-text lang="und">${esc(x.scope)}</td><td class="mono">${fmtDT(x.expires)}</td></tr>`).join("");
   const pr=(g.predictions||[]).slice().reverse();
   $("t-preds").querySelector("tbody").innerHTML=pr.map(p=>{const o=p.outcome; const st=o?o.status:"PENDING"; const lv={HIT:"quiet",MISS:"alarm",UNVERIFIABLE:"unknown",WITHDRAWN:"unknown",PENDING:"watch"}[st];
-    return `<tr><td class="mono">${esc(p.id)}</td><td>${esc(p.claim)}${o?.original_outcome?`<div class="ev">revisada; original ${esc(o.original_outcome.status)}</div>`:""}</td><td class="mono">${fmtT(p.made)}–${fmtT(p.window_end)}</td><td>${pill(lv,st)}${o?.delta_mm!=null?` <span class="num">${n1(o.delta_mm)} mm</span>`:""}</td></tr>`;}).join("") || '<tr><td colspan="4" class="empty">Sin predicciones.</td></tr>';
-  const an=(g.anomalies||[]).map(a=>`<li class="cond ${a.reviewed?"pe":""}"><code>${esc(a.id)}</code> ${a.reviewed?"revisada":"<b>sin revisar</b>"} · ${esc(a.text)}${a.review?`<div class="ev">${esc(a.review)}</div>`:""}</li>`);
-  const ds=(g.dissent||[]).map(d=>`<li class="cond ${d.status==="OPEN"?"":"pe"}"><code>${esc(d.id)}</code> disenso ${esc(d.status)} · ${esc(d.text)}${d.response?`<div class="ev">${esc(d.response)}</div>`:""}</li>`);
-  const ov=Object.entries(g.overrides||{}).map(([k,v])=>`<li class="cond pe"><code>${esc(k)}</code> levantado por el propietario: ${esc(v.motivo)}</li>`);
+    return `<tr><td class="mono">${esc(p.id)}</td><td><span data-source-text lang="und">${esc(p.claim)}</span>${o?.original_outcome?`<div class="ev">${uiText('revisada; original','reviewed; original')} ${esc(o.original_outcome.status)}</div>`:""}</td><td class="mono">${fmtT(p.made)}–${fmtT(p.window_end)}</td><td>${pill(lv,st)}${o?.delta_mm!=null?` <span class="num">${n1(o.delta_mm)} mm</span>`:""}</td></tr>`;}).join("") || '<tr><td colspan="4" class="empty">Sin predicciones.</td></tr>';
+  const an=(g.anomalies||[]).map(a=>`<li class="cond ${a.reviewed?"pe":""}"><code>${esc(a.id)}</code> ${a.reviewed?uiText("revisada","reviewed"):uiText("<b>sin revisar</b>","<b>not reviewed</b>")} · <span data-source-text lang="und">${esc(a.text)}</span>${a.review?`<div class="ev" data-source-text lang="und">${esc(a.review)}</div>`:""}</li>`);
+  const ds=(g.dissent||[]).map(d=>`<li class="cond ${d.status==="OPEN"?"":"pe"}"><code>${esc(d.id)}</code> ${uiText('disenso','disagreement')} ${esc(d.status)} · <span data-source-text lang="und">${esc(d.text)}</span>${d.response?`<div class="ev" data-source-text lang="und">${esc(d.response)}</div>`:""}</li>`);
+  const ov=Object.entries(g.overrides||{}).map(([k,v])=>`<li class="cond pe"><code>${esc(k)}</code> ${uiText('levantado por el propietario:','lifted by the owner:')} <span data-source-text lang="und">${esc(v.motivo)}</span></li>`);
   $("anom").innerHTML=[...an,...ds,...ov].join("")||'<li class="empty">Ninguna.</li>';
 }
 
@@ -1170,12 +1171,12 @@ function renderGov(){
 function renderChannels(){
   const c=S.core; if(!c) return;
   $("channels").innerHTML=c.channels.map(ch=>{const lv=ch.available?LV[ch.level]:"unknown";
-    return `<details><summary>${pill(lv, ch.available?LV_ES[lv]:"Sin dato")} <b>${esc(ch.name)}</b> <span class="ev">${esc(ch.kind)} · confianza ${esc(ch.confidence)}${ch.local?" · señal local":""} · ${ch.age_min!=null?`dato de hace ${esc(ch.age_min)} min`:"edad del dato desconocida"}</span></summary><ul class="plain" style="margin:6px 0 4px 12px">${ch.evidence.map(e=>`<li style="font-size:.8rem">${esc(e)}</li>`).join("")}</ul></details>`;}).join("");
+    return `<details><summary>${pill(lv, ch.available?LV_ES[lv]:"Sin dato")} <b data-source-text lang="und">${esc(ch.name)}</b> <span class="ev"><span data-source-text lang="und">${esc(ch.kind)}</span> · ${uiText('confianza','confidence')} <span data-source-text lang="und">${esc(ch.confidence)}</span>${ch.local?uiText(' · señal local',' · local signal'):''} · ${ch.age_min!=null?uiText(`dato de hace ${esc(ch.age_min)} min`,`data from ${esc(ch.age_min)} min ago`):uiText('edad del dato desconocida','data age unknown')}</span></summary><ul class="plain" style="margin:6px 0 4px 12px">${ch.evidence.map(e=>`<li data-source-text lang="und" style="font-size:.8rem">${esc(e)}</li>`).join("")}</ul></details>`;}).join("");
 }
 function renderSources(){
   const c=S.core; if(!c) return;
   const lv=s=>s==="ok"?"quiet":s==="error"?"alarm":"unknown";
-  $("t-src").querySelector("tbody").innerHTML=c.sources.map(s=>`<tr><td class="mono">${esc(s.name)}</td><td>${pill(lv(s.status),s.status)}</td><td class="mono">${fmtDT(s.data_time)}</td><td>${esc(s.detail)}</td></tr>`).join("");
+  $("t-src").querySelector("tbody").innerHTML=c.sources.map(s=>`<tr><td class="mono" data-source-text lang="und">${esc(s.name)}</td><td>${pill(lv(s.status),s.status)}</td><td class="mono">${fmtDT(s.data_time)}</td><td data-source-text lang="und">${esc(s.detail)}</td></tr>`).join("");
 }
 
 /* ── pestañas ── */
@@ -1198,7 +1199,7 @@ const tOf = t => +new Date(/Z|[+-]\d\d:?\d\d$/.test(t) ? t : t+"Z");
 const IDX = [
   ["cape","CAPE","J/kg",0],["cin","CIN","J/kg",0],["li","Lifted Index","°C",1],["ki","K-Index","",1],["tt","Total Totals","",1],
   ["lr75","Gradiente 700–500","°C/km",1],["thetae850","θe 850 hPa","K",1],["tcwv","Agua precipitable","mm",1],["fzl","Isoterma 0 °C","m",0],
-  ["shr06","Cizalladura 0–6 km","m/s",1],["shr01","Cizalladura 0–1 km","m/s",1],["w700","Ascenso 700 hPa","m/s",2],
+  ["shr06","Cizalladura superficie–500 hPa","m/s",1],["shr01","Cizalladura superficie–925 hPa","m/s",1],["w700","Velocidad vertical 700 hPa","m/s",2],
   ["mw","Viento medio 850–300","m/s",1],["flux850","Flujo de humedad 850","g/kg·m/s",0],["blh","Capa límite","m",0]];
 function hourIndex(){ const p=S.atmos?.profile; if(!p) return 0; if(S.hour==null){ const now=Date.now(); let k=0; p.time.forEach((t,i)=>{ if(tOf(t)<=now) k=i; }); S.hour=k; } return Math.min(S.hour, p.time.length-1); }
 function spark(vals, i, w=180, h=34){
@@ -1255,7 +1256,7 @@ function renderAtmos(){
   if (r) cards.push(`<article class="card"><div style="display:flex;justify-content:space-between;gap:8px"><h2>IRH · respuesta hidrológica de la cala</h2>${ST("irh")}</div>
       <div style="font-family:var(--f-mono);font-size:2rem;margin:4px 0">${r.value==null?"—":r.value.toFixed(2)}<small style="font-size:.8rem;color:var(--muted)"> / 1 · ahora</small></div>
       <div class="comp">${Object.keys(r.weights).map(k=>{ const v=r.components[k], raw={antecedente:r.raw.antecedente_mm,intensidad:r.raw.intensidad_mmh,prevista_3h:r.raw.prevista_3h_mm}[k]; return `<span>${esc(k.replace("_"," "))} <span class="ev">(${raw==null?"sin dato":n1(raw)} · ${r.ranges[k][0]}→${r.ranges[k][1]})</span></span><span class="bar"><i style="width:${(v||0)*100}%;background:var(--diag)"></i></span><span class="mono">${v==null?"—":v.toFixed(2)} × ${r.weights[k]}</span>`; }).join("")}</div>
-      <p class="nt" style="font-size:.75rem;color:var(--muted)">${esc(r.reference)}. Si falta un componente, el valor se calcula con los demás.</p></article>`);
+      <p class="nt" style="font-size:.75rem;color:var(--muted)">${esc(r.reference)}. Si falta un componente o la convención vertical, el índice queda sin datos.</p></article>`);
   $("composites").innerHTML = cards.join("");
 }
 $("hour").addEventListener("input", e => { S.hour=+e.target.value; renderAtmos(); if(S.tab==="atmosfera") renderPhysics(); if(S.tab==="laboratorio") renderLab(); });
@@ -1275,7 +1276,7 @@ function renderSurface(){
     $("ch-sfc-w").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>v.toFixed(0), nowLine:false})+legend(lg)+`<div class="sub">Puntos = rachas.</div>`;
   } else ["ch-sfc-t","ch-sfc-p","ch-sfc-w"].forEach(id=>$(id).innerHTML='<p class="empty">Sin METAR.</p>');
   const G=(A?.gauges_now||[]).slice().sort((a,b)=>a.dist_km-b.dist_km);
-  $("t-gsfc").querySelector("tbody").innerHTML = G.map(g=>`<tr><td>${g.near?"<b>":""}${esc(g.nombre)}${g.near?"</b>":""}</td><td class="num">${n0(g.dist_km)}</td><td class="num">${n1(g.total)}</td><td class="num">${n1(g.ante_mm)}</td><td class="num">${g.rate==null?"—":n1(g.rate)}</td><td class="num">${g.radar_dbz==null?"—":n0(g.radar_dbz)}</td><td>${g.wet?pill("alert","saturado"):pill("quiet","normal")}</td></tr>`).join("") || '<tr><td colspan="7" class="empty">Sin pluviómetros.</td></tr>';
+  $("t-gsfc").querySelector("tbody").innerHTML = G.map(g=>`<tr><td>${g.near?"<b>":""}<span data-source-text lang="und">${esc(g.nombre)}</span>${g.near?"</b>":""}</td><td class="num">${n0(g.dist_km)}</td><td class="num">${n1(g.total)}</td><td class="num">${n1(g.ante_mm)}</td><td class="num">${g.rate==null?"—":n1(g.rate)}</td><td class="num">${g.radar_dbz==null?"—":n0(g.radar_dbz)}</td><td>${g.wet?pill("alert","saturado"):pill("quiet","normal")}</td></tr>`).join("") || '<tr><td colspan="7" class="empty">Sin pluviómetros.</td></tr>';
   const r=A?.irh;
   $("irh-card").innerHTML = r ? `<h2>Cómo leer la respuesta hidrológica</h2><p style="font-size:.85rem;margin:6px 0 0;max-width:80ch">El IRH combina el antecedente de lluvia (ayer + hoy en la vecina más mojada), la intensidad medida ahora y la lluvia prevista a 3 h en la vecindad. Sus pesos salen de dos observaciones del propietario en la cala, así que es <b>diagnóstico</b>, no un índice validado. Valor actual: <b class="mono">${r.value==null?"—":r.value.toFixed(2)}</b>. En la pestaña Atmósfera se ven sus componentes.</p>` : "";
 }
@@ -1300,7 +1301,7 @@ function renderEnsembleX(){
     cnt.forEach((c,k)=>{ const hh=c/cm*(H2-P2.t-P2.b); h+=`<rect x="${P2.l+k*bwpx+1}" y="${H2-P2.b-hh}" width="${bwpx-2}" height="${hh}" fill="var(--std)"/><text x="${P2.l+k*bwpx+bwpx/2}" y="${H2-8}" text-anchor="middle">${Math.round(k*bw)}</text>`; if(c) h+=`<text x="${P2.l+k*bwpx+bwpx/2}" y="${H2-P2.b-hh-3}" text-anchor="middle">${c}</text>`; });
     $("ch-hist24").innerHTML = h+"</svg>";
     const fmtp=o=>o?Object.entries(o).map(([k,v])=>`≥${k} mm ${(v*100).toFixed(0)} %`).join(" · "):"—";
-    $("hist-sub").innerHTML = `mm en las próximas 24 h · ${e.n} miembros · <b>en el punto</b>: ${fmtp(e.p24_point)} · <b>algún punto de la vecindad</b>: ${fmtp(e.p24_neigh)}`;
+    $("hist-sub").innerHTML = uiText(`mm en las próximas 24 h · ${e.n} miembros · <b>en el punto</b>: ${fmtp(e.p24_point)} · <b>algún punto de la vecindad</b>: ${fmtp(e.p24_neigh)}`, `mm in the next 24 h · ${e.n} members · <b>at the point</b>: ${fmtp(e.p24_point)} · <b>somewhere in the neighbourhood</b>: ${fmtp(e.p24_neigh)}`);
   }
 }
 
@@ -1310,22 +1311,37 @@ const zr = (dbz,a,b) => dbz==null||dbz<15 ? 0 : Math.pow(Math.pow(10,Math.min(db
 const QPE_SC = [[0.5,"#3a7fd6"],[2,"#2350b8"],[5,"#f0d723"],[10,"#f3a21c"],[20,"#e8541b"],[40,"#c4161c"],[80,"#d23ad2"]];
 const qpeColor = v => { let c=null; for(const [t,col] of QPE_SC) if(v>=t) c=col; return c; };
 $("qpe-legend").innerHTML = QPE_SC.map(([t,c])=>`<i style="background:${c}"></i><span>&nbsp;${t}&nbsp;</span>`).join("")+"<span>mm/h</span>";
-function compositeJS(name, idx, w, spec){
-  let val=0, ws=0; const comps={};
-  for (const [k,[v,lo,hi]] of Object.entries(spec.ranges)) { const x=idx[v]; const nn = x==null?null:Math.max(0,Math.min(1,(x-lo)/(hi-lo))); comps[k]=nn; if(nn!=null){ val+=w[k]*nn; ws+=w[k]; } }
-  if(!ws) return {value:null, comps};
-  val/=ws; let pen=null;
-  if (spec.penalty){ const [v,lo,hi,f]=spec.penalty, x=idx[v]; if(x!=null){ pen=Math.max(0,Math.min(1,(x-lo)/(hi-lo))); val*=(1-f*pen); } }
-  return {value:val, comps, pen};
+function compositeJS(name, idx, w, spec, upwardVerified=false){
+  let val=0, ws=0, missing=false; const comps={};
+  for (const [k,[v,lo,hi]] of Object.entries(spec.ranges)) {
+    const x=idx[v], weight=w[k];
+    const nn=typeof x==='number'&&Number.isFinite(x)?Math.max(0,Math.min(1,(x-lo)/(hi-lo))):null;
+    comps[k]=nn;
+    if(nn===null||typeof weight!=='number'||!Number.isFinite(weight)||weight<0) missing=true;
+    else {val+=weight*nn;ws+=weight;}
+  }
+  let pen=null;
+  if(spec.penalty){const [v,lo,hi]=spec.penalty, x=idx[v];if(typeof x==='number'&&Number.isFinite(x))pen=Math.max(0,Math.min(1,(x-lo)/(hi-lo)));else missing=true;}
+  if(missing||!ws||(name==='icc'&&!upwardVerified))return {value:null,comps,pen};
+  val/=ws;if(spec.penalty)val*=1-spec.penalty[3]*pen;
+  return {value:val,comps,pen};
 }
-function fromComps(comps, w, pen, spec){ let v=0, ws=0; for(const k in comps){ if(comps[k]!=null){ v+=w[k]*comps[k]; ws+=w[k]; } } if(!ws) return null; v/=ws; if(spec.penalty&&pen!=null) v*=(1-spec.penalty[3]*pen); return v; }
+function fromComps(comps,w,pen,spec){
+  let v=0,ws=0;
+  for(const k of Object.keys(spec.weights)){
+    if(typeof comps[k]!=='number'||!Number.isFinite(comps[k])||typeof w[k]!=='number'||!Number.isFinite(w[k])||w[k]<0)return null;
+    v+=w[k]*comps[k];ws+=w[k];
+  }
+  if(!ws||(spec.penalty&&!Number.isFinite(pen)))return null;
+  v/=ws;if(spec.penalty)v*=1-spec.penalty[3]*pen;return v;
+}
 function renderLab(){
   const A=S.atmos, R=S.radar; if(!A) return;
   // Z–R
   $("zr-a").value=LAB.a; $("zr-b").value=LAB.b; $("zr-a-o").textContent=LAB.a; $("zr-b-o").textContent=(+LAB.b).toFixed(2);
   drawQpe();
   const G=(A.gauges_now||[]).filter(g=>g.near||g.radar_dbz);
-  $("t-zr").querySelector("tbody").innerHTML = G.map(g=>{ const q=zr(g.radar_dbz,LAB.a,LAB.b); return `<tr><td>${esc(g.nombre)}</td><td class="num">${g.radar_dbz==null?"—":n0(g.radar_dbz)}</td><td class="num">${n1(q)}</td><td class="num">${g.rate==null?"—":n1(g.rate)}</td><td class="num">${g.rate!=null&&q>=1&&g.rate>=1?(g.rate/q).toFixed(2)+"×":"—"}</td></tr>`; }).join("") || '<tr><td colspan="5" class="empty">Sin pares radar–pluviómetro en este ciclo.</td></tr>';
+  $("t-zr").querySelector("tbody").innerHTML = G.map(g=>{ const q=zr(g.radar_dbz,LAB.a,LAB.b); return `<tr><td><span data-source-text lang="und">${esc(g.nombre)}</span></td><td class="num">${g.radar_dbz==null?"—":n0(g.radar_dbz)}</td><td class="num">${n1(q)}</td><td class="num">${g.rate==null?"—":n1(g.rate)}</td><td class="num">${g.rate!=null&&q>=1&&g.rate>=1?(g.rate/q).toFixed(2)+"×":"—"}</td></tr>`; }).join("") || '<tr><td colspan="5" class="empty">Sin pares radar–pluviómetro en este ciclo.</td></tr>';
   // umbrales
   const T=A.thresholds; if(!LAB.thr) LAB.thr={dry:[...T.rain_1h], wet:[...T.rain_1h_wet], sat:T.sat_mm};
   const rows=[["Seco · vigilancia","dry",0],["Seco · alerta","dry",1],["Seco · alarma","dry",2],["Saturado · vigilancia","wet",0],["Saturado · alerta","wet",1],["Saturado · alarma","wet",2]];
@@ -1338,28 +1354,28 @@ function renderLab(){
   const lvl=(x,t)=>x==null?0:x>=t[2]?3:x>=t[1]?2:x>=t[0]?1:0;
   let changed=0;
   $("t-thr").querySelector("tbody").innerHTML=(A.gauges_now||[]).filter(g=>g.near).map(g=>{ const eng=lvl(g.rate, g.wet?T.rain_1h_wet:T.rain_1h); const wet=(g.ante_mm||0)>=LAB.thr.sat; const lab=lvl(g.rate, wet?LAB.thr.wet:LAB.thr.dry); if(lab!==eng) changed++;
-    return `<tr><td>${esc(g.nombre)}</td><td class="num">${g.rate==null?"—":n1(g.rate)}</td><td class="num">${n1(g.total)}</td><td>${pill(LV[eng])}</td><td>${pill(LV[lab])}${lab!==eng?' <span class="diff">cambia</span>':""}</td></tr>`; }).join("") || '<tr><td colspan="5" class="empty">Sin pluviómetros vecinos.</td></tr>';
+    return `<tr><td><span data-source-text lang="und">${esc(g.nombre)}</span></td><td class="num">${g.rate==null?"—":n1(g.rate)}</td><td class="num">${n1(g.total)}</td><td>${pill(LV[eng])}</td><td>${pill(LV[lab])}${lab!==eng?' <span class="diff">cambia</span>':""}</td></tr>`; }).join("") || '<tr><td colspan="5" class="empty">Sin pluviómetros vecinos.</td></tr>';
   $("thr-sum").innerHTML = uiText(`Solo intensidad entre lecturas; el motor también puntúa el acumulado diario. ${changed?`<span class="diff">${changed} estación(es) cambian de nivel con tus umbrales.</span>`:"Con estos umbrales ninguna estación vecina cambia de nivel."}`,`Intensity between readings only; the engine also scores daily accumulation. ${changed?`<span class="diff">${changed} station(s) change level with your thresholds.</span>`:"With these thresholds no nearby station changes level."}`);
   // compuestos
   const p=A.profile, spec=A.composites_spec[LAB.ci]; if(!p) return;
   if(!LAB.w || LAB.w._ci!==LAB.ci){ LAB.w={...spec.weights, _ci:LAB.ci}; $("ci-ctl").dataset.ready=""; }
   const keys=Object.keys(spec.weights);
   if(!$("ci-ctl").dataset.ready){
-    $("ci-ctl").innerHTML = keys.map(k=>`<label for="w-${k}">peso · ${esc(k)}</label><input type="range" id="w-${k}" min="0" max="1" step="0.05" data-k="${k}"><output id="w-${k}-o"></output>`).join("");
+    $("ci-ctl").innerHTML = keys.map(k=>`<label for="w-${k}">${uiText('peso','weight')} · ${esc(k)}</label><input type="range" id="w-${k}" min="0" max="1" step="0.05" data-k="${k}"><output id="w-${k}-o"></output>`).join("");
     $("ci-ctl").querySelectorAll("input").forEach(el=>el.addEventListener("input",()=>{ LAB.w[el.dataset.k]=+el.value; renderLab(); }));
     $("ci-ctl").dataset.ready="1";
   }
   keys.forEach(k=>{ $(`w-${k}`).value=LAB.w[k]; $(`w-${k}-o`).textContent=(+LAB.w[k]).toFixed(2); });
   const hours=p.time.map((t,i)=>{ const idx={}; for(const k in p.indices) idx[k]=p.indices[k][i]; return idx; });
-  const labVals=hours.map(idx=>compositeJS(LAB.ci, idx, LAB.w, spec).value), engVals=p.composites[LAB.ci].map(c=>c?.value);
+  const labVals=hours.map(idx=>compositeJS(LAB.ci, idx, LAB.w, spec, p.quality?.vertical_velocity_positive==="up").value), engVals=p.composites[LAB.ci].map(c=>c?.value);
   const T0=p.time.map(tOf);
   $("ch-ci").innerHTML = lineChart({series:[{pts:T0.map((t,k)=>[t,engVals[k]]),color:"var(--muted)",w:1.4,dash:"4 3"},{pts:T0.map((t,k)=>[t,labVals[k]]),color:"var(--exp)",w:2.2,end:true}], xmin:T0[0], xmax:T0[T0.length-1], ymax:1, yfmt:v=>v.toFixed(1)})+legend([["var(--muted)","motor (pesos por defecto)",1],["var(--exp)","laboratorio (tus pesos)"]]);
   // tornado en la hora elegida
-  const i=hourIndex(), base=compositeJS(LAB.ci, hours[i], LAB.w, spec), bars=[];
-  for(const k of keys){ if(base.comps[k]==null){ bars.push([k,null,null]); continue; }
+  const i=hourIndex(), base=compositeJS(LAB.ci, hours[i], LAB.w, spec, p.quality?.vertical_velocity_positive==="up"), bars=[];
+  for(const k of keys){ if(base.value==null||base.comps[k]==null){ bars.push([k,null,null]); continue; }
     const up={...base.comps,[k]:Math.min(1,base.comps[k]+0.2)}, dn={...base.comps,[k]:Math.max(0,base.comps[k]-0.2)};
     bars.push([k, fromComps(dn,LAB.w,base.pen,spec)-base.value, fromComps(up,LAB.w,base.pen,spec)-base.value]); }
-  if(spec.penalty && base.pen!=null){ const f=spec.penalty[3], raw=base.value/(1-f*base.pen); bars.push(["penalización "+spec.penalty[0], raw*(1-f*Math.min(1,base.pen+0.2))-base.value, raw*(1-f*Math.max(0,base.pen-0.2))-base.value]); }
+  if(base.value!=null && spec.penalty && base.pen!=null){ const f=spec.penalty[3], raw=base.value/(1-f*base.pen); bars.push(["penalización "+spec.penalty[0], raw*(1-f*Math.min(1,base.pen+0.2))-base.value, raw*(1-f*Math.max(0,base.pen-0.2))-base.value]); }
   const mx=Math.max(0.05,...bars.flatMap(b=>[Math.abs(b[1]||0),Math.abs(b[2]||0)])), W=600, rh=26, Pt={l:150,r:40}, Ht=rh*bars.length+24, cx=Pt.l+(W-Pt.l-Pt.r)/2, sx=v=>v/mx*(W-Pt.l-Pt.r)/2;
   let s=`<svg class="ch" viewBox="0 0 ${W} ${Ht}"><line x1="${cx}" x2="${cx}" y1="0" y2="${Ht-20}" stroke="var(--line)"/>`;
   bars.forEach(([k,lo,hi],r)=>{ const y=r*rh+4; s+=`<text x="${Pt.l-8}" y="${y+13}" text-anchor="end">${esc(k)}</text>`; if(lo==null){ s+=`<text x="${cx+4}" y="${y+13}">sin dato</text>`; return; }
@@ -1390,7 +1406,7 @@ document.querySelectorAll("[data-ci]").forEach(b=>b.addEventListener("click",()=
 
 /* ══ capa 2: satélite, territorio, modelos, física ══ */
 IDX.push(["tw2m","Bulbo húmedo 2 m","°C",1],["wbz","Cero de bulbo húmedo","m",0],["u925","Viento 925 hPa","m/s",1],
-  ["w850","Ascenso 850 hPa","m/s",2],["w500","Ascenso 500 hPa","m/s",2],["shr03","Cizalladura 0–3 km","m/s",1],
+  ["w850","Velocidad vertical 850 hPa","m/s",2],["w500","Velocidad vertical 500 hPa","m/s",2],["shr03","Cizalladura superficie–700 hPa","m/s",1],
   ["div925","Divergencia 925","10⁻⁵ s⁻¹",1],["div850","Divergencia 850","10⁻⁵ s⁻¹",1],["vort850","Vorticidad 850","10⁻⁵ s⁻¹",1],
   ["vort500","Vorticidad 500","10⁻⁵ s⁻¹",1],["froude","Froude (relieve)","",2]);
 
@@ -1506,7 +1522,7 @@ function renderModels(){
     g.ctx.globalAlpha=1; let mx=-1,km=-1; v.forEach((x,k)=>{ if(x>mx){mx=x;km=k;} });
     if(km>=0){ const [la,lo]=F.cells[km]; g.ctx.strokeStyle=css("--ink"); g.ctx.lineWidth=2; g.ctx.strokeRect(g.X(lo-0.075),g.Y(la+0.075),g.X(lo+0.075)-g.X(lo-0.075),g.Y(la-0.075)-g.Y(la+0.075)); }
     $("fld-note").textContent=uiText(`${MLAB(FLD.m)} · run ${fmtDT(F.init)} · celdas de 0,15° · máximo de la ventana ${n0(mx)} mm (recuadro). Hipótesis del modelo: en este episodio el máximo real cayó al E del modelizado.`,`${MLAB(FLD.m)} · run ${fmtDT(F.init)} · 0.15° grid cells · window maximum ${n0(mx)} mm (box). Model hypothesis: in this episode the observed maximum fell east of the modelled one.`);
-  } else $("fld-note").textContent="Campo no disponible: se rellenará con el próximo run del modelo.";
+  } else $("fld-note").textContent="Campo no disponible en este ciclo.";
   drawCoast(g); drawSite(g);
   const V=se.verif; if(!V) return;
   const P=V.filas.find(r=>r.nombre==="Portinatx");
@@ -1515,7 +1531,7 @@ function renderModels(){
   const cell=(mod,obs)=>{ if(mod==null) return '<td class="num">—</td>'; if(obs==null||obs<1) return `<td class="num">${n1(mod)}</td>`; const r=mod/obs, col=r<0.5?"var(--std)":r>2?"var(--x)":"var(--ink)"; return `<td class="num" style="color:${col}">${n1(mod)} <span class="ev">${r.toFixed(1)}×</span></td>`; };
   const VM = Object.keys(V.filas[0]?.modelos||{});
   $("t-verif").querySelector("thead").innerHTML = `<tr><th>Estación</th><th class="num">Medido</th>${VM.map(m=>`<th class="num ${S.modx?.info?.[m]?.familia==="IA"?"fam-IA":""}">${esc(MLAB(m))}</th>`).join("")}</tr>`;
-  $("t-verif").querySelector("tbody").innerHTML = V.filas.filter(r=>r.nombre!=="Portinatx").map(r=>`<tr><td>${esc(r.nombre)}</td><td class="num"><b>${n1(r.obs_hoy)}</b></td>${VM.map(m=>cell(r.modelos[m]?.hoy, r.obs_hoy)).join("")}</tr>`).join("");
+  $("t-verif").querySelector("tbody").innerHTML = V.filas.filter(r=>r.nombre!=="Portinatx").map(r=>`<tr><td><span data-source-text lang="und">${esc(r.nombre)}</span></td><td class="num"><b>${n1(r.obs_hoy)}</b></td>${VM.map(m=>cell(r.modelos[m]?.hoy, r.obs_hoy)).join("")}</tr>`).join("");
 }
 document.querySelectorAll("[data-fm]").forEach(b=>b.addEventListener("click",()=>{ FLD.m=b.dataset.fm; document.querySelectorAll("[data-fm]").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderModels(); }));
 document.querySelectorAll("[data-fw]").forEach(b=>b.addEventListener("click",()=>{ FLD.w=b.dataset.fw; document.querySelectorAll("[data-fw]").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderModels(); }));
@@ -1523,7 +1539,7 @@ document.querySelectorAll("[data-fw]").forEach(b=>b.addEventListener("click",()=
 /* superficie: tabla METAR */
 function renderMetarTable(){
   const M=(S.series?.metar_meta||[]).slice().sort((a,b)=>a.dist_km-b.dist_km);
-  $("t-metar").querySelector("tbody").innerHTML = M.map(m=>{ const old=m.edad_min>75; return `<tr><td class="mono"><b>${esc(m.icao)}</b></td><td>${esc(m.name||"")}</td><td class="num">${n0(m.dist_km)}</td><td class="num ${old?"stale":""}">${n0(m.edad_min)} min</td><td class="mono" style="font-size:.75rem">${esc(m.raw)}</td></tr>`; }).join("") || '<tr><td colspan="5" class="empty">Sin METAR.</td></tr>';
+  $("t-metar").querySelector("tbody").innerHTML = M.map(m=>{ const old=m.edad_min>75; return `<tr><td class="mono"><b>${esc(m.icao)}</b></td><td><span data-source-text lang="und">${esc(m.name||"")}</span></td><td class="num">${n0(m.dist_km)}</td><td class="num ${old?"stale":""}">${n0(m.edad_min)} min</td><td class="mono" style="font-size:.75rem"><span data-source-text lang="und">${esc(m.raw)}</span></td></tr>`; }).join("") || '<tr><td colspan="5" class="empty">Sin METAR.</td></tr>';
 }
 
 /* física en atmósfera: θe/Tw por nivel y cizalladura por altura */
@@ -1706,7 +1722,7 @@ function chatDigest(){
 function saveChat(){ try { localStorage.setItem("pnx-chat", JSON.stringify(CHAT.turns.slice(-20))); } catch(e){} }
 function renderChatLog(extra){
   const log=$("chat-log");
-  log.innerHTML = CHAT.turns.map(t=> t.role==="user" ? `<div class="msg u">${esc(t.content)}</div>` : `<div class="msg a${t.err?" err":""}">${mdLite(t.content)}${t.meta?`<div class="mt">${esc(t.meta)}</div>`:""}</div>`).join("") + (extra||"");
+  log.innerHTML = CHAT.turns.map(t=> t.role==="user" ? `<div class="msg u" data-source-text lang="und">${esc(t.content)}</div>` : `<div class="msg a${t.err?" err":""}"><div${t.err?"":' data-source-text lang="und"'}>${mdLite(t.content)}</div>${t.meta?`<div class="mt">${esc(t.meta)}</div>`:""}</div>`).join("") + (extra||"");
   $("chat-sugg").hidden = CHAT.turns.length > 0;
   log.scrollTop = log.scrollHeight;
 }
@@ -1772,7 +1788,7 @@ function renderForense(){
   $("fz-st").innerHTML = ST("forense"); $("fz-learn-st").innerHTML = ST("aprendizaje");
   const name = m => F.info?.[m] || MLAB(m);
   const nd = Math.max(0, ...Object.values(F.puntuacion||{}).map(s=>s.n_dias||0));
-  $("fz-lessons").innerHTML = `<ul class="plain">${(F.lecciones||[]).map(l=>`<li class="cond pe">${esc(l)}</li>`).join("")||'<li class="empty">Aún no hay lecciones con muestra suficiente.</li>'}</ul>`;
+  $("fz-lessons").innerHTML = `<ul class="plain">${(F.lecciones||[]).map(l=>`<li class="cond pe" data-source-text lang="und">${esc(l)}</li>`).join("")||'<li class="empty">Aún no hay lecciones con muestra suficiente.</li>'}</ul>`;
   $("fz-sample").textContent = uiText(`Archivo: ${(F.dias||[]).length} días con lecturas (${(F.dias||[]).map(d=>d.slice(8)+"/"+d.slice(5,7)).join(", ")}), ${nd} días de lluvia independientes por modelo. Con tan poca muestra las lecciones describen este episodio, no el comportamiento general del modelo.`,`Archive: ${(F.dias||[]).length} days with readings (${(F.dias||[]).map(d=>d.slice(8)+"/"+d.slice(5,7)).join(", ")}), ${nd} independent rain days per model. With such a small sample, the lessons describe this episode, not general model performance.`);
   // previsión aprendida
   const C=F.corregido||{};
@@ -1791,7 +1807,7 @@ function renderForense(){
   const cols=F.pares_cols, P=(F.pares||[]).map(r=>Object.fromEntries(cols.map((c,i)=>[c,r[i]]))).filter(r=>r.dia===FZ.day&&r.L===lead);
   const bySt={}; P.forEach(r=>{ (bySt[r.sid] ??= {obs:r.obs, h:r.h, m:{}}).m[F.modelos[r.modelo]]=r.fc; });
   $("t-fz-st").querySelector("thead").innerHTML = `<tr><th>Estación</th><th class="num">Medido</th>${F.modelos.map(m=>`<th class="num ${S.modx?.info?.[m]?.familia==="IA"?"fam-IA":""}">${esc(name(m))}</th>`).join("")}</tr>`;
-  $("t-fz-st").querySelector("tbody").innerHTML = Object.entries(bySt).sort((a,b)=>b[1].obs-a[1].obs).map(([sid,v])=>`<tr><td>${esc(F.estaciones?.[sid]?.nombre||sid)} <span class="ev">${v.h>=23.9?uiText("día completo","full day"):uiText("hasta ","until ")+String(Math.floor(v.h)).padStart(2,"0")+":"+String(Math.round((v.h%1)*60)).padStart(2,"0")}</span></td><td class="num"><b>${n1(v.obs)}</b></td>${F.modelos.map(m=>fzRatioCell(v.m[m], v.obs)).join("")}</tr>`).join("") || '<tr><td colspan="7" class="empty">Sin lecturas ese día.</td></tr>';
+  $("t-fz-st").querySelector("tbody").innerHTML = Object.entries(bySt).sort((a,b)=>b[1].obs-a[1].obs).map(([sid,v])=>`<tr><td><span data-source-text lang="und">${esc(F.estaciones?.[sid]?.nombre||sid)}</span> <span class="ev">${v.h>=23.9?uiText("día completo","full day"):uiText("hasta ","until ")+String(Math.floor(v.h)).padStart(2,"0")+":"+String(Math.round((v.h%1)*60)).padStart(2,"0")}</span></td><td class="num"><b>${n1(v.obs)}</b></td>${F.modelos.map(m=>fzRatioCell(v.m[m], v.obs)).join("")}</tr>`).join("") || '<tr><td colspan="7" class="empty">Sin lecturas ese día.</td></tr>';
   $("fz-st-note").textContent = uiText(`Previsión ${LEAD_TXT[lead]} tal como se emitió, acumulada desde las 00 h local hasta la hora de la última lectura de cada estación.`,`Forecast ${LEAD_TXT[lead]} as issued, accumulated from local midnight to the time of each station’s latest reading.`);
   // mapa del núcleo
   if(!FZ.m||!F.modelos.includes(FZ.m)) FZ.m=F.modelos[0];
@@ -1831,4 +1847,4 @@ document.querySelectorAll("[data-fzl]").forEach(b=>b.addEventListener("click",()
 document.querySelectorAll(".mapwrap.geo").forEach(el=>{ const [nx,ny,lat]=el.dataset.ar.split(",").map(Number); el.style.aspectRatio=`${(nx*Math.cos(lat*Math.PI/180)).toFixed(1)}/${ny}`; });
 { let t=location.hash.slice(1); if(!TABS.includes(t)){ try{ t=localStorage.getItem("pnx-tab")||"vigilancia"; }catch(e){ t="vigilancia"; } } S.tab=t; TABS.forEach(x=>{ $("tab-"+x).hidden = x!==t; }); document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current", a.dataset.tab===t?"page":"false")); }
 start();
-</script>
+</script></body></html>

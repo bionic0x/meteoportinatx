@@ -79,7 +79,7 @@ python3 src/nowcast.py zone compare /tmp/consulta-anterior.zip /tmp/consulta-nue
 
 The report shows points, sources, coverage by variable, family scenarios and marine data only for profiles that include it. Snapshot label and dates are visible: HTML does not become current information when opened. The point filter works offline. Diagnostics are recalculated using local code from verified data, without executing package content.
 
-The verifier rejects duplicates, unexpected paths, incomplete inventories, invalid numerical values and mismatched hashes. It does not extract the ZIP or load package code. Limits: 128 MiB compressed/uncompressed, 25 MB per entry and 256 entries. Checksums detect corruption; they are neither authorship signatures nor meteorological validation.
+The verifier rejects duplicates, unexpected paths, incomplete inventories, invalid numerical values and mismatched hashes. It does not extract the ZIP or load package code. Limits: 128 MiB compressed/uncompressed, 25 MB per entry and 512 entries. Checksums detect corruption; they are neither authorship signatures nor meteorological validation.
 
 The archive retains each ZIP by SHA-256. Only an `AVAILABLE` package can activate `CURRENT`, and an older snapshot does not replace a newer one. A partial or failed package is archived for review while the last complete package is retained. Missing fields still have incomplete coverage even in an `AVAILABLE` package. The archive is used by one installer at a time; it is not a multi-user service.
 
@@ -194,3 +194,10 @@ The `/decidir/` views and five use profiles are retained. Regional downloads and
 The public console provides external official viewers and does not ingest radar or satellite rasters. `zone fetch pirineo` obtains RainViewer tiles on demand for profile points and `zone report` displays them offline with attribution and a marker. This is separate from the console and does not certify coverage or instrumental quality in each valley. [RainViewer documents](https://www.rainviewer.com/api/weather-maps-api.html) that the composite time is not necessarily the time of its contributing radar data. The displayed age is the frame's and cannot establish that an individual measurement is fresh. Review terms and coverage before increasing distribution; the free API is described for personal or educational use.
 
 Satellite remains an external EUMETView viewer: integration, acquisition date and coverage are not simulated. Before incorporating it into the engine, product selection and licence documentation, verifiable acquisition metadata, projection and coverage, expiry management and real-data tests are needed. [EUMETSAT states](https://www.eumetsat.int/about-us/terms-use) that its satellite products are subject to its data policy, not automatically to Creative Commons.
+
+
+## Shared atmospheric engine — 13 November 2026
+
+The coastal console, mountain console and downloadable `atmosphere` module now use `atmospheric_core.derive`. Both templates include this module; custom profiles can select it alone. It requests three days of model profiles with explicit units, surface pressure and model-cell elevation. Terrain masking, K/TT, lapse rate, wet bulb and pressure-level wind shear use identical calculations. Missing units/inputs remain unknown; pressure velocity is not relabelled as geometric velocity. Composite indices require all inputs and a verified vertical convention where applicable. Radar advection, regional DEM, snow, föhn and calibration are still separate work; see [the evidence matrix](PARIDAD-ALGORITMOS.md).
+
+The pack inventory limit is 512 entries for 25 fully selected points, with unchanged byte limits. Old packs remain readable; older readers may reject new packs exceeding 256 entries. Numerical regression fixtures do not establish live provider availability or calibrated skill.

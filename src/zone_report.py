@@ -1,15 +1,94 @@
 """One offline, escaped HTML report for every regional profile."""
+import json
 from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 
 from zone_packages import read_pack, analysis
 
-LABELS = {'forecast':'Previsión', 'ensemble':'Ensembles', 'terrain':'Elevación', 'marine':'Mar', 'radar':'Radar', 'warnings':'Avisos oficiales', 'observations':'Observaciones'}
+# Report labels only: source names, measurements and official bulletin text stay unchanged.
+REPORT_EN = {
+ 'MeteoPortinatx · Observatorio de zona':'MeteoPortinatx · Regional observatory',
+ 'Instantánea sin conexión: no se actualiza al abrirla. Descargado no significa vigente ni completo. Cada fuente muestra su cobertura y fecha; consulte su vigencia antes de usarla.':'Offline snapshot: it does not update when opened. Downloaded does not mean current or complete. Each source shows its coverage and date; check its currency before use.',
+ 'Procedencia y límites':'Provenance and limitations',
+ 'Integridad comprobada; los hashes no acreditan la identidad del autor ni la exactitud meteorológica.':'Integrity checked; hashes do not establish the author’s identity or meteorological accuracy.',
+ 'Las cifras diarias requieren cobertura completa de 24 horas UTC. Los escenarios requieren al menos diez miembros completos por familia y unidades verificadas. No se aplican umbrales de aviso de otra zona.':'Daily figures require complete 24-hour UTC coverage. Scenarios require at least ten complete members per family and verified units. Warning thresholds from other areas are not applied.',
+ 'Punto de consulta':'Location', 'Todos los puntos':'All locations', 'Fuentes y cobertura':'Sources and coverage',
+ 'Atmósfera':'Atmosphere', 'Previsión':'Forecast', 'Ensembles':'Ensembles', 'Elevación':'Elevation', 'Mar':'Sea', 'Radar':'Radar', 'Avisos oficiales':'Official warnings', 'Observaciones':'Observations', 'Fuente':'Source',
+ 'Sin datos suficientes':'Insufficient data', 'unidad no verificada':'unverified unit',
+ 'Previsión diaria · UTC':'Daily forecast · UTC', 'Totales y extremos; los huecos no cuentan como cero':'Totals and extremes; missing values do not count as zero', 'Día':'Day', 'Lluvia total':'Total rain', 'Nieve nueva':'Fresh snow', 'Racha máxima':'Maximum gust', 'Temperatura mínima':'Minimum temperature', 'Bulbo húmedo mínimo':'Minimum wet-bulb temperature', 'No hay previsión disponible.':'No forecast available.',
+ 'Escenarios por familias':'Scenarios by family', 'Fracciones de miembros sin calibrar, no probabilidades verificadas. Cada familia institucional pesa lo mismo cuando aporta datos suficientes.':'Uncalibrated member fractions, not verified probabilities. Each institutional family has equal weight when it provides sufficient data.', 'Evento':'Event', 'Fracción':'Fraction', 'Familias con datos':'Families with data', 'Miembros válidos / presentes':'Valid / present members', 'Lluvia ≥10 mm':'Rain ≥10 mm', 'Nieve ≥5 cm':'Snow ≥5 cm', 'No hay ensemble disponible.':'No ensemble available.',
+ 'Predicción puntual; no estima rebase, rompiente ni seguridad de navegación.':'Point forecast; it does not estimate overtopping, breakers or navigation safety.', 'Altura máxima':'Maximum height', 'Periodo máximo':'Maximum period', 'Dirección media circular':'Circular mean direction', 'No hay datos marinos disponibles.':'No marine data available.',
+ 'Atmósfera · perfil modelizado':'Atmosphere · model profile', 'Mismo cálculo en Portinatx, Pirineo y zonas personalizadas. Los niveles bajo terreno, sin unidades o sin presión/elevación verificables quedan sin diagnóstico. No son mediciones ni probabilidades de impacto calibradas.':'The same calculation is used in Portinatx, the Pyrenees and custom regions. Levels below ground, without units or without verifiable pressure/elevation remain undiagnosed. These are neither measurements nor calibrated impact probabilities.', 'Perfil atmosférico no disponible.':'Atmospheric profile unavailable.', 'Horas UTC · cizalladura entre superficie y nivel de presión, no una capa fija de 6 km':'UTC hours · shear between surface and pressure level, not a fixed 6 km layer', 'Hora UTC':'UTC time', 'Índice K':'K index', 'Bulbo húmedo superficial':'Surface wet-bulb temperature', 'Nivel de bulbo húmedo 0 °C':'Wet-bulb zero level', 'Cizalladura superficie–500 hPa':'Surface–500 hPa shear', 'Velocidad vertical 700 hPa':'700 hPa vertical velocity',
+ 'La altura de bulbo húmedo cero se refiere al nivel del mar; las alturas de cizalladura del paquete son sobre el terreno del modelo. No se convierten Pa/s en m/s cambiando el signo. Sin una convención verificada del proveedor no se interpreta el signo como ascenso. Los índices compuestos requieren todos sus componentes y las convenciones verificadas.':'Wet-bulb zero height is above sea level; the package shear heights are above model ground. Pa/s cannot be converted to m/s by changing the sign. Without a verified provider convention, the sign is not interpreted as ascent. Composite indices require all components and verified conventions.',
+ 'Observaciones cercanas · METAR':'Nearby observations · METAR', 'Hasta 100 km del punto. La altitud y exposición pueden diferir; no sustituyen una estación local. Frescura calculada en la captura.':'Up to 100 km from the location. Elevation and exposure may differ; these do not replace a local station. Freshness was calculated when the snapshot was taken.', 'Sin observaciones utilizables.':'No usable observations.',
+ 'Avisos oficiales · Meteoalarm':'Official warnings · Meteoalarm', 'Selección por nombres de áreas del perfil, no por polígonos. Sin coincidencias no equivale a ausencia de avisos. Consulte el organismo emisor.':'Selected by profile area names, not polygons. No matches do not mean there are no warnings. Consult the issuing authority.', 'Fuente de avisos no disponible.':'Warning source unavailable.', 'No se encontraron coincidencias en los boletines descargados.':'No matches were found in the downloaded bulletins.',
+ 'Radar · RainViewer':'Radar · RainViewer', 'Composiciones disponibles al descargar; la cruz marca el punto. La hora es la del fotograma compuesto, no garantiza la hora de cada radar que lo integra. Su antigüedad tampoco demuestra que la cobertura local sea reciente. Una imagen vacía o transparente no demuestra ausencia de lluvia. Sin estimación local calibrada de intensidad. Datos:':'Composites available when downloaded; the cross marks the location. The time is that of the composite frame and does not guarantee the time of each contributing radar. Its age does not prove local coverage is recent. An empty or transparent image does not prove there is no rain. No calibrated local intensity estimate. Data:', 'Sin imágenes de radar utilizables.':'No usable radar images.',
+ 'Temperatura':'Temperature', 'viento':'wind', 'racha':'gust', 'estado del boletín en la captura:':'bulletin state at snapshot:', 'actualizado':'updated', 'áreas:':'areas:', 'severidad':'severity', 'certeza':'certainty',
+ 'Paquete':'Package', 'Fotograma:':'Frame:', 'Antigüedad del fotograma:':'Frame age:', 'en la captura':'at snapshot', 'horas':'hours',
+ 'Los textos de avisos y fuentes externas se muestran en su idioma original.':'External warning and source text is shown in its original language.',
+ '. Integridad comprobada; los hashes no acreditan la identidad del autor ni la exactitud meteorológica.':'. Integrity checked; hashes do not establish the author’s identity or meteorological accuracy.',
+ '· estado del boletín en la captura:':'· bulletin state at snapshot:', '· actualizado':'· updated', '· áreas:':'· areas:', '· severidad':'· severity', '· certeza':'· certainty', '· viento':'· wind', '· racha':'· gust', 'Cobertura parcial: fallaron':'Partial coverage: failed',
+
+}
+
+# Narrow patterns translate only report-owned scaffolding, never provider-origin values.
+REPORT_PATTERNS = [
+ (r'^Paquete descargado · Captura (.+)$', r'Downloaded package · Snapshot $1'),
+ (r'^Paquete parcial · Captura (.+)$', r'Partial package · Snapshot $1'),
+ (r'^Fuentes no disponibles · Captura (.+)$', r'Sources unavailable · Snapshot $1'),
+ (r'^Informe calculado (.+)\. Diagnóstico sin calibración local; consulte fuentes oficiales para decisiones de seguridad\.$', r'Report calculated $1. Diagnostic is not locally calibrated; consult official sources for safety decisions.'),
+ (r'^Elevación de la celda del modelo: (.+)\. El perfil puede representar una altitud distinta a la del lugar real\.$', r'Model grid-cell elevation: $1. The profile may represent a different altitude from the actual location.'),
+ (r'^Celda del modelo: (.+)\.$', r'Model grid cell: $1.'),
+ (r'^Elevación puntual: (.+); no representa un DEM regional\.$', r'Point elevation: $1; it does not represent a regional DEM.'),
+ (r'^: Descargado(.*) · consulta (.+) ·$', r': Downloaded$1 · retrieved $2 ·'),
+ (r'^: No disponible(.*) · consulta (.+) ·$', r': Unavailable$1 · retrieved $2 ·'),
+ (r' · valores presentes ([0-9]+)/([0-9]+) \(consultar cobertura por variable\)', r' · values present $1/$2 (check coverage by variable)'),
+ (r'^([0-9]+)/24 horas$', r'$1/24 hours'),
+ (r'^Fotograma: (.+)$', r'Frame: $1'),
+ (r'^(.+) unidad no verificada$', r'$1 unverified unit'),
+ (r'^Temperatura (.+) · viento (.+) · racha$', r'Temperature $1 · wind $2 · gust'),
+ (r'^Temperatura (.+) · viento$', r'Temperature $1 · wind'),
+ (r'^· viento (.+) · racha$', r'· wind $1 · gust'),
+
+]
+
+
+LANGUAGE_SCRIPT = '''<script>
+(()=>{'use strict';
+ const words=__WORDS__, patterns=__PATTERNS__;
+ const selector=document.getElementById('report-language'), originals=new WeakMap();
+ let lang='es';try{lang=localStorage.getItem('meteo-language')==='en'?'en':'es'}catch(_){}
+ const ws=(node)=>{
+  const raw=originals.has(node)?originals.get(node):node.nodeValue;
+  if(!originals.has(node))originals.set(node,raw);
+  const key=raw.trim();if(!key)return;
+  let translated=words[key]||key;
+  if(translated===key)for(const [pattern,replacement] of patterns)translated=translated.replace(new RegExp(pattern),replacement);
+  const target=lang==='en'?raw.replace(key,translated):raw;
+  if(node.nodeValue!==target)node.nodeValue=target;
+ };
+ function render(){
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+  while((n=walker.nextNode())){const p=n.parentElement;if(!p||p.closest('script,style,#report-language,[data-source-text],h1,h2,code'))continue;ws(n)}
+  document.documentElement.lang=lang;selector.value=lang;
+  for(const img of document.querySelectorAll('.tile img'))img.alt=lang==='en'?'Radar tile; location marked with a cross':'Tesela del radar; punto señalado con una cruz';
+  const orig=' · Observatorio de zona',eng=' · Regional observatory';document.title=lang==='en'?document.title.replace(orig,eng):document.title.replace(eng,orig);
+ }
+ selector.addEventListener('change',()=>{lang=selector.value;try{localStorage.setItem('meteo-language',lang)}catch(_){}render()});render();
+})();
+</script>'''.replace('__WORDS__',json.dumps(REPORT_EN, ensure_ascii=True)).replace('__PATTERNS__',json.dumps(REPORT_PATTERNS, ensure_ascii=True))
+
+
+LABELS = {'atmosphere':'Atmósfera', 'forecast':'Previsión', 'ensemble':'Ensembles', 'terrain':'Elevación', 'marine':'Mar', 'radar':'Radar', 'warnings':'Avisos oficiales', 'observations':'Observaciones'}
 
 
 def text(value):
     return escape(str(value), quote=True)
+
+
+def external(value):
+    return f'<span data-source-text lang="und">{text(value)}</span>'
 
 
 def point_name(pid):
@@ -36,18 +115,18 @@ def source_sections(pack, pid):
         if not obs:
             rows.append('<p class="missing">Sin observaciones utilizables.</p>')
         for r in obs:
-            rows.append(f'<p><b>{text(r["station"])}</b> · {text(stamp(r["observed_at"]))} · {r["distance_km"]:.1f} km · {text(r["freshness"])}<br>Temperatura {value(r.get("temperature_c"),"°C")} · viento {value(r.get("wind_kmh"),"km/h")} · racha {value(r.get("gust_kmh"),"km/h")}</p>')
+            rows.append(f'<p><b>{external(r["station"])}</b> · {text(stamp(r["observed_at"]))} · {r["distance_km"]:.1f} km · {external(r["freshness"])}<br>Temperatura {value(r.get("temperature_c"),"°C")} · viento {value(r.get("wind_kmh"),"km/h")} · racha {value(r.get("gust_kmh"),"km/h")}</p>')
     if 'warnings' in modules:
         rows.append('<h3>Avisos oficiales · Meteoalarm</h3><p>Selección por nombres de áreas del perfil, no por polígonos. Sin coincidencias no equivale a ausencia de avisos. Consulte el organismo emisor.</p>')
         data=pack['data'].get((pid,'warnings'),{})
         if not data:
             rows.append('<p class="missing">Fuente de avisos no disponible.</p>')
         for feed in data.get('feeds',[]):
-            rows.append(f'<p>{text(feed["country"])} · estado del boletín en la captura: {text(feed["feed_state"])} · actualizado {text(feed["feed_updated"])} · áreas: {text(", ".join(feed["areas"]))}</p>')
+            rows.append(f'<p>{external(feed["country"])} · estado del boletín en la captura: {external(feed["feed_state"])} · actualizado {external(feed["feed_updated"])} · áreas: {external(", ".join(feed["areas"]))}</p>')
         if data.get('failed_feeds'):
-            rows.append(f'<p class="missing">Cobertura parcial: fallaron {text(", ".join(data["failed_feeds"]))}.</p>')
+            rows.append(f'<p class="missing">Cobertura parcial: fallaron {external(", ".join(data["failed_feeds"]))}.</p>')
         for r in data.get('records',[]):
-            rows.append(f'<p><b>{text(r["event"])}</b> · {text(r["area"])} · severidad {text(r["severity"])} · certeza {text(r["certainty"])}<br>{text(stamp(r["onset"]))} — {text(stamp(r["expires"]))}</p>')
+            rows.append(f'<p><b>{external(r["event"])}</b> · {external(r["area"])} · severidad {external(r["severity"])} · certeza {external(r["certainty"])}<br>{text(stamp(r["onset"]))} — {text(stamp(r["expires"]))}</p>')
         if data and not data.get('records'):
             rows.append('<p>No se encontraron coincidencias en los boletines descargados.</p>')
     if 'radar' in modules:
@@ -55,10 +134,30 @@ def source_sections(pack, pid):
         frames=pack['data'].get((pid,'radar'),{}).get('frames',[])
         for f in frames:
             x,y=f['point_pixel']
-            rows.append(f'<figure><div class="tile"><img width="256" height="256" alt="Tesela del radar; punto señalado con una cruz" src="data:image/png;base64,{f["png_base64"]}"><span aria-hidden="true" style="left:{x/256*100:.3f}%;top:{y/256*100:.3f}%">+</span></div><figcaption>Fotograma: {text(stamp(f["observed_at"]))}<br>Antigüedad del fotograma: {text(f["freshness"])} en la captura</figcaption></figure>')
+            rows.append(f'<figure><div class="tile"><img width="256" height="256" alt="Tesela del radar; punto señalado con una cruz" src="data:image/png;base64,{f["png_base64"]}"><span aria-hidden="true" style="left:{x/256*100:.3f}%;top:{y/256*100:.3f}%">+</span></div><figcaption>Fotograma: {text(stamp(f["observed_at"]))}<br>Antigüedad del fotograma: {external(f["freshness"])} en la captura</figcaption></figure>')
         if not frames:
             rows.append('<p class="missing">Sin imágenes de radar utilizables.</p>')
         rows.append('</div>')
+    return ''.join(rows)
+
+
+def atmosphere_section(data):
+    rows=['<h3>Atmósfera · perfil modelizado</h3><p>Mismo cálculo en Portinatx, Pirineo y zonas personalizadas. Los niveles bajo terreno, sin unidades o sin presión/elevación verificables quedan sin diagnóstico. No son mediciones ni probabilidades de impacto calibradas.</p>']
+    if not data or not data.get('time'):
+        return ''.join(rows)+'<p class="missing">Perfil atmosférico no disponible.</p>'
+    rows.append(f'<p>Elevación de la celda del modelo: {value(data.get("elevacion_m"),"m")}. El perfil puede representar una altitud distinta a la del lugar real.</p>')
+    location=data.get('ubicacion') or {}
+    if location.get('lat') is not None and location.get('lon') is not None:
+        rows.append(f'<p>Celda del modelo: {text(location["lat"])}, {text(location["lon"])}.</p>')
+    columns=[('cape','CAPE','J/kg'),('ki','Índice K','°C'),('tw2m','Bulbo húmedo superficial','°C'),('wbz','Nivel de bulbo húmedo 0 °C','m'),('shr06','Cizalladura superficie–500 hPa','m/s'),('w700','Velocidad vertical 700 hPa','m/s')]
+    rows.append('<div class="table"><table><caption>Horas UTC · cizalladura entre superficie y nivel de presión, no una capa fija de 6 km</caption><thead><tr><th>Hora UTC</th>'+''.join('<th>'+label+'</th>' for _,label,_ in columns)+'</tr></thead><tbody>')
+    for i,t in enumerate(data['time']):
+        cells=[]
+        for key,_,unit in columns:
+            values=data.get('indices',{}).get(key,[])
+            cells.append('<td>'+value(values[i] if i<len(values) else None,unit)+'</td>')
+        rows.append('<tr><th scope="row">'+text(t)+'</th>'+''.join(cells)+'</tr>')
+    rows.append('</tbody></table></div><p>La altura de bulbo húmedo cero se refiere al nivel del mar; las alturas de cizalladura del paquete son sobre el terreno del modelo. No se convierten Pa/s en m/s cambiando el signo. Sin una convención verificada del proveedor no se interpreta el signo como ascenso. Los índices compuestos requieren todos sus componentes y las convenciones verificadas.</p>')
     return ''.join(rows)
 
 
@@ -123,6 +222,8 @@ def render_report(path):
             rows.append('</tbody></table></div>')
             if not marine:
                 rows.append('<p class="missing">No hay datos marinos disponibles.</p>')
+        if 'atmosphere' in profile['modules']:
+            rows.append(atmosphere_section(computed[pid].get('atmosphere')))
         rows.append(source_sections(pack,pid))
         rows.append('</section>')
         blocks.append(''.join(rows))
@@ -135,13 +236,14 @@ def render_report(path):
 <style>
 :root{{font-family:system-ui,sans-serif;color:#172b3a;background:#f4f7f8}}body{{margin:0}}main{{max-width:1200px;margin:auto;padding:24px}}header,section{{background:white;border:1px solid #d2dce2;border-radius:12px;padding:24px;margin:0 0 20px}}h1{{margin:.3em 0}}h2{{color:#145166}}p,li{{line-height:1.6}}.eyebrow{{font-weight:650;color:#145166}}.notice{{border-left:4px solid #ab6500;padding:10px 16px;background:#fff6e5}}select{{font:inherit;padding:10px;max-width:100%;margin-bottom:20px}}table{{border-collapse:collapse;width:100%;font-size:.95rem}}th,td{{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #d2dce2}}caption{{text-align:left;padding:10px 0}}.table{{overflow-x:auto}}.frames{{display:flex;flex-wrap:wrap;gap:16px}}figure{{margin:0;max-width:100%}}.tile{{position:relative;width:256px;max-width:100%;background:#d2dce2}}.tile img{{display:block;width:100%;height:auto}}.tile span{{position:absolute;transform:translate(-50%,-50%);font-weight:bold;color:#000;background:white;line-height:1}}figcaption{{font-size:.85rem}}small{{display:block;color:#4e5e67;margin-top:5px}}.missing{{color:#7a4900}}a{{color:#075c83}}code{{overflow-wrap:anywhere}}[hidden]{{display:none}}@media(max-width:600px){{main{{padding:10px}}header,section{{padding:16px}}th,td{{padding:8px}}}}@media print{{select,label{{display:none}}.point[hidden]{{display:block}}}}
 </style></head><body><main>
-<header><p class="eyebrow">MeteoPortinatx · Observatorio de zona</p><h1>{text(profile['name'])}</h1>
+<header><label for="report-language">Idioma / Language </label><select id="report-language"><option value="es">Español</option><option value="en">English</option></select><p class="eyebrow">MeteoPortinatx · Observatorio de zona</p><h1>{text(profile['name'])}</h1>
 <p>{state} · Captura {text(stamp(manifest['created_at']))}</p>
 <p class="notice">Instantánea sin conexión: no se actualiza al abrirla. Descargado no significa vigente ni completo. Cada fuente muestra su cobertura y fecha; consulte su vigencia antes de usarla.</p>
 <p>Informe calculado {text(stamp(generated))}. Diagnóstico sin calibración local; consulte fuentes oficiales para decisiones de seguridad.</p>
-<details><summary>Procedencia y límites</summary><p>Paquete <code>{pack['sha256']}</code>. Integridad comprobada; los hashes no acreditan la identidad del autor ni la exactitud meteorológica.</p><p>Las cifras diarias requieren cobertura completa de 24 horas UTC. Los escenarios requieren al menos diez miembros completos por familia y unidades verificadas. No se aplican umbrales de aviso de otra zona.</p></details></header>
+<p>Los textos de avisos y fuentes externas se muestran en su idioma original.</p><details><summary>Procedencia y límites</summary><p>Paquete <code>{pack['sha256']}</code>. Integridad comprobada; los hashes no acreditan la identidad del autor ni la exactitud meteorológica.</p><p>Las cifras diarias requieren cobertura completa de 24 horas UTC. Los escenarios requieren al menos diez miembros completos por familia y unidades verificadas. No se aplican umbrales de aviso de otra zona.</p></details></header>
 <label for="point-filter">Punto de consulta</label> <select id="point-filter"><option value="all">Todos los puntos</option>{options}</select>
 {''.join(blocks)}
+{LANGUAGE_SCRIPT}
 <script>document.getElementById('point-filter').addEventListener('change',function(){{document.querySelectorAll('.point').forEach(section=>{{section.hidden=this.value!=='all'&&section.dataset.point!==this.value;}});}});</script>
 </main></body></html>'''
 

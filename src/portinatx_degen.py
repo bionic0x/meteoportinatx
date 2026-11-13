@@ -3169,19 +3169,19 @@ INDEX_STATUS = {
     "thetae850": ("ESTÁNDAR", "Temperatura potencial equivalente a 850 hPa (K, Bolton 1980). Masa de aire cálida y húmeda."),
     "tcwv": ("ESTÁNDAR", "Agua precipitable (columna total de vapor, mm) del modelo."),
     "fzl": ("ESTÁNDAR", "Altura de la isoterma 0 °C del modelo (m)."),
-    "shr06": ("ESTÁNDAR", "Cizalladura 0–6 km aproximada: |V500 − V10m| (m/s). Aproximación por niveles, no capa integrada."),
-    "shr01": ("ESTÁNDAR", "Cizalladura 0–1 km aproximada: |V925 − V10m| (m/s)."),
-    "w700": ("ESTÁNDAR", "Velocidad vertical a 700 hPa del modelo (positivo = ascenso)."),
+    "shr06": ("ESTÁNDAR", "Cizalladura superficie–500 hPa: |V500 − V10m| (m/s). Aproximación por niveles, no capa integrada."),
+    "shr01": ("ESTÁNDAR", "Cizalladura superficie–925 hPa: |V925 − V10m| (m/s)."),
+    "w700": ("ESTÁNDAR", "Velocidad vertical a 700 hPa del modelo en m/s; signo no verificado salvo declaración explícita de la fuente."),
     "tw2m": ("ESTÁNDAR", "Temperatura de bulbo húmedo en superficie (°C), ecuación psicrométrica."),
     "wbz": ("ESTÁNDAR", "Altura del cero de bulbo húmedo (m) interpolada en el perfil."),
-    "w850": ("ESTÁNDAR", "Velocidad vertical a 850 hPa del modelo (positivo = ascenso)."),
-    "w500": ("ESTÁNDAR", "Velocidad vertical a 500 hPa del modelo (positivo = ascenso)."),
-    "shr03": ("ESTÁNDAR", "Cizalladura 0–3 km aproximada: |V700 − V10m| (m/s)."),
+    "w850": ("ESTÁNDAR", "Velocidad vertical a 850 hPa del modelo en m/s; signo no verificado salvo declaración explícita de la fuente."),
+    "w500": ("ESTÁNDAR", "Velocidad vertical a 500 hPa del modelo en m/s; signo no verificado salvo declaración explícita de la fuente."),
+    "shr03": ("ESTÁNDAR", "Cizalladura superficie–700 hPa: |V700 − V10m| (m/s)."),
     "div925": ("ESTÁNDAR", "Divergencia a 925 hPa (10⁻⁵ s⁻¹) por diferencias finitas en una malla de ±0,25°: negativa = convergencia. Escala de ~50 km."),
     "div850": ("ESTÁNDAR", "Divergencia a 850 hPa (10⁻⁵ s⁻¹), malla ±0,25°."),
     "vort850": ("ESTÁNDAR", "Vorticidad relativa a 850 hPa (10⁻⁵ s⁻¹), malla ±0,25°: positiva = ciclónica."),
     "vort500": ("ESTÁNDAR", "Vorticidad relativa a 500 hPa (10⁻⁵ s⁻¹), malla ±0,25°."),
-    "froude": ("EXPERIMENTAL", "Froude U925/(N·h) con N seco de 1000–850 hPa y h = cota máxima de Ibiza: <1 el aire rodea el relieve, >1 lo remonta. Fórmula estándar; aplicación local sin validar."),
+    "froude": ("EXPERIMENTAL", "Froude U925/(N·h) con N seco de 1000–850 hPa y h = obstáculo sobre el terreno del modelo, si se conoce: <1 el aire rodea el relieve, >1 lo remonta. Fórmula estándar; aplicación local sin validar."),
     "u925": ("ESTÁNDAR", "Viento a 925 hPa (m/s): el que choca con el relieve de la isla."),
     "orografia": ("EXPERIMENTAL", "Ascenso forzado por el relieve w = V925·∇h (m/s) sobre el MDT del IGN. Solo la componente forzada lineal; ignora bloqueo y efectos no lineales."),
     "oleaje_costa": ("ESTÁNDAR", "Asomeramiento lineal (Ks = √(cg0/cg)) y rotura H ≥ 0,78·d. Sin refracción ni difracción: es una cota, no la ola en la cala."),
@@ -3208,28 +3208,16 @@ INDEX_STATUS = {
     "gauge_wet": ("DIAGNÓSTICO", "Umbrales de pluviómetro rebajados con suelo saturado (≥60 mm ayer+hoy): 10/20/40 mm/h. n=2."),
 }
 # Normalización de componentes (lineal y recortada a [0,1]) y pesos. Todo editable en el modo laboratorio.
-COMPOSITES = {
-    "icc": {"weights": {"inestabilidad": 0.30, "humedad": 0.30, "ascenso": 0.20, "organizacion": 0.20},
-            "ranges": {"inestabilidad": ("cape", 0, 2000), "humedad": ("tcwv", 20, 40),
-                       "ascenso": ("w700", 0, 0.3), "organizacion": ("shr06", 5, 25)},
-            "penalty": ("cin", 0, 200, 0.5)},
-    "ipp": {"weights": {"humedad": 0.30, "alimentacion": 0.30, "lentitud": 0.25, "inestabilidad": 0.15},
-            "ranges": {"humedad": ("tcwv", 20, 40), "alimentacion": ("flux850", 50, 250),
-                       "lentitud": ("mw", 20, 5), "inestabilidad": ("cape", 0, 1500)},
-            "penalty": None},
-}
-PROFILE_LEVELS = (1000, 925, 850, 700, 500, 300)
+from atmospheric_core import (COMPOSITES, LEVELS as PROFILE_LEVELS, PROFILE_VARIABLES,
+                              derive as derive_atmosphere, dewpoint, thetae,
+                              specific_humidity, uv, composite as atmospheric_composite)
+# Compatibility names also consumed by the mountain snow-profile engine.
+_dewpoint, _thetae, _q, _uv = dewpoint, thetae, specific_humidity, uv
 
 
 def src_profile() -> SourceResult:
     lv = PROFILE_LEVELS
-    vars_ = [f"{v}_{p}hPa" for p in lv for v in ("temperature", "relative_humidity", "wind_speed",
-                                                  "wind_direction", "geopotential_height")]
-    vars_ += ["vertical_velocity_700hPa", "vertical_velocity_850hPa", "cape", "convective_inhibition",
-              "lifted_index", "freezing_level_height", "total_column_integrated_water_vapour",
-              "boundary_layer_height", "temperature_2m", "dew_point_2m", "pressure_msl",
-              "wind_speed_10m", "wind_direction_10m", "precipitation"]
-    vars_ += ["vertical_velocity_500hPa"]
+    vars_ = PROFILE_VARIABLES
     dd = CFG["stencil_deg"]
     pts = [(SITE["lat"], SITE["lon"]), (SITE["lat"] + dd, SITE["lon"]), (SITE["lat"] - dd, SITE["lon"]),
            (SITE["lat"], SITE["lon"] + dd), (SITE["lat"], SITE["lon"] - dd)]
@@ -3239,45 +3227,18 @@ def src_profile() -> SourceResult:
     d = res[0]
     if "hourly" not in d:
         raise RuntimeError(str(d.get("reason", d))[:120])
-    keep = [f"wind_{v}_{p}hPa" for p in (925, 850, 500) for v in ("speed", "direction")]
-    sten = {k: {v: r.get("hourly", {}).get(v) for v in keep} for k, r in zip(("N", "S", "E", "W"), res[1:])}
+    def source(raw):
+        return {'hourly':raw.get('hourly',{}), 'units':raw.get('hourly_units',{}),
+                'elevation':raw.get('elevation'),
+                'ubicacion':{'lat':raw.get('latitude'),'lon':raw.get('longitude')},
+                'model':CFG.get('profile_model','best_match')}
+    sten = {key:source(raw) for key,raw in zip(('N','S','E','W'),res[1:])}
+    payload=source(d)
+    payload.update(stencil=sten, geometry={'latitude':SITE['lat'], 'longitude':SITE['lon'],
+                                          'delta_lat_deg':dd, 'delta_lon_deg':dd})
     return SourceResult(name="perfil", status="ok", kind="model", data_time=now_utc().isoformat(),
                         detail=f"perfil {CFG.get('profile_model', 'best_match')} · {len(lv)} niveles · 60 h · malla ±{dd}°",
-                        payload={"hourly": d["hourly"], "units": d.get("hourly_units", {}), "stencil": sten})
-
-
-def _dewpoint(t: float | None, rh: float | None) -> float | None:
-    if t is None or rh is None or rh <= 0:
-        return None
-    a, b = 17.625, 243.04                                   # Magnus–Alduchov
-    g = math.log(rh / 100.0) + a * t / (b + t)
-    return b * g / (a - g)
-
-
-def _thetae(t: float | None, td: float | None, p: float) -> float | None:
-    """Bolton (1980), ec. 38–43."""
-    if t is None or td is None:
-        return None
-    tk, tdk = t + 273.15, td + 273.15
-    e = 6.112 * math.exp(17.67 * td / (td + 243.5))
-    r = 622.0 * e / (p - e)                                # g/kg
-    tl = 1.0 / (1.0 / (tdk - 56.0) + math.log(tk / tdk) / 800.0) + 56.0
-    th = tk * (1000.0 / p) ** (0.2854 * (1 - 0.00028 * r))
-    return th * math.exp((3.376 / tl - 0.00254) * r * (1 + 0.00081 * r))
-
-
-def _q(t: float | None, td: float | None, p: float) -> float | None:
-    if td is None:
-        return None
-    e = 6.112 * math.exp(17.67 * td / (td + 243.5))
-    return 622.0 * e / (p - 0.378 * e)                     # g/kg
-
-
-def _uv(ws: float | None, wd: float | None) -> tuple[float, float] | None:
-    if ws is None or wd is None:
-        return None
-    a = math.radians(wd)
-    return -ws * math.sin(a), -ws * math.cos(a)
+                        payload=payload)
 
 
 def _norm(v: float | None, lo: float, hi: float) -> float | None:
@@ -3288,130 +3249,23 @@ def _norm(v: float | None, lo: float, hi: float) -> float | None:
 
 
 def composite(name: str, idx: dict[str, float | None], weights: dict | None = None) -> dict:
-    spec = COMPOSITES[name]
-    w = weights or spec["weights"]
-    comps, val, wsum = {}, 0.0, 0.0
-    for k, (var, lo, hi) in spec["ranges"].items():
-        n = _norm(idx.get(var), lo, hi)
-        comps[k] = n
-        if n is not None:
-            val += w[k] * n
-            wsum += w[k]
-    if not wsum:
-        return {"value": None, "components": comps}
-    val /= wsum                                              # renormaliza si falta un componente
-    pen = None
-    if spec.get("penalty"):
-        var, lo, hi, f = spec["penalty"]
-        pn = _norm(idx.get(var), lo, hi)
-        if pn is not None:
-            pen = pn
-            val *= (1 - f * pn)
-    return {"value": round(val, 3), "components": {k: (None if v is None else round(v, 3)) for k, v in comps.items()},
-            "penalty": None if pen is None else round(pen, 3), "missing": [k for k, v in comps.items() if v is None]}
+    """Compatibility adapter; no partial-component renormalization or inferred ascent."""
+    return atmospheric_composite(name,idx,weights=weights)
 
 
-def derive_profile(h: dict, units: dict, stencil: dict | None = None, terrain_top: float = 400.0) -> dict:
-    """Índices por hora a partir del perfil del modelo."""
-    times = h.get("time", [])
-    get = lambda k, i: (h.get(k) or [None] * len(times))[i] if i < len(h.get(k) or []) else None
-    w_sign = -1.0 if "Pa" in (units.get("vertical_velocity_700hPa") or "") else 1.0   # Pa/s: negativo = ascenso
-    out = {k: [] for k in ("cape", "cin", "li", "ki", "tt", "lr75", "thetae850", "tcwv", "fzl", "shr06",
-                           "shr01", "w700", "mw", "flux850", "blh", "t2m", "td2m", "pmsl", "pr",
-                           "tw2m", "wbz", "w850", "w500", "shr03", "div925", "div850", "vort850", "vort500",
-                           "froude", "u925")}
-    phys = {"thetae": {str(p): [] for p in PROFILE_LEVELS}, "tw": {str(p): [] for p in PROFILE_LEVELS},
-            "shear_by_height": []}
-    comp = {"icc": [], "ipp": []}
-    levels = {p: {"T": [], "Td": [], "ws": [], "wd": [], "z": []} for p in PROFILE_LEVELS}
-    for i in range(len(times)):
-        L = {}
-        for p in PROFILE_LEVELS:
-            t, rh = get(f"temperature_{p}hPa", i), get(f"relative_humidity_{p}hPa", i)
-            td = _dewpoint(t, rh)
-            L[p] = {"T": t, "Td": td, "ws": get(f"wind_speed_{p}hPa", i), "wd": get(f"wind_direction_{p}hPa", i),
-                    "z": get(f"geopotential_height_{p}hPa", i)}
-            for k in levels[p]:
-                v = L[p][k]
-                levels[p][k].append(None if v is None else round(v, 1))
-        T = lambda p: L[p]["T"]; TD = lambda p: L[p]["Td"]
-        ki = tt = lr = None
-        if None not in (T(850), T(700), T(500), TD(850), TD(700)):
-            ki = (T(850) - T(500)) + TD(850) - (T(700) - TD(700))
-            tt = T(850) + TD(850) - 2 * T(500)
-        if None not in (T(700), T(500), L[700]["z"], L[500]["z"]) and L[500]["z"] > L[700]["z"]:
-            lr = (T(700) - T(500)) / ((L[500]["z"] - L[700]["z"]) / 1000.0)
-        v10 = _uv(get("wind_speed_10m", i), get("wind_direction_10m", i))
-        v500, v925 = _uv(L[500]["ws"], L[500]["wd"]), _uv(L[925]["ws"], L[925]["wd"])
-        shr = lambda a, b: math.hypot(a[0] - b[0], a[1] - b[1]) if a and b else None
-        uvs = [_uv(L[p]["ws"], L[p]["wd"]) for p in (850, 700, 500, 300)]
-        mw = (math.hypot(sum(u[0] for u in uvs) / 4, sum(u[1] for u in uvs) / 4) if all(uvs) else None)
-        q850 = _q(T(850), TD(850), 850.0)
-        w700 = get("vertical_velocity_700hPa", i)
-        row = {"cape": get("cape", i), "cin": get("convective_inhibition", i), "li": get("lifted_index", i),
-               "ki": ki, "tt": tt, "lr75": lr, "thetae850": _thetae(T(850), TD(850), 850.0),
-               "tcwv": get("total_column_integrated_water_vapour", i), "fzl": get("freezing_level_height", i),
-               "shr06": shr(v500, v10), "shr01": shr(v925, v10), "w700": None if w700 is None else w_sign * w700,
-               "mw": mw, "flux850": (q850 * L[850]["ws"]) if (q850 is not None and L[850]["ws"] is not None) else None,
-               "blh": get("boundary_layer_height", i), "t2m": get("temperature_2m", i), "td2m": get("dew_point_2m", i),
-               "pmsl": get("pressure_msl", i), "pr": get("precipitation", i)}
-        if row["cin"] is not None:
-            row["cin"] = abs(row["cin"])
-        # física: θe y bulbo húmedo por nivel, cero de bulbo húmedo, cizalladura por altura, divergencia, vorticidad
-        tw_lv = {}
-        for p in PROFILE_LEVELS:
-            te_p = _thetae(T(p), TD(p), float(p))
-            tw_p = wet_bulb(T(p), TD(p), float(p))
-            tw_lv[p] = tw_p
-            phys["thetae"][str(p)].append(None if te_p is None else round(te_p, 1))
-            phys["tw"][str(p)].append(None if tw_p is None else round(tw_p, 1))
-        tw2 = wet_bulb(row["t2m"], row["td2m"], row["pmsl"] or 1013.0)
-        prof = [(0.0, tw2)] + [(L[p]["z"], tw_lv[p]) for p in PROFILE_LEVELS if L[p]["z"] is not None]
-        wbz = None
-        for (z1, a1), (z2, a2) in zip(prof, prof[1:]):
-            if None not in (a1, a2) and a1 > 0 >= a2 and z2 > z1:
-                wbz = z1 + (z2 - z1) * a1 / (a1 - a2)
-                break
-        v700 = _uv(L[700]["ws"], L[700]["wd"])
-        sbh = []
-        for p in (925, 850, 700, 500, 300):
-            vp = _uv(L[p]["ws"], L[p]["wd"])
-            if vp and v10 and L[p]["z"] is not None:
-                sbh.append([round(L[p]["z"] / 1000, 2), round(math.hypot(vp[0] - v10[0], vp[1] - v10[1]), 1)])
-        phys["shear_by_height"].append(sbh)
-        dv = {}
-        if stencil:
-            dd = CFG["stencil_deg"]
-            dx = 2 * dd * 111000 * math.cos(math.radians(SITE["lat"]))
-            dy = 2 * dd * 111000
+def derive_profile(h: dict, units: dict, stencil: dict | None = None,
+                   terrain_top: float | None = None, *, elevation=None,
+                   location=None, geometry=None, model='best_match (Open-Meteo)',
+                   vertical_velocity_positive=None) -> dict:
+    """Shared atmosphere: explicit surface elevation/pressure and geographic context.
 
-            def g_(k, p):
-                st_ = stencil.get(k) or {}
-                sp, di = st_.get(f"wind_speed_{p}hPa") or [], st_.get(f"wind_direction_{p}hPa") or []
-                return _uv(sp[i] if i < len(sp) else None, di[i] if i < len(di) else None)
-            for p in (925, 850, 500):
-                n_, s_, e_, w_ = g_("N", p), g_("S", p), g_("E", p), g_("W", p)
-                if all((n_, s_, e_, w_)):
-                    dv[f"div{p}"] = ((e_[0] - w_[0]) / dx + (n_[1] - s_[1]) / dy) * 1e5
-                    dv[f"vort{p}"] = ((e_[1] - w_[1]) / dx - (n_[0] - s_[0]) / dy) * 1e5
-        th1000 = (T(1000) + 273.15) if T(1000) is not None else None
-        th850 = (T(850) + 273.15) * (1000 / 850) ** 0.2854 if T(850) is not None else None
-        dz = (L[850]["z"] - L[1000]["z"]) if None not in (L[850]["z"], L[1000]["z"]) else None
-        u925 = L[925]["ws"]
-        row.update({"tw2m": tw2, "wbz": wbz, "w850": get("vertical_velocity_850hPa", i), "w500": get("vertical_velocity_500hPa", i),
-                    "shr03": (math.hypot(v700[0] - v10[0], v700[1] - v10[1]) if v700 and v10 else None),
-                    "div925": dv.get("div925"), "div850": dv.get("div850"), "vort850": dv.get("vort850"),
-                    "vort500": dv.get("vort500"), "froude": froude(u925, th1000, th850, dz, terrain_top), "u925": u925})
-        for kk in ("w850", "w500"):
-            if row[kk] is not None:
-                row[kk] = w_sign * row[kk]
-        for k, v in row.items():
-            out[k].append(None if v is None else round(v, 3 if k in ("w700", "w850", "w500") else 2 if k in ("froude", "div925", "div850", "vort850", "vort500") else 1))
-        for c in comp:
-            comp[c].append(composite(c, row))
-    return {"time": times, "indices": out, "levels": {str(p): v for p, v in levels.items()},
-            "composites": comp, "wind10": {"ws": h.get("wind_speed_10m", []), "wd": h.get("wind_direction_10m", [])},
-            "physics": phys}
+    Older calls still work but absent terrain/units produce missing diagnostics.
+    terrain_top is obstacle height ABOVE model ground; no island-height default.
+    """
+    source={'hourly':h,'units':units,'elevation':elevation,'ubicacion':location,'model':model}
+    if vertical_velocity_positive is not None:
+        source['vertical_velocity_positive']=vertical_velocity_positive
+    return derive_atmosphere(source,stencil=stencil,geometry=geometry,terrain_top=terrain_top)
 
 
 def irh_now(gauges: Channel, models: dict | None) -> dict:
@@ -4625,16 +4479,22 @@ def build_app(snap: dict, state: dict) -> dict[str, dict]:
     # atmósfera
     atmos = {"status": {k: {"estado": v[0], "nota": v[1]} for k, v in INDEX_STATUS.items()},
              "composites_spec": COMPOSITES, "profile": None}
-    top = 400.0
+    top = None
     if ok("relieve"):
         rel = srcs["relieve"].payload
-        top = float(max(v for row in rel["rows"] for v in row if v is not None))
+        heights = [v for row in rel["rows"] for v in row if fnum(v) is not None]
+        top = max(heights) if heights else None
         atmos["terrain"] = rel
     if ok("batimetria"):
         atmos["bathy"] = srcs["batimetria"].payload
     if ok("perfil"):
-        atmos["profile"] = derive_profile(srcs["perfil"].payload["hourly"], srcs["perfil"].payload["units"],
-                                          srcs["perfil"].payload.get("stencil"), top)
+        profile_source=srcs["perfil"].payload
+        ground=fnum(profile_source.get('elevation'))
+        obstacle=top-ground if top is not None and ground is not None and top>ground else None
+        atmos["profile"] = derive_profile(profile_source["hourly"],profile_source["units"],
+            profile_source.get('stencil'),obstacle,elevation=ground,
+            location=profile_source.get('ubicacion'),geometry=profile_source.get('geometry'),
+            model=CFG.get('profile_model','best_match'))
         atmos["units"] = srcs["perfil"].payload["units"]
         atmos["model"] = CFG.get("profile_model", "best_match")
     gch = next((c for c in snap["channels"] if c["name"] == "pluviometros"), None)
@@ -5522,7 +5382,14 @@ def selftest() -> int:
                    f"wind_speed_{p_}hPa": [5 + p_ / 100], f"wind_direction_{p_}hPa": [200]})
     hh.update({"wind_speed_10m": [3], "wind_direction_10m": [90], "cape": [1200], "convective_inhibition": [-30],
                "total_column_integrated_water_vapour": [34], "vertical_velocity_700hPa": [0.1]})
-    dp = derive_profile(hh, {"vertical_velocity_700hPa": "m/s"})
+    hh['surface_pressure']=[1013]
+    profile_units={'surface_pressure':'hPa','wind_speed_10m':'m/s','wind_direction_10m':'°',
+                   'cape':'J/kg','convective_inhibition':'J/kg',
+                   'total_column_integrated_water_vapour':'kg/m²','vertical_velocity_700hPa':'m/s'}
+    for pressure in PROFILE_LEVELS:
+        for variable,unit in [('temperature','°C'),('relative_humidity','%'),('geopotential_height','m'),('wind_speed','m/s'),('wind_direction','°')]:
+            profile_units[f'{variable}_{pressure}hPa']=unit
+    dp = derive_profile(hh,profile_units,elevation=0,vertical_velocity_positive='up')
     ix = {k: v[0] for k, v in dp["indices"].items()}
     check("perfil: LR75 = 17 °C / 2,6 km ≈ 6,5 °C/km; TT y KI calculados; CIN en valor absoluto",
           abs(ix["lr75"] - 6.5) < 0.1 and ix["tt"] is not None and ix["ki"] is not None and ix["cin"] == 30)

@@ -16,7 +16,11 @@ import urllib.parse
 import urllib.request
 import zipfile
 
+from atmospheric_core import PROFILE_VARIABLES
+
 MODULES = {
+    'atmosphere': {'host':'api.open-meteo.com', 'path':'/v1/forecast',
+                   'hourly':','.join(PROFILE_VARIABLES), 'days':3, 'wind_speed_unit':'ms'},
     'radar': {'host':'api.rainviewer.com','path':'/public/weather-maps.json'},
     'warnings': {'host':'feeds.meteoalarm.org','path':'/feeds/'},
     'observations': {'host':'aviationweather.gov','path':'/api/data/metar'},
@@ -33,13 +37,13 @@ BUILTINS = {
     'portinatx': {'schema': 1, 'id': 'portinatx', 'name': 'Portinatx', 'setting': 'coastal',
                   'points': [{'id': 'portinatx', 'latitude': 39.1153, 'longitude': 1.5214}],
                   'sources': {'metar':['LEIB'],'warning_feeds':[{'country':'spain','areas':['ibiza','formentera','pitiusas']}]},
-                  'modules': ['forecast', 'ensemble', 'terrain', 'marine','radar','warnings','observations']},
+                  'modules': ['forecast', 'ensemble', 'atmosphere', 'terrain', 'marine','radar','warnings','observations']},
     'pirineo': {'schema': 1, 'id': 'pirineo', 'name': 'Pirineo', 'setting': 'inland',
                'points': [{'id': 'andorra_vella', 'latitude': 42.5078, 'longitude': 1.5211},
                           {'id': 'masella', 'latitude': 42.3500, 'longitude': 1.9000},
                           {'id': 'font_romeu', 'latitude': 42.5047, 'longitude': 2.0392}],
                'sources': {'metar':['LESU','LFMP'],'warning_feeds':[{'country':'spain','areas':['pirineo de girona','pirineo de lleida']},{'country':'france','areas':['pyrénées-orientales','ariège']},{'country':'andorra','areas':['andorra']}]},
-               'modules': ['forecast', 'ensemble', 'terrain','radar','warnings','observations']},
+               'modules': ['forecast', 'ensemble', 'atmosphere', 'terrain','radar','warnings','observations']},
 }
 
 
@@ -96,6 +100,8 @@ def request_url(module, point, profile=None):
     query = {'latitude': point['latitude'], 'longitude': point['longitude']}
     if 'hourly' in spec:
         query.update(hourly=spec['hourly'], forecast_days=spec['days'], timezone='UTC')
+    if 'wind_speed_unit' in spec:
+        query['wind_speed_unit'] = spec['wind_speed_unit']
     if 'models' in spec:
         query['models'] = spec['models']
     return 'https://' + spec['host'] + spec['path'] + '?' + urllib.parse.urlencode(query)
@@ -162,7 +168,10 @@ def validate_payload(module, data):
         raise ValueError('invalid hourly numeric value')
     if 'hourly_units' in data and (not isinstance(data['hourly_units'], dict) or any(not isinstance(v,str) for v in data['hourly_units'].values())):
         raise ValueError('invalid units')
-    for field in MODULES[module]['hourly'].split(','):
+    # Profile providers may omit unsupported fields; the shared core preserves
+    # those diagnostics as unknown instead of discarding the entire profile.
+    required = ['surface_pressure'] if module == 'atmosphere' else MODULES[module]['hourly'].split(',')
+    for field in required:
         keys = [k for k in h if k == field or k.startswith(field + '_')]
         if not keys or (module == 'ensemble' and not any('_member' in k for k in keys)):
             raise ValueError('missing requested field: ' + field)
@@ -204,6 +213,16 @@ def daily_diagnostics(data):
         row['basis'] = 'provider forecast; diagnostic only; no local alert thresholds'
         out[day] = row
     return out
+
+
+def atmosphere_diagnostics(data):
+    """The same model-profile calculation used by both territorial consoles."""
+    from atmospheric_core import derive
+    lat,lon=data.get('latitude'),data.get('longitude')
+    location={'lat':lat,'lon':lon} if _number(lat) and _number(lon) else None
+    return derive({'hourly':data.get('hourly',{}), 'units':data.get('hourly_units',{}),
+                   'elevation':data.get('elevation'), 'ubicacion':location,
+                   'model':'best_match (Open-Meteo)'})
 
 
 def collect(profile, output, *, getter=fetch_json):
@@ -252,7 +271,7 @@ def collect(profile, output, *, getter=fetch_json):
                         validate_payload(module, data)
                         raw = json.dumps(data, ensure_ascii=False, allow_nan=False).encode()
                         from weather_core import ensemble_daily, marine_daily
-                        diagnostics = {'forecast': ('daily', daily_diagnostics), 'ensemble': ('ensemble', ensemble_daily), 'marine': ('marine', marine_daily)}
+                        diagnostics = {'forecast': ('daily', daily_diagnostics), 'ensemble': ('ensemble', ensemble_daily), 'marine': ('marine', marine_daily), 'atmosphere': ('atmosphere', atmosphere_diagnostics)}
                         label, function = diagnostics.get(module, (None, None))
                         derived = json.dumps(function(data), ensure_ascii=False, allow_nan=False).encode() if function else None
                         if len(raw) > 25_000_000 or (derived is not None and len(derived) > 25_000_000) or content_bytes + len(raw) + len(derived or b'') > 120 * 1024 * 1024:
