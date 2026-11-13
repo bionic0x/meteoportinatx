@@ -20,6 +20,7 @@ const [chrome, file] = process.argv.slice(1);
   const html=fs.readFileSync(file,'utf8');
   await page.route('**/*', route=>route.request().url()==='http://meteo.test/' ? route.fulfill({contentType:'text/html',body:html}) : route.abort());
   await page.goto('http://meteo.test/');
+  assert.equal(await page.locator('html').getAttribute('lang'),'es');
   await page.selectOption('#portinatx-language','en');
   assert.equal(await page.locator('[data-tab="vigilancia"]').textContent(),'Monitoring');
   assert.equal(await page.locator('#portinatx-language-note').isVisible(),true);
@@ -34,6 +35,29 @@ const [chrome, file] = process.argv.slice(1);
   assert.match(await page.locator('#pre-exit').textContent(), /no observed local hazard/);
   await page.locator('#refresh-st').evaluate(e => { e.textContent = 'El ciclo falló: timeout'; });
   await page.waitForFunction(() => document.querySelector('#refresh-st').textContent === 'The cycle failed: timeout');
+  // A running cycle can mutate an existing text node instead of replacing it.
+  await page.locator('#refresh-st').evaluate(e => { e.firstChild.data = 'Actualizado · ciclo-7'; });
+  await page.waitForFunction(() => document.querySelector('#refresh-st').textContent === 'Updated · ciclo-7');
+  await page.selectOption('#portinatx-language','es');
+  assert.equal(await page.locator('#refresh-st').textContent(),'Actualizado · ciclo-7');
+  await page.selectOption('#portinatx-language','en');
+  assert.equal(await page.locator('#refresh-st').textContent(),'Updated · ciclo-7');
+  await page.evaluate(() => { CHAT.turns=[{role:'user',content:'Mar'},{role:'assistant',content:'Viento'}]; renderChatLog(); });
+  await page.waitForTimeout(100);
+  assert.equal(await page.locator('#chat-log .msg.u').textContent(),'Mar');
+  assert.equal(await page.locator('#chat-log .msg.a').textContent(),'Viento');
+  await page.evaluate(() => {
+   S.core={sources:[{name:'Mar',status:'ok',data_time:null,detail:'Viento'}],channels:[{name:'Mar',available:true,level:0,kind:'test',confidence:'unknown',age_min:2,evidence:['Mar']}]};
+   renderSources(); renderChannels();
+  });
+  await page.waitForTimeout(100);
+  assert.equal(await page.locator('#t-src tbody tr td').first().textContent(),'Mar');
+  assert.equal(await page.locator('#t-src tbody tr td').last().textContent(),'Viento');
+  assert.equal(await page.locator('#channels li').textContent(),'Mar');
+  assert.equal(await page.locator('#channels summary b').textContent(),'Mar');
+  await page.evaluate(() => {document.querySelector('#chat-log').innerHTML='<div id="chat-live">Mar</div>';});
+  await page.waitForTimeout(100);
+  assert.equal(await page.locator('#chat-live').textContent(),'Mar');
 
 
 

@@ -92,6 +92,7 @@ The supervised cycle for the Portinatx prospective archive includes systemd temp
 |---|---|
 | `src/portinatx_degen.py` | Coastal engine: radar, observations, warnings, marine data, models and private forensics. |
 | `src/pirineo.py` and `src/pirineo_meta.py` | Mountain engine: terrain, profiles, snow and ensembles. |
+| `src/atmospheric_core.py` | Shared atmospheric core; parity covers only the block tested with synthetic inputs. |
 | `src/nowcast.py` and `src/nowcast_backend.py` | Orchestration, local server and read-only backend. |
 | `src/public_fetch.js` | Consistent domain loading and static fallback. |
 | `src/route_engine.js` and `src/pirineo_ruta.html` | Private in-browser GPX route planner. |
@@ -102,4 +103,4 @@ CI checks Python 3.10 and 3.11, JavaScript tests, integrity and the portable app
 
 The repository also configures seven [Codex agent divisions](docs/agency-agents.en.md): data, geospatial, backend, operations, quality, interface and security. These are profiles for compatible sessions; they do not create persistent agents or schedule work by themselves.
 
-[Architecture](docs/ARQUITECTURA-UNIFICADA.en.md) · [Release notes](docs/RELEASE-NOTES.en.md) · [Assessment and roadmap](docs/EVALUACION-MODELO-USOS-POTENCIAL.en.md) · [Modular zones](docs/ZONAS-MODULARES.en.md)
+[Architecture](docs/ARQUITECTURA-UNIFICADA.en.md) · [Release notes](docs/RELEASE-NOTES.en.md) · [Assessment and roadmap](docs/EVALUACION-MODELO-USOS-POTENCIAL.en.md) · [Modular zones](docs/ZONAS-MODULARES.en.md) · [Algorithm parity](docs/PARIDAD-ALGORITMOS.en.md)

@@ -1,5 +1,7 @@
 # Paridad de algoritmos: alcance y evidencia
 
+**Idioma / Language:** Español · [English](PARIDAD-ALGORITMOS.en.md)
+
 Revisión Agency Agents del 13 de noviembre de 2026 sobre la base `9ba40bf`.
 División de Ingeniería: perfiles Backend Architect y Frontend Developer de Ante/Agency Agents. Backend, Geoespacial y Calidad iniciaron la revisión paralela; alcanzaron el límite de uso de la cuenta tras entregar diagnóstico, núcleo inicial y pruebas. El coordinador completó adaptadores, integración, revisión y verificación; no se declara una revisión independiente final terminada por esos agentes.
 Referencias: perfiles de `.codex/agents/` y [contrato de coordinación](agency-agents.md).
