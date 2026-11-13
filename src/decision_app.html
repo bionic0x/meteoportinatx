@@ -189,6 +189,7 @@ function apply(){
   const internalDetails=['Consultar AEMET directamente.','Comprobar AEMET, SMA y Météo-France.','Consultar fuentes oficiales.','Situación del último ciclo verificado; comprobar AEMET.','No equivale a ausencia de peligro; verificar los organismos oficiales.'];
   const officialDetail=parent.id==='official-detail';
   const officialAllowed=internalDetails.includes(str)||str.startsWith('Fuente: solo MeteoAlarm (sin CAP directo de AEMET). ')||str.startsWith('Sin fuente oficial disponible en este ciclo. ');
+  if(officialDetail)parent.setAttribute('lang',internalDetails.includes(str)?lang:'und');
   const value=lang==='en'&&(!officialDetail||officialAllowed)?(dict[str]||dynamic(str)):str;
   const next=source.replace(str,value);if(node.nodeValue!==next)node.nodeValue=next;
  }

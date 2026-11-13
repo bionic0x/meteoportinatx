@@ -28,6 +28,7 @@ const [chrome,file] = process.argv.slice(1);
   await page.waitForFunction(()=>document.querySelector('#question').textContent==='What has changed near home?');
   assert.equal(await page.locator('#official-title').textContent(),'Warnings unverified');
   assert.equal(await page.locator('#official-detail').textContent(),'Aviso de lluvias de nivel amarillo');
+  assert.equal(await page.locator('#official-detail').getAttribute('lang'),'und');
   assert.equal(await page.locator('html').getAttribute('lang'),'en');
   await page.reload();
   assert.equal(await page.locator('#decision-language').inputValue(),'en');

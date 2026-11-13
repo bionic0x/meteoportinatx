@@ -627,6 +627,16 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
   Object.assign(generatedFragments, {
     "Fracciones de miembros del ensemble, NO probabilidades calibradas localmente; sin observación del manto de nieve ni predicción de apertura": "Ensemble member fractions, NOT locally calibrated probabilities; no observed snowpack or opening prediction"
 });
+  Object.assign(generatedFragments, {
+    " · isocero ": " · freezing level ",
+    "Relieve:": "Terrain:",
+    "Datos:": "Data:",
+    "Verificación Météo-France": "Météo-France verification",
+    "archivo diario, no tiempo real · datos hasta ": "daily archive, not real time · data through ",
+    " °C hace ": " °C observed ",
+    " · sin validar": " · unvalidated",
+    " · lluvia 24 h ": " · 24-hour rain "
+});
   const attributeTranslations = {
     "Secciones del observatorio": "Observatory sections",
     "Volver a observatorios": "Back to observatories",
@@ -677,12 +687,16 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
     if (missing) return `Not calibrated in the Pyrenees. Missing components: ${missing[1] === 'ninguno' ? 'none' : missing[1]}.`;
     const count = value.match(/^([0-9]+) estaciones$/);
     if (count) return `${count[1]} stations`;
+    if (parent.id === 'probe') {
+      const distance = value.match(/^a ([0-9]+(?:\.[0-9]+)?) km$/);
+      if (distance) return `${distance[1]} km away`;
+    }
     if (parent.closest('#t-pts td:last-child')) {
       let translated = value;
       for (const [span, replacement] of Object.entries(pointFragments)) translated = translated.replaceAll(span, replacement);
       if (translated !== value) return translated;
     }
-    const generated = parent.closest('#warns,#m-issued,#m-src,#now-kv,#legend,#map-note,#cut-note,#cotas-note,#pts-note,#foehn,#ch-cotas,#ch-cut,#inv-note,#meta-st,#meta-note,#meta-context,#meta-sources,#t-meta,#t-flow,#t-obs,#pov-atmos-note,#pov-model-note,#pov-forensic,#pov-lab-result,#refresh-st,#btn-refresh,#other-sections summary');
+    const generated = parent.closest('#warns,#aemet-mt,#srcs,#m-issued,#m-src,#now-kv,#legend,#map-note,#cut-note,#cotas-note,#pts-note,#foehn,#ch-cotas,#ch-cut,#inv-note,#meta-st,#meta-note,#meta-context,#meta-sources,#t-meta,#t-flow,#t-obs,#pov-atmos-note,#pov-model-note,#pov-forensic,#pov-lab-result,#refresh-st,#btn-refresh,#other-sections summary');
     if (generated) {
       let translated = value;
       for (const [span, replacement] of Object.entries(generatedFragments).sort((a,b)=>b[0].length-a[0].length)) translated = translated.replaceAll(span, replacement);
@@ -695,7 +709,7 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
     let node;
     while ((node = walker.nextNode())) {
       const parent = node.parentElement;
-      if (!parent || parent.closest('script, style, #pir-language, #language-note, [data-source-text], #srcs, #chat-log')) continue;
+      if (!parent || parent.closest('script, style, #pir-language, #language-note, [data-source-text], #chat-log')) continue;
       let raw = original.get(node);
       const previous = rendered.has(node) ? rendered.get(node) : raw;
       if (raw === undefined || node.nodeValue !== previous) { raw = node.nodeValue; original.set(node, raw); }
@@ -939,7 +953,7 @@ function legendFor(pr){
   if(S.ov==="racha"){ h+=RAMP_G.map(([v,c])=>sw(c,v)).join("")+"<span>km/h</span>"; note="Racha de AROME HD a 10 m. En collados y crestas la aceleración real puede superar la del modelo."; }
   if(S.cont) h+=ln(css("--contour-i"),"curvas cada 100 m (gruesas cada 500 m)");
   h+=`<span>▲ cima · ● pueblo o estación · <span style="color:var(--ice)">●</span> collado</span>`;
-  $("legend").innerHTML=h; $("map-note").textContent=(note?note+" ":"")+`Relieve: ${D.dem?.fuente||"—"}, remuestreado a ${D.dem?.step}°. ${ST("dem").replace(/<[^>]+>/g,"")}`;
+  $("legend").innerHTML=h; $("map-note").innerHTML=(note?esc(note)+" ":"")+`Relieve: <span data-source-text>${esc(D.dem?.fuente||"—")}</span>, remuestreado a ${esc(D.dem?.step)}°. <span data-source-text>${esc(ST("dem").replace(/<[^>]+>/g,""))}</span>`;
 }
 document.querySelectorAll("[data-ov]").forEach(b=>b.addEventListener("click",()=>{ S.ov=b.dataset.ov; document.querySelectorAll("[data-ov]").forEach(x=>x.setAttribute("aria-pressed",x===b)); drawMap(); }));
 $("tg-names").addEventListener("click",e=>{ S.names=!S.names; e.target.setAttribute("aria-pressed",S.names); drawMap(); });
@@ -947,7 +961,7 @@ $("tg-cont").addEventListener("click",e=>{ S.cont=!S.cont; e.target.setAttribute
 $("map").addEventListener("pointermove", e=>{ const d=D.dem; if(!d) return; const r=e.currentTarget.getBoundingClientRect(); const fx=(e.clientX-r.left)/r.width, fy=(e.clientY-r.top)/r.height;
   const lat=d.lat_n-fy*(d.nlat-1)*d.step, lon=d.lon_w+fx*(d.nlon-1)*d.step, z=demAt(lat,lon); let near=null, nd=1e9;
   for(const p of D.core?.pois||[]){ const dd=Math.hypot((p.lat-lat)*111,(p.lon-lon)*82); if(dd<nd){nd=dd;near=p;} }
-  const pb=$("probe"); pb.hidden=false; pb.innerHTML=`${n0(z)} m · ${lat.toFixed(3)} N ${lon.toFixed(3)} E${near&&nd<6?`<br>${esc(near.nombre)} a ${nd.toFixed(1)} km`:""}`; });
+  const pb=$("probe"); pb.hidden=false; pb.innerHTML=`${n0(z)} m · ${lat.toFixed(3)} N ${lon.toFixed(3)} E${near&&nd<6?`<br><span data-source-text>${esc(near.nombre)}</span> a ${nd.toFixed(1)} km`:""}`; });
 $("map").addEventListener("pointerleave", ()=>{ $("probe").hidden=true; });
 
 /* ── corte vertical ── */
@@ -1011,7 +1025,7 @@ function renderPoints(){
   for(const z of ZONE_ORDER){ const ps=c.pois.filter(p=>p.zona===z); if(!ps.length) continue; h+=`<tr class="zone"><td colspan="10">${z}</td></tr>`;
     for(const p of ps){ const m=byId[p.id]?.modelos?.[S.model]||{}; const alt=p.alt_dem??p.alt_ref; const copo=copoAt(byId[p.id]?.vertiente); const above=copo!=null&&alt>=copo;
       const note=[m.ventisca_h?`ventisca ${m.ventisca_h} h`:"", (m.nieve72_cm||0)>=1?"nieve":"", m.racha24>=80?"viento fuerte":"", above?"sobre la cota":""].filter(Boolean).join(" · ");
-      h+=`<tr><td>${esc(p.nombre)} <span class="ev">${p.tipo}</span></td><td class="num">${n0(alt)}</td><td class="num ${m.T!=null&&m.T<=0?"snow":""}">${n1(m.T)}</td><td class="num">${n1(m.Tw)}</td><td class="num">${n0(m.tmin24)} / ${n0(m.tmax24)}</td><td class="num">${n1(m.pr24)} / ${n1(m.pr72)}</td><td class="num ${(m.nieve72_cm||0)>=1?"snow":""}">${m.nieve24_cm==null?"—":n1(m.nieve24_cm)} / ${m.nieve72_cm==null?"—":n1(m.nieve72_cm)}</td><td class="num">${n0(m.racha24)}</td><td class="num">${n0(m.viento_ahora)} ${m.dir_ahora!=null?["N","NE","E","SE","S","SW","W","NW"][Math.floor(((m.dir_ahora+22.5)%360)/45)]:""}</td><td>${esc(note)}</td></tr>`; } }
+      h+=`<tr><td><span data-source-text>${esc(p.nombre)}</span> <span class="ev">${esc(p.tipo)}</span></td><td class="num">${n0(alt)}</td><td class="num ${m.T!=null&&m.T<=0?"snow":""}">${n1(m.T)}</td><td class="num">${n1(m.Tw)}</td><td class="num">${n0(m.tmin24)} / ${n0(m.tmax24)}</td><td class="num">${n1(m.pr24)} / ${n1(m.pr72)}</td><td class="num ${(m.nieve72_cm||0)>=1?"snow":""}">${m.nieve24_cm==null?"—":n1(m.nieve24_cm)} / ${m.nieve72_cm==null?"—":n1(m.nieve72_cm)}</td><td class="num">${n0(m.racha24)}</td><td class="num">${n0(m.viento_ahora)} ${m.dir_ahora!=null?["N","NE","E","SE","S","SW","W","NW"][Math.floor(((m.dir_ahora+22.5)%360)/45)]:""}</td><td>${esc(note)}</td></tr>`; } }
   $("t-pts").querySelector("tbody").innerHTML=h;
   $("pts-note").textContent=`${c.modelo_nombre?.[S.model]||S.model} · valores en la altitud real del punto (DEM). Lluvia y nieve en mm y cm; racha en km/h. «Sobre la cota»: el punto está por encima de la cota de copo actual de su vertiente (perfil norte o sur; en los collados de la divisoria, la más baja). AROME HD no publica nieve en Open-Meteo: para la nieve usa ICON-EU o IFS.`;
 }
@@ -1027,7 +1041,7 @@ function renderDiag(){
   $("foehn-st").innerHTML=ST("foehn"); $("inv-st").innerHTML=ST("inversion");
   const P=c.perfil?.sur||[];
   $("t-flow").querySelector("tbody").innerHTML=P.filter((_,i)=>i%6===0).slice(0,12).map(p=>`<tr><td>${fmtT(p.t)}</td><td class="num">${p.flujo||"—"} ${n0(p.viento700_kmh)}</td><td class="num">${p.froude??"—"}</td><td class="num">${n0(p.isocero_m)}</td><td class="num">${n0(p.tw0_m)}</td><td class="num">${n0(p.cota_copo_m)}</td><td class="num">${p.slr??"—"}</td><td style="white-space:normal;min-width:200px">${esc(regime(p))}</td></tr>`).join("")||'<tr><td colspan="8" class="empty">Perfil no disponible.</td></tr>';
-  $("foehn").innerHTML=(c.foehn||[]).map(f=>`<li>${esc(f.par)}: ${f.estado==="UNKNOWN"?`<b>UNKNOWN</b> · ${esc(f.motivo||"sin datos")}`:f.horas?`<b>${f.horas} h con señal de föhn</b> (primera ${fmtT(f.primeras[0]?.t)}, Δθ ${f.primeras[0]?.dtheta} K, ΔHR ${f.primeras[0]?.dhr})`:"sin señal de föhn en 72 h"}</li>`).join("")||'<li class="empty">Sin pares evaluables.</li>';
+  $("foehn").innerHTML=(c.foehn||[]).map(f=>`<li><span data-source-text>${esc(f.par)}</span>: ${f.estado==="UNKNOWN"?`<b>UNKNOWN</b> · ${esc(f.motivo||"sin datos")}`:f.horas?`<b>${f.horas} h con señal de föhn</b> (primera ${fmtT(f.primeras[0]?.t)}, Δθ ${f.primeras[0]?.dtheta} K, ΔHR ${f.primeras[0]?.dhr})`:"sin señal de föhn en 72 h"}</li>`).join("")||'<li class="empty">Sin pares evaluables.</li>';
   // inversión observada: temperatura frente a altitud
   const O=[...(c.obs||[]).map(o=>({n:o.nombre,z:o.alt,T:o.T,e:window.PirineoObservatory.liveAge(o,c.issued)})), ...(c.metar||[]).map(m=>({n:m.icao,z:m.alt,T:m.T,e:window.PirineoObservatory.liveAge(m,c.issued)}))].filter(o=>o.z!=null&&o.T!=null&&o.e!=null&&o.e<=90);
   if(O.length>=2){ const W=460,H=260,pd={l:40,r:12,t:10,b:28}, zmin=Math.floor(Math.min(...O.map(o=>o.z))/200)*200, zmax=Math.ceil(Math.max(...O.map(o=>o.z))/200)*200+200, tmin=Math.floor(Math.min(...O.map(o=>o.T)))-1, tmax=Math.ceil(Math.max(...O.map(o=>o.T)))+1;
@@ -1055,9 +1069,9 @@ function renderDiag(){
   $("aemet-mt").innerHTML=am;
   const L=c.enlaces||{}; const lab={aludes_andorra:"Estat de la neu i allaus · Andorra",aludes_meteocat:"Butlletí de perill d'allaus · Meteocat",aludes_meteofrance:"BERA · Météo-France montagne",carreteras_andorra:"Mobilitat · Andorra (Envalira)",carreteras_francia:"Inforoute 66 (Puymorens)",carreteras_cat:"Trànsit · Catalunya (Toses)"};
   $("links").innerHTML=Object.entries(L).map(([k,u])=>`<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(lab[k]||k)}</a></li>`).join("");
-  $("srcs").innerHTML=Object.entries(c.fuentes||{}).map(([k,v])=>`<li><b>${esc(k)}</b> · <span class="ev">${esc(String(v).slice(0,140))}</span></li>`).join("");
-  if((c.atribuciones||[]).length) $("srcs").innerHTML+=c.atribuciones.map(a=>`<li class="ev">Datos: ${esc(String(a).slice(0,200))}</li>`).join("");
-  const mfv=c.verificacion_mf; if(mfv&&Array.isArray(mfv.estaciones)) $("srcs").innerHTML+=`<li><b>Verificación Météo-France</b> · <span class="ev">archivo diario, no tiempo real · datos hasta ${fmtT(mfv.datos_hasta)}</span></li>`+mfv.estaciones.map(s=>`<li class="ev">${esc(s.nombre)} (${n0(s.alt)} m): ${n1(s.T)} °C hace ${n1(s.edad_h)} h${s.QT==="9"?" · sin validar":""} · lluvia 24 h ${s.rr_24h==null?"—":n1(s.rr_24h)+" mm"}</li>`).join("");
+  $("srcs").innerHTML=Object.entries(c.fuentes||{}).map(([k,v])=>`<li><b data-source-text>${esc(k)}</b> · <span class="ev" data-source-text>${esc(String(v).slice(0,140))}</span></li>`).join("");
+  if((c.atribuciones||[]).length) $("srcs").innerHTML+=c.atribuciones.map(a=>`<li class="ev"><span>Datos:</span> <span data-source-text>${esc(String(a).slice(0,200))}</span></li>`).join("");
+  const mfv=c.verificacion_mf; if(mfv&&Array.isArray(mfv.estaciones)) $("srcs").innerHTML+=`<li><b>Verificación Météo-France</b> · <span class="ev">archivo diario, no tiempo real · datos hasta ${fmtT(mfv.datos_hasta)}</span></li>`+mfv.estaciones.map(s=>`<li class="ev"><span data-source-text>${esc(s.nombre)}</span> (${n0(s.alt)} m): ${n1(s.T)} °C hace ${n1(s.edad_h)} h${s.QT==="9"?" · sin validar":""} · lluvia 24 h ${s.rr_24h==null?"—":n1(s.rr_24h)+" mm"}</li>`).join("");
 }
 
 /* ── metaanálisis 15 días ── */
@@ -1073,8 +1087,8 @@ function renderExtended(){
   const basis = m.forecast_basis === knownBasis ? "Fracciones de miembros del ensemble, NO probabilidades calibradas localmente; sin observación del manto de nieve ni predicción de apertura" : (m.forecast_basis||"Sin datos");
   const basisHtml = !m.forecast_basis || m.forecast_basis === knownBasis ? esc(basis) : `<span data-source-text>${esc(basis)}</span>`;
   $("meta-note").innerHTML=`Captura ${esc(fmtT(m.issued_utc))} · Celdas de referencia de pista; DEM y perfiles verticales siguen en el módulo 72 h. ${basisHtml}.`;
-  $("meta-sources").innerHTML=Object.entries(m.sources||{}).map(([name,info])=>`<li><b>${esc(name)}</b> · ${esc(info.state||"UNKNOWN")}${info.error?" · "+esc(info.error):""}</li>`).join("") + `<li>Pesos por familias institucionales: ${esc(JSON.stringify(m.model_families||{}))}</li>` + `<li>Revisiones en días comunes: ${n0(m.run_revisions?.length||0)}; no equivalen a error observado</li>`;
-  $("meta-context").innerHTML=Object.entries(m.teleconnections||{}).map(([name,entry])=>`<li><b>${esc(name)}</b> · ${esc(entry.state||"UNKNOWN")}${entry.value!=null?" · "+esc(entry.value):""}${entry.valid_at?" · "+esc(entry.valid_at):""}</li>`).join("") + `<li><b>Contrarian:</b> ${esc(m.contrarian?.state||"UNCONFIRMED")}. Sin incremento automático de probabilidad de nieve.</li>`;
+  $("meta-sources").innerHTML=Object.entries(m.sources||{}).map(([name,info])=>`<li><b data-source-text>${esc(name)}</b> · <span data-source-text>${esc(info.state||"UNKNOWN")}</span>${info.error?" · <span data-source-text>"+esc(info.error)+"</span>":""}</li>`).join("") + `<li>Pesos por familias institucionales: <span data-source-text>${esc(JSON.stringify(m.model_families||{}))}</span></li>` + `<li>Revisiones en días comunes: ${n0(m.run_revisions?.length||0)}; no equivalen a error observado</li>`;
+  $("meta-context").innerHTML=Object.entries(m.teleconnections||{}).map(([name,entry])=>`<li><b data-source-text>${esc(name)}</b> · <span data-source-text>${esc(entry.state||"UNKNOWN")}${entry.value!=null?" · "+esc(entry.value):""}${entry.valid_at?" · "+esc(entry.valid_at):""}</span></li>`).join("") + `<li><b>Contrarian:</b> ${esc(m.contrarian?.state||"UNCONFIRMED")}. Sin incremento automático de probabilidad de nieve.</li>`;
 }
 $("meta-station").addEventListener("change",renderExtended);
 $("meta-level").addEventListener("change",renderExtended);
