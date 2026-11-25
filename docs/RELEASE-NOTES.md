@@ -2,6 +2,12 @@
 
 **Idioma / Language:** Español · [English](RELEASE-NOTES.en.md)
 
+# Sin publicar — Pirineo: relieve fino, cubeta fría y carreteras (experimental)
+
+- `src/pirineo_orografia.py`: cota de copo efectiva por punto (descenso por fusión con la precipitación del perfil realzada por el forzamiento orográfico lineal de Smith y Barstad; solo horas con precipitación) y mínima de cubeta fría en los fondos de la Cerdanya, la Cerdagne y el Capcir. Tablas de relieve en malla de 0,01° (~1 km) sobre un DEM de 90 m, en `src/pirineo_orografia.json`, generadas por `scripts/build_orografia_pirineo.py`.
+- `src/pirineo_carreteras.py`: incidencias oficiales de SCT y Bison Futé (fallo cerrado: UNKNOWN, nunca «vía libre»); Andorra e Inforoute 66 solo enlace; exposición de 11 vías sobre la cota efectiva.
+- Nuevos bloques `core.orografia`, `core.cubeta_fria`, `core.carreteras` y entradas `status` EXPERIMENTAL. Sin calibrar; no cambian avisos ni niveles. Versión del motor sin cambios (0.6.1). Ver `docs/PIRINEO-OROGRAFIA-CUBETA-CARRETERAS.md`.
+
 - Vista experimental `/dispositivo/`, sensores optativos y vibración por transición del ciclo. No sustituye avisos oficiales ni funciona como alerta en segundo plano. Ver `docs/DISPOSITIVO-SENSORES.md`.
 
 # Sin publicar — vigilancia de la clave de Météo-France

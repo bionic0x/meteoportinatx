@@ -41,6 +41,8 @@ import knowledge_base as kb  # noqa: E402
 import pirineo_atmos as atmos  # noqa: E402
 import mf_obs  # noqa: E402  (verificación: archivo horario oficial de Météo-France)
 import meteo_france_obs as mf  # noqa: E402  (tiempo real: API DPObs, clave del propietario)
+import pirineo_orografia as oro  # noqa: E402  (relieve fino: cota efectiva y cubeta fría, EXPERIMENTAL)
+import pirineo_carreteras as roads  # noqa: E402  (estado oficial de las vías y exposición, EXPERIMENTAL)
 
 VERSION = "0.6.1"
 UTC = timezone.utc
@@ -131,6 +133,9 @@ STATUS = {
     "foehn": ("EXPERIMENTAL", "Föhn del norte: flujo a 700 hPa perpendicular a la divisoria (≥10 m/s) y, en el par barlovento/sotavento, θ de sotavento ≥2 K mayor y HR ≥20 puntos menor, en cualquiera de los modelos. Sin perfil u horas comunes: UNKNOWN. El föhn del sur no se evalúa."),
     "inversion": ("DIAGNÓSTICO", "Inversión observada entre estaciones de fondo y de ladera de la Cerdanya y Andorra: gradiente con la altitud de la temperatura medida. Solo se afirma con ≥300 m de desnivel y pendiente mayor que dos veces su error; si no, «no concluyente». Mezcla cuencas: no resuelve lagos fríos de cada valle."),
     "viento_collados": ("DIAGNÓSTICO", "Racha prevista en Envalira, Pas de la Casa, Puymorens y Toses; ventisca probable si además nieva con T < −1 °C y racha ≥ 50 km/h."),
+    "orografia": ("EXPERIMENTAL", "Cota de copo efectiva por punto: la cota del perfil (Tw0 − 300 m) baja por fusión con la precipitación local = precipitación del perfil × factor de realce orográfico (1 a 2, del modelo lineal de Smith y Barstad con el viento de 700 hPa); hasta −400 m y nunca bajo el suelo del perfil. Mínima de 24 h solo entre horas con precipitación. El föhn no se suma: ya va en el perfil de cada vertiente y en «foehn». Tablas en malla de 0,01° (~1 km) sobre un DEM de 90 m. HIPÓTESIS sin calibrar; sin perfil o sin precipitación conocida, UNKNOWN o PARCIAL."),
+    "cubeta_fria": ("EXPERIMENTAL", "Mínima estimada en cubetas (Das, Capcir, fondo de la Cerdanya...) que los modelos de 2–9 km no resuelven: mínima del modelo − 0,6 × ΔTmax × (1 − nubosidad) × calma a 700 hPa; ΔTmax proporcional al índice de cubeta (hundimiento × drenaje de aire frío), 20 °C en Das y tope de 20 °C (los fondos con índice mayor que Das quedan igual que Das). Solo en fondos de cuenca de la Cerdanya, la Cerdagne y el Capcir; en el resto, NO_CALIBRADO. HIPÓTESIS sin calibrar con observaciones."),
+    "carreteras": ("EXPERIMENTAL", "Estado oficial: incidencias del Servei Català de Trànsit y de Bison Futé (DATEX II, red nacional francesa); si una fuente falla, UNKNOWN. Andorra (Mobilitat) e Inforoute 66 sin fuente abierta: solo enlace. Exposición: diagnóstico propio sobre un trazado aproximado (km sobre la cota efectiva, tramos en cubeta, puertos); no es el estado de la vía."),
 }
 
 
@@ -1021,6 +1026,43 @@ def summarize_points(points: dict, pois: list[dict], prof) -> list[dict]:
     return out
 
 
+def relieve_diag(pois: list[dict], prof, series: dict | None, now=None) -> dict:
+    """Cota efectiva por punto, cubeta fría y exposición de carreteras. Sin tablas de relieve: UNKNOWN."""
+    now = now or pd.now_utc()
+    doc = oro.load()
+    if doc is None:
+        unk = {"estado": "UNKNOWN", "motivo": "faltan las tablas src/pirineo_orografia.json"}
+        return {"orografia": unk, "cubeta_fria": unk, "exposicion": unk}
+    pmap = {p["id"]: p for p in pois}
+    prof = prof if isinstance(prof, dict) else {"sur": prof or []}
+    orog, cub, cotas = {}, {}, {}
+    for pid, sample in doc["puntos"].items():
+        p = pmap.get(pid)
+        if not p:
+            continue
+        vert = vertiente(p)
+        sides = oro.perfiles_del_punto(vert, prof)
+        d = oro.diag_punto(sample, doc, prof, sides, now)
+        orog[pid] = {"vertiente": vert, "cpi": sample["cpi"], **d}
+        # A la exposición viaria solo pasa una mínima de 24 h completa; si no, sus km cuentan como UNKNOWN
+        cotas[pid] = {"lat": p["lat"], "lon": p["lon"],
+                      "cota": (d.get("min24") or {}).get("cota_copo_efectiva_m") if d["estado"] == "OK" else None,
+                      "sin_precipitacion": bool(d.get("sin_precipitacion_24h"))}
+        if series and pid in series:
+            side = sides[-1] if sides else None          # en la divisoria, el viento del perfil sur (Cerdanya)
+            c = oro.cubeta_punto(sample, doc, series[pid], prof.get(side) if side else None, now)
+            if c["estado"] != "NO_APLICA":            # NO_CALIBRADO se publica: no desaparece en silencio
+                cub[pid] = c
+    def global_state(rows):
+        st = {r.get("estado") for r in rows.values()}
+        return "OK" if "OK" in st else "PARCIAL" if "PARCIAL" in st else "UNKNOWN"
+    return {"orografia": {"version": oro.VERSION, "estado": global_state(orog), "fuente_dem": doc["fuente_dem"],
+                          "modelo": doc["modelo"]["nombre"], "generado": doc["generado"], "puntos": orog},
+            "cubeta_fria": {"version": oro.VERSION, "estado": global_state(cub),
+                            "cpi_ref_das": doc["cubeta"]["cpi_ref_das"], "puntos": cub},
+            "exposicion": roads.exposicion(doc["carreteras"], cotas, doc.get("puertos"), doc["cubeta"]["cpi_ref_das"])}
+
+
 SOURCE_AGE_MIN: dict[str, float] = {}       # edad (min) del dato servido por fuente en este ciclo
 
 
@@ -1164,6 +1206,27 @@ def build(dem: dict | None = None) -> dict:
             verificacion_mf["ledger"] = ledger_shadow.record_observations(mf_obs.ledger_observations(mf_st))
     except Exception as exc:
         srcs["meteo_france_base"] = f"error: {type(exc).__name__}"
+    try:
+        relieve = relieve_diag(pois, prof, points["puntos"] if points else None)
+        srcs["relieve_fino"] = relieve["orografia"].get("estado", "UNKNOWN")
+    except Exception as exc:          # capa experimental: un fallo no tumba el diagnóstico físico
+        relieve = {k: {"estado": "UNKNOWN", "motivo": type(exc).__name__} for k in ("orografia", "cubeta_fria", "exposicion")}
+        srcs["relieve_fino"] = f"error: {type(exc).__name__}"
+    fallo_vias = {}
+    try:
+        def _vias():
+            v = roads.estado_oficial(lambda u: pd.http_get(u, timeout=15, retries=0))   # capa secundaria: no bloquea el ciclo
+            if all(v["fuentes"][k]["estado"] == "UNKNOWN" for k in ("sct", "bison_fute")):
+                fallo_vias["v"] = v
+                raise RuntimeError("SCT y Bison Futé sin respuesta")     # que _cached sirva la última buena (≤60 min)
+            return v
+        vias, st = _cached("carreteras", 15, _vias, max_age_min=60)
+        srcs["carreteras"] = st + " · " + ", ".join(f"{k} {v['estado']}" for k, v in vias["fuentes"].items())
+    except Exception as exc:
+        # Sin caché válida: cada fuente queda UNKNOWN con su motivo y Andorra e Inforoute 66 conservan su enlace
+        vias = fallo_vias.get("v") or roads.estado_oficial(lambda u: (_ for _ in ()).throw(RuntimeError("no consultado")))
+        srcs["carreteras"] = f"error: {type(exc).__name__}"
+    vias = {**vias, "edad_min": round(SOURCE_AGE_MIN["carreteras"]) if "carreteras" in SOURCE_AGE_MIN else None}
     contexto = {"nota": "contexto, no observación ni aviso; UNKNOWN si el estado no es ok",
                 "sidecars": {n: {k: v for k, v in b.items() if k != "data"} for n, b in bundle.items()},
                 "notas_lluvia_24h": kb.pirineo_precip_notes(bundle.get("climatologia_era5land_pirineo"), resumen, pd.now_utc())}
@@ -1176,6 +1239,8 @@ def build(dem: dict | None = None) -> dict:
             "puntos": resumen,
             "series": points["puntos"] if points else {}, "perfil": prof, "atmosfera_detalle": atmos_detail,
             "foehn": foehn_diag(points["puntos"] if points else None, pmap, prof.get("norte")),
+            "orografia": relieve["orografia"], "cubeta_fria": relieve["cubeta_fria"],
+            "carreteras": {"oficial": vias, "exposicion": relieve["exposicion"]},
             "inversion_obs": obs_inversion(obs_all), "obs": obs, "metar": metar, "avisos": warns, "aemet": aemet_txt,
             "status": {k: {"estado": a, "nota": b} for k, (a, b) in STATUS.items()},
             "enlaces": {"aludes_andorra": "https://www.meteo.ad/estatneu", "aludes_meteocat": "https://www.meteo.cat/prediccio/allaus",
@@ -1302,6 +1367,13 @@ def selftest() -> int:
     mcu = parse_meteociel_table(tb.replace("Heure locale", "Heure UTC"), datetime(2026, 10, 25))
     check("Meteociel: cabecera «Heure UTC» no se convierte", mcu[1]["t"].startswith("2026-10-25T18:00"))
     check("AEMET montaña: isocero «3.900 m» → 3900", _aemet_iso([{"cabecera": "Altitud de la isoterma de 0 ºC en la atmósfera libre", "texto": "3.900 m"}]) == 3900)
+    for name, fn in (("relieve fino: interpolación por rumbo, fusión, föhn, cubeta y tablas de relieve (~1 km)", oro.selftest),
+                     ("carreteras: SCT/DATEX II, fallo cerrado (UNKNOWN) y exposición sobre la cota", roads.selftest)):
+        try:
+            fn()
+            check(name, True)
+        except Exception:                    # cualquier excepción cuenta como fallo, no aborta la suite
+            check(name, False)
     print(f"\n{ok} OK, {fail} fallos")
     return 1 if fail else 0
 
