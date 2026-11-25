@@ -57,9 +57,10 @@ def load(path: Path | None = None) -> dict | None:
         return None
     if doc.get("schema") != 1 or len(doc.get("modelo", {}).get("direcciones", [])) != 16:
         return None
+    def ok16(v):
+        return isinstance(v, list) and len(v) == 16 and all(isinstance(x, (int, float)) and math.isfinite(x) for x in v)
     for s in list((doc.get("puntos") or {}).values()) + [m for r in (doc.get("carreteras") or {}).values() for m in r.get("muestras", [])]:
-        if not all(len(s.get(k) or []) == 16 and all(isinstance(x, (int, float)) and math.isfinite(x) for x in s[k])
-                   for k in ("p_oro_mmh", "ascenso_ms")):
+        if not ok16(s.get("p_oro_mmh")):
             return None                         # tabla incompleta: UNKNOWN entero, no ceros
     return doc
 
@@ -184,7 +185,7 @@ def perfiles_del_punto(vert: str | None, prof: dict) -> list[str]:
     return [vert] if vert and prof.get(vert) else []
 
 
-def diag_punto(sample: dict, doc: dict, prof: dict, sides: list[str], now: datetime) -> dict:
+def diag_punto(sample: dict, doc: dict, prof: dict, sides: list[str], now: datetime, n_esperado: int = 1) -> dict:
     """Hora más cercana a ahora y mínima de la cota efectiva en 24 h, solo entre horas con precipitación.
 
     Sin precipitación prevista en 24 h (todas las horas en OK y bajo 0,1 mm/h): estado OK, min24 None y
@@ -192,14 +193,24 @@ def diag_punto(sample: dict, doc: dict, prof: dict, sides: list[str], now: datet
     """
     if not sides:
         return {"estado": "UNKNOWN", "motivo": "sin perfil de la vertiente", "ahora": None, "min24": None}
-    horas = {}
+    def peor(d):
+        """Orden de «más desfavorable» en la divisoria: hora OK con precipitación y cota más baja primero."""
+        c = d.get("cota_copo_efectiva_m")
+        llueve = d.get("estado") == "OK" and (d.get("p_local_mmh") or 0) >= PR_MIN_MMH
+        return (not llueve, d.get("estado") != "OK", c if c is not None else 1e9)
+
+    por_hora: dict = {}
     for s in sides:
         for ph in perfil_horas(prof.get(s), now):
-            d = diag_hora(sample, doc, ph)
-            prev = horas.get(ph["_t"])
-            if prev is None or (d["cota_copo_efectiva_m"] is not None and
-                                (prev["cota_copo_efectiva_m"] is None or d["cota_copo_efectiva_m"] < prev["cota_copo_efectiva_m"])):
-                horas[ph["_t"]] = {**d, "perfil": s}
+            por_hora.setdefault(ph["_t"], []).append({**diag_hora(sample, doc, ph), "perfil": s})
+    horas = {}
+    for t, cands in por_hora.items():
+        d = dict(min(cands, key=peor))
+        # Divisoria: si un lado no es OK (o falta) a esa hora, la hora fusionada no puede ser OK: la falta de dato
+        # de un lado no se tapa con el otro (UNKNOWN no es cero).
+        if d.get("estado") == "OK" and (len(cands) < max(n_esperado, len(sides)) or any(c.get("estado") != "OK" for c in cands)):
+            d["estado"] = "PARCIAL"
+        horas[t] = d
     if not horas:
         return {"estado": "UNKNOWN", "motivo": "el perfil no cubre las próximas 24 h", "ahora": None, "min24": None}
     ahora_t = min(horas, key=lambda t: abs((t - now).total_seconds()))
@@ -213,9 +224,33 @@ def diag_punto(sample: dict, doc: dict, prof: dict, sides: list[str], now: datet
     completo = len(horas) >= 20 and len(validas) == len(horas)
     seco = completo and not con_pr
     estado = "OK" if completo else "PARCIAL" if (validas or parciales) else "UNKNOWN"
-    return {"estado": estado, "horas_validas": len(validas), "horas_parciales": len(parciales),
-            "horas_con_precipitacion": len(con_pr), "horas": len(horas), "sin_precipitacion_24h": seco,
-            "ahora": ahora, "min24": minimo}
+    out = {"estado": estado, "horas_validas": len(validas), "horas_parciales": len(parciales),
+           "horas_con_precipitacion": len(con_pr), "horas": len(horas), "sin_precipitacion_24h": seco,
+           "ahora": ahora, "min24": minimo}
+    if len(sides) < n_esperado:
+        out["motivo"] = "divisoria con un solo perfil disponible"
+    return out
+
+
+def estacion_esqui(sample: dict, diag: dict) -> dict:
+    """Parte del desnivel esquiable por encima de la cota de copo efectiva mínima en 24 h (horas con precipitación).
+
+    No dice si hay nieve en las pistas (ni la producida ni la acumulada): solo dónde cae como nieve lo que precipite.
+    """
+    base, top = sample.get("base_m"), sample.get("techo_m")
+    out = {"base_m": base, "techo_m": top, "estado_estacion": sample.get("estado_estacion")}
+    if base is None or top is None or top <= base:
+        return {**out, "estado": "UNKNOWN", "fraccion_sobre_cota": None}
+    if diag.get("estado") != "OK":
+        return {**out, "estado": "UNKNOWN" if diag.get("estado") == "UNKNOWN" else "PARCIAL", "fraccion_sobre_cota": None}
+    if diag.get("sin_precipitacion_24h"):
+        return {**out, "estado": "OK", "sin_precipitacion_24h": True, "fraccion_sobre_cota": None}
+    c = (diag.get("min24") or {}).get("cota_copo_efectiva_m")
+    if c is None:
+        return {**out, "estado": "UNKNOWN", "fraccion_sobre_cota": None}
+    frac = min(1.0, max(0.0, (top - c) / (top - base)))
+    return {**out, "estado": "OK", "cota_copo_efectiva_m": c, "fraccion_sobre_cota": round(frac, 2),
+            "lectura": "nieve en toda la estación" if frac >= 1 else "nieve solo en la parte alta" if frac > 0 else "lluvia hasta el techo"}
 
 
 def cubeta_punto(sample: dict, doc: dict, serie: dict, prof_side: list[dict] | None, now: datetime) -> dict:

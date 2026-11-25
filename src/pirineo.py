@@ -1035,29 +1035,43 @@ def relieve_diag(pois: list[dict], prof, series: dict | None, now=None) -> dict:
         return {"orografia": unk, "cubeta_fria": unk, "exposicion": unk}
     pmap = {p["id"]: p for p in pois}
     prof = prof if isinstance(prof, dict) else {"sur": prof or []}
-    orog, cub, cotas = {}, {}, {}
+    orog, cub, cotas, esqui = {}, {}, {}, {}
     for pid, sample in doc["puntos"].items():
-        p = pmap.get(pid)
+        # Puntos de pirineo.POIS: posición y vertiente del motor. Puntos adicionales del modelo de relieve (cimas,
+        # estaciones de esquí, Ariège, Donezan...): no piden previsión por punto; usan la vertiente de la tabla.
+        p = pmap.get(pid) or (sample if sample.get("fuente") != "pirineo.POIS" else None)
         if not p:
             continue
-        vert = vertiente(p)
+        vert = vertiente(p) if pid in pmap else sample.get("vertiente")
         sides = oro.perfiles_del_punto(vert, prof)
-        d = oro.diag_punto(sample, doc, prof, sides, now)
-        orog[pid] = {"vertiente": vert, "cpi": sample["cpi"], **d}
-        # A la exposición viaria solo pasa una mínima de 24 h completa; si no, sus km cuentan como UNKNOWN
-        cotas[pid] = {"lat": p["lat"], "lon": p["lon"],
-                      "cota": (d.get("min24") or {}).get("cota_copo_efectiva_m") if d["estado"] == "OK" else None,
-                      "sin_precipitacion": bool(d.get("sin_precipitacion_24h"))}
+        d = oro.diag_punto(sample, doc, prof, sides, now, n_esperado=2 if vert == "divisoria" else 1)
+        orog[pid] = {"nombre": sample.get("nombre"), "tipo": sample.get("tipo"), "zona": sample.get("zona"),
+                     "vertiente": vert, "cpi": sample["cpi"], **d}
+        if sample.get("tipo") == "estacion_esqui":
+            esqui[pid] = {"nombre": sample.get("nombre"), "zona": sample.get("zona"), "fuente": sample.get("fuente"),
+                          **oro.estacion_esqui(sample, d)}
+        # A la exposición viaria solo pasa una mínima de 24 h completa; si no, sus km cuentan como UNKNOWN.
+        # Solo puntos de fondo o de paso: una cima o el punto de referencia de una estación no representan la calzada.
+        if sample.get("tipo") in ("pueblo", "collado", "estacion"):
+            cotas[pid] = {"lat": p["lat"], "lon": p["lon"],
+                          "cota": (d.get("min24") or {}).get("cota_copo_efectiva_m") if d["estado"] == "OK" else None,
+                          "sin_precipitacion": bool(d.get("sin_precipitacion_24h"))}
         if series and pid in series:
             side = sides[-1] if sides else None          # en la divisoria, el viento del perfil sur (Cerdanya)
             c = oro.cubeta_punto(sample, doc, series[pid], prof.get(side) if side else None, now)
             if c["estado"] != "NO_APLICA":            # NO_CALIBRADO se publica: no desaparece en silencio
                 cub[pid] = c
     def global_state(rows):
-        st = {r.get("estado") for r in rows.values()}
-        return "OK" if "OK" in st else "PARCIAL" if "PARCIAL" in st else "UNKNOWN"
+        st = {r.get("estado") for r in rows.values()} - {"NO_CALIBRADO"}
+        if st == {"OK"}:
+            return "OK"
+        return "PARCIAL" if st & {"OK", "PARCIAL"} else "UNKNOWN"     # algún punto sin dato: el conjunto no es OK
     return {"orografia": {"version": oro.VERSION, "estado": global_state(orog), "fuente_dem": doc["fuente_dem"],
-                          "modelo": doc["modelo"]["nombre"], "generado": doc["generado"], "puntos": orog},
+                          "modelo": doc["modelo"]["nombre"], "generado": doc["generado"], "dominio": doc.get("dominio"),
+                          "puntos": orog,
+                          "estaciones_esqui": {"nota": "parte del desnivel esquiable sobre la cota de copo efectiva mínima en "
+                                                       "24 h; no es el estado de las pistas ni su espesor de nieve",
+                                               "estaciones": esqui}},
             "cubeta_fria": {"version": oro.VERSION, "estado": global_state(cub),
                             "cpi_ref_das": doc["cubeta"]["cpi_ref_das"], "puntos": cub},
             "exposicion": roads.exposicion(doc["carreteras"], cotas, doc.get("puertos"), doc["cubeta"]["cpi_ref_das"])}

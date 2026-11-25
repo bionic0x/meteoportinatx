@@ -14,7 +14,8 @@ NOW = datetime(2026, 11, 26, 3, 0, tzinfo=timezone.utc)
 
 
 def doc_stub(cpi=3.0, p=2.0, w=1.0):
-    pt = {"nombre": "X", "p_oro_mmh": [p] * 16, "ascenso_ms": [w] * 16, "cpi": cpi, "tpi_m": -100, "cubeta_calibrable": True}
+    pt = {"nombre": "X", "p_oro_mmh": [p] * 16, "ascenso_ms": [w] * 16, "cpi": cpi, "tpi_m": -100, "cubeta_calibrable": True,
+          "fuente": "pirineo.POIS", "tipo": "pueblo"}
     return {"schema": 1, "generado": "2026-11-25T00:00:00Z", "fuente_dem": "stub",
             "modelo": {"nombre": "stub", "U_ref_ms": 14.0, "direcciones": [i * 22.5 for i in range(16)]},
             "cubeta": {"cpi_ref_das": 3.0, "dtmax_ref_c": 20.0},
@@ -112,8 +113,73 @@ class Orografia(unittest.TestCase):
         self.assertIsNone(oro.load(Path(f.name)))
         Path(f.name).unlink()
 
-    def test_puntos_del_json_coinciden_con_pois(self):
-        self.assertEqual(set(oro.load()["puntos"]), {p[0] for p in pirineo.POIS})
+    def test_puntos_del_json_cubren_pois_y_extras_tienen_vertiente(self):
+        pts = oro.load()["puntos"]
+        self.assertTrue({p[0] for p in pirineo.POIS} <= set(pts))
+        extras = {k: v for k, v in pts.items() if v.get("fuente") != "pirineo.POIS"}
+        self.assertGreater(len(extras), 60)
+        for k, v in extras.items():
+            self.assertIn(v.get("vertiente"), ("norte", "sur", "divisoria"), k)
+            self.assertIn(v.get("tipo"), ("cima", "collado", "pueblo", "estacion_esqui"), k)
+        self.assertEqual(pts["ax"]["zona"], "Ariège")
+        for k, v in pts.items():
+            if v["tipo"] == "estacion_esqui":
+                self.assertLess(v["base_m"], v["techo_m"], k)
+
+    def test_dominio_incluye_el_ariege(self):
+        d = oro.load()
+        self.assertGreaterEqual(d["dominio"]["lat_n"], 43.0)
+        self.assertTrue({"rn20_ariege", "rn20_puymorens", "d613_pailheres", "d618"} <= set(d["carreteras"]))
+
+    def test_puntos_extra_se_diagnostican_sin_pois(self):
+        d = doc_stub()
+        d["puntos"]["ax"] = {**d["puntos"]["das"], "nombre": "Ax", "tipo": "pueblo", "zona": "Ariège", "vertiente": "norte",
+                             "lat": 42.72, "lon": 1.84, "fuente": "geocodificador"}
+        with patch.object(oro, "load", return_value=d):
+            r = pirineo.relieve_diag([], {"norte": profile(), "sur": profile()}, None, now=NOW)
+        self.assertIn("ax", r["orografia"]["puntos"])
+        self.assertNotIn("das", r["orografia"]["puntos"])          # punto de POIS sin resolver: se omite como antes
+        self.assertEqual(r["orografia"]["puntos"]["ax"]["estado"], "OK")
+
+    def test_divisoria_no_tapa_un_lado_sin_dato(self):
+        d = doc_stub(p=0.0)
+        prof = {"norte": profile(pr=0.0, cota=1700), "sur": profile(pr=None, cota=1400)}
+        r = oro.diag_punto(d["puntos"]["das"], d, prof, ["norte", "sur"], NOW, n_esperado=2)
+        self.assertEqual(r["estado"], "PARCIAL")
+        self.assertFalse(r["sin_precipitacion_24h"])
+
+    def test_divisoria_con_un_solo_perfil_es_parcial(self):
+        d = doc_stub(p=0.0)
+        r = oro.diag_punto(d["puntos"]["das"], d, {"norte": profile(pr=1.0)}, ["norte"], NOW, n_esperado=2)
+        self.assertEqual(r["estado"], "PARCIAL")
+        self.assertIn("motivo", r)
+
+    def test_estado_global_parcial_si_falta_algun_punto(self):
+        d = doc_stub()
+        d["puntos"]["ax"] = {**d["puntos"]["das"], "tipo": "pueblo", "zona": "Ariège", "vertiente": "norte",
+                             "lat": 42.72, "lon": 1.84, "fuente": "geocodificador"}
+        with patch.object(oro, "load", return_value=d):
+            r = pirineo.relieve_diag(POIS, {"sur": profile()}, None, now=NOW)     # sin perfil norte: Ax UNKNOWN
+        self.assertEqual(r["orografia"]["puntos"]["ax"]["estado"], "UNKNOWN")
+        self.assertEqual(r["orografia"]["estado"], "PARCIAL")
+
+    def test_cimas_no_dan_cota_a_las_carreteras(self):
+        d = doc_stub()
+        d["puntos"]["das"]["tipo"] = "cima"
+        d["puntos"]["masella"]["tipo"] = "estacion_esqui"
+        with patch.object(oro, "load", return_value=d):
+            r = pirineo.relieve_diag(POIS, {"sur": profile(pr=0.0)}, None, now=NOW)
+        self.assertEqual(r["exposicion"]["carreteras"]["c16"]["km_unknown"], 7.0)
+
+    def test_estacion_esqui_fraccion_sobre_cota(self):
+        s = {"base_m": 1500, "techo_m": 2500}
+        ok = {"estado": "OK", "min24": {"cota_copo_efectiva_m": 2000}}
+        self.assertEqual(oro.estacion_esqui(s, ok)["fraccion_sobre_cota"], 0.5)
+        self.assertEqual(oro.estacion_esqui(s, {"estado": "OK", "min24": {"cota_copo_efectiva_m": 1200}})["fraccion_sobre_cota"], 1.0)
+        self.assertIsNone(oro.estacion_esqui(s, {"estado": "PARCIAL", "min24": None})["fraccion_sobre_cota"])
+        seco = oro.estacion_esqui(s, {"estado": "OK", "sin_precipitacion_24h": True, "min24": None})
+        self.assertTrue(seco["sin_precipitacion_24h"])
+        self.assertIsNone(seco["fraccion_sobre_cota"])
 
     def test_sin_tablas_todo_unknown(self):
         with patch.object(oro, "load", return_value=None):
@@ -179,7 +245,7 @@ class Cubeta(unittest.TestCase):
         real = oro.load()
         self.assertIsNotNone(real)
         self.assertGreater(real["puntos"]["das"]["cpi"], 2 * real["puntos"]["masella"]["cpi"])
-        self.assertEqual(len(real["carreteras"]), 11)
+        self.assertEqual(len(real["carreteras"]), 14)
 
 
 class Carreteras(unittest.TestCase):

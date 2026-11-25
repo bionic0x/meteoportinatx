@@ -21,7 +21,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 import xml.etree.ElementTree as ET
 
-BBOX = (42.15, 42.80, 1.40, 2.30)          # Cerdanya, Capcir, Andorra oriental, Carol y accesos (sin Garrotxa)
+BBOX = (42.15, 42.90, 1.40, 2.30)          # Cerdanya, Capcir, Andorra oriental, Carol y accesos (sin Garrotxa)
 SCT_URL = "https://www.gencat.cat/transit/opendata/incidenciesGML.xml"
 BF_URL = "https://tipi.bison-fute.gouv.fr/bison-fute-ouvert/publicationsDIR/Evenementiel-DIR/grt/RRN/content.xml"
 SIN_FEED = {"andorra": ("Mobilitat Andorra", "https://www.mobilitat.ad/totes-incidencies"),

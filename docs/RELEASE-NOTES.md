@@ -2,6 +2,13 @@
 
 **Idioma / Language:** Español · [English](RELEASE-NOTES.en.md)
 
+# Sin publicar — Pirineo: modelo orográfico integrado (experimental)
+
+- Dominio del relieve ampliado a 42,15–43,05 N × 1,15–2,65 E (Ariège hasta Foix, Pallars, Canigó). 129 puntos de control: los 32 del motor y 97 adicionales sin previsión por punto (pueblos del Ariège, Donezan, Carol y Cerdanya; cimas de la divisoria, Montcalm–Estats, Puigmal, Cadí, Madres y Canigó; collados).
+- `core.orografia.estaciones_esqui`: 17 estaciones (Grandvalira en dos sectores) con rango esquiable publicado y fracción del desnivel sobre la cota efectiva.
+- 14 vías: se añaden RN20 Tarascon–Ax–L'Hospitalet, D618 Ur–Font-Romeu y D613/D25 Col de Pailhères; corregidos el Col du Puymorens (42,560 N 1,8075 E) y la Collada de Toses; N-260 Martinet–La Seu y CG-3 por el fondo de valle.
+- Divisoria: en cada hora manda el perfil con precipitación y la cota más baja.
+
 # Sin publicar — Pirineo: relieve fino, cubeta fría y carreteras (experimental)
 
 - `src/pirineo_orografia.py`: cota de copo efectiva por punto (descenso por fusión con la precipitación del perfil realzada por el forzamiento orográfico lineal de Smith y Barstad; solo horas con precipitación) y mínima de cubeta fría en los fondos de la Cerdanya, la Cerdagne y el Capcir. Tablas de relieve en malla de 0,01° (~1 km) sobre un DEM de 90 m, en `src/pirineo_orografia.json`, generadas por `scripts/build_orografia_pirineo.py`.
