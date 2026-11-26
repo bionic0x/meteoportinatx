@@ -1,4 +1,5 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Portinatx Nowcast</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,6 +148,7 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:980px){.grid3{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+select,details summary,input[type=range]{min-height:24px}
 </style></head><body>
 
 <header>
@@ -1017,13 +1019,13 @@ document.querySelectorAll("[data-layer]").forEach(b => b.addEventListener("click
 window.addEventListener("resize", () => { drawMap(); if(S.tab==="laboratorio") drawQpe(); if(["satelite","territorio","modelos","mar","forense"].includes(S.tab)) renderAll(); });
 
 /* ── gráficos SVG ── */
-function lineChart({series, xmin, xmax, ymin=0, ymax, h=150, yfmt=v=>v, nowLine=true, bands=[], yLabel="", nice=true}){
+function lineChart({series, xmin, xmax, ymin=0, ymax, h=150, yfmt=v=>v, nowLine=true, bands=[], yLabel="", nice=true, label}){
   const W=600, P={l:36,r:10,t:8,b:20}, iw=W-P.l-P.r, ih=h-P.t-P.b;
   const all = series.flatMap(s=>s.pts.map(p=>p[1])).filter(v=>v!=null&&isFinite(v));
   if (ymax==null) ymax = Math.max(1e-6, ...all, ...bands.flatMap(b=>b.pts.flatMap(p=>[p[2]])).filter(v=>v!=null));
   if (nice) ymax = niceMax(ymax - ymin) + ymin;
   const X = t => P.l + (t - xmin)/(xmax - xmin)*iw, Y = v => P.t + ih - (v - ymin)/(ymax - ymin)*ih;
-  let s = `<svg class="ch" viewBox="0 0 ${W} ${h}" role="img">`;
+  let s = `<svg class="ch" viewBox="0 0 ${W} ${h}" role="img" aria-label="${esc(label)}">`;
   for (let k=0;k<=4;k++){ const v=ymin+(ymax-ymin)*k/4, y=Y(v); s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="${k?0.6:1}"/><text x="${P.l-4}" y="${y+3}" text-anchor="end">${yfmt(v)}</text>`; }
   const span = xmax - xmin, stepH = span > 60*3600e3 ? 12 : span > 30*3600e3 ? 6 : span > 8*3600e3 ? 3 : 1;
   const t0 = Math.ceil(xmin/(stepH*3600e3))*stepH*3600e3;
@@ -1052,7 +1054,7 @@ function renderCharts(){
     const xmin=Math.min(...tt), xmax=Math.max(...tt, Date.now());
     const ser=[]; const lg=[];
     buoys.forEach(([n,v],i)=>{ const col=PAL[i]; ser.push({pts:v.rows.map(r=>[+new Date(r.t), r.hm0]), color:col, end:true}); ser.push({pts:v.rows.map(r=>[+new Date(r.t), r.hmax]), color:col, dots:true}); const L=v.rows[v.rows.length-1]||{}; lg.push([col, `${n.replace("Boya ","")} ${n1(L.hm0)} m (máx ${n1(L.hmax)})`]); });
-    $("ch-hs").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>v.toFixed(1)}) + legend(lg) + `<div class="sub" style="margin-top:4px">Aviso costero: olas de 3 m. Boyas en mar abierto: no describen la ola dentro de la cala.</div>`;
+    $("ch-hs").innerHTML = lineChart({label:"Altura significativa del oleaje en boyas: Hs y Hmax, en m", series:ser, xmin, xmax, yfmt:v=>v.toFixed(1)}) + legend(lg) + `<div class="sub" style="margin-top:4px">Aviso costero: olas de 3 m. Boyas en mar abierto: no describen la ola dentro de la cala.</div>`;
   } else $("ch-hs").innerHTML = '<p class="empty">PORTUS sin datos de oleaje.</p>';
   // viento
   const winds = Object.entries(se.portus||{}).filter(([,v])=>v.kind==="viento");
@@ -1061,16 +1063,17 @@ function renderCharts(){
     const xmin=Math.max(Math.min(...tt), Date.now()-24*3600e3), xmax=Math.max(...tt);
     const ser=[], lg=[];
     winds.forEach(([n,v],i)=>{ const col=PAL[(i+3)%PAL.length]; ser.push({pts:v.rows.map(r=>[+new Date(r.t), (r.vv_mx??r.vv_md)!=null?(r.vv_mx??r.vv_md)*3.6:null]), color:col, end:true, w:1.4}); const L=v.rows[v.rows.length-1]||{}; lg.push([col, `${n} ${n0((L.vv_mx??L.vv_md)*3.6)} km/h ${uiText('de','from')} ${n0(L.dv_md)}°`]); });
-    $("ch-wind").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>Math.round(v)}) + legend(lg);
+    $("ch-wind").innerHTML = lineChart({label:"Racha máxima de viento en estaciones PORTUS, en km/h", series:ser, xmin, xmax, yfmt:v=>Math.round(v)}) + legend(lg);
   } else $("ch-wind").innerHTML = '<p class="empty">PORTUS sin datos de viento.</p>';
   // avisos (Gantt)
   const ws = (c?.official?.all||[]).filter(w=>w.desde&&w.hasta&&new Date(w.hasta)>Date.now()-3*3600e3);
   if (ws.length){
     const xmin=Date.now()-3*3600e3, xmax=Math.max(Date.now()+36*3600e3, ...ws.map(w=>+new Date(w.hasta)));
-    const W=600, rowH=20, P={l:150,r:10,t:6,b:18}, H=P.t+P.b+rowH*ws.length, X=t=>P.l+(Math.min(Math.max(t,xmin),xmax)-xmin)/(xmax-xmin)*(W-P.l-P.r);
-    let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img">`;
+    const W=600, rowH=28, P={l:150,r:10,t:6,b:18}, H=P.t+P.b+rowH*ws.length, X=t=>P.l+(Math.min(Math.max(t,xmin),xmax)-xmin)/(xmax-xmin)*(W-P.l-P.r);
+    const nm=w=>(w.evento.replace(/^Aviso de /,"").replace(/ de nivel \w+$/,"")+(w.tipo==="costero"?" (costa)":"")).slice(0,24), nv=w=>(/de nivel \w+$/.exec(w.evento)||[`de nivel ${w.nivel||"sin verificar"}`])[0];
+    let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc("Avisos · próximas horas: "+ws.map(w=>nm(w)+" "+nv(w)).join("; "))}">`;
     ws.forEach((w,i)=>{ const y=P.t+i*rowH, lv=NIVEL_LV[w.nivel]||"unknown", col={watch:"var(--w)",alert:"var(--a)",alarm:"var(--x)",quiet:"var(--q)",unknown:"var(--unk)"}[lv];
-      s+=`<text x="${P.l-6}" y="${y+13}" text-anchor="end">${esc((w.evento.replace(/^Aviso de /,"").replace(/ de nivel \w+$/,"")+(w.tipo==="costero"?" (costa)":"")).slice(0,24))}</text><rect x="${X(+new Date(w.desde))}" y="${y+3}" width="${Math.max(2,X(+new Date(w.hasta))-X(+new Date(w.desde)))}" height="${rowH-7}" rx="2" fill="${col}" opacity="${w.activo?1:.55}"/>`; });
+      s+=`<text x="${P.l-6}" y="${y+11}" text-anchor="end">${esc(nm(w))}</text><text x="${P.l-6}" y="${y+23}" text-anchor="end">${esc(nv(w))}</text><rect x="${X(+new Date(w.desde))}" y="${y+3}" width="${Math.max(2,X(+new Date(w.hasta))-X(+new Date(w.desde)))}" height="${rowH-7}" rx="2" fill="${col}" opacity="${w.activo?1:.55}"/>`; });
     const step=6*3600e3; for(let t=Math.ceil(xmin/step)*step;t<=xmax;t+=step){ const x=X(t); s+=`<line x1="${x}" x2="${x}" y1="${P.t}" y2="${H-P.b}" stroke="var(--line)" stroke-width=".5"/><text x="${x}" y="${H-5}" text-anchor="middle">${fmtT(new Date(t).toISOString(),{weekday:"short",hour:"2-digit"})}</text>`; }
     const xn=X(Date.now()); s+=`<line x1="${xn}" x2="${xn}" y1="${P.t}" y2="${H-P.b}" stroke="var(--accent)" stroke-width="1.4"/>`;
     $("ch-warn").innerHTML = s+"</svg>";
@@ -1082,13 +1085,13 @@ function renderCharts(){
     const lab = m => m.includes("arome")?"AROME HD":m.includes("ecmwf")?"ECMWF IFS":m.includes("icon")?"ICON-EU":m;
     ms.forEach(([m,v],i)=>{ const col=PAL[i]; const T=v.time.map(t=>+new Date(t+"Z")); ser.push({pts:T.map((t,k)=>[t,v.pr[k]]), color:col, end:false}); ser.push({pts:T.map((t,k)=>[t,v.pr_neigh_max?.[k]]), color:col, w:.8, dash:"2 3"});
       const fut=T.map((t,k)=>t>=Date.now()?v.pr[k]||0:0); lg.push([col, `${lab(m)} · 12 h: ${n0(fut.slice(0).reduce((a,b,k)=>a+(T[k]>=Date.now()&&T[k]<Date.now()+12*3600e3?b:0),0))} mm · ${uiText('máx','max')} ${n1(Math.max(...fut))} mm/h`]); });
-    $("ch-models").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>v.toFixed(0)}) + legend(lg);
+    $("ch-models").innerHTML = lineChart({label:"Lluvia horaria de los modelos en Portinatx, en mm/h", series:ser, xmin, xmax, yfmt:v=>v.toFixed(0)}) + legend(lg);
   }
   const e = se.ensemble;
   if (e && e.start){
     const t0 = +new Date(e.start+"Z"), T = e.p50.map((_,k)=>t0+k*3600e3);
     const xmin=Date.now()-3*3600e3, xmax=Math.min(T[T.length-1], Date.now()+66*3600e3);
-    $("ch-ens").innerHTML = lineChart({series:[{pts:T.map((t,k)=>[t,e.p50[k]]),color:"var(--ink)",w:1.6},{pts:T.map((t,k)=>[t,e.max[k]]),color:"var(--x)",w:.9,dash:"3 3"}], bands:[{pts:T.map((t,k)=>[t,e.p10[k],e.p90[k]]),color:"#1f77b4"}], xmin, xmax, yfmt:v=>v.toFixed(1)})
+    $("ch-ens").innerHTML = lineChart({label:"Ensemble ECMWF en el punto: banda p10–p90, mediana y máximo, en mm/h", series:[{pts:T.map((t,k)=>[t,e.p50[k]]),color:"var(--ink)",w:1.6},{pts:T.map((t,k)=>[t,e.max[k]]),color:"var(--x)",w:.9,dash:"3 3"}], bands:[{pts:T.map((t,k)=>[t,e.p10[k],e.p90[k]]),color:"#1f77b4"}], xmin, xmax, yfmt:v=>v.toFixed(1)})
       + legend([["#1f77b4","p10–p90"],["var(--ink)","mediana"],["var(--x)","máximo de los miembros",1]]);
     $("ens-sub").textContent = uiText(`mm/h · ${e.n} miembros · total 72 h: p10 ${n0(e.total72.p10)} · mediana ${n0(e.total72.p50)} · p90 ${n0(e.total72.p90)} · máx ${n0(e.total72.max)} mm (0,25°: cota inferior en convección)`, `mm/h · ${e.n} members · 72 h total: p10 ${n0(e.total72.p10)} · median ${n0(e.total72.p50)} · p90 ${n0(e.total72.p90)} · max ${n0(e.total72.max)} mm (0.25°: lower bound in convection)`);
   }
@@ -1101,7 +1104,7 @@ function renderCharts(){
       const xmin=Math.min(...all)-3600e3, xmax=Math.max(...all)+3600e3, W=600,H=150,P={l:36,r:10,t:8,b:20};
       const ymax=niceMax(Math.max(40,...tr.flatMap(([,r])=>r.map(x=>x.max_dist_km||0))));
       const X=t=>P.l+(t-xmin)/(xmax-xmin)*(W-P.l-P.r), Y=v=>P.t+(H-P.t-P.b)*(1-v/ymax);
-      let s=`<svg class="ch" viewBox="0 0 ${W} ${H}">`;
+      let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Núcleo convectivo: distancia por run entre el máximo de 12 h del modelo y Portinatx, en km">`;
       for(let k=0;k<=4;k++){const v=ymax*k/4;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width=".6"/><text x="${P.l-4}" y="${Y(v)+3}" text-anchor="end">${Math.round(v)}</text>`;}
       s+=`<rect x="${P.l}" y="${Y(20)}" width="${W-P.l-P.r}" height="${Y(0)-Y(20)}" fill="var(--accent)" opacity=".10"/><text x="${W-P.r-2}" y="${Y(20)-3}" text-anchor="end">≤20 km = centrado</text>`;
       tr.forEach(([m,r],i)=>{ const col=m.includes("arome")?"#b23ad8":"#2a9d8f"; const pts=r.filter(x=>okInit(x)&&x.max_dist_km!=null);
@@ -1115,7 +1118,7 @@ function renderCharts(){
   if (mr?.time?.length){
     const T=mr.time.map(t=>+new Date(t+"Z")), xmin=Date.now()-3*3600e3, xmax=Date.now()+60*3600e3;
     const buoyLast = buoys.map(([n,v])=>[n,(v.rows[v.rows.length-1]||{}).hm0]);
-    $("ch-marine").innerHTML = lineChart({series:[{pts:T.map((t,k)=>[t,mr.hs[k]]),color:"#1f77b4",w:1.8}], xmin, xmax, yfmt:v=>v.toFixed(1), ymax:Math.max(3.5,...buoyLast.map(b=>b[1]||0), ...mr.hs.filter(x=>x!=null))})
+    $("ch-marine").innerHTML = lineChart({label:"Oleaje modelizado frente a la bocana: Hs, en m", series:[{pts:T.map((t,k)=>[t,mr.hs[k]]),color:"#1f77b4",w:1.8}], xmin, xmax, yfmt:v=>v.toFixed(1), ymax:Math.max(3.5,...buoyLast.map(b=>b[1]||0), ...mr.hs.filter(x=>x!=null))})
       + `<div class="sub">${uiText("Boyas ahora:","Buoys now:")} ${buoyLast.map(([n,v])=>`${esc(n.replace("Boya ",""))} ${n1(v)} m`).join(" · ")}</div>`;
   }
 }
@@ -1140,11 +1143,12 @@ function renderHistory(){
   const c=S.core; if(!c) return;
   const h=c.history||[];
   if(h.length){ const W=600,H=64,w=W/Math.max(h.length,1), col=l=>({quiet:"var(--q)",watch:"var(--w)",alert:"var(--a)",alarm:"var(--x)"}[l]||"var(--unk)");
-    let s=`<svg class="ch" viewBox="0 0 ${W} ${H+14}">`;
-    h.forEach((x,i)=>{ s+=`<rect x="${i*w}" y="0" width="${Math.max(1,w-.5)}" height="${H/2-2}" fill="${col(x.nowcast)}"><title>${esc(x.id)} precaución ${x.nowcast}</title></rect><rect x="${i*w}" y="${H/2}" width="${Math.max(1,w-.5)}" height="${H/2-2}" fill="${col(x.level)}" opacity=".6"><title>${esc(x.id)} 36 h ${x.level}</title></rect>`; });
+    const es=l=>LV_ES[l]||LV_ES.unknown, last=h[h.length-1], resumen=`último ciclo: precaución ${es(last.nowcast)} · 36 h ${es(last.level)}`;
+    let s=`<svg class="ch" viewBox="0 0 ${W} ${H+14}" role="img" aria-label="${esc(`Historial del motor: ${h.length} ciclos; ${resumen}`)}">`;
+    h.forEach((x,i)=>{ s+=`<rect x="${i*w}" y="0" width="${Math.max(1,w-.5)}" height="${H/2-2}" fill="${col(x.nowcast)}"><title>${esc(x.id)} precaución ${es(x.nowcast)}</title></rect><rect x="${i*w}" y="${H/2}" width="${Math.max(1,w-.5)}" height="${H/2-2}" fill="${col(x.level)}" opacity=".6"><title>${esc(x.id)} 36 h ${es(x.level)}</title></rect>`; });
     const lab=id=>{const m=/(\d{8})T(\d{4})/.exec(id);return m?`${m[1].slice(6)} ${m[2].slice(0,2)}:${m[2].slice(2)}Z`:"";};
     s+=`<text x="0" y="${H+11}">${lab(h[0].id)}</text><text x="${W}" y="${H+11}" text-anchor="end">${lab(h[h.length-1].id)}</text>`;
-    $("ch-hist").innerHTML=s+"</svg>"; }
+    $("ch-hist").innerHTML=s+`</svg><div class="sub">${esc(resumen[0].toUpperCase()+resumen.slice(1))}</div>`; }
   const ep=c.governance?.episode||{}, order=["ACTIVE","CESSATION","TRANSITION","CLOSURE_PROPOSED","CLOSED"];
   $("phases").innerHTML=order.map(p=>`<span class="${ep.phase===p?"on":""}">${p}</span>`).join("");
   $("episode").innerHTML = ep.id ? `<p style="font-size:.82rem;margin:0">${esc(ep.id)} · abierto ${fmtDT(ep.opened)}${(ep.closure_blockers||[]).length?` · cierre bloqueado por: ${ep.closure_blockers.map(esc).join(", ")}`:""}</p>${ep.phase==="CLOSURE_PROPOSED"?'<p style="font-size:.82rem">Cierre propuesto. Lo acepta el propietario (<code>--close-episode</code>); el motor no se auto-acepta.</p>':""}` : '<p class="empty">Sin episodio abierto.</p>';
@@ -1218,7 +1222,7 @@ function renderAtmos(){
   const yP=pr=>pad.t+(Math.log(1000)-Math.log(pr))/(Math.log(1000)-Math.log(300))*(H-pad.t-pad.b);
   const Ts=P.flatMap(pr=>[Lv[pr]?.T?.[i],Lv[pr]?.Td?.[i]]).filter(x=>x!=null);
   const tmin=Math.floor((Math.min(...Ts)-5)/10)*10, tmax=Math.ceil((Math.max(...Ts)+5)/10)*10, xT=t=>pad.l+(t-tmin)/(tmax-tmin)*(W-pad.l-pad.r);
-  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}">`;
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Perfil vertical: temperatura y punto de rocío por niveles de presión, en °C">`;
   for(const pr of P){ const y=yP(pr); s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width=".6"/><text x="${pad.l-4}" y="${y+3}" text-anchor="end">${pr}</text>`; }
   for(let t=tmin;t<=tmax;t+=10){ const x=xT(t); s+=`<line x1="${x}" x2="${x}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--line)" stroke-width="${t===0?1.2:.4}"/><text x="${x}" y="${H-8}" text-anchor="middle">${t}</text>`; }
   const line=(k,col)=>{ const pts=P.map(pr=>[Lv[pr]?.[k]?.[i],pr]).filter(a=>a[0]!=null); return `<polyline points="${pts.map(([t,pr])=>`${xT(t)},${yP(pr)}`).join(" ")}" fill="none" stroke="${col}" stroke-width="2.2"/>`+pts.map(([t,pr])=>`<circle cx="${xT(t)}" cy="${yP(pr)}" r="3" fill="${col}"/>`).join(""); };
@@ -1232,7 +1236,7 @@ function renderAtmos(){
   const uv=(ws,wd)=>ws==null||wd==null?null:[-ws*Math.sin(wd*Math.PI/180), -ws*Math.cos(wd*Math.PI/180)];
   const pts=[["10 m",uv(p.wind10.ws[i],p.wind10.wd[i])], ...[925,850,700,500,300].map(pr=>[pr,uv(Lv[pr]?.ws?.[i],Lv[pr]?.wd?.[i])])].filter(a=>a[1]);
   const R=Math.max(10, ...pts.map(a=>Math.hypot(...a[1])))*1.15, HW=320, c=HW/2, sc=v=>v/R*(c-14);
-  let h=`<svg class="ch" viewBox="0 0 ${HW} ${HW}">`;
+  let h=`<svg class="ch" viewBox="0 0 ${HW} ${HW}" role="img" aria-label="Hodógrafa: viento de 10 m a 300 hPa, en m/s">`;
   for(const r of [10,20,30,40].filter(r=>r<R)) h+=`<circle cx="${c}" cy="${c}" r="${sc(r)}" fill="none" stroke="var(--line)"/><text x="${c+sc(r)+2}" y="${c-2}">${r}</text>`;
   h+=`<line x1="${c}" x2="${c}" y1="6" y2="${HW-6}" stroke="var(--line)"/><line y1="${c}" y2="${c}" x1="6" x2="${HW-6}" stroke="var(--line)"/>`;
   h+=`<polyline points="${pts.map(a=>`${c+sc(a[1][0])},${c-sc(a[1][1])}`).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
@@ -1267,13 +1271,13 @@ function renderSurface(){
   const L=(se.surface||{}).LEIB||[];
   if (L.length){
     const T=L.map(r=>+new Date(r.t)), xmin=Math.min(...T), xmax=Math.max(...T);
-    $("ch-sfc-t").innerHTML = lineChart({series:[{pts:L.map(r=>[+new Date(r.t),r.T]),color:"var(--x)",end:true},{pts:L.map(r=>[+new Date(r.t),r.Td]),color:"var(--q)",end:true}], xmin, xmax, ymin:Math.floor(Math.min(...L.map(r=>r.Td??99))-1), ymax:Math.ceil(Math.max(...L.map(r=>r.T??-99))+1), yfmt:v=>v.toFixed(0), nowLine:false, nice:false})+legend([["var(--x)","T"],["var(--q)","Td"]]);
+    $("ch-sfc-t").innerHTML = lineChart({label:"LEIB: temperatura y punto de rocío, en °C", series:[{pts:L.map(r=>[+new Date(r.t),r.T]),color:"var(--x)",end:true},{pts:L.map(r=>[+new Date(r.t),r.Td]),color:"var(--q)",end:true}], xmin, xmax, ymin:Math.floor(Math.min(...L.map(r=>r.Td??99))-1), ymax:Math.ceil(Math.max(...L.map(r=>r.T??-99))+1), yfmt:v=>v.toFixed(0), nowLine:false, nice:false})+legend([["var(--x)","T"],["var(--q)","Td"]]);
     const Ps=L.filter(r=>r.P!=null), last=Ps[Ps.length-1], before=Ps.filter(r=>+new Date(r.t)<=+new Date(last?.t)-3*3600e3).pop();
     const lo=Math.min(...Ps.map(r=>r.P)), hi=Math.max(...Ps.map(r=>r.P));
-    $("ch-sfc-p").innerHTML = lineChart({series:[{pts:Ps.map(r=>[+new Date(r.t),r.P]),color:"var(--std)",end:true}], xmin, xmax, ymin:Math.floor(lo-1), ymax:Math.ceil(hi+1), yfmt:v=>v.toFixed(0), nowLine:false, nice:false});
+    $("ch-sfc-p").innerHTML = lineChart({label:"LEIB: presión (QNH), en hPa", series:[{pts:Ps.map(r=>[+new Date(r.t),r.P]),color:"var(--std)",end:true}], xmin, xmax, ymin:Math.floor(lo-1), ymax:Math.ceil(hi+1), yfmt:v=>v.toFixed(0), nowLine:false, nice:false});
     $("sfc-p-sub").textContent = `${uiText("hPa (QNH) · tendencia 3 h:","hPa (QNH) · 3 h tendency:")} ${before&&last?((last.P-before.P)>=0?"+":"")+(last.P-before.P).toFixed(1)+" hPa":"—"}`;
     const ser=[], lg=[]; Object.entries(se.surface).forEach(([icao,rows],k)=>{ const col=PAL[k%PAL.length]; ser.push({pts:rows.map(r=>[+new Date(r.t),r.U]),color:col,w:1.4,end:true}); ser.push({pts:rows.map(r=>[+new Date(r.t),r.G]),color:col,dots:true}); lg.push([col,`${icao} ${n0(rows[rows.length-1]?.U)} km/h de ${n0(rows[rows.length-1]?.D)}°`]); });
-    $("ch-sfc-w").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>v.toFixed(0), nowLine:false})+legend(lg)+`<div class="sub">Puntos = rachas.</div>`;
+    $("ch-sfc-w").innerHTML = lineChart({label:"Viento en aeródromos: medio y racha, en km/h", series:ser, xmin, xmax, yfmt:v=>v.toFixed(0), nowLine:false})+legend(lg)+`<div class="sub">Puntos = rachas.</div>`;
   } else ["ch-sfc-t","ch-sfc-p","ch-sfc-w"].forEach(id=>$(id).innerHTML='<p class="empty">Sin METAR.</p>');
   const G=(A?.gauges_now||[]).slice().sort((a,b)=>a.dist_km-b.dist_km);
   $("t-gsfc").querySelector("tbody").innerHTML = G.map(g=>`<tr><td>${g.near?"<b>":""}<span data-source-text lang="und">${esc(g.nombre)}</span>${g.near?"</b>":""}</td><td class="num">${n0(g.dist_km)}</td><td class="num">${n1(g.total)}</td><td class="num">${n1(g.ante_mm)}</td><td class="num">${g.rate==null?"—":n1(g.rate)}</td><td class="num">${g.radar_dbz==null?"—":n0(g.radar_dbz)}</td><td>${g.wet?pill("alert","saturado"):pill("quiet","normal")}</td></tr>`).join("") || '<tr><td colspan="7" class="empty">Sin pluviómetros.</td></tr>';
@@ -1286,18 +1290,18 @@ function renderEnsembleX(){
   const e=S.series?.ensemble; if(!e?.exceed) return;
   const t0=tOf(e.start), n=e.exceed["1"].length, thr=Object.keys(e.exceed);
   const W=600, rowH=22, P={l:60,r:10,t:6,b:20}, H=P.t+P.b+rowH*thr.length, cw=(W-P.l-P.r)/n;
-  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}">`;
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Probabilidad de superar umbrales de lluvia por hora: fracción de miembros ECMWF ENS, umbrales en mm/h">`;
   thr.forEach((k,r)=>{ s+=`<text x="${P.l-6}" y="${P.t+r*rowH+14}" text-anchor="end">≥${k} mm/h</text>`; e.exceed[k].forEach((v,c)=>{ if(v>0) s+=`<rect x="${P.l+c*cw}" y="${P.t+r*rowH+2}" width="${Math.max(1,cw-.3)}" height="${rowH-4}" fill="var(--std)" opacity="${Math.min(1,.12+v*1.6)}"><title>${fmtDT(new Date(t0+c*3600e3).toISOString())}: ${(v*100).toFixed(0)} %</title></rect>`; }); });
   for(let c=0;c<n;c+=12) s+=`<text x="${P.l+c*cw}" y="${H-5}">${fmtT(new Date(t0+c*3600e3).toISOString(),{weekday:"short",hour:"2-digit"})}</text>`;
   $("ch-exceed").innerHTML = s+"</svg>"+`<div class="sub">Opacidad = fracción de miembros. Con 0,25° de resolución, la convección estrecha queda infraestimada: léase como cota inferior.</div>`;
   if (e.cum?.length){
     const m=e.cum[0].length, xs=k=>t0+k*3*3600e3, xmin=t0, xmax=xs(m-1), med=[...Array(m).keys()].map(k=>{ const v=e.cum.map(c=>c[k]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; });
-    $("ch-spag").innerHTML = lineChart({series:[...e.cum.map(c=>({pts:c.map((v,k)=>[xs(k),v]),color:"var(--muted)",w:.5})),{pts:med.map((v,k)=>[xs(k),v]),color:"var(--accent)",w:2.4,end:true}], xmin, xmax, yfmt:v=>v.toFixed(0)});
+    $("ch-spag").innerHTML = lineChart({label:"Lluvia acumulada por miembro del ensemble, en mm desde ahora", series:[...e.cum.map(c=>({pts:c.map((v,k)=>[xs(k),v]),color:"var(--muted)",w:.5})),{pts:med.map((v,k)=>[xs(k),v]),color:"var(--accent)",w:2.4,end:true}], xmin, xmax, yfmt:v=>v.toFixed(0)});
   }
   if (e.hist24?.length){
     const v=e.hist24, mx=Math.max(10,...v), bins=12, bw=niceMax(mx)/bins, cnt=Array(bins).fill(0); v.forEach(x=>cnt[Math.min(bins-1,Math.floor(x/bw))]++);
     const W2=600,H2=140,P2={l:30,r:10,t:8,b:22}, cm=Math.max(...cnt), bwpx=(W2-P2.l-P2.r)/bins;
-    let h=`<svg class="ch" viewBox="0 0 ${W2} ${H2}">`;
+    let h=`<svg class="ch" viewBox="0 0 ${W2} ${H2}" role="img" aria-label="Distribución de la lluvia en 24 h: miembros por intervalo, en mm">`;
     cnt.forEach((c,k)=>{ const hh=c/cm*(H2-P2.t-P2.b); h+=`<rect x="${P2.l+k*bwpx+1}" y="${H2-P2.b-hh}" width="${bwpx-2}" height="${hh}" fill="var(--std)"/><text x="${P2.l+k*bwpx+bwpx/2}" y="${H2-8}" text-anchor="middle">${Math.round(k*bw)}</text>`; if(c) h+=`<text x="${P2.l+k*bwpx+bwpx/2}" y="${H2-P2.b-hh-3}" text-anchor="middle">${c}</text>`; });
     $("ch-hist24").innerHTML = h+"</svg>";
     const fmtp=o=>o?Object.entries(o).map(([k,v])=>`≥${k} mm ${(v*100).toFixed(0)} %`).join(" · "):"—";
@@ -1369,7 +1373,7 @@ function renderLab(){
   const hours=p.time.map((t,i)=>{ const idx={}; for(const k in p.indices) idx[k]=p.indices[k][i]; return idx; });
   const labVals=hours.map(idx=>compositeJS(LAB.ci, idx, LAB.w, spec, p.quality?.vertical_velocity_positive==="up").value), engVals=p.composites[LAB.ci].map(c=>c?.value);
   const T0=p.time.map(tOf);
-  $("ch-ci").innerHTML = lineChart({series:[{pts:T0.map((t,k)=>[t,engVals[k]]),color:"var(--muted)",w:1.4,dash:"4 3"},{pts:T0.map((t,k)=>[t,labVals[k]]),color:"var(--exp)",w:2.2,end:true}], xmin:T0[0], xmax:T0[T0.length-1], ymax:1, yfmt:v=>v.toFixed(1)})+legend([["var(--muted)","motor (pesos por defecto)",1],["var(--exp)","laboratorio (tus pesos)"]]);
+  $("ch-ci").innerHTML = lineChart({label:"Serie del indicador: motor frente a laboratorio, escala de 0 a 1", series:[{pts:T0.map((t,k)=>[t,engVals[k]]),color:"var(--muted)",w:1.4,dash:"4 3"},{pts:T0.map((t,k)=>[t,labVals[k]]),color:"var(--exp)",w:2.2,end:true}], xmin:T0[0], xmax:T0[T0.length-1], ymax:1, yfmt:v=>v.toFixed(1)})+legend([["var(--muted)","motor (pesos por defecto)",1],["var(--exp)","laboratorio (tus pesos)"]]);
   // tornado en la hora elegida
   const i=hourIndex(), base=compositeJS(LAB.ci, hours[i], LAB.w, spec, p.quality?.vertical_velocity_positive==="up"), bars=[];
   for(const k of keys){ if(base.value==null||base.comps[k]==null){ bars.push([k,null,null]); continue; }
@@ -1377,14 +1381,14 @@ function renderLab(){
     bars.push([k, fromComps(dn,LAB.w,base.pen,spec)-base.value, fromComps(up,LAB.w,base.pen,spec)-base.value]); }
   if(base.value!=null && spec.penalty && base.pen!=null){ const f=spec.penalty[3], raw=base.value/(1-f*base.pen); bars.push(["penalización "+spec.penalty[0], raw*(1-f*Math.min(1,base.pen+0.2))-base.value, raw*(1-f*Math.max(0,base.pen-0.2))-base.value]); }
   const mx=Math.max(0.05,...bars.flatMap(b=>[Math.abs(b[1]||0),Math.abs(b[2]||0)])), W=600, rh=26, Pt={l:150,r:40}, Ht=rh*bars.length+24, cx=Pt.l+(W-Pt.l-Pt.r)/2, sx=v=>v/mx*(W-Pt.l-Pt.r)/2;
-  let s=`<svg class="ch" viewBox="0 0 ${W} ${Ht}"><line x1="${cx}" x2="${cx}" y1="0" y2="${Ht-20}" stroke="var(--line)"/>`;
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Sensibilidad del indicador en la hora elegida a una variación de ±0,2 de cada componente"><line x1="${cx}" x2="${cx}" y1="0" y2="${Ht-20}" stroke="var(--line)"/>`;
   bars.forEach(([k,lo,hi],r)=>{ const y=r*rh+4; s+=`<text x="${Pt.l-8}" y="${y+13}" text-anchor="end">${esc(k)}</text>`; if(lo==null){ s+=`<text x="${cx+4}" y="${y+13}">sin dato</text>`; return; }
     const a=Math.min(lo,hi), b=Math.max(lo,hi); s+=`<rect x="${cx+sx(a)}" y="${y}" width="${Math.max(1,sx(b)-sx(a))}" height="${rh-8}" fill="var(--exp)" opacity=".8"/><text x="${cx+sx(b)+4}" y="${y+13}">${(b>=0?"+":"")+b.toFixed(2)}</text>${cx+sx(a)-4 > Pt.l+28 ? `<text x="${cx+sx(a)-4}" y="${y+13}" text-anchor="end">${a.toFixed(2)}</text>` : `<text x="${cx+sx(a)+4}" y="${y+13}" style="fill:var(--bg)">${a.toFixed(2)}</text>`}`; });
   $("ch-tornado").innerHTML = s+`<text x="${cx}" y="${Ht-4}" text-anchor="middle">${uiText("valor base","baseline value")} ${base.value==null?"—":base.value.toFixed(2)} · ${esc(fmtDT(new Date(T0[i]).toISOString()))}</text></svg>`;
   // barrido de umbral
   const fut=labVals.filter((v,k)=>T0[k]>=Date.now()), taus=[...Array(19).keys()].map(k=>0.05+k*0.05), cnt=taus.map(t=>fut.filter(v=>v!=null&&v>=t).length);
   { const W=600,H=130,P={l:30,r:10,t:8,b:22}, bw=(W-P.l-P.r)/taus.length, cm=Math.max(1,fut.length);
-    let h=`<svg class="ch" viewBox="0 0 ${W} ${H}">`;
+    let h=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Horas por encima de cada umbral del indicador en las próximas 48 h">`;
     taus.forEach((t,k)=>{ const hh=cnt[k]/cm*(H-P.t-P.b); h+=`<rect x="${P.l+k*bw+1}" y="${H-P.b-hh}" width="${bw-2}" height="${hh}" fill="var(--exp)" opacity=".85"><title>${uiText("umbral","threshold")} ${t.toFixed(2)}: ${cnt[k]} h</title></rect>`; if(k%2===0) h+=`<text x="${P.l+k*bw+bw/2}" y="${H-8}" text-anchor="middle">${t.toFixed(2)}</text>`; if(cnt[k]) h+=`<text x="${P.l+k*bw+bw/2}" y="${H-P.b-hh-3}" text-anchor="middle">${cnt[k]}</text>`; });
     $("ch-sweep").innerHTML = h+uiText(`</svg><div class="sub">De ${fut.length} h futuras. Un umbral en zona de cambio brusco hace frágil la conclusión.</div>`,`</svg><div class="sub">From ${fut.length} future hours. A threshold in a region of abrupt change makes the conclusion fragile.</div>`); }
 }
@@ -1549,12 +1553,12 @@ function renderPhysics(){
   const yP=pr=>pad.t+(Math.log(1000)-Math.log(pr))/(Math.log(1000)-Math.log(300))*(H-pad.t-pad.b);
   const te=P.map(pr=>[ph.thetae[pr]?.[i],pr]).filter(a=>a[0]!=null); if(te.length){
     const lo=Math.floor(Math.min(...te.map(a=>a[0]))/5)*5-5, hi=Math.ceil(Math.max(...te.map(a=>a[0]))/5)*5+5, xT=v=>pad.l+(v-lo)/(hi-lo)*(W-pad.l-pad.r);
-    let s=`<svg class="ch" viewBox="0 0 ${W} ${H}">`; for(const pr of P) s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yP(pr)}" y2="${yP(pr)}" stroke="var(--line)" stroke-width=".6"/><text x="${pad.l-4}" y="${yP(pr)+3}" text-anchor="end">${pr}</text>`;
+    let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="θe por niveles de presión, en K">`; for(const pr of P) s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yP(pr)}" y2="${yP(pr)}" stroke="var(--line)" stroke-width=".6"/><text x="${pad.l-4}" y="${yP(pr)+3}" text-anchor="end">${pr}</text>`;
     for(let v=lo;v<=hi;v+=10) s+=`<text x="${xT(v)}" y="${H-8}" text-anchor="middle">${v}</text>`;
     s+=`<polyline points="${te.map(([v,pr])=>`${xT(v)},${yP(pr)}`).join(" ")}" fill="none" stroke="var(--a)" stroke-width="2.2"/>`+te.map(([v,pr])=>`<circle cx="${xT(v)}" cy="${yP(pr)}" r="3" fill="var(--a)"/>`).join("");
     $("ch-thetae").innerHTML=s+`</svg><div class="sub">θe (K). Si disminuye con la altura entre 1000 y 700 hPa la columna es potencialmente inestable: al ascender en bloque se desestabiliza.</div>`; }
   const sb=ph.shear_by_height?.[i]||[]; if(sb.length){ const Wd=420,Hd=200,pd={l:40,r:16,t:10,b:26}, xm=Math.max(10,...sb.map(a=>a[1])), ym=Math.max(...sb.map(a=>a[0]));
-    const X=v=>pd.l+v/niceMax(xm)*(Wd-pd.l-pd.r), Y=z=>Hd-pd.b-z/ym*(Hd-pd.t-pd.b); let s=`<svg class="ch" viewBox="0 0 ${Wd} ${Hd}">`;
+    const X=v=>pd.l+v/niceMax(xm)*(Wd-pd.l-pd.r), Y=z=>Hd-pd.b-z/ym*(Hd-pd.t-pd.b); let s=`<svg class="ch" viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="Cizalladura por altura respecto al viento a 10 m, en m/s">`;
     for(let v=0;v<=niceMax(xm);v+=niceMax(xm)/4) s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${pd.t}" y2="${Hd-pd.b}" stroke="var(--line)" stroke-width=".5"/><text x="${X(v)}" y="${Hd-8}" text-anchor="middle">${Math.round(v)}</text>`;
     s+=`<polyline points="${[[0,0],...sb].map(([z,v])=>`${X(v)},${Y(z)}`).join(" ")}" fill="none" stroke="var(--std)" stroke-width="2.2"/>`+sb.map(([z,v])=>`<circle cx="${X(v)}" cy="${Y(z)}" r="3" fill="var(--std)"/><text x="${X(v)+6}" y="${Y(z)+3}" style="fill:var(--ink)">${z.toFixed(1)} km</text>`).join("");
     $("ch-shear").innerHTML=s+`</svg><div class="sub">m/s respecto al viento a 10 m. Por encima de ~12–15 m/s a 6 km la convección se organiza (multicelular o lineal).</div>`; }
@@ -1574,7 +1578,7 @@ function renderMar(){
     const T=M.time.map(tUTC), xmin=Date.now()-24*3600e3, xmax=Date.now()+72*3600e3, ser=[], lg=[];
     Object.entries(M.waves).forEach(([m,d],i)=>{ const col=PAL[i%PAL.length]; ser.push({pts:T.map((t,k)=>[t,d.wave_height?.[k]]), color:col, w:1.3, dash:coarse(m)?"4 3":null}); lg.push([col, mlab(m), coarse(m)]); });
     const B=M.boyas?.["Boya Dragonera"]; if (B?.length){ ser.push({pts:B.map(r=>[tUTC(r.t), r.hm0]), color:"var(--ink)", w:2.6, end:true}); lg.push(["var(--ink)","Boya Dragonera · observada (70 km)"]); }
-    $("ch-wav").innerHTML = lineChart({series:ser, xmin, xmax, yfmt:v=>v.toFixed(1), yLabel:"Hs m"}) + legend(lg);
+    $("ch-wav").innerHTML = lineChart({label:"Oleaje de 7 modelos frente a la boya: Hs, en m", series:ser, xmin, xmax, yfmt:v=>v.toFixed(1), yLabel:"Hs m"}) + legend(lg);
     const C=M.consenso?.modelos||{};
     $("t-wav").querySelector("tbody").innerHTML = Object.entries(C).sort((a,b)=>(b[1].hs_max24??0)-(a[1].hs_max24??0)).map(([m,c])=>
       `<tr><td>${esc(mlab(m))}</td><td class="num">${n1(c.hs_ahora)}</td><td class="num"><b>${n1(c.hs_max24)}</b></td><td class="num">${n1(c.fondo_ahora)}</td><td class="num">${n1(c.viento_ahora)}</td><td class="num">${n1(c.tp_ahora)}</td><td class="num">${n0(c.dir_ahora)}</td></tr>`).join("");
@@ -1587,7 +1591,7 @@ function renderMar(){
   const SG=M.surge;
   if (SG?.serie?.length){
     const T=SG.serie.map(r=>tUTC(r.t)), all=SG.serie.flatMap(r=>[r.obs,r.mod,r.res]), lo=Math.min(...all), hi=Math.max(...all);
-    $("ch-surge").innerHTML = lineChart({series:[{pts:T.map((t,k)=>[t,SG.serie[k].obs]),color:"var(--ink)",w:2,end:true},{pts:T.map((t,k)=>[t,SG.serie[k].mod]),color:"var(--std)",w:1.4,dash:"4 3"},{pts:T.map((t,k)=>[t,SG.serie[k].res]),color:"var(--accent)",w:1.6}],
+    $("ch-surge").innerHTML = lineChart({label:"Nivel del mar: mareógrafo, modelo y marea meteorológica, en cm", series:[{pts:T.map((t,k)=>[t,SG.serie[k].obs]),color:"var(--ink)",w:2,end:true},{pts:T.map((t,k)=>[t,SG.serie[k].mod]),color:"var(--std)",w:1.4,dash:"4 3"},{pts:T.map((t,k)=>[t,SG.serie[k].res]),color:"var(--accent)",w:1.6}],
       xmin:T[0], xmax:Math.max(T[T.length-1], Date.now()), ymin:Math.floor(lo*20)/20, ymax:Math.ceil(hi*20)/20, nice:false, yfmt:v=>Math.round(v*100), yLabel:"cm"})
       + legend([["var(--ink)","mareógrafo puerto de Ibiza (anomalía)"],["var(--std)","modelo: marea + barómetro inverso",1],["var(--accent)","residuo = marea meteorológica no modelizada"]]);
     $("surge-note").textContent = uiText(`Residuo actual ${Math.round(SG.res_ultimo*100)} cm · máximo ${Math.round(SG.res_max*100)} cm en ${SG.n} h. Las dos series se comparan como anomalía respecto a su media común porque sus ceros de referencia no coinciden.`,`Current residual ${Math.round(SG.res_ultimo*100)} cm · maximum ${Math.round(SG.res_max*100)} cm over ${SG.n} h. The series are compared as anomalies relative to their common mean because their reference datums differ.`);
@@ -1596,9 +1600,9 @@ function renderMar(){
   const O=M.ocean;
   if (O?.time){
     const T=O.time.map(tUTC), xmin=Date.now()-24*3600e3, xmax=Date.now()+72*3600e3, B=M.boyas?.["Boya Dragonera"]||[];
-    $("ch-sst").innerHTML = lineChart({series:[{pts:T.map((t,k)=>[t,O.sea_surface_temperature?.[k]]),color:"var(--a)",w:1.8},{pts:B.filter(r=>r.ts2!=null).map(r=>[tUTC(r.t),r.ts2]),color:"var(--ink)",dots:true}], xmin, xmax, ymin:Math.floor(Math.min(...(O.sea_surface_temperature||[20]).filter(v=>v!=null), ...B.map(r=>r.ts2).filter(v=>v!=null))-1), nice:false, ymax:Math.ceil(Math.max(...(O.sea_surface_temperature||[25]).filter(v=>v!=null), ...B.map(r=>r.ts2).filter(v=>v!=null))+1), yfmt:v=>v.toFixed(0), yLabel:"°C", h:120})
+    $("ch-sst").innerHTML = lineChart({label:"Temperatura del agua en la bocana, modelo y boya, en °C", series:[{pts:T.map((t,k)=>[t,O.sea_surface_temperature?.[k]]),color:"var(--a)",w:1.8},{pts:B.filter(r=>r.ts2!=null).map(r=>[tUTC(r.t),r.ts2]),color:"var(--ink)",dots:true}], xmin, xmax, ymin:Math.floor(Math.min(...(O.sea_surface_temperature||[20]).filter(v=>v!=null), ...B.map(r=>r.ts2).filter(v=>v!=null))-1), nice:false, ymax:Math.ceil(Math.max(...(O.sea_surface_temperature||[25]).filter(v=>v!=null), ...B.map(r=>r.ts2).filter(v=>v!=null))+1), yfmt:v=>v.toFixed(0), yLabel:"°C", h:120})
       + legend([["var(--a)","temperatura del mar · modelo en la bocana"],["var(--ink)","agua en boya Dragonera"]]);
-    $("ch-cur").innerHTML = lineChart({series:[{pts:T.map((t,k)=>[t,O.ocean_current_velocity?.[k]]),color:"var(--std)",w:1.8},{pts:B.filter(r=>r.vc_md!=null).map(r=>[tUTC(r.t),r.vc_md*0.036]),color:"var(--ink)",dots:true}], xmin, xmax, yfmt:v=>v.toFixed(1), yLabel:"km/h", h:120})
+    $("ch-cur").innerHTML = lineChart({label:"Corriente en la bocana, modelo y boya, en km/h", series:[{pts:T.map((t,k)=>[t,O.ocean_current_velocity?.[k]]),color:"var(--std)",w:1.8},{pts:B.filter(r=>r.vc_md!=null).map(r=>[tUTC(r.t),r.vc_md*0.036]),color:"var(--ink)",dots:true}], xmin, xmax, yfmt:v=>v.toFixed(1), yLabel:"km/h", h:120})
       + legend([["var(--std)","corriente superficial · modelo"],["var(--ink)","corriente en boya Dragonera"]]);
     const k=T.reduce((b,t,i)=>Math.abs(t-Date.now())<Math.abs(T[b]-Date.now())?i:b,0), Bl=[...B].reverse().find(r=>r.ts2!=null)||{};
     $("ocean-kv").innerHTML=[["Mar · modelo", `${n1(O.sea_surface_temperature?.[k])} °C`],["Agua · Dragonera", Bl.ts2!=null?`${n1(Bl.ts2)} °C`:"—"],["Corriente · modelo", `${n1(O.ocean_current_velocity?.[k])} km/h → ${n0(O.ocean_current_direction?.[k])}°`],["Nivel · modelo", `${O.sea_level_height_msl?.[k]!=null?Math.round(O.sea_level_height_msl[k]*100):"—"} cm`],["Barómetro inverso", `${O.invert_barometer_height?.[k]!=null?Math.round(O.invert_barometer_height[k]*100):"—"} cm`],["Radar HF · media", M.hf?.media?`${Math.round(M.hf.media.vel_ms*100)} cm/s → ${M.hf.media.hacia_deg}°`:"—"]].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
@@ -1631,7 +1635,7 @@ function renderModelsX(){
     $("t-modx").querySelector("tbody").innerHTML = ms.map(m=>{ const r=X.ventanas[m]; return `<tr><td><span class="fam-${fam(m)}">${fam(m)==="IA"?"IA · ":""}</span>${esc(MLAB(m))} <span class="ev">${esc(X.info?.[m]?.res||"")}</span></td>${["0-6","6-12","12-24","24-48","48-72"].map(w=>`<td class="num">${n1(r.lluvia?.[w])}</td>`).join("")}<td class="num">${n0(r.racha_max?.["0-24"])}</td><td class="num">${n0(r.cape_max?.["0-24"])}</td></tr>`; }).join("");
     const T=(X.time||[]).map(tUTC), now=Date.now(), ser=[], lg=[];
     ms.forEach((m,i)=>{ const pr=X.series?.[m]?.pr||[]; let acc=0; const pts=T.map((t,k)=>{ if(t<now) return [t,null]; acc+=pr[k]||0; return [t,acc]; }); const col=fam(m)==="IA"?["#c58cff","#e07be0"][ms.filter(x=>fam(x)==="IA").indexOf(m)%2]:PAL[i%PAL.length]; ser.push({pts, color:col, w:fam(m)==="IA"?2.2:1.4, dash:fam(m)==="IA"?"5 3":null, end:true}); lg.push([col, MLAB(m), fam(m)==="IA"]); });
-    $("ch-modx").innerHTML = lineChart({series:ser, xmin:now, xmax:now+72*3600e3, yfmt:v=>v.toFixed(0), yLabel:"mm acumulados desde ahora", nowLine:false}) + legend(lg);
+    $("ch-modx").innerHTML = lineChart({label:"Física frente a IA en Portinatx: lluvia acumulada desde ahora, en mm", series:ser, xmin:now, xmax:now+72*3600e3, yfmt:v=>v.toFixed(0), yLabel:"mm acumulados desde ahora", nowLine:false}) + legend(lg);
     $("modx-note").textContent = uiText(`${X.fuente||""}. Lluvia en mm por ventana; racha en km/h y CAPE en J/kg, máximos de las próximas 24 h. AIFS y AIGFS dan totales de 6 h repartidos por hora: compara ventanas, no horas. En este episodio todos los modelos se han quedado cortos sobre Ibiza.`,`${X.fuente||""}. Rain in mm per window; gusts in km/h and CAPE in J/kg, maximum values for the next 24 h. AIFS and AIGFS provide 6 h totals distributed by hour: compare time windows, not individual hours. In this episode all models underestimated rainfall over Ibiza.`);
   }
   const SE=X.superens;
@@ -1643,7 +1647,7 @@ function renderModelsX(){
       + `<tr><td><b>Conjunto</b> <span class="ev">mismo peso por sistema</span></td><td class="num">${rows.reduce((a,s)=>a+s.n,0)}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td>${prob(SE.conjunto?.[w])}</tr>`;
     const T=(SE.time||[]).map(tUTC), ser=[], lg=[];
     rows.forEach((s,i)=>{ const col=s.familia==="IA"?["#c58cff","#e07be0","#9d7bff"][i%3]:PAL[i%PAL.length]; ser.push({pts:T.map((t,k)=>[t,s.mediana_h?.[k]]), color:col, w:1.6, dash:s.familia==="IA"?"5 3":null}); lg.push([col, `${s.nombre} · mediana`, s.familia==="IA"]); });
-    $("ch-sens").innerHTML = lineChart({series:ser, xmin:Date.now(), xmax:Date.now()+72*3600e3, yfmt:v=>v.toFixed(1), yLabel:"mm/h", h:130, nowLine:false}) + legend(lg);
+    $("ch-sens").innerHTML = lineChart({label:"Superensemble: lluvia horaria por sistema, en mm/h", series:ser, xmin:Date.now(), xmax:Date.now()+72*3600e3, yfmt:v=>v.toFixed(1), yLabel:"mm/h", h:130, nowLine:false}) + legend(lg);
     $("sens-note").textContent = uiText(`${X.superens_fuente||""}. Columnas ≥1…≥30: fracción de miembros con al menos esos mm en la ventana, en el punto. Estimación diagnóstica sin calibrar: 25 km de malla, cota inferior en convección.`,`${X.superens_fuente||""}. Columns ≥1…≥30: fraction of members with at least that many mm in the window at the point. Uncalibrated diagnostic estimate: 25 km grid, lower bound in convection.`);
   }
 }
@@ -1820,7 +1824,7 @@ function renderForense(){
   // curva de aprendizaje
   const H=F.historial_aprendizaje||{}, hd=Object.keys(H).sort();
   if (hd.length>=2){ const ser=[], lg=[]; F.modelos.forEach((m,i)=>{ const col=S.modx?.info?.[m]?.familia==="IA"?["#c58cff","#e07be0"][i%2]:PAL[i%PAL.length]; ser.push({pts:hd.map(d=>[+new Date(d+"T12:00:00Z"), H[d][`${m}|D0`]??null]), color:col, w:1.6, end:true}); lg.push([col,name(m)]); });
-    $("ch-fz-learn").innerHTML = lineChart({series:ser, xmin:+new Date(hd[0]+"T00:00:00Z"), xmax:+new Date(hd[hd.length-1]+"T23:59:00Z"), ymin:0, yfmt:v=>"×"+v.toFixed(1), nowLine:false, h:130}) + legend(lg);
+    $("ch-fz-learn").innerHTML = lineChart({label:"Curva de aprendizaje: factor de corrección a 0–24 h por modelo (×)", series:ser, xmin:+new Date(hd[0]+"T00:00:00Z"), xmax:+new Date(hd[hd.length-1]+"T23:59:00Z"), ymin:0, yfmt:v=>"×"+v.toFixed(1), nowLine:false, h:130}) + legend(lg);
   } else $("ch-fz-learn").innerHTML = `<p class="empty">La curva de aprendizaje aparece a partir del segundo día de archivo (hoy: ${hd.length} día).</p>`;
 }
 function drawForenseMap(){
