@@ -473,7 +473,7 @@ nav.tabs .menu-label{display:block;color:var(--muted);padding:8px 10px 2px;font-
     "Sin mensajes de nivel amarillo o superior en las zonas procesadas del ciclo; comprobar cobertura de fuentes.": "No yellow-or-higher messages in the areas processed for this cycle; check source coverage.",
     "UNKNOWN: no interpretar la ausencia de mensajes como calma.": "UNKNOWN: do not interpret an absence of messages as calm."
 });
-  Object.assign(translations, {"Pirineo":"Pyrenees", "VIGENTE":"ACTIVE", "PRÓXIMO":"UPCOMING", "FINALIZADO":"ENDED", "SIN HORARIO VERIFICABLE":"TIME NOT VERIFIED", "amarillo":"yellow", "naranja":"orange", "rojo":"red"});
+  Object.assign(translations, {"Pirineo":"Pyrenees", "VIGENTE":"ACTIVE", "PRÓXIMO":"UPCOMING", "FINALIZADO":"ENDED", "SIN HORARIO VERIFICABLE":"TIME NOT VERIFIED", "VIGENCIA NO INDICADA":"END TIME NOT STATED", "amarillo":"yellow", "naranja":"orange", "rojo":"red"});
   Object.assign(translations, {
     "Hoy": "Today",
     "Mañana": "Tomorrow",
@@ -1059,7 +1059,14 @@ function renderDiag(){
     ...(c.metar||[]).map(m=>`<tr><td>${esc(m.icao)} <span class="ev">${esc(m.raw)}</span></td><td class="ev">METAR</td><td class="num">${n0(m.alt)}</td><td class="num">${n1(m.T)}</td><td class="num">—</td><td class="num">${m.viento_kt!=null?n0(m.viento_kt*1.852):"—"}</td><td class="num">${m.racha_kt!=null?n0(m.racha_kt*1.852):"—"}</td><td class="num">—</td><td class="num">${n0(window.PirineoObservatory.liveAge(m,c.issued))} min</td></tr>`)].join("")||'<tr><td colspan="9" class="empty">Sin observaciones.</td></tr>';
   const W2=(c.avisos||[]).filter(w=>!w.error);
   const warnCoverageOk = window.PirineoObservatory.derive(c,D.series,D.extended).officialOk;
-  $("warns").innerHTML=W2.length?W2.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> <span data-source-text>${esc(w.evento)}</span> · <span class="ev"><span data-source-text>${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)}</span> · ${fmtT(w.desde)} → ${fmtT(w.hasta)}${w.vigente&&Date.parse(w.desde)<=Date.now()&&Date.now()<=Date.parse(w.hasta)?" · vigente":""}</span></li>`).join(""):(!warnCoverageOk?'<li class="empty">UNKNOWN · avisos institucionales no verificados; comprueba AEMET, MeteoAlarm y las fuentes oficiales.</li>':`<li>Sin avisos amarillos o superiores en el Pirineo de Girona, de Lleida, Prepirineo de Barcelona ni Pirineo oscense (${/^(ok|caché)/.test(String((c.fuentes||{}).aemet_cap||""))?"AEMET CAP":"MeteoAlarm"}), ni en Pyrénées-Orientales, Ariège o Andorra (MeteoAlarm), con cobertura condicionada.</li>`);
+  // Cobertura por país: «sin avisos» solo si respondieron todas las fuentes consultadas; las demás, UNKNOWN con nombre.
+  const cob=Array.isArray(c.avisos_cobertura)?c.avisos_cobertura:null;
+  const cobFail=cob?cob.filter(x=>x.estado!=="ok"):null;
+  const cobNote=cobFail&&cobFail.length?`<li class="empty">UNKNOWN · no se pudo consultar: ${cobFail.map(x=>esc(x.nombre)).join(", ")}. No equivale a ausencia de avisos.</li>`:"";
+  const timing=w=>window.PirineoObservatory.warningTiming(w);
+  const tLabel={"VIGENTE":" · vigente","PRÓXIMO":" · próximo","VIGENCIA NO INDICADA":" · vigencia no indicada por el emisor: incierta","SIN HORARIO VERIFICABLE":" · horario no verificable"};
+  const W3=W2.filter(w=>timing(w)!=="FINALIZADO");
+  $("warns").innerHTML=W3.length?W3.map(w=>`<li><span class="pill p-${w.nivel}">${esc(w.nivel)}</span> <span data-source-text>${esc(w.evento)}</span> · <span class="ev"><span data-source-text>${esc(w.fuente||"MeteoAlarm")} · ${esc(w.area)}</span> · ${fmtT(w.desde)} → ${w.hasta?fmtT(w.hasta):"fin no indicado"}${tLabel[timing(w)]||""}${w.emitido?` · emitido ${fmtT(w.emitido)}`:""}</span></li>`).join("")+cobNote:(!warnCoverageOk||(cobFail&&cobFail.length===cob.length)?'<li class="empty">UNKNOWN · avisos institucionales no verificados; comprueba AEMET, MeteoAlarm y las fuentes oficiales.</li>':cob?`<li>Sin avisos amarillos o superiores en: ${cob.filter(x=>x.estado==="ok").map(x=>`${esc(x.nombre)} (${esc(x.ambito)}; ${esc(x.fuente)})`).join("; ")}. Cobertura condicionada al ámbito oficial de cada zona.</li>${cobNote}`:'<li class="empty">UNKNOWN · el ciclo no indica qué fuentes de avisos respondieron; comprueba AEMET, MeteoAlarm y las fuentes oficiales.</li>');
   const A=c.aemet; let am="";
   if(A&&A.montana&&A.montana.length){
     am=A.montana.map(m=>`<p><b>${m.dia===0?"Hoy":"Mañana"}</b>${m.isocero_m?` · isocero ${n0(m.isocero_m)} m`:""}</p><ul class="plain">${(m.prediccion||[]).map(a=>`<li data-source-text><b>${esc(a.cabecera)}:</b> ${esc(a.texto)}</li>`).join("")}${(m.atmosfera_libre||[]).filter(a=>/Viento/.test(a.cabecera)).map(a=>`<li class="ev" data-source-text>${esc(a.cabecera)}: ${esc(a.texto)}</li>`).join("")}</ul>`).join("");

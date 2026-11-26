@@ -123,8 +123,15 @@ LEVELS = (925, 850, 700, 600, 500)
 NOW_TOLERANCE_MIN = 90          # el valor «ahora» de un punto debe estar a ≤90 min de la hora actual
 INVERSION_MIN_SPAN_M = 300      # desnivel mínimo entre estaciones para afirmar un gradiente
 FOEHN_NORTH_SECTOR = (300.0, 30.0)
-WARN_AREAS = {"spain": ("pirineo de girona", "pirineo de lleida", "girona", "lleida"),
+# Áreas de MeteoAlarm por país, comparadas como palabras completas: «girona» suelto dejaba entrar «Litoral sur de
+# Girona». España = las zonas Meteoalerta de AEMET_ZONES («Pirineo de Lleida» y «Pirineo oscense» vistas en el feed
+# real el 26/11/2026; las otras dos siguen el mismo formato, SUPUESTO). 66 y 09 son departamentos enteros.
+WARN_AREAS = {"spain": ("pirineo de girona", "pirineo de lleida", "prepirineo de barcelona", "pirineo oscense"),
               "france": ("pyrénées-orientales", "pyrenees-orientales", "ariège", "ariege"), "andorra": ("andorra",)}
+WARN_SCOPE = {"spain": ("España", "Pirineo de Girona, Pirineo de Lleida, Prepirineo de Barcelona y Pirineo oscense"),
+              "france": ("Francia", "departamentos de Pyrénées-Orientales (66) y Ariège (09), ámbito departamental: "
+                                    "incluye también el litoral del Rosellón y la llanura"),
+              "andorra": ("Andorra", "todo el país")}
 STATUS = {
     "dem": ("ESTÁNDAR", "Relieve de las teselas Terrarium (SRTM/Copernicus/ASTER combinados, ~76 m), remuestreado a ~0,004°. Curvas cada 100 m."),
     "puntos": ("DIAGNÓSTICO", "Previsión por punto a la altitud real del punto. Open-Meteo ajusta la temperatura del modelo a esa altitud; MET Norway lo hace con un gradiente fijo de 6 °C/km (no ve inversiones)."),
@@ -587,6 +594,21 @@ def src_metar() -> list[dict]:
              "edad_min": round((pd.now_utc() - datetime.fromtimestamp(v["obsTime"], UTC)).total_seconds() / 60)} for k, v in out.items()]
 
 
+def warn_area_match(area: str, keys) -> bool:
+    a = area.lower()
+    return any(re.search(rf"(?<!\w){re.escape(k)}(?!\w)", a) for k in keys)
+
+
+def warn_coverage_status(cob: dict) -> str:
+    """Estado de la fuente de avisos a partir de la cobertura por país: «ok» solo si respondieron todos."""
+    failed = [WARN_SCOPE[k][0] for k, v in cob.items() if v != "ok"]
+    if not failed:
+        return "ok"
+    if len(failed) == len(cob):
+        return "error: no se pudo consultar ninguna fuente de avisos"
+    return "parcial: no se pudo consultar " + ", ".join(failed)
+
+
 def src_warnings() -> list[dict]:
     now, out = pd.now_utc(), []
     color = {"yellow": "amarillo", "orange": "naranja", "red": "rojo"}
@@ -598,16 +620,19 @@ def src_warnings() -> list[dict]:
             continue
         for e in txt.split("<entry>")[1:]:
             area = pd._tag(e, "cap:areaDesc")
-            if not any(k in area.lower() for k in keys):
+            if not warn_area_match(area, keys):
                 continue
             title = pd._tag(e, "title")
             lv = next((v for k, v in color.items() if title.lower().startswith(k)), "")
-            on, ex = pd.parse_time(pd._tag(e, "cap:onset")), pd.parse_time(pd._tag(e, "cap:expires"))
-            if ex and ex < now:
+            win = pd.cap_window(now, pd._tag(e, "cap:onset"), pd._tag(e, "cap:expires"), pd._tag(e, "cap:effective"),
+                                pd._tag(e, "cap:sent"))
+            if win is None:
                 continue
+            on, ex = win["start"], win["end"]
             out.append({"pais": country, "area": area, "nivel": lv, "evento": pd._tag(e, "cap:event") or title,
                         "desde": on.isoformat() if on else "", "hasta": ex.isoformat() if ex else "",
-                        "vigente": bool(on and on <= now and (not ex or ex >= now))})
+                        "vigente": win["activo"], "vigencia": win["vigencia"],
+                        "caduca_prudente": win["caduca_prudente"], "emitido": pd._tag(e, "cap:sent")})
     return out
 
 
@@ -733,7 +758,8 @@ def src_aemet_cap() -> list[dict]:
             out.append({"pais": "spain", "fuente": "AEMET", "zona": zone, "area": w.get("area") or zname,
                         "nivel": w.get("nivel"), "evento": w.get("evento"), "desde": w.get("onset") or "",
                         "hasta": w.get("expires") or "", "vigente": bool(w.get("activo_ahora")),
-                        "descripcion": w.get("descripcion") or ""})
+                        "vigencia": w.get("vigencia", ""), "caduca_prudente": w.get("caduca_prudente", ""),
+                        "emitido": w.get("sent", ""), "descripcion": w.get("descripcion") or ""})
     return out
 
 
@@ -1152,6 +1178,7 @@ def build(dem: dict | None = None) -> dict:
     except Exception as exc:
         srcs["atmosfera_detalle"] = f"error: {type(exc).__name__}"
     obs, metar, warns, aemet_txt = [], [], [], None
+    cob_avisos = {p: "error" for p in WARN_AREAS}       # por país: «ok» solo si su feed respondió
     atribuciones: list[str] = []
     for name, fn in (("meteoclimatic", lambda: src_meteoclimatic(dem)), ("metar", src_metar), ("avisos", src_warnings)):
         try:
@@ -1163,6 +1190,9 @@ def build(dem: dict | None = None) -> dict:
                 metar = val
             else:
                 warns = val
+                cob_avisos = {p: "error" if any(w.get("pais") == p and w.get("error") for w in val) else "ok"
+                              for p in WARN_AREAS}
+                srcs[name] = warn_coverage_status(cob_avisos)
         except Exception as exc:
             srcs[name] = f"error: {type(exc).__name__}"
     extra = (("aemet_obs", 30, src_aemet_obs), ("xema", 30, src_xema), ("meteo_france_obs", 45, mf.fetch_observations),
@@ -1199,7 +1229,8 @@ def build(dem: dict | None = None) -> dict:
                 atribuciones.append(cnp_perm["atribucion"])
         elif name == "aemet_cap":
             warns = [w for w in warns if w.get("pais") != "spain"] + val     # AEMET sustituye a MeteoAlarm en España
-            srcs["avisos"] += " · España: AEMET CAP"
+            cob_avisos["spain"] = "ok"
+            srcs["avisos"] = warn_coverage_status(cob_avisos) + " · España: AEMET CAP"
         else:
             aemet_txt = val
     obs = [o for o in obs if o.get("edad_min") is not None and o["edad_min"] <= 24 * 60]
@@ -1257,6 +1288,9 @@ def build(dem: dict | None = None) -> dict:
             "orografia": relieve["orografia"], "cubeta_fria": relieve["cubeta_fria"],
             "carreteras": {"oficial": vias, "exposicion": relieve["exposicion"]},
             "inversion_obs": obs_inversion(obs_all), "obs": obs, "metar": metar, "avisos": warns, "aemet": aemet_txt,
+            "avisos_cobertura": [{"pais": p, "nombre": WARN_SCOPE[p][0], "ambito": WARN_SCOPE[p][1], "estado": v,
+                                  "fuente": "AEMET CAP" if p == "spain" and "AEMET CAP" in srcs.get("avisos", "")
+                                  else "MeteoAlarm"} for p, v in cob_avisos.items()],
             "status": {k: {"estado": a, "nota": b} for k, (a, b) in STATUS.items()},
             "enlaces": {"aludes_andorra": "https://www.meteo.ad/estatneu", "aludes_meteocat": "https://www.meteo.cat/prediccio/allaus",
                         "aludes_meteofrance": "https://meteofrance.com/meteo-montagne", "carreteras_andorra": "https://www.mobilitat.ad",

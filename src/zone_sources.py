@@ -1,6 +1,6 @@
 """Regional observations, warning feeds and radar tiles; no territorial globals."""
 import base64
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import math
 import re
@@ -13,6 +13,8 @@ import xml.etree.ElementTree as ET
 from weather_core import number
 
 UTC = timezone.utc
+# Igual que portinatx_degen.CAP_SIN_FIN_H (docs/AVISOS-VIGENCIA-AMBITO.md); un test comprueba que coinciden.
+NO_EXPIRES_MAX_H = 24
 
 
 def time_utc(value):
@@ -114,17 +116,23 @@ def warnings(raw,feed,now):
         if entry.tag.split('}')[-1]!='entry':
             continue
         area=tag(entry,'areaDesc')
-        if not any(_normal(key) in _normal(area) for key in feed['areas']):
+        # Palabra completa: «pirineo de girona» no debe casar con «Prepirineo de Girona».
+        if not any(re.search(r'(?<!\w)'+re.escape(_normal(key))+r'(?!\w)',_normal(area)) for key in feed['areas']):
             continue
         try:
-            start,end=time_utc(tag(entry,'onset')),time_utc(tag(entry,'expires'))
+            start=time_utc(tag(entry,'onset') or tag(entry,'effective'))
+            end=time_utc(tag(entry,'expires')) if tag(entry,'expires') else None
+            # Sin expires: vigencia no indicada, retirada prudente a NO_EXPIRES_MAX_H de la emisión (sent o inicio).
+            limit=end or (time_utc(tag(entry,'sent')) if tag(entry,'sent') else start)+timedelta(hours=NO_EXPIRES_MAX_H)
         except (ValueError,TypeError):
             continue
-        if end<=now or end<=start:
+        if limit<=now or limit<=start:
             continue
         output.append({'id':tag(entry,'id'),'country':feed['country'],'area':area,
                        'event':tag(entry,'event') or tag(entry,'title'), 'severity':tag(entry,'severity') or 'unknown',
-                       'certainty':tag(entry,'certainty') or 'unknown', 'onset':start.isoformat(),'expires':end.isoformat(),
+                       'certainty':tag(entry,'certainty') or 'unknown', 'onset':start.isoformat(),
+                       'expires':end.isoformat() if end else '', 'expires_prudent':'' if end else limit.isoformat(),
+                       'validity':'declared' if end else 'end-not-declared',
                        'state':'active' if start<=now else 'future','source_type':'official-feed'})
     updated=tag(root,'updated')
     try:
@@ -245,4 +253,4 @@ def validate_data(module,data):
                     if row.get(field) is not None and not number(row[field]):
                         raise ValueError('invalid observation number')
             else:
-                time_utc(row['onset']);time_utc(row['expires'])
+                time_utc(row['onset']);time_utc(row['expires'] if row.get('validity')!='end-not-declared' else row['expires_prudent'])

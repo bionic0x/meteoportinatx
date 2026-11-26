@@ -126,7 +126,7 @@ def source_sections(pack, pid):
         if data.get('failed_feeds'):
             rows.append(f'<p class="missing">Cobertura parcial: fallaron {external(", ".join(data["failed_feeds"]))}.</p>')
         for r in data.get('records',[]):
-            rows.append(f'<p><b>{external(r["event"])}</b> · {external(r["area"])} · severidad {external(r["severity"])} · certeza {external(r["certainty"])}<br>{text(stamp(r["onset"]))} — {text(stamp(r["expires"]))}</p>')
+            rows.append(f'<p><b>{external(r["event"])}</b> · {external(r["area"])} · severidad {external(r["severity"])} · certeza {external(r["certainty"])}<br>{text(stamp(r["onset"]))} — {text(stamp(r["expires"])) if r.get("expires") else "fin no indicado por el emisor: vigencia incierta; se retira a las " + text(stamp(r["expires_prudent"]))}</p>')
         if data and not data.get('records'):
             rows.append('<p>No se encontraron coincidencias en los boletines descargados.</p>')
     if 'radar' in modules:

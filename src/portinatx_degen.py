@@ -630,6 +630,31 @@ def src_aemet_obs() -> SourceResult:
                         payload={"series": out, "prec_mode": mode})
 
 
+# Aviso sin <expires>: no queda vigente para siempre ni se borra en silencio. Se marca «SIN FIN DECLARADO» y se
+# retira a las CAP_SIN_FIN_H horas de su emisión (sent; si falta, del inicio). Decisión en docs/AVISOS-VIGENCIA-AMBITO.md.
+CAP_SIN_FIN_H = 24
+_TZ_SUFFIX = re.compile(r"(Z|[+-]\d\d:?\d\d)$")
+
+
+def cap_window(now: datetime, onset: str | None = "", expires: str | None = "", effective: str | None = "",
+               sent: str | None = "") -> dict | None:
+    """Ventana temporal de un aviso CAP 1.2. None si ya ha caducado (expires, o la caducidad prudente)."""
+    raw = [(v or "").strip() for v in (onset, expires, effective, sent)]
+    tz_asumida = any(v and not _TZ_SUFFIX.search(v) for v in raw[:3])  # hora sin zona: parse_time supone UTC
+    start = parse_time(raw[0]) or parse_time(raw[2])                    # CAP 1.2: sin onset rige effective
+    end = parse_time(raw[1])
+    ref = None if end else (parse_time(raw[3]) or start)
+    prudente = ref + timedelta(hours=CAP_SIN_FIN_H) if ref else None
+    limit = end or prudente
+    if limit and limit < now:
+        return None
+    return {"start": start, "end": end, "caduca_prudente": prudente.isoformat() if prudente else "",
+            "vigencia": ("SIN HORARIO VERIFICABLE" if tz_asumida or not start
+                         else "SIN FIN DECLARADO" if not end else "DECLARADA"),
+            "tz": "ASUMIDA_UTC" if tz_asumida else "",
+            "activo": bool(not tz_asumida and start and start <= now and (not limit or limit >= now))}
+
+
 def parse_cap_documents(blobs: list[bytes], zone: str, now: datetime,
                         lookahead_h: int) -> list[dict]:
     """Extrae los avisos CAP de la zona. Devuelve lista de {nivel, rank, onset, expires, ...}."""
@@ -661,14 +686,17 @@ def parse_cap_documents(blobs: list[bytes], zone: str, now: datetime,
                 aw = (params.get("awareness_level") or "").split(";")
                 nivel = {"yellow": "amarillo", "orange": "naranja", "red": "rojo",
                          "green": "verde"}.get(aw[1].strip().lower() if len(aw) > 1 else "", "")
-            onset = parse_time(info.findtext("c:onset", None, ns))
-            expires = parse_time(info.findtext("c:expires", None, ns))
+            win = cap_window(now, info.findtext("c:onset", None, ns), info.findtext("c:expires", None, ns),
+                             info.findtext("c:effective", None, ns), sent)
+            # El EMMA_ID de Ibiza (ES113) solo vale para la zona de Portinatx, nunca para otra zona pedida.
+            emma = CFG["emma_id"] if zone == CFG["aemet_zone"] else None
             for area in info.findall("c:area", ns):
                 codes = [g.findtext("c:value", "", ns) for g in area.findall("c:geocode", ns)]
-                if not (zone in codes or CFG["emma_id"] in codes or f".{zone}" in ident):
+                if not (zone in codes or emma in codes or f".{zone}" in ident):
                     continue
-                if expires and expires < now:
+                if win is None:
                     continue
+                onset, expires = win["start"], win["end"]
                 if onset and onset > horizon:
                     continue
                 adesc = area.findtext("c:areaDesc", "", ns) or ""
@@ -681,7 +709,8 @@ def parse_cap_documents(blobs: list[bytes], zone: str, now: datetime,
                     "evento": info.findtext("c:event", "", ns),
                     "onset": onset.isoformat() if onset else "",
                     "expires": expires.isoformat() if expires else "",
-                    "activo_ahora": bool(onset and onset <= now and (not expires or expires >= now)),
+                    "activo_ahora": win["activo"], "vigencia": win["vigencia"], "tz": win["tz"],
+                    "caduca_prudente": win["caduca_prudente"],
                     "parametro": params.get("AEMET-Meteoalerta parametro", ""),
                     "probabilidad": params.get("AEMET-Meteoalerta probabilidad", ""),
                     "descripcion": (info.findtext("c:description", "", ns) or "")[:240],
@@ -724,9 +753,11 @@ def src_meteoalarm() -> SourceResult:
             continue
         title = _tag(e, "title")
         lv = next((v for k, v in color.items() if title.lower().startswith(k)), "")
-        onset, exp = parse_time(_tag(e, "cap:onset")), parse_time(_tag(e, "cap:expires"))
-        if (exp and exp < now) or (onset and onset > horizon):
+        win = cap_window(now, _tag(e, "cap:onset"), _tag(e, "cap:expires"), _tag(e, "cap:effective"),
+                         _tag(e, "cap:sent"))
+        if win is None or (win["start"] and win["start"] > horizon):
             continue
+        onset, exp = win["start"], win["end"]
         # El CAP completo trae el umbral ("Precipitación acumulada en una hora: 50 mm").
         cap_url = ""
         marker = 'type="application/cap+xml" href="'
@@ -744,7 +775,8 @@ def src_meteoalarm() -> SourceResult:
             continue
         warns.append({"nivel": lv, "rank": WARN_RANK.get(lv, 0), "evento": _tag(e, "cap:event"),
                       "onset": onset.isoformat() if onset else "", "expires": exp.isoformat() if exp else "",
-                      "activo_ahora": bool(onset and onset <= now and (not exp or exp >= now)),
+                      "activo_ahora": win["activo"], "vigencia": win["vigencia"], "tz": win["tz"],
+                      "caduca_prudente": win["caduca_prudente"], "sent": _tag(e, "cap:sent"), "area": area,
                       "parametro": area, "probabilidad": _tag(e, "cap:certainty"), "descripcion": title})
     return SourceResult(name="meteoalarm", status="ok", kind="institutional",
                         data_time=now.isoformat(), detail=f"{len(warns)} avisos Pitiusas (cubre D y D+1)",
@@ -4349,6 +4381,8 @@ def build_app(snap: dict, state: dict) -> dict[str, dict]:
         seen.add(k)
         wl.append({"nivel": w["nivel"], "rank": w["rank"], "tipo": w.get("tipo", ""), "evento": w["evento"],
                    "desde": w.get("onset"), "hasta": w.get("expires"), "activo": bool(w.get("activo_ahora")),
+                   "vigencia": w.get("vigencia", ""), "caduca_prudente": w.get("caduca_prudente", ""),
+                   "emitido": w.get("sent", ""), "area": w.get("area", ""),
                    "umbral": w.get("descripcion") or w.get("parametro", "")})
     hist = []
     try:

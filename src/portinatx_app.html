@@ -570,7 +570,7 @@ nav.tabs a.lab[aria-current="page"]{border-color:var(--exp);color:var(--exp)}
  "Responde Claude con los datos del último ciclo publicado. Es una estimación diagnóstica, no un aviso oficial: manda AEMET. En emergencia, 112.":"Claude responds using data from the latest published cycle. This is a diagnostic estimate, not an official warning: AEMET warnings take precedence. In an emergency, call 112."
  });
  Object.assign(dict, {
- "Sin aviso vigente":"No current warning", "No verificado":"Not verified", "Sin avisos en las próximas 36 h.":"No warnings in the next 36 hours.", "Fuente: CAP de AEMET vía MeteoAlarm (una sola raíz).":"Source: AEMET CAP via MeteoAlarm (one underlying source).",
+ "Sin aviso vigente":"No current warning", "No verificado":"Not verified", "Sin avisos en las próximas 36 h.":"No warnings in the next 36 hours.", "No verificado: no se pudo consultar la fuente oficial. No equivale a ausencia de avisos.":"Not verified: the official source could not be queried. This does not mean there are no warnings.","Fuente: CAP de AEMET vía MeteoAlarm (una sola raíz).":"Source: AEMET CAP via MeteoAlarm (one underlying source).",
  "Calma":"Quiet", "Vigilancia":"Monitoring", "Alerta":"Alert", "Alarma":"Alarm", "Sin verificar":"Unverified", "Amarillo":"Yellow", "Naranja":"Orange", "Rojo":"Red", "Lluvia (pluviómetros)":"Rainfall (rain gauges)", "Lluvia (METAR/AEMET)":"Rainfall (METAR/AEMET)", "Rayos":"Lightning", "Viento":"Wind", "Escorrentía":"Runoff", "Anegamiento":"Flooding", "Sin datos disponibles: verifica el motor o el snapshot web.":"Data unavailable: check the engine or the web snapshot.",
  "Sin fuente de datos en esta vista":"No data source in this view", "Backend en vivo · consulta cada 30 s":"Live backend · checked every 30 s", "Respaldo GitHub Pages (API no disponible)":"GitHub Pages fallback (API unavailable)", "Instantánea periódica · consulta cada 30 s":"Periodic snapshot · checked every 30 s", "Base de datos del artifact · en vivo":"Artifact database · live", "Error de lectura de la base de datos":"Database read error", "Actualizando…":"Updating…", "Actualizar y publicar":"Refresh and publish", "Actualizar ahora":"Refresh now",
  "Flecha = hacia dónde sopla el viento; número = m/s.":"Arrow = direction towards which the wind blows; number = m/s.", "Curvatura y longitud = cizalladura. Una hodógrafa corta y recta con viento medio débil favorece células lentas.":"Curvature and length indicate wind shear. A short, straight hodograph with weak mean wind favours slow-moving cells.", "Cómo leer la respuesta hidrológica":"How to read the hydrological response", "IRH · respuesta hidrológica de la cala":"IRH · hydrological response of the bay", "diagnóstico":"diagnostic", "experimental":"experimental", "en el punto":"at the point", "algún punto de la vecindad":"somewhere in the neighbourhood", "hipótesis, no observación":"hypothesis, not observation", "sin dato":"no data", "sin revisar":"not reviewed", "Puntos = rachas.":"Points = gusts.", "cm/s · la flecha apunta hacia donde va el agua":"cm/s · arrow points in the direction the water flows", "m/s respecto al viento a 10 m. Por encima de ~12–15 m/s a 6 km la convección se organiza (multicelular o lineal).":"m/s relative to 10 m wind. Above ~12–15 m/s at 6 km, convection becomes organised (multicellular or linear).",
@@ -899,6 +899,15 @@ function renderHeader(){
 
 /* ── tres ejes ── */
 function setAxis(id, lv){ const a=$(id); a.className = a.className.replace(/l-\w+/, "l-"+lv); }
+function warnTiming(w, now){
+  if (w.vigencia === "SIN HORARIO VERIFICABLE") return "SIN HORARIO VERIFICABLE";
+  const s = Date.parse(w.desde||""), e = Date.parse(w.hasta||""), p = Date.parse(w.caduca_prudente||"");
+  if (!Number.isFinite(s)) return "SIN HORARIO VERIFICABLE";
+  const end = Number.isFinite(e) ? e : p;            // sin expires: retirada prudente del motor
+  if (Number.isFinite(end) && now > end) return "FINALIZADO";
+  if (now < s) return "PRÓXIMO";
+  return Number.isFinite(e) ? "VIGENTE" : "VIGENCIA NO INDICADA";
+}
 function renderAxes(){
   const c = S.core; if(!c) return;
   const ban = $("banner"); const ch = (c.warning_changes||[]).filter(x=>x.kind!=="INICIAL");
@@ -909,8 +918,14 @@ function renderAxes(){
   setAxis("ax-off", lvO);
   $("off-level").innerHTML = o.verificado ? (lvO==="quiet" ? "Sin aviso vigente" : pill(lvO, {watch:"Amarillo",alert:"Naranja",alarm:"Rojo"}[lvO])) : pill("unknown","No verificado");
   const now = Date.now();
-  const list = (o.all||[]).filter(w => !w.hasta || new Date(w.hasta) > now).slice(0, 10);
-  $("off-list").innerHTML = list.length ? list.map(w => `<li class="warn">${pill(NIVEL_LV[w.nivel]||"unknown", w.nivel)}<span><b>${esc(w.evento.replace(/^Aviso de /,"").replace(/ de nivel \w+$/,""))}</b>${w.tipo==="costero"&&!/coster/i.test(w.evento)?" · costero":""}${w.activo?' · <b style="color:var(--x)">activo</b>':""}${w.umbral?" — "+esc(w.umbral):""}</span><span class="when">${fmtDT(w.desde)} → ${fmtDT(w.hasta)}</span></li>`).join("") : '<li class="empty">Sin avisos en las próximas 36 h.</li>';
+  // Vigencia recalculada con la hora actual, no la del ciclo (misma regla que warningTiming del Pirineo).
+  const list = (o.all||[]).map(w => ({...w, t: warnTiming(w, now)})).filter(w => w.t !== "FINALIZADO").slice(0, 10);
+  const tTxt = {VIGENTE:uiText("activo","active"), "PRÓXIMO":uiText("próximo","upcoming"),
+    "VIGENCIA NO INDICADA":uiText("vigencia no indicada por el emisor: incierta","end time not stated by the issuer: uncertain"),
+    "SIN HORARIO VERIFICABLE":uiText("horario no verificable (hora sin zona horaria)","time not verifiable (no time zone)")};
+  const age = iso => { const h=(now-Date.parse(iso))/36e5; return Number.isFinite(h) ? uiText(` (hace ${h<1?"<1":Math.round(h)} h)`,` (${h<1?"<1":Math.round(h)} h ago)`) : ""; };
+  $("off-list").innerHTML = list.length ? list.map(w => `<li class="warn">${pill(NIVEL_LV[w.nivel]||"unknown", w.nivel)}<span><b>${esc(w.evento.replace(/^Aviso de /,"").replace(/ de nivel \w+$/,""))}</b>${w.tipo==="costero"&&!/coster/i.test(w.evento)?" · costero":""} · <b${w.t==="VIGENTE"?' style="color:var(--x)"':""}>${tTxt[w.t]}</b>${w.umbral?" — "+esc(w.umbral):""}${w.area?` · <span data-source-text lang="und">${esc(w.area)}</span>`:""}</span><span class="when">${fmtDT(w.desde)} → ${w.hasta?fmtDT(w.hasta):uiText("fin no indicado","end not stated")}${w.emitido?` · ${uiText("emitido","issued")} ${fmtDT(w.emitido)}${age(w.emitido)}`:""}</span></li>`).join("")
+    : (o.verificado ? '<li class="empty">Sin avisos en las próximas 36 h.</li>' : '<li class="empty">No verificado: no se pudo consultar la fuente oficial. No equivale a ausencia de avisos.</li>');
   $("off-src").textContent = "Fuente: CAP de AEMET vía MeteoAlarm (una sola raíz).";
   if (o.fuente_oficial && o.fuente_oficial !== "AEMET_CAP+METEOALARM")
     $("off-src").innerHTML = `<b>⚠ ${esc(o.fuente_oficial_nota || o.fuente_oficial)}</b> · ` + esc($("off-src").textContent);
