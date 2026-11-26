@@ -35,6 +35,7 @@ Both profiles share modular acquisition, diagnostics, coverage indicators and re
 - **Route planner:** load a GPX in the browser and explore conditions by segment and time. The route remains in the browser. Its limits and variables are documented in [Pyrenees routes](docs/RUTAS-PIRINEO.en.md).
 - **Zone packages:** prepare, verify and install snapshots containing data, diagnostics, coverage and hashes; you can also generate offline HTML reports. [Zone guide](docs/ZONAS-MODULARES.en.md).
 - **Climate context:** the project includes provenance-labelled knowledge and experimental sidecar tools, without confusing context with an observation or warning. [Source catalogue](docs/CATALOGO-FUENTES.en.md).
+- **SEPI research:** an experimental line on exceptional snow winters in the eastern Pyrenees, using open data and reproducible scripts. It issues no forecasts or probabilities. [Design and results](docs/SEPI.en.md).
 
 In **Atmosphere · Pyrenees**, the detailed profile compares representative points on the northern and southern sides: thermal profiles, hodograph, wind shear and hourly indicators. These are model fields; below-ground levels are excluded and unavailable fields are shown as `UNKNOWN`. Experimental indices have not been calibrated for the Pyrenees.
 
