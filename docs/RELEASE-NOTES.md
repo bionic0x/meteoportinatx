@@ -7,7 +7,7 @@
 - Dominio del relieve ampliado a 42,15–43,05 N × 1,15–2,65 E (Ariège hasta Foix, Pallars, Canigó). 129 puntos de control: los 32 del motor y 97 adicionales sin previsión por punto (pueblos del Ariège, Donezan, Carol y Cerdanya; cimas de la divisoria, Montcalm–Estats, Puigmal, Cadí, Madres y Canigó; collados).
 - `core.orografia.estaciones_esqui`: 17 estaciones (Grandvalira en dos sectores) con rango esquiable publicado y fracción del desnivel sobre la cota efectiva.
 - 14 vías: se añaden RN20 Tarascon–Ax–L'Hospitalet, D618 Ur–Font-Romeu y D613/D25 Col de Pailhères; corregidos el Col du Puymorens (42,560 N 1,8075 E) y la Collada de Toses; N-260 Martinet–La Seu y CG-3 por el fondo de valle.
-- Divisoria: en cada hora manda el perfil con precipitación y la cota más baja.
+- Divisoria: en cada hora manda el perfil con precipitación y la cota más baja. La meseta de Font-Romeu (Font-Romeu, Bolquère, Odeillo, Eyne y sus estaciones) pasa a divisoria tras la nevada del 26-11.
 
 # Sin publicar — Pirineo: relieve fino, cubeta fría y carreteras (experimental)
 

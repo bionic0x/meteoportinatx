@@ -171,6 +171,24 @@ class Orografia(unittest.TestCase):
             r = pirineo.relieve_diag(POIS, {"sur": profile(pr=0.0)}, None, now=NOW)
         self.assertEqual(r["exposicion"]["carreteras"]["c16"]["km_unknown"], 7.0)
 
+    def test_meseta_de_font_romeu_es_divisoria(self):
+        pts = oro.load()["puntos"]
+        for k in ("font_romeu", "bolquere", "odeillo", "eyne", "est_font_romeu", "est_pyrenees2000"):
+            self.assertEqual(pts[k].get("vertiente"), "divisoria", k)
+        self.assertNotIn("vertiente", pts["puigcerda"])           # el fondo catalán sigue con el mapa del motor
+
+    def test_vertiente_de_la_tabla_manda_sobre_la_del_motor(self):
+        # 26-11-2026: fondo catalán seco de noche y nieve en la meseta francesa con N–NW
+        d = doc_stub(p=0.0)
+        d["puntos"]["das"]["vertiente"] = "divisoria"
+        prof = {"norte": profile(pr=1.0, cota=1400), "sur": profile(pr=0.0, cota=1700)}
+        with patch.object(oro, "load", return_value=d):
+            r = pirineo.relieve_diag(POIS, prof, None, now=NOW)
+        das = r["orografia"]["puntos"]["das"]
+        self.assertEqual(das["vertiente"], "divisoria")
+        self.assertFalse(das["sin_precipitacion_24h"])
+        self.assertEqual(das["min24"]["perfil"], "norte")
+
     def test_estacion_esqui_fraccion_sobre_cota(self):
         s = {"base_m": 1500, "techo_m": 2500}
         ok = {"estado": "OK", "min24": {"cota_copo_efectiva_m": 2000}}

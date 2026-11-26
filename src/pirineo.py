@@ -1042,7 +1042,8 @@ def relieve_diag(pois: list[dict], prof, series: dict | None, now=None) -> dict:
         p = pmap.get(pid) or (sample if sample.get("fuente") != "pirineo.POIS" else None)
         if not p:
             continue
-        vert = vertiente(p) if pid in pmap else sample.get("vertiente")
+        # La tabla de relieve puede fijar la vertiente también para un punto del motor (meseta de Font-Romeu)
+        vert = sample.get("vertiente") or (vertiente(p) if pid in pmap else None)
         sides = oro.perfiles_del_punto(vert, prof)
         d = oro.diag_punto(sample, doc, prof, sides, now, n_esperado=2 if vert == "divisoria" else 1)
         orog[pid] = {"nombre": sample.get("nombre"), "tipo": sample.get("tipo"), "zona": sample.get("zona"),

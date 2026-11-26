@@ -185,12 +185,12 @@ EXTRA = [
     ("porta", "Porta", 42.5260, 1.8253, "pueblo", "Carol", "sur", 1514),
     ("ur", "Ur", 42.4622, 1.9377, "pueblo", "Cerdagne", "sur", 1211),
     ("estavar", "Estavar", 42.4677, 1.9955, "pueblo", "Cerdagne", "sur", 1218),
-    ("targasonne", "Targasonne", 42.4999, 1.9971, "pueblo", "Cerdagne", "sur", 1610),
-    ("odeillo", "Odeillo", 42.4977, 2.0339, "pueblo", "Cerdagne", "sur", 1590),
+    ("targasonne", "Targasonne", 42.4999, 1.9971, "pueblo", "Cerdagne", "divisoria", 1610),
+    ("odeillo", "Odeillo", 42.4977, 2.0339, "pueblo", "Cerdagne", "divisoria", 1590),
     ("err", "Err", 42.4416, 2.0331, "pueblo", "Cerdagne", "sur", 1369),
     ("llo", "Llo", 42.4546, 2.0613, "pueblo", "Cerdagne", "sur", 1418),
-    ("eyne", "Eyne", 42.4737, 2.0818, "pueblo", "Cerdagne", "sur", 1573),
-    ("st_pierre_forcats", "Saint-Pierre-dels-Forcats", 42.4941, 2.1187, "pueblo", "Cerdagne", "sur", 1580),
+    ("eyne", "Eyne", 42.4737, 2.0818, "pueblo", "Cerdagne", "divisoria", 1573),
+    ("st_pierre_forcats", "Saint-Pierre-dels-Forcats", 42.4941, 2.1187, "pueblo", "Cerdagne", "divisoria", 1580),
     ("mont_louis", "Mont-Louis", 42.5085, 2.1217, "pueblo", "Haut-Conflent", "divisoria", 1585),
     ("la_llagonne", "La Llagonne", 42.5271, 2.1195, "pueblo", "Haut-Conflent", "divisoria", 1678),
     ("real", "Réal", 42.6312, 2.1334, "pueblo", "Capcir", "norte", 1444),
@@ -214,9 +214,9 @@ ESTACIONES = [
     ("est_les_angles", "Les Angles", (42.5784, 2.0748), "norte", "Capcir", 1640, 2360, "abierta", "alti-mag"),
     ("est_formigueres", "Formiguères", (42.6147, 2.1044), "norte", "Capcir", 1500, 2300, "abierta", "alti-mag; base = altitud del pueblo (aproximada, no la cota inferior de pistas)"),
     ("est_puyvalador", "Puyvalador", (42.6500, 2.0900), "norte", "Capcir", 1700, 2382, "cerrada", "remontees-mecaniques.net / skiinfo; referencia: snow-forecast (42,65 N 2,09 E)"),
-    ("est_font_romeu", "Font-Romeu", (42.5050, 2.0350), "sur", "Cerdagne", 1750, 2200, "abierta", "alti-mag"),
-    ("est_pyrenees2000", "Pyrénées 2000 (Bolquère)", (42.4970, 2.0720), "sur", "Cerdagne", 1800, 2200, "abierta", "alti-mag"),
-    ("est_cambre_aze", "Cambre d'Aze", (42.4941, 2.1187), "sur", "Cerdagne", 1640, 2400, "abierta", "skiinfo / tourisme-pyreneesorientales"),
+    ("est_font_romeu", "Font-Romeu", (42.5050, 2.0350), "divisoria", "Cerdagne", 1750, 2200, "abierta", "alti-mag"),
+    ("est_pyrenees2000", "Pyrénées 2000 (Bolquère)", (42.4970, 2.0720), "divisoria", "Cerdagne", 1800, 2200, "abierta", "alti-mag"),
+    ("est_cambre_aze", "Cambre d'Aze", (42.4941, 2.1187), "divisoria", "Cerdagne", 1640, 2400, "abierta", "skiinfo / tourisme-pyreneesorientales"),
     ("est_porte", "Porté-Puymorens", (42.5480, 1.8350), "divisoria", "Puymorens", 1640, 2470, "abierta", "alti-mag"),
     ("est_la_molina", "La Molina", (42.3400, 1.9400), "sur", "Cerdanya", 1700, 2537, "abierta", "dato de memoria, sin verificar"),
     ("est_masella", "Masella", (42.3500, 1.9000), "sur", "Cerdanya", 1600, 2535, "abierta", "dato de memoria, sin verificar"),
@@ -227,6 +227,10 @@ ESTACIONES = [
     ("est_arcalis", "Ordino Arcalís", (42.6290, 1.5060), "divisoria", "Andorra", 1940, 2600, "abierta", "skiresort.info / j2ski"),
     ("est_pal_arinsal", "Pal Arinsal", (42.5720, 1.4845), "sur", "Andorra", 1550, 2560, "abierta", "palarinsal.com / skiresort.info"),
 ]
+# Meseta de la Cerdagne francesa (Font-Romeu–Odeillo–Bolquère–Eyne): con N–NW recibe el derrame del Capcir y del
+# Carlit aunque el fondo catalán quede seco (verificado el 26-11-2026: XEMA 0 mm de noche en Das y Puigcerdà, nieve
+# cuajada hasta Odeillo). Para el relieve usa la regla de divisoria, también en los puntos del motor.
+VERTIENTE_RELIEVE = {"font_romeu": "divisoria", "bolquere": "divisoria", "cambre_aze": "divisoria"}
 BASIN_ZONES = ("Cerdanya", "Cerdagne", "Capcir")
 BASIN_KM = 6.0
 
@@ -388,6 +392,8 @@ def main():
     for pid, name, lat, lon, tipo, zona, alt in pirineo.POIS:
         pois[pid] = {"nombre": name, "lat": lat, "lon": lon, "tipo": tipo, "zona": zona, "alt_ref": alt, "fuente": "pirineo.POIS",
                      **sample(lat, lon), "cubeta_calibrable": tipo == "pueblo" and zona in BASIN_ZONES}
+        if pid in VERTIENTE_RELIEVE:
+            pois[pid]["vertiente"] = VERTIENTE_RELIEVE[pid]
     for pid, name, lat, lon, tipo, zona, vert, alt in EXTRA:
         assert pid not in pois, pid
         pois[pid] = {"nombre": name, "lat": lat, "lon": lon, "tipo": tipo, "zona": zona, "vertiente": vert, "alt_ref": alt,

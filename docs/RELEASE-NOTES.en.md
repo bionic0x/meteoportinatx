@@ -7,7 +7,7 @@
 - Terrain domain extended to 42.15–43.05 N × 1.15–2.65 E (Ariège to Foix, Pallars, Canigou). 129 control points: the engine's 32 plus 97 additional points without point forecasts (Ariège, Donezan, Carol and Cerdanya villages; divide summits, Montcalm–Estats, Puigmal, Cadí, Madres and Canigou; passes).
 - `core.orografia.estaciones_esqui`: 17 resorts (Grandvalira in two sectors) with published ski range and fraction of the vertical above the effective elevation.
 - 14 roads: adds RN20 Tarascon–Ax–L'Hospitalet, D618 Ur–Font-Romeu and D613/D25 Col de Pailhères; Col du Puymorens (42.560 N 1.8075 E) and Collada de Toses corrected; N-260 Martinet–La Seu and CG-3 along the valley floor.
-- Divide: each hour the profile with precipitation and the lower elevation wins.
+- Divide: each hour the profile with precipitation and the lower elevation wins. The Font-Romeu plateau (Font-Romeu, Bolquère, Odeillo, Eyne and their resorts) becomes divide after the 26-11 snowfall.
 
 # Unreleased — Pyrenees: fine terrain, cold pools and roads (experimental)
 
