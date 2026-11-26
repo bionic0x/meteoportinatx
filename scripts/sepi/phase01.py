@@ -8,7 +8,11 @@ import glob, json, re, warnings
 import numpy as np, pandas as pd, xarray as xr
 from scipy import stats
 import os
-os.chdir(os.environ.get("SEPI_DATA", "."))  # datos y salidas fuera del repo (ver scripts/sepi/README.md)
+_REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_DATA = os.path.abspath(os.environ.get("SEPI_DATA", ""))
+if not os.environ.get("SEPI_DATA") or os.path.commonpath([_REPO, _DATA]) == _REPO:
+    raise SystemExit("Define SEPI_DATA con una carpeta fuera del repositorio (ver scripts/sepi/README.md).")
+os.chdir(_DATA)  # datos y salidas fuera del repo
 
 warnings.filterwarnings("ignore")
 rng = np.random.default_rng(42)
@@ -31,7 +35,7 @@ def load_xema(code):
     # Rampas espurias en el máximo diario: si max-min supera 30 cm (300 mm antes del cambio), usar el mínimo
     thr = pd.Series(30.0, index=s.index); thr[s.index < "2021-11-15"] = 300.0
     s = s.where((s - smin) <= thr, smin)
-    # Cambio de unidades en los datos abiertos: mm hasta el verano de 2021, cm después.
+    # Cambio de unidades en los datos abiertos: mm hasta el 14-11-2021, cm desde el 15-11-2021.
     # Comprobado: Cadí Nord 2018 = 2338 (mm) -> 234 cm, máximo histórico citado por Meteocat;
     # Núria 26-01-2026 = 144 (cm), récord citado por Meteocat.
     s[s.index < "2021-11-15"] = s[s.index < "2021-11-15"] / 10.0
@@ -60,7 +64,10 @@ def xema_metrics(s):
 def mf_solid(pattern, tmax_c=0.5):
     """Precipitación caída con T ≤ tmax_c (proxy de precipitación sólida), nov–abr."""
     out = {}
-    for f in sorted(glob.glob(pattern)):
+    files = sorted(glob.glob(pattern))
+    if not files:
+        raise SystemExit(f"Sin archivos {pattern}: ejecuta scripts/sepi/fetch_data.py")
+    for f in files:
         d = xr.open_dataset(f)
         if "cumul_precip" not in d or "ta" not in d:
             continue
@@ -200,8 +207,6 @@ H6["E_HSmax_z"] = ((HSm - HSm.mean()) / HSm.std(ddof=1)).mean(axis=1)
 for tgt, col in [("E_acum", "E_racha_seca_max"), ("E_acum", "E_episodios"), ("E_HSmax_z", "E_episodios"), ("E_HSmax_z", "E_racha_seca_max")]:
     n, r, ci, p = spearman_boot(H6[tgt], H6[col])
     print(f"{tgt} vs {col}: n={n} rho={r:.2f} IC95 [{ci[0]:.2f},{ci[1]:.2f}]")
-for _ in []:
-    print(f"E_acum vs {col}: n={n} rho={r:.2f} IC95 [{ci[0]:.2f},{ci[1]:.2f}]")
 print("\nConsistencia entre redes (Spearman):")
 for a, b in [("E_acum", "FRM_Psolida"), ("E_acum", "AST_Psolida"), ("W_acum", "AST_Psolida"), ("FRM_Psolida", "AST_Psolida")]:
     n, r, ci, p = spearman_boot(cat[a], cat[b])

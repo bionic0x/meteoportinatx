@@ -10,7 +10,11 @@ import glob, json, warnings
 import numpy as np, pandas as pd, xarray as xr
 from scipy import stats
 import os
-os.chdir(os.environ.get("SEPI_DATA", "."))  # datos y salidas fuera del repo (ver scripts/sepi/README.md)
+_REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_DATA = os.path.abspath(os.environ.get("SEPI_DATA", ""))
+if not os.environ.get("SEPI_DATA") or os.path.commonpath([_REPO, _DATA]) == _REPO:
+    raise SystemExit("Define SEPI_DATA con una carpeta fuera del repositorio (ver scripts/sepi/README.md).")
+os.chdir(_DATA)  # datos y salidas fuera del repo
 
 warnings.filterwarnings("ignore")
 rng = np.random.default_rng(7)
@@ -131,7 +135,6 @@ for a, b in tests:
     n, r, lo, hi, p = sb(T[a], T[b])
     out.append((a, b, n, r, lo, hi, p))
     print(f"{a:>14} vs {b:<20} n={n} rho={r:+.2f} IC95 [{lo:+.2f},{hi:+.2f}] p={p:.3f}")
-pd.DataFrame(out, columns=["objetivo", "metrica", "n", "rho", "ic2.5", "ic97.5", "p"]).to_csv("out_fase02_tests.csv", index=False)
 
 
 # H2/H3: parciales de rangos controlando P_total para las ocho pruebas y corrección BH

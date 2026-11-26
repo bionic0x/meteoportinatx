@@ -123,7 +123,7 @@ Los datos abiertos de la XEMA para la variable 38 están en **mm hasta el 14-11-
 
 ## Coherencia entre redes
 - E_acum frente a la precipitación sólida de Formiguères: ρ = 0,65 (n = 16).
-- Contraste occidental frente a Aston: ρ = 0,63 (n = 14).
+- Acumulación oeste (W_acum) frente a Aston: ρ = 0,63 (n = 14).
 - Formiguères frente a Aston: ρ = 0,76 (n = 13).
 - Los pluviómetros calefactados de Météo-France captan mal la nieve. En Formiguères, en diciembre de 2017 y febrero de 2018, los huecos de datos coinciden con la precipitación, y esa temporada queda excluida. Las cifras de precipitación sólida son índices relativos, no la nieve caída.
 
@@ -172,7 +172,7 @@ Los datos abiertos de la XEMA para la variable 38 están en **mm hasta el 14-11-
 - **Conclusión:** el signo tiende a ser negativo, pero la señal es frágil y depende de dónde se trace la frontera entre sectores. No se puede sostener con el viento de una estación; contrastar con regímenes ERA5 a 700 hPa. Salida: `out_sens_transiciones.csv` (`scripts/sepi/sens_trans.py`).
 
 ## Hallazgos de la verificación independiente (aplicados o declarados)
-- H1, P0: **Canigou no representa el flujo de cresta.** Su componente v diaria se correlaciona negativamente con Puigmal (−0,60), Port d'Aula, Formiguères y Targasonne. El 86 % de sus días caen en S-SW y entre un 33 y un 42 % de sus horas están en calma. Se descarta un error de código: convención, unidades, desfase horario y giro de 180° comprobados. Causa (canalización local o sensor): desconocida. **Retirado como relleno**; no usar Canigou como proxy de cresta.
+- H1, P0: **Canigou no representa el flujo de cresta.** Su componente v diaria se correlaciona negativamente con Puigmal (−0,60), Port d'Aula, Formiguères y Targasonne. El 86 % de sus días caen en S-SW y entre un 33 y un 42 % de sus horas están en calma. Se descarta un error de código: convención, unidades, desfase horario y giro de 180° comprobados. Causa (canalización local o sensor): desconocida. **Retirado como relleno**; no usar Canigou como proxy de cresta. (Comprobación hecha por el verificador con scripts propios; `fetch_data.py` descarga Port d'Aula y Targasonne para repetirla, pero aún no hay script en el repo.)
 - H2, P1: posible sobrecontrol, porque la precipitación total puede ser mediadora. La redacción se ajusta en consecuencia.
 - H3, P1: el control parcial se había aplicado solo a lo significativo. Ahora se calcula para las ocho pruebas, con BH, dentro de `phase02.py`.
 - H4, P1: W_acum se controlaba con precipitación del este. Tratado en la fase 02b.

@@ -113,7 +113,7 @@ XEMA open data for variable 38 are in **mm until 14-11-2021** and in **cm from 1
 - Descriptive result compatible with H6. Phase 02 tests it with an independent source.
 
 ## Cross-network consistency
-- E_acum vs Formiguères solid precipitation: ρ = 0.65 (n = 16). Western contrast vs Aston: ρ = 0.63 (n = 14). Formiguères vs Aston: ρ = 0.76 (n = 13).
+- E_acum vs Formiguères solid precipitation: ρ = 0.65 (n = 16). Western accumulation (W_acum) vs Aston: ρ = 0.63 (n = 14). Formiguères vs Aston: ρ = 0.76 (n = 13).
 - Météo-France heated gauges undercatch snow. At Formiguères, in December 2017 and February 2018, data gaps coincide with precipitation and that season is excluded. Solid-precipitation figures are relative indices, not snowfall.
 
 ## Independent verification findings (applied)
@@ -161,7 +161,7 @@ XEMA open data for variable 38 are in **mm until 14-11-2021** and in **cm from 1
 - **Conclusion:** the sign tends to be negative, but the signal is fragile and depends on the sector boundaries. It cannot be sustained with one station's wind; test with ERA5 700 hPa regimes. Output: `out_sens_transiciones.csv` (`scripts/sepi/sens_trans.py`).
 
 ## Independent verification findings (applied or declared)
-- H1, P0: **Canigou does not represent crest-level flow.** Its daily v component correlates negatively with Puigmal (−0.60), Port d'Aula, Formiguères and Targasonne; 86 % of its days fall in S-SW and 33–42 % of its hours are calm. A code error was ruled out (convention, units, time offset and 180° flip checked). Cause (local channelling or sensor) unknown. **Removed as gap filler**; do not use Canigou as a crest proxy.
+- H1, P0: **Canigou does not represent crest-level flow.** Its daily v component correlates negatively with Puigmal (−0.60), Port d'Aula, Formiguères and Targasonne; 86 % of its days fall in S-SW and 33–42 % of its hours are calm. A code error was ruled out (convention, units, time offset and 180° flip checked). Cause (local channelling or sensor) unknown. **Removed as gap filler**; do not use Canigou as a crest proxy. (Check run by the verifier with its own scripts; `fetch_data.py` downloads Port d'Aula and Targasonne to repeat it, but there is no script in the repo yet.)
 - H2, P1: possible over-control, since total precipitation may be a mediator. Wording adjusted.
 - H3, P1: the partial control had only been applied to significant results. Now computed for all eight tests, with BH, inside `phase02.py`.
 - H4, P1: W_acum was controlled with eastern precipitation. Addressed in phase 02b.

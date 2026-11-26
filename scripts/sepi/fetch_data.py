@@ -17,7 +17,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-BASE = os.environ.get("SEPI_DATA", ".")
+BASE = os.environ.get("SEPI_DATA", "")
+_REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SOCRATA = "https://analisi.transparenciacatalunya.cat/resource/nzvn-apee.json"
 THREDDS = ("https://thredds-su.ipsl.fr/thredds/fileServer/aeris_thredds/actrisfr_data/"
            "665029c8-82b8-4754-9ff4-d558e640b0ba/{y}/{code}_{name}_MTO_1H_{y}.nc")
@@ -47,7 +48,11 @@ def get(url, dest, timeout=300):
     except urllib.error.HTTPError as e:
         if e.code != 404:
             print("  error", e.code, url)
-        return False
+    except (urllib.error.URLError, OSError) as e:  # red caída o tiempo agotado: seguir con lo demás
+        print("  error", e, url)
+    if os.path.exists(dest) and os.path.getsize(dest) == 0:
+        os.remove(dest)
+    return False
 
 
 def socrata(code, var, select):
@@ -58,20 +63,25 @@ def socrata(code, var, select):
 
 
 def main():
+    if not BASE or os.path.commonpath([_REPO, os.path.abspath(BASE)]) == _REPO:
+        raise SystemExit("Define SEPI_DATA con una carpeta fuera del repositorio.")
     for sub in ("xema", "mf", "idx"):
         os.makedirs(os.path.join(BASE, sub), exist_ok=True)
     for c in XEMA:  # una estación por consulta: la consulta múltiple agota el tiempo
         get(socrata(c, "38", "max(valor_lectura) as hmax, min(valor_lectura) as hmin, count(*) as n"),
             os.path.join(BASE, "xema", f"{c}.json"))
-        get(socrata(c, "35", "sum(valor_lectura) as p, count(*) as n"), os.path.join(BASE, "xema", f"P_{c}.json"))
-        n = len(json.load(open(os.path.join(BASE, "xema", f"P_{c}.json"))))
-        print(f"XEMA {c}: {n} días de precipitación")
+        if get(socrata(c, "35", "sum(valor_lectura) as p, count(*) as n"), os.path.join(BASE, "xema", f"P_{c}.json")):
+            n = len(json.load(open(os.path.join(BASE, "xema", f"P_{c}.json"))))
+            print(f"XEMA {c}: {n} días de precipitación")
+        else:
+            print(f"XEMA {c}: precipitación NO descargada")
     for code, (name, y0) in MF.items():
         ok = sum(get(THREDDS.format(y=y, code=code, name=name),
                      os.path.join(BASE, "mf", f"{code}_{name}_MTO_1H_{y}.nc")) for y in range(y0, 2027))
-        print(f"Météo-France {name}: {ok} años")
+        print(f"Météo-France {name}: {ok} años" + ("  ← ninguno descargado" if ok == 0 else ""))
     for fn, url in CPC.items():
-        get(url, os.path.join(BASE, "idx", fn))
+        if not get(url, os.path.join(BASE, "idx", fn)):
+            print("CPC", fn, "NO descargado")
     print("Listo en", os.path.abspath(BASE))
 
 

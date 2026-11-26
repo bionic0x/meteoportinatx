@@ -11,7 +11,11 @@ import json, warnings
 import numpy as np, pandas as pd
 from scipy import stats
 import os
-os.chdir(os.environ.get("SEPI_DATA", "."))  # datos y salidas fuera del repo (ver scripts/sepi/README.md)
+_REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_DATA = os.path.abspath(os.environ.get("SEPI_DATA", ""))
+if not os.environ.get("SEPI_DATA") or os.path.commonpath([_REPO, _DATA]) == _REPO:
+    raise SystemExit("Define SEPI_DATA con una carpeta fuera del repositorio (ver scripts/sepi/README.md).")
+os.chdir(_DATA)  # datos y salidas fuera del repo
 
 warnings.filterwarnings("ignore")
 rng = np.random.default_rng(11)
