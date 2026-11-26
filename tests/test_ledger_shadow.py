@@ -55,6 +55,14 @@ class Build(unittest.TestCase):
         self.assertTrue(base)
         self.assertTrue(all(f["prediction"] == 2.4 for f in base))
 
+    def test_stale_persistence_is_not_frozen(self):
+        srcs = sources()
+        srcs["portus"].payload["stations"]["Boya Dragonera"] = [
+            {"t": (ISSUED - timedelta(minutes=121)).isoformat(), "hm0": 2.4}]
+        fcs, _ = ls.build_records(srcs, ISSUED, SITE, BUOYS)
+        self.assertFalse([f for f in fcs if f.get("baseline")])
+        self.assertTrue([f for f in fcs if f["model"] == "marine"])
+
     def test_observations_only_for_closed_hours_with_unknown_qc(self):
         _, obs = ls.build_records(sources(), ISSUED, SITE, BUOYS)
         self.assertTrue(obs)

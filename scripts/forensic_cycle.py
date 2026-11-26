@@ -31,6 +31,10 @@ def private_root(value):
     return path
 
 
+def local_ids(ledger):
+    return {record['id'] for _, record in ledger.records(include_imported=False)}
+
+
 def run(root):
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     if root.stat().st_mode & 0o077:
@@ -42,6 +46,11 @@ def run(root):
             return 75
         status = {'at_utc': datetime.now(timezone.utc).isoformat(), 'state': 'ERROR',
                   'external_attestation': False, 'durability': 'USER_MANAGED_FILESYSTEM'}
+        ledger = forecast_ledger.Ledger(root)
+        try:
+            before = local_ids(ledger)
+        except Exception:
+            before = None
         try:
             env = dict(os.environ, METEO_LEDGER=str(root))
             proc = subprocess.run([sys.executable, str(REPO / 'src/nowcast.py'), 'export', '--domain', 'portinatx'],
@@ -73,6 +82,12 @@ def run(root):
         except Exception as exc:
             # Do not propagate exception strings or subprocess output: they may contain secrets.
             status['error_type'] = type(exc).__name__
+        # Diario encadenado: un asiento en TODOS los ciclos, también NO_DATA/DEGRADED/ERROR.
+        try:
+            added = sorted(local_ids(ledger) - before) if before is not None else []
+            status['journal_seq'] = ledger.append_journal(status['state'], added)['seq']
+        except Exception as exc:
+            status.update(state='ERROR', journal_error=type(exc).__name__)
         fd, name = tempfile.mkstemp(prefix='.health-', dir=root)
         try:
             with os.fdopen(fd, 'w', encoding='utf-8') as fh:
