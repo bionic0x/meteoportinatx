@@ -71,7 +71,8 @@ def run(root):
             if shadow.get('estado') != 'OK':
                 raise RuntimeError('shadow capture failed')
             verified = forecast_ledger.Ledger(root).verify()
-            if not verified.get('ok'):
+            # A torn journal tail is reported by the journal step below, not as a capture failure.
+            if not verified.get('ok') and verified.get('motivo') != 'DIARIO_COLA_INCOMPLETA':
                 raise RuntimeError('ledger verification failed')
             counts = {k: shadow.get(k, 0) for k in ('pronosticos', 'observaciones', 'repetidos', 'conflictos', 'rechazados')}
             no_data = not any(counts[k] for k in ('pronosticos', 'observaciones'))
@@ -85,7 +86,13 @@ def run(root):
         # Diario encadenado: un asiento en TODOS los ciclos, también NO_DATA/DEGRADED/ERROR.
         try:
             added = sorted(local_ids(ledger) - before) if before is not None else []
-            status['journal_seq'] = ledger.append_journal(status['state'], added)['seq']
+            entry = ledger.append_journal(status['state'], added)
+            if entry['estado'] == 'OK':
+                status['journal_seq'] = entry['seq']
+            else:
+                # Tail never repaired automatically: capture continues, campaign goes INVALIDO (docs §5).
+                status.update(state='DEGRADED' if status['state'] == 'OK' else status['state'],
+                              journal=entry['estado'])
         except Exception as exc:
             status.update(state='ERROR', journal_error=type(exc).__name__)
         fd, name = tempfile.mkstemp(prefix='.health-', dir=root)

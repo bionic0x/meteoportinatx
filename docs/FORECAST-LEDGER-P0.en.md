@@ -66,41 +66,60 @@ This example is **synthetic**, not a real weather forecast. To retain prospectiv
 
 ## 5. Ninety-day prospective campaign
 
-**Current status: the 90-day validation has NOT been started or finished.** Its status is not declared in any document: `campaign-status` computes it from the journal and the records. It is also **blocked by A1** (see §5.6): the current wiring yields no scorable pair.
+**Current status: the 90-day validation has NOT been started or finished, and it will not be declared complete early.** Its status is not declared in any document: `campaign-status` computes it from the journal and the records, and only by accumulating real evidence (data days, real hours, coverage, QC PASS pairs and a restore from an external copy). It is also **blocked by A1** (see §5.6): the current wiring yields no scorable pair.
 
 ### 5.1 Hash-chained cycle journal
 
-`<METEO_LEDGER>/journal/cycles.jsonl` is an append-only journal. `scripts/forensic_cycle.py` appends an entry on **every** cycle (`OK`, `NO_DATA`, `DEGRADED`, `ERROR`), so gaps and failures leave a trace even though `cycle-health.json` is overwritten. Each entry carries `seq`, `timestamp` (UTC, host clock), `state`, `added_ids` (ids of new records in `local/` during the cycle), `prev_hash` and `hash` (canonical SHA-256 of the entry without `hash`; the first links to 64 zeros).
+`<METEO_LEDGER>/journal/cycles.jsonl` is an append-only journal. `scripts/forensic_cycle.py` appends an entry on **every** cycle (`OK`, `NO_DATA`, `DEGRADED`, `ERROR`), so gaps and failures leave a trace even though `cycle-health.json` is overwritten. Each entry carries `seq`, `timestamp` (UTC, host clock), `state`, `added_ids`, `added_sha256` (map id → SHA-256 of each added record file), `prev_hash` and `hash` (canonical SHA-256 of the entry without `hash`; the first links to 64 zeros).
 
-`verify` recomputes the chain (sequence, `prev_hash`, hash, canonical form, non-decreasing time) and requires every cited id to exist. If a record is missing or the journal has been altered it returns `ok: false` with a `motivo` (e.g. `DIARIO_ID_AUSENTE`, `DIARIO_HASH_ALTERADO`, `DIARIO_SECUENCIA_ROTA`) and the CLI exits with code 1. An old ledger without a journal is **not migrated**: `verify` reports `journal.estado=SIN_DIARIO`, `integridad=UNKNOWN`, not "broken". Limits: whoever controls the disk can rewrite the whole chain consistently (no external signature or timestamp); records added outside `forensic_cycle.py` (e.g. a direct `nowcast.py export`) are not in the journal.
+`verify` recomputes the chain (sequence, `prev_hash`, hash, canonical form, non-decreasing time), requires every cited id to exist and its file to keep the recorded SHA-256, and checks that every restore receipt is intact and anchored to an existing entry. It returns a top-level `integridad`:
+
+| `integridad` | When | `verify` exit code |
+|---|---|---|
+| `VERIFICADA` | Intact journal and every entry carries file hashes. | 0 |
+| `ROTA` | Reason in `motivo`: `DIARIO_ID_AUSENTE`, `DIARIO_REGISTRO_ALTERADO` (edited value), `DIARIO_HASH_ALTERADO`, `DIARIO_SECUENCIA_ROTA`, `DIARIO_COLA_INCOMPLETA`, `DIARIO_RECIBO_HUERFANO`, `DIARIO_RECIBO_ALTERADO`… | 1 |
+| `UNKNOWN` | Old ledger without a journal (`SIN_DIARIO`, **not migrated**) or first-format entries without `added_sha256` (`parcial: ASIENTOS_SIN_HASH`): existence is checked, content is not. | 3 |
+
+A record with an invalid format still exits with code 2, as before. The `ok` field is kept (`ok = integridad ≠ ROTA`). Selftest and CI only check these codes in synthetic tests (`tests/test_forecast_ledger.py`, `tests/test_ledger_campaign.py`); no CI step and not `forensic_cycle.py` depends on the `verify` exit code.
+
+**Incomplete tail (a half-written line after a crash).** `append_journal` neither deletes nor repairs it: it writes nothing and returns `DIARIO_COLA_INCOMPLETA`; the cycle keeps capturing and ends `DEGRADED` with that reason in `cycle-health.json`, and the campaign becomes `INVALIDO:DIARIO_COLA_INCOMPLETA`. Manual recovery (owner's decision): (1) copy the whole root to a read-only archive as evidence; (2) **do not rewrite** the old journal; (3) start a new campaign with `METEO_LEDGER` pointing to a new, empty directory. The same procedure applies to any `INVALIDO`.
+
+**Remaining limits:** whoever controls the disk can rewrite the whole chain, records and receipts consistently (no external signature or timestamp). Truncating the end of the journal is **not** detectable when no later receipt exists. Records added outside `forensic_cycle.py` (e.g. a direct `nowcast.py export`) are not in the journal.
 
 ### 5.2 States and counters (`campaign-status`)
 
 ```bash
-python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap-hours 48]
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap-hours 48] [--min-coverage 0.8]
 ```
 
-`ledger_campaign.campaign_status(ledger, *, max_gap_hours)` **accepts no start or end date**. N = UTC days with at least one `OK` cycle in the journal.
+`ledger_campaign.campaign_status(ledger, *, max_gap_hours, min_coverage)` **accepts no start or end date**. A *data cycle* is an `OK` entry with non-empty `added_ids`; a *data day* is a UTC day with at least one. An `OK` without new records does not count.
+
+**Frozen window.** The window starts at the first data cycle and is frozen at the *anchor entry*: the first data cycle at which 90 data days and at least 90 × 24 real hours since the start both hold. Coverage, pairs and gaps are computed over that window. Later events do not change the state: they are reported in `vigilancia_posterior` (`HUECO_POSTERIOR` if a gap exceeds the threshold).
 
 | State | Condition |
 |---|---|
 | `SIN_INICIAR` | Journal absent or empty. |
-| `EN_CURSO` (`día N/90`) | Intact chain, no gap above the threshold, N < 90. |
-| `INVALIDO:<motivo>` | Broken chain or missing id (`DIARIO_…`), corrupt record, gap between `OK` cycles above the threshold (`HUECO_MAYOR_QUE_UMBRAL`) or time since the last `OK` above the threshold (`HUECO_ABIERTO_MAYOR_QUE_UMBRAL`). The campaign must restart. |
-| `DATOS_COMPLETOS_RESTAURACION_NO_PROBADA` | N ≥ 90 and intact chain, but no valid restore receipt. **Never** reported as complete. |
-| `COMPLETADO` | N ≥ 90, intact chain and a valid restore receipt anchored to a journal entry on or after day 90. |
+| `EN_CURSO` (`día N/90`) | Intact chain, no gap above the threshold and window still open. |
+| `INVALIDO:<motivo>` | Integrity `ROTA` (`DIARIO_…`), corrupt record, an entry `timestamp` later than now + 10 min (`TIMESTAMP_FUTURO`), a gap between data cycles above the threshold inside the window (`HUECO_MAYOR_QUE_UMBRAL`) or, with the window open, time since the last data cycle above the threshold (`HUECO_ABIERTO_MAYOR_QUE_UMBRAL`). |
+| `DATOS_COMPLETOS_COBERTURA_INSUFICIENTE` | Window closed with `ciclos_con_datos / ciclos_esperados` below the threshold. |
+| `DATOS_COMPLETOS_PARES_INSUFICIENTES` | Window closed with fewer than **20 QC PASS pairs** whose forecast entered in the window (D-021 minimum). |
+| `DATOS_COMPLETOS_RESTAURACION_NO_PROBADA` | All of the above holds, but there is no valid receipt with `origen: copia_externa`, `n_pares ≥ 20` and anchored at or after the anchor entry. A `copia_local` receipt is never enough. |
+| `COMPLETADO` | All at once: 90 data days, ≥ 2160 real hours, coverage ≥ threshold, ≥ 20 pairs, intact chain and a valid receipt from an external copy. |
 
-**Gap threshold: 48 h by default. This is the owner's decision**, proposed by the audit and not calibrated; `ERROR`/`NO_DATA` cycles do not close a gap. The text summary only says "completado" when the state is `COMPLETADO`.
+**Thresholds, the owner's decision** (proposed by the audit, not calibrated): maximum gap 48 h; minimum coverage 0.8 at hourly cadence. `ERROR`/`NO_DATA` cycles do not close a gap. The intermediate `DATOS_COMPLETOS_*` states cannot become `COMPLETADO` within the same campaign, except the restore one (a valid external receipt is enough). The text summary only says "completado" when the state is `COMPLETADO` and never says "restauración probada".
 
-Counters: days with data; expected cycles (hours between first and last entry at hourly cadence) versus recorded and `OK`; cycles per state; gaps (> 1.5 h between `OK`), maximum gap and open gap; fraction of `UNKNOWN` observations; matched pairs and exclusions by reason. **Limit:** episodes are counted as days (`event_id` = window day); consecutive days of the same storm are not independent. Neither minimum hourly coverage nor a minimum number of pairs is yet required for `COMPLETADO`: with 0 pairs, `COMPLETADO` would only certify the archive, not any measurement.
+Counters: data days, real hours in the window, expected / recorded / `OK` / data cycles, coverage, cycles per state, gaps (> 1.5 h between data cycles) and maximum gap, open gap, fraction of `UNKNOWN` observations in the window, matched pairs in the window and exclusions by reason (whole archive). **Limit:** episodes are counted as days (`event_id` = window day); consecutive days of the same storm are not independent.
 
 ### 5.3 Restore drill
 
 ```bash
+# Only checks that this disk is readable (origen: copia_local; never enough for COMPLETADO):
 METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger" python3 scripts/ledger_restore_drill.py
+# Restores FROM an existing external copy (another disk, private-repository clone):
+METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger" python3 scripts/ledger_restore_drill.py --source /media/backup/forecast-ledger
 ```
 
-Takes the same lock as the cycle, copies `local/` and `journal/cycles.jsonl` to a clean temporary directory and, with the same clock, compares `verify`, `score` and the SHA-256 of the exported bundle. It writes a hashed receipt to `journal/restore-receipts/<sha256>.json`. **`import` is not suitable for this:** it leaves every record `IMPORTED_UNATTESTED`, excluded from scoring. The receipt proves this disk's copy restores; it does not prove an external copy exists, nor attest it. The drill must be repeated on the real external copy (private-repo clone or backup disk).
+Takes the same lock as the cycle, copies `local/` and `journal/cycles.jsonl` from the source into a clean temporary directory and, with the same clock, compares against the original ledger `verify`, the journal, `score` (with its exclusions) and the bundle SHA-256. `--source` must be an existing absolute directory outside the ledger; the copy must be in sync with the ledger, otherwise the receipt is `ok: false`. It writes a hashed receipt to `journal/restore-receipts/<sha256>.json` with `origen`, `journal_seq`, journal head, restored `n_pares` and `mismo_dispositivo` (informational: the script cannot prove the source is on another medium). **`import` is not suitable for this:** it leaves every record `IMPORTED_UNATTESTED`, excluded from scoring. **Limit:** the receipt is neither signed nor timestamped; whoever controls the disk can forge it.
 
 ### 5.4 Metrics (after the campaign)
 
@@ -117,11 +136,12 @@ None of this can be done by code or by an agent:
 2. **Fine-grained PAT or deploy key with minimal scope** (contents write on that private repository only). **Never in the repository or in prompts**; monitor its expiry.
 3. **Branch protection** on the private repository (no force-push or deletion). Git is not WORM.
 4. **Always-on Linux machine** with the systemd timer installed, `loginctl enable-linger <user>` (without linger the user service stops at logout), NTP-synchronised clock and an **encrypted disk**.
-5. **Invalidity thresholds** (maximum gap, minimum coverage, minimum pairs) and the **PORTUS QC criterion** (QC gate 1 of D-021).
+5. **Invalidity thresholds** (maximum gap, 48 h by default; minimum coverage, 0.8 by default) and the **PORTUS QC criterion** (QC gate 1 of D-021).
+6. An **external copy** of the ledger kept in sync, and a `--source` drill on it when the window closes.
 
 ### 5.6 Blocker A1: 0 scorable pairs with the current wiring
 
-At Portinatx precipitation has no rain gauge within ≤ 3 km and PORTUS Hs enters as `UNKNOWN`; in the Pyrenees there are Météo-France observations with `INSTRUMENT_QC_PASS` but no forecast frozen at those coordinates. Result: **0 scorable pairs**. Starting the 90 days like this would only measure archive availability. Proposal (separate change, **not implemented here**): freeze forecasts at the coordinates of the Pyrenean Météo-France stations with QC PASS; for PORTUS, the owner closes the QC criterion (which flags or checks turn an Hs into `INSTRUMENT_QC_PASS`).
+At Portinatx precipitation has no rain gauge within ≤ 3 km and PORTUS Hs enters as `UNKNOWN`; in the Pyrenees there are Météo-France observations with `INSTRUMENT_QC_PASS` but no forecast frozen at those coordinates. Result: **0 scorable pairs**. Starting the 90 days like this would end at best in `DATOS_COMPLETOS_PARES_INSUFICIENTES`. Proposal (separate change, **not implemented here**): freeze forecasts at the coordinates of the Pyrenean Météo-France stations with QC PASS; for PORTUS, the owner closes the QC criterion (which flags or checks turn an Hs into `INSTRUMENT_QC_PASS`).
 
 **Deliberately out of scope:** scraping ClimayNievePirineos/forums without permission, automatic weight training, official forecasts, public publication of the measurement archive, user ingestion and alert execution. If a model description conflicts with a non-comparable measurement, output `UNKNOWN/NO_COMPARABLE`.
 
@@ -158,7 +178,7 @@ python3 src/forecast_ledger.py --root "$METEO_LEDGER" verify
 
 ## 8. Supervised cycle on persistent equipment (Linux, optional)
 
-`scripts/forensic_cycle.py` captures Portinatx and verifies the private ledger. A lock prevents two simultaneous runs of this command; it does not stop another process using `nowcast.py` directly. The process requires `METEO_LEDGER` to be an absolute path outside the repository, creates the private directory with mode 700 or rejects an existing one accessible by group or others, and atomically writes `cycle-health.json` with counts, date and status `OK`, `NO_DATA`, `DEGRADED` or `ERROR`. It does not save provider output or error messages, which could contain credentials. `OK` only certifies that the cycle and local check finished; it does **not** certify a good forecast, QC for observations or functioning backups. A run with no new records (including repeated cycles in the same hour) is marked `NO_DATA` and is not considered a success. The execution limit is 20 minutes; an active lock returns code 75. Every cycle, whatever its state, also appends an entry to the hash-chained journal (§5.1); if it cannot, the cycle ends as `ERROR`.
+`scripts/forensic_cycle.py` captures Portinatx and verifies the private ledger. A lock prevents two simultaneous runs of this command; it does not stop another process using `nowcast.py` directly. The process requires `METEO_LEDGER` to be an absolute path outside the repository, creates the private directory with mode 700 or rejects an existing one accessible by group or others, and atomically writes `cycle-health.json` with counts, date and status `OK`, `NO_DATA`, `DEGRADED` or `ERROR`. It does not save provider output or error messages, which could contain credentials. `OK` only certifies that the cycle and local check finished; it does **not** certify a good forecast, QC for observations or functioning backups. A run with no new records (including repeated cycles in the same hour) is marked `NO_DATA` and is not considered a success. The execution limit is 20 minutes; an active lock returns code 75. Every cycle, whatever its state, also appends an entry to the hash-chained journal (§5.1); if it cannot, the cycle ends as `ERROR`, and if the journal has an incomplete tail, as `DEGRADED` without writing or repairing anything.
 
 On an always-on Linux computer you own, with the repository already installed and private engine data/configuration in place, first run manually:
 

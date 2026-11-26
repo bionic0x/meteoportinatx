@@ -1,9 +1,14 @@
-"""Diario encadenado, campaña de 90 días y simulacro de restauración con reloj sintético."""
+"""Diario encadenado, campaña de 90 días y simulacro de restauración con reloj sintético.
+
+Incluye las reproducciones del verificador independiente (90 asientos vacíos, 0 pares, recibo local,
+edición de valor, timestamp futuro, diario truncado, cola incompleta y códigos de salida).
+"""
 from __future__ import annotations
 
 import importlib.util
 import inspect
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -26,96 +31,233 @@ spec.loader.exec_module(fc)
 
 UTC = timezone.utc
 START = datetime(2026, 1, 1, 12, tzinfo=UTC)
+SITE = {"domain": "portinatx", "site_id": "portinatx", "lat": 39.1, "lon": 1.5,
+        "variable": "precipitation_mm", "unit": "mm", "source_license": "SYNTHETIC"}
 
 
-class Campaign(unittest.TestCase):
+class Base(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
+        self.tmp = Path(tmp.name)
         self.now = START
-        self.ledger = fl.Ledger(Path(tmp.name) / "private", clock=lambda: self.now)
+        self.ledger = fl.Ledger(self.tmp / "private", clock=lambda: self.now)
+        self.pending = []
 
-    def forecast(self):
-        begin = self.now + timedelta(hours=2)
+    def forecast(self, begin):
         return self.ledger.add("forecast", {
-            "event_id": "shadow-x", "domain": "portinatx", "site_id": "portinatx", "lat": 39.1, "lon": 1.5,
-            "valid_from": begin.isoformat(), "valid_to": (begin + timedelta(hours=1)).isoformat(),
-            "issued_at": self.now.isoformat(), "provider_run_at": self.now.isoformat(),
-            "provider": "test", "model": "m", "family": "f", "variable": "precipitation_mm", "unit": "mm",
-            "mode": "amount", "prediction": 1.0, "source_id": "synthetic", "source_license": "SYNTHETIC"})["id"]
+            **SITE, "event_id": f"e{begin:%Y%m%d%H}", "valid_from": begin.isoformat(),
+            "valid_to": (begin + timedelta(hours=1)).isoformat(), "issued_at": self.now.isoformat(),
+            "provider_run_at": self.now.isoformat(), "provider": "test", "model": "m", "family": "f",
+            "mode": "amount", "prediction": 1.0, "source_id": "synthetic"})["id"]
 
-    def run_days(self, n, *, step_hours=24):
-        ids = []
-        for day in range(n):
-            self.now = START + timedelta(hours=step_hours * day)
-            added = [self.forecast()] if day == 0 else []
-            ids += added
-            self.ledger.append_journal("OK", added)
-        return ids
+    def observation(self, begin):
+        return self.ledger.add("observation", {
+            **SITE, "event_id": f"e{begin:%Y%m%d%H}", "observed_from": begin.isoformat(),
+            "observed_to": (begin + timedelta(hours=1)).isoformat(), "station_id": "rain-gauge",
+            "value": 1.5, "qc": "INSTRUMENT_QC_PASS", "source_type": "instrument", "source_id": "synthetic"})["id"]
+
+    def cycle(self, when, *, pairs=False, state="OK"):
+        """One journaled cycle that freezes a forecast (+1 h) and, optionally, observes closed windows."""
+        self.now = when
+        ids = [self.forecast(when + timedelta(hours=1))]
+        if pairs:
+            closed = [b for b in self.pending if b + timedelta(hours=1) <= when]
+            ids += [self.observation(b) for b in closed]
+            self.pending = [b for b in self.pending if b not in closed]
+        self.pending.append(when + timedelta(hours=1))
+        return self.ledger.append_journal(state, ids)
+
+    def run_cycles(self, n, *, step=timedelta(days=1), pairs=0):
+        for k in range(n):
+            self.cycle(START + step * k, pairs=k <= pairs)
 
     def status(self, **kw):
         return lc.campaign_status(self.ledger, **kw)
 
+    def external_copy(self):
+        copy = self.tmp / "external"
+        shutil.rmtree(copy, ignore_errors=True)
+        shutil.copytree(self.ledger.root, copy, ignore=shutil.ignore_patterns("restore-receipts"))
+        return copy
+
+
+class Campaign(Base):
     def test_old_ledger_without_journal_is_unknown_not_broken(self):
-        self.forecast()
+        self.forecast(START + timedelta(hours=2))
         v = self.ledger.verify()
         self.assertTrue(v["ok"])
+        self.assertEqual(v["integridad"], "UNKNOWN")
         self.assertEqual(v["journal"], {"estado": "SIN_DIARIO", "integridad": "UNKNOWN"})
         self.assertEqual(self.status()["estado"], "SIN_INICIAR")
 
     def test_89_days_is_in_progress_day_89(self):
-        self.run_days(89)
+        self.run_cycles(89)
         out = self.status()
-        self.assertEqual(out["estado"], "EN_CURSO")
-        self.assertEqual(out["dia"], "día 89/90")
-        self.assertEqual(out["dias_con_datos"], 89)
+        self.assertEqual((out["estado"], out["dia"], out["dias_con_datos"]), ("EN_CURSO", "día 89/90", 89))
 
-    def test_90_days_with_deleted_record_is_invalid(self):
-        ids = self.run_days(90)
-        (self.ledger.root / "local" / "forecast" / (ids[0] + ".json")).unlink()
+    def test_empty_ok_entries_are_not_days_with_data(self):
+        for k in range(95):
+            self.now = START + timedelta(days=k)
+            self.ledger.append_journal("OK", [])
+        out = self.status()
+        self.assertEqual(out["dias_con_datos"], 0)
+        self.assertTrue(out["estado"].startswith("INVALIDO:HUECO_ABIERTO"))
+
+    def test_90_utc_days_in_88_real_days_is_not_a_full_window(self):
+        # Reproducción A del verificador: 23:59 del día 1 → 00:01 del día 90.
+        first = datetime(2026, 1, 1, 23, 59, tzinfo=UTC)
+        self.cycle(first)
+        for k in range(1, 89):
+            self.cycle(first + timedelta(days=k))
+        self.cycle(datetime(2026, 3, 31, 0, 1, tzinfo=UTC))
+        out = self.status()
+        self.assertEqual(out["dias_con_datos"], 90)
+        self.assertLess(out["horas_reales_ventana"], 90 * 24)
+        self.assertEqual(out["estado"], "EN_CURSO")
+        drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
+        self.assertEqual(self.status(min_coverage=0)["estado"], "EN_CURSO")
+
+    def test_full_window_with_zero_pairs_never_completed(self):
+        self.run_cycles(91)
+        self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_PARES_INSUFICIENTES")
+        receipt = drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
+        self.assertTrue(receipt["ok"])
+        out = self.status(min_coverage=0)
+        self.assertEqual(out["estado"], "DATOS_COMPLETOS_PARES_INSUFICIENTES")
+        self.assertNotIn("completado", out["resumen"].lower())
+
+    def test_daily_cycles_have_insufficient_coverage(self):
+        self.run_cycles(91, pairs=25)
+        out = self.status()
+        self.assertEqual(out["estado"], "DATOS_COMPLETOS_COBERTURA_INSUFICIENTE")
+        self.assertLess(out["cobertura"], 0.8)
+
+    def test_local_receipt_is_not_restore_proof(self):
+        self.run_cycles(91, pairs=25)
+        self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+        receipt = drill.drill(self.ledger.root, clock=lambda: self.now)
+        self.assertTrue(receipt["ok"])
+        self.assertEqual(receipt["origen"], "copia_local")
+        out = self.status(min_coverage=0)
+        self.assertEqual(out["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+        self.assertNotIn("restauración probada", out["resumen"])
+
+    def test_external_receipt_completes_and_window_is_frozen(self):
+        self.run_cycles(91, pairs=25)
+        receipt = drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
+        self.assertEqual((receipt["ok"], receipt["origen"], receipt["n_pares"]), (True, "copia_externa", 25))
+        out = self.status(min_coverage=0)
+        self.assertEqual(out["estado"], "COMPLETADO")
+        self.assertTrue(out["ventana_congelada"])
+        self.assertIn("completado", out["resumen"].lower())
+        # Un hueco posterior no invalida la ventana ya congelada; se informa aparte.
+        self.now += timedelta(days=5)
+        out = self.status(min_coverage=0)
+        self.assertEqual(out["estado"], "COMPLETADO")
+        self.assertEqual(out["vigilancia_posterior"]["estado"], "HUECO_POSTERIOR")
+
+    def test_external_receipt_with_mismatching_copy_fails(self):
+        self.run_cycles(91, pairs=25)
+        copy = self.external_copy()
+        self.cycle(self.now + timedelta(hours=1))           # el ledger avanza; la copia queda vieja
+        receipt = drill.drill(self.ledger.root, source=copy, clock=lambda: self.now)
+        self.assertFalse(receipt["ok"])
+        self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+
+    def test_source_must_be_outside_ledger(self):
+        self.run_cycles(1)
+        with self.assertRaises(ValueError):
+            drill.drill(self.ledger.root, source=self.ledger.root / "local", clock=lambda: self.now)
+
+    def test_hourly_campaign_at_default_thresholds_completes(self):
+        start = START
+        for k in range(90 * 24 + 1):
+            if k % 10 == 7:                                  # 10 % de ciclos perdidos: cobertura 0,9
+                continue
+            self.cycle(start + timedelta(hours=k), pairs=k < 30)
+        self.assertEqual(self.status()["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+        drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
+        out = self.status()
+        self.assertEqual(out["estado"], "COMPLETADO", out)
+        self.assertGreaterEqual(out["cobertura"], 0.8)
+        self.assertGreaterEqual(out["pares_emparejados"], 20)
+
+    def test_deleted_record_is_invalid(self):
+        self.run_cycles(3)
+        first = json.loads(self.ledger.journal_path.read_text().splitlines()[0])["added_ids"][0]
+        (self.ledger.root / "local" / "forecast" / (first + ".json")).unlink()
         self.assertFalse(self.ledger.verify()["ok"])
         self.assertTrue(self.status()["estado"].startswith("INVALIDO:DIARIO_ID_AUSENTE"))
 
-    def test_90_intact_days_without_receipt_never_completed(self):
-        self.run_days(90)
-        out = self.status()
-        self.assertEqual(out["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
-        self.assertNotIn("completado", out["resumen"].lower())
+    def test_edited_record_value_is_detected(self):
+        # Reproducción H del verificador: cambiar el valor sin cambiar la identidad.
+        self.run_cycles(2)
+        first = json.loads(self.ledger.journal_path.read_text().splitlines()[0])["added_ids"][0]
+        path = self.ledger.root / "local" / "forecast" / (first + ".json")
+        record = json.loads(path.read_bytes())
+        record["data"]["prediction"] = 42.0
+        path.write_bytes(fl._canonical(record))
+        v = self.ledger.verify()
+        self.assertEqual(v["integridad"], "ROTA")
+        self.assertTrue(v["motivo"].startswith("DIARIO_REGISTRO_ALTERADO"))
+        self.assertTrue(self.status()["estado"].startswith("INVALIDO:DIARIO_REGISTRO_ALTERADO"))
 
-    def test_90_days_with_valid_drill_receipt_completed(self):
-        self.run_days(90)
-        receipt = drill.drill(self.ledger.root, clock=lambda: self.now)
-        self.assertTrue(receipt["ok"], receipt)
-        out = self.status()
-        self.assertEqual(out["estado"], "COMPLETADO")
-        self.assertIn("completado", out["resumen"].lower())
+    def test_legacy_entries_without_hash_are_partial_unknown(self):
+        rid = self.forecast(START + timedelta(hours=2))
+        entry = {"seq": 0, "timestamp": fl._iso(START), "state": "OK", "added_ids": [rid], "prev_hash": fl.GENESIS}
+        entry["hash"] = fl._hash(fl._canonical(entry))
+        self.ledger.journal_path.parent.mkdir(parents=True)
+        self.ledger.journal_path.write_bytes(fl._canonical(entry))
+        self.ledger.append_journal("NO_DATA", [])
+        v = self.ledger.verify()
+        self.assertEqual((v["ok"], v["integridad"]), (True, "UNKNOWN"))
+        self.assertEqual(v["journal"]["parcial"], "ASIENTOS_SIN_HASH n=1")
 
-    def test_receipt_before_day_90_does_not_count(self):
-        self.run_days(10)
-        self.assertTrue(drill.drill(self.ledger.root, clock=lambda: self.now)["ok"])
-        for day in range(10, 90):
-            self.now = START + timedelta(days=day)
-            self.ledger.append_journal("OK", [])
-        self.assertEqual(self.status()["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+    def test_future_timestamp_is_invalid(self):
+        self.run_cycles(3)
+        self.now = START + timedelta(days=1)
+        self.assertEqual(self.status()["estado"], "INVALIDO:TIMESTAMP_FUTURO")
+        self.now = START + timedelta(days=2, minutes=-9)
+        self.assertNotEqual(self.status()["estado"], "INVALIDO:TIMESTAMP_FUTURO")
 
-    def test_tampered_receipt_does_not_count(self):
-        self.run_days(90)
+    def test_truncated_tail_with_receipt_is_orphan(self):
+        self.run_cycles(5)
+        drill.drill(self.ledger.root, clock=lambda: self.now)
+        lines = self.ledger.journal_path.read_bytes().splitlines(keepends=True)
+        self.ledger.journal_path.write_bytes(b"".join(lines[:3]))
+        v = self.ledger.verify()
+        self.assertEqual((v["integridad"], v["motivo"]), ("ROTA", "DIARIO_RECIBO_HUERFANO"))
+        self.assertEqual(self.status()["estado"], "INVALIDO:DIARIO_RECIBO_HUERFANO")
+
+    def test_tampered_receipt_breaks_integrity(self):
+        self.run_cycles(2)
         receipt = drill.drill(self.ledger.root, clock=lambda: self.now)
         path = self.ledger.root / "journal" / lc.RECEIPTS_DIR / (receipt["sha256"] + ".json")
         text = path.read_text()
-        self.assertIn('"records":1', text)
-        path.write_text(text.replace('"records":1', '"records":2'))
-        self.assertEqual(self.status()["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+        self.assertIn('"origen":"copia_local"', text)
+        path.write_text(text.replace('"origen":"copia_local"', '"origen":"copia_externa"'))
+        self.assertEqual(self.ledger.verify()["motivo"], "DIARIO_RECIBO_ALTERADO")
+
+    def test_incomplete_tail_is_kept_and_blocks_campaign(self):
+        self.run_cycles(2)
+        self.ledger.journal_path.write_bytes(self.ledger.journal_path.read_bytes() + b'{"se')
+        before = self.ledger.journal_path.read_bytes()
+        self.assertEqual(self.ledger.append_journal("OK", []), {"estado": "DIARIO_COLA_INCOMPLETA"})
+        self.assertEqual(self.ledger.journal_path.read_bytes(), before)
+        self.assertEqual(self.ledger.verify()["motivo"], "DIARIO_COLA_INCOMPLETA")
+        out = self.status()
+        self.assertEqual(out["estado"], "INVALIDO:DIARIO_COLA_INCOMPLETA")
+        self.assertIn("campaña nueva en un directorio nuevo", out["resumen"])
 
     def test_gap_over_48h_is_invalid(self):
-        self.run_days(3)
-        self.now += timedelta(hours=49)
-        self.ledger.append_journal("OK", [])
+        self.run_cycles(3)
+        self.cycle(self.now + timedelta(hours=49))
         self.assertEqual(self.status()["estado"], "INVALIDO:HUECO_MAYOR_QUE_UMBRAL")
         self.assertEqual(self.status(max_gap_hours=72)["estado"], "EN_CURSO")
 
     def test_error_cycles_do_not_close_a_gap(self):
-        self.run_days(2)
+        self.run_cycles(2)
         for h in range(1, 50):
             self.now = START + timedelta(days=1, hours=h)
             self.ledger.append_journal("ERROR", [])
@@ -123,46 +265,46 @@ class Campaign(unittest.TestCase):
 
     def test_signature_has_no_declared_dates(self):
         params = inspect.signature(lc.campaign_status).parameters
-        self.assertEqual(list(params), ["ledger", "max_gap_hours"])
+        self.assertEqual(list(params), ["ledger", "max_gap_hours", "min_coverage"])
         with self.assertRaises(TypeError):
             lc.campaign_status(self.ledger, start=START)
 
-    def test_summary_says_completed_only_when_completed(self):
+    def test_summary_wording(self):
         for key, text in lc.SUMMARIES.items():
             self.assertEqual("completado" in text.lower(), key == "COMPLETADO", key)
+            self.assertNotIn("restauración probada", text.lower())
 
     def test_verify_detects_altered_journal(self):
-        self.run_days(3)
-        path = self.ledger.journal_path
-        lines = path.read_text().splitlines(True)
+        self.run_cycles(3)
+        lines = self.ledger.journal_path.read_text().splitlines(True)
         lines[1] = lines[1].replace('"state":"OK"', '"state":"NO_DATA"')
-        path.write_text("".join(lines))
-        out = self.ledger.verify()
-        self.assertFalse(out["ok"])
-        self.assertTrue(out["motivo"].startswith("DIARIO_HASH_ALTERADO"))
+        self.ledger.journal_path.write_text("".join(lines))
+        self.assertTrue(self.ledger.verify()["motivo"].startswith("DIARIO_HASH_ALTERADO"))
 
     def test_verify_detects_removed_journal_entry(self):
-        self.run_days(3)
-        path = self.ledger.journal_path
-        lines = path.read_text().splitlines(True)
-        path.write_text(lines[0] + lines[2])
+        self.run_cycles(3)
+        lines = self.ledger.journal_path.read_text().splitlines(True)
+        self.ledger.journal_path.write_text(lines[0] + lines[2])
         self.assertTrue(self.ledger.verify()["motivo"].startswith("DIARIO_SECUENCIA_ROTA"))
 
     def test_counters(self):
-        self.run_days(2, step_hours=1)
+        self.run_cycles(3, step=timedelta(hours=1), pairs=3)
         self.ledger.append_journal("NO_DATA", [])
         out = self.status()
-        self.assertEqual(out["ciclos_registrados"], 3)
-        self.assertEqual(out["ciclos_ok"], 2)
+        self.assertEqual((out["ciclos_registrados"], out["ciclos_ok"], out["ciclos_con_datos"]), (4, 3, 3))
         self.assertEqual(out["ciclos_por_estado"]["NO_DATA"], 1)
-        self.assertEqual(out["pares_emparejados"], 0)
-        self.assertIsNone(out["fraccion_obs_unknown"])
+        self.assertEqual(out["pares_emparejados"], 1)
+        self.assertEqual(out["fraccion_obs_unknown"], 0.0)
 
-    def test_cli_campaign_status_and_verify_exit_code(self):
-        self.run_days(1)
+    def test_cli_exit_codes(self):
         cmd = [sys.executable, str(ROOT / "src/nowcast.py"), "ledger", "--root", str(self.ledger.root)]
+        self.forecast(START + timedelta(hours=2))
+        result = subprocess.run(cmd + ["verify"], capture_output=True, text=True)
+        self.assertEqual((result.returncode, json.loads(result.stdout)["integridad"]), (3, "UNKNOWN"))
+        self.ledger.append_journal("NO_DATA", [])
+        self.assertEqual(subprocess.run(cmd + ["verify"], capture_output=True).returncode, 0)
         out = subprocess.run(cmd + ["campaign-status"], capture_output=True, text=True, check=True)
-        self.assertEqual(json.loads(out.stdout)["estado"], "INVALIDO:HUECO_ABIERTO_MAYOR_QUE_UMBRAL")
+        self.assertIn("estado", json.loads(out.stdout))
         self.ledger.journal_path.write_text(self.ledger.journal_path.read_text().replace('"seq":0', '"seq":1'))
         self.assertEqual(subprocess.run(cmd + ["verify"], capture_output=True).returncode, 1)
 
@@ -183,6 +325,21 @@ class CycleJournal(unittest.TestCase):
             self.assertIsNone(reason)
             self.assertEqual([e["state"] for e in entries], ["OK", "NO_DATA", "ERROR"])
             self.assertNotIn("secret", fl.Ledger(root).journal_path.read_text())
+
+    def test_incomplete_tail_degrades_cycle_without_repair(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "private"
+            root.mkdir(mode=0o700)
+            journal = root / "journal" / "cycles.jsonl"
+            journal.parent.mkdir()
+            journal.write_bytes(b'{"se')
+            proc = subprocess.CompletedProcess([], 0, json.dumps(
+                {"domain": "portinatx", "ledger_sombra": {"estado": "OK", "pronosticos": 1}}), "")
+            with patch.object(fc.subprocess, "run", return_value=proc):
+                self.assertEqual(fc.run(root), 1)
+            health = json.loads((root / "cycle-health.json").read_text())
+            self.assertEqual((health["state"], health["journal"]), ("DEGRADED", "DIARIO_COLA_INCOMPLETA"))
+            self.assertEqual(journal.read_bytes(), b'{"se')
 
 
 if __name__ == "__main__":

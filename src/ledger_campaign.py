@@ -1,53 +1,42 @@
 """Estado de la campaña prospectiva de 90 días, calculado SOLO desde el diario y los registros.
 
-No acepta fechas declaradas de inicio ni de fin: el día N es el número de días UTC con al menos un
-ciclo OK en el diario encadenado. Un ledger sin diario no tiene campaña medible (SIN_INICIAR, diario
-UNKNOWN). El estado no es una validación meteorológica ni una puntuación de habilidad.
+No acepta fechas declaradas de inicio ni de fin. Un "ciclo con datos" es un asiento OK que añadió
+al menos un registro; un día con datos es un día UTC con al menos un ciclo con datos. Al alcanzar el
+criterio (90 días con datos y 90×24 h reales desde el primer ciclo con datos) la ventana de
+evaluación se congela en ese asiento de anclaje: lo posterior solo se informa como
+`vigilancia_posterior`. El estado no es una validación meteorológica ni una puntuación de habilidad.
 
-Límite declarado: los "episodios" se cuentan como días (`event_id` = día de la ventana); días
-consecutivos de un mismo temporal no son episodios independientes.
+Límites declarados: los "episodios" se cuentan como días (`event_id` = día de la ventana); días
+consecutivos de un mismo temporal no son episodios independientes. Diario y recibos no están
+firmados ni sellados externamente: quien controla el disco puede rehacerlos de forma coherente.
 """
 from __future__ import annotations
 
-import json
 from datetime import timedelta
 
 import forecast_ledger as fl
 
 TARGET_DAYS = 90
-CADENCE_HOURS = 1.0           # cadencia declarada del ciclo supervisado (systemd, cada hora)
-DEFAULT_MAX_GAP_HOURS = 48.0  # decisión del titular; propuesta de la auditoría, no calibrada
-RECEIPTS_DIR = "restore-receipts"
+TARGET_SPAN = timedelta(days=TARGET_DAYS)
+CADENCE_HOURS = 1.0            # cadencia declarada del ciclo supervisado (systemd, cada hora)
+DEFAULT_MAX_GAP_HOURS = 48.0   # decisión del titular; propuesta de la auditoría, no calibrada
+DEFAULT_MIN_COVERAGE = 0.8     # decisión del titular: ciclos con datos / ciclos esperados en la ventana
+MIN_PAIRS = 20                 # mínimo de D-021 (pares pronóstico/observación con QC PASS)
+FUTURE_TOLERANCE = timedelta(minutes=10)
+RECEIPTS_DIR = fl.RECEIPTS_DIR
+receipt_digest = fl.receipt_digest
 
 
-def receipt_digest(receipt):
-    """SHA-256 canónico de un recibo, excluido su propio campo `sha256`."""
-    return fl._hash(fl._canonical({k: v for k, v in receipt.items() if k != "sha256"}))
+def _gaps(times):
+    return [b - a for a, b in zip(times, times[1:])]
 
 
-def _valid_receipts(ledger, entries, min_seq):
-    """Recibos de restauración íntegros, satisfactorios y anclados en el diario en seq >= min_seq."""
-    heads = {e["hash"]: e["seq"] for e in entries}
-    found = []
-    for path in sorted((ledger.root / "journal" / RECEIPTS_DIR).glob("*.json")):
-        try:
-            receipt = json.loads(path.read_bytes())
-        except (OSError, ValueError):
-            continue
-        if (isinstance(receipt, dict) and receipt.get("kind") == "restore-drill"
-                and receipt.get("sha256") == receipt_digest(receipt)
-                and path.name == receipt["sha256"] + ".json"
-                and receipt.get("ok") is True
-                and heads.get(receipt.get("journal_head_sha256"), -1) >= min_seq):
-            found.append(receipt["sha256"])
-    return found
-
-
-def campaign_status(ledger, *, max_gap_hours=DEFAULT_MAX_GAP_HOURS):
+def campaign_status(ledger, *, max_gap_hours=DEFAULT_MAX_GAP_HOURS, min_coverage=DEFAULT_MIN_COVERAGE):
     """Estado y contadores de la campaña. Sin parámetros de fecha: todo sale del diario y del reloj."""
     max_gap = timedelta(hours=fl._number(max_gap_hours, "max_gap_hours", lower=1))
+    min_coverage = fl._number(min_coverage, "min_coverage", lower=0, upper=1)
     base = {"objetivo_dias": TARGET_DAYS, "umbral_hueco_horas": float(max_gap_hours),
-            "cadencia_horas": CADENCE_HOURS,
+            "umbral_cobertura": min_coverage, "minimo_pares": MIN_PAIRS, "cadencia_horas": CADENCE_HOURS,
             "limite_episodios": "los episodios se cuentan como días UTC; no son independientes",
             "validacion_meteorologica": False}
     try:
@@ -62,39 +51,74 @@ def campaign_status(ledger, *, max_gap_hours=DEFAULT_MAX_GAP_HOURS):
 
     now = ledger._now()
     times = [fl._date(e["timestamp"], "timestamp") for e in entries]
-    ok_times = [t for t, e in zip(times, entries) if e["state"] == "OK"]
-    days = sorted({t.date() for t in ok_times})
-    gaps = [b - a for a, b in zip(ok_times, ok_times[1:])]
-    open_gap = now - (ok_times[-1] if ok_times else times[0])
-    span_h = (times[-1] - times[0]).total_seconds() / 3600
+    if times[-1] > now + FUTURE_TOLERANCE:
+        return _out(base, "INVALIDO:TIMESTAMP_FUTURO", {"diario": verified["journal"]})
+
+    # Ventana de evaluación: desde el primer ciclo con datos hasta el asiento de anclaje (si existe).
+    data = [(t, e) for t, e in zip(times, entries) if e["state"] == "OK" and e["added_ids"]]
+    anchor, days = None, set()
+    for t, e in data:
+        days.add(t.date())
+        if len(days) >= TARGET_DAYS and t - data[0][0] >= TARGET_SPAN:
+            anchor = (t, e)
+            break
+    end_seq = anchor[1]["seq"] if anchor else entries[-1]["seq"]
+    window = [(t, e) for t, e in zip(times, entries) if e["seq"] <= end_seq]
+    data_w = [t for t, e in data if e["seq"] <= end_seq]
+    start = data_w[0] if data_w else times[0]
+    end = anchor[0] if anchor else times[-1]
+    expected = int((end - start).total_seconds() / 3600 // CADENCE_HOURS) + 1
+    window_ids = {i for _, e in window for i in e["added_ids"]}
     pairs, excluded = ledger.pairs()
-    obs = [r for _, r in ledger.records("observation", include_imported=False)]
+    pairs_w = [p for p in pairs if p["forecast_id"] in window_ids]
+    obs = [r for _, r in ledger.records("observation", include_imported=False) if r["id"] in window_ids]
+    gaps = _gaps(data_w)
+    days_w = {t.date() for t in data_w}
     counters = {
-        "dias_con_datos": len(days),
-        "ciclos_esperados": int(span_h // CADENCE_HOURS) + 1,
-        "ciclos_registrados": len(entries),
-        "ciclos_ok": len(ok_times),
-        "ciclos_por_estado": {s: sum(e["state"] == s for e in entries) for s in sorted(fl.JOURNAL_STATES)},
+        "dias_con_datos": len(days_w),
+        "dia": f"día {min(len(days_w), TARGET_DAYS)}/{TARGET_DAYS}",
+        "horas_reales_ventana": round((end - start).total_seconds() / 3600, 2) if data_w else 0.0,
+        "ventana_congelada": anchor is not None,
+        "asiento_anclaje_seq": end_seq if anchor else None,
+        "ciclos_esperados": expected,
+        "ciclos_registrados": len(window),
+        "ciclos_ok": sum(e["state"] == "OK" for _, e in window),
+        "ciclos_con_datos": len(data_w),
+        "cobertura": round(len(data_w) / expected, 4),
+        "ciclos_por_estado": {s: sum(e["state"] == s for _, e in window) for s in sorted(fl.JOURNAL_STATES)},
         "huecos": sum(g > timedelta(hours=1.5 * CADENCE_HOURS) for g in gaps),
-        "hueco_max_horas": round(max(gaps + [open_gap]).total_seconds() / 3600, 2),
-        "hueco_abierto_horas": round(open_gap.total_seconds() / 3600, 2),
+        "hueco_max_horas": round(max(gaps, default=timedelta(0)).total_seconds() / 3600, 2),
         "fraccion_obs_unknown": (round(sum(o["data"]["qc"] == "UNKNOWN" for o in obs) / len(obs), 4)
                                  if obs else None),
-        "pares_emparejados": len(pairs),
-        "episodios_como_dias": len({p["event_id"] for p in pairs}),
-        "excluidos_por_motivo": excluded,
+        "pares_emparejados": len(pairs_w),
+        "episodios_como_dias": len({p["event_id"] for p in pairs_w}),
+        "excluidos_por_motivo_todo_el_archivo": excluded,
         "diario": verified["journal"],
     }
     if any(g > max_gap for g in gaps):
         return _out(base, "INVALIDO:HUECO_MAYOR_QUE_UMBRAL", counters)
-    if open_gap > max_gap:
-        return _out(base, "INVALIDO:HUECO_ABIERTO_MAYOR_QUE_UMBRAL", counters)
-    if len(days) < TARGET_DAYS:
-        return _out(base, "EN_CURSO", counters, dia=f"día {len(days)}/{TARGET_DAYS}")
-    day_target = days[TARGET_DAYS - 1]
-    min_seq = next(e["seq"] for t, e in zip(times, entries) if e["state"] == "OK" and t.date() == day_target)
-    receipts = _valid_receipts(ledger, entries, min_seq)
-    counters["recibos_restauracion_validos"] = receipts
+    if anchor is None:
+        open_gap = now - (data_w[-1] if data_w else times[0])
+        counters["hueco_abierto_horas"] = round(open_gap.total_seconds() / 3600, 2)
+        if open_gap > max_gap:
+            return _out(base, "INVALIDO:HUECO_ABIERTO_MAYOR_QUE_UMBRAL", counters)
+        return _out(base, "EN_CURSO", counters)
+
+    after = [anchor[0]] + [t for t, e in data if e["seq"] > end_seq]
+    worst = max(_gaps(after) + [now - after[-1]])
+    counters["vigilancia_posterior"] = {
+        "estado": "HUECO_POSTERIOR" if worst > max_gap else "SIN_HUECO_MAYOR_QUE_UMBRAL",
+        "hueco_max_horas": round(worst.total_seconds() / 3600, 2),
+        "nota": "no altera el estado de la ventana congelada"}
+    if counters["cobertura"] < min_coverage:
+        return _out(base, "DATOS_COMPLETOS_COBERTURA_INSUFICIENTE", counters)
+    if len(pairs_w) < MIN_PAIRS:
+        return _out(base, "DATOS_COMPLETOS_PARES_INSUFICIENTES", counters)
+    receipts = [r["sha256"] for r, problem in ledger.receipts()
+                if not problem and r.get("ok") is True and r.get("origen") == "copia_externa"
+                and isinstance(r.get("n_pares"), int) and r["n_pares"] >= MIN_PAIRS
+                and isinstance(r.get("journal_seq"), int) and r["journal_seq"] >= end_seq]
+    counters["recibos_copia_externa_validos"] = receipts
     if not receipts:
         return _out(base, "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA", counters)
     return _out(base, "COMPLETADO", counters)
@@ -102,18 +126,25 @@ def campaign_status(ledger, *, max_gap_hours=DEFAULT_MAX_GAP_HOURS):
 
 SUMMARIES = {
     "SIN_INICIAR": "Campaña sin iniciar: el diario no tiene ciclos.",
-    "EN_CURSO": "Campaña en curso ({dia}). La validación de 90 días no ha terminado.",
-    "INVALIDO": "Campaña inválida ({motivo}). Debe reiniciarse; los datos no cuentan como campaña.",
-    "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA": ("90 días de datos reunidos, pero sin recibo de restauración "
-                                                "válido: la validación no ha terminado."),
-    "COMPLETADO": "Estado COMPLETADO: 90 días, diario íntegro y restauración probada. No implica habilidad.",
+    "EN_CURSO": ("Campaña en curso ({dia}; hacen falta 90 días con datos y 2160 h reales). "
+                 "La validación de 90 días no ha terminado."),
+    "INVALIDO": ("Campaña inválida ({motivo}). No se repara el diario: se conserva tal cual y se inicia "
+                 "una campaña nueva en un directorio nuevo (docs/FORECAST-LEDGER-P0.md §5)."),
+    "DATOS_COMPLETOS_COBERTURA_INSUFICIENTE": ("Ventana de 90 días cerrada con cobertura inferior al umbral: "
+                                               "la validación no ha terminado ni puede terminar en esta campaña."),
+    "DATOS_COMPLETOS_PARES_INSUFICIENTES": ("Ventana de 90 días cerrada con menos de 20 pares con QC PASS: "
+                                            "la validación no ha terminado ni puede terminar en esta campaña."),
+    "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA": ("Ventana de 90 días cerrada, pero sin recibo de restauración "
+                                                "desde una copia externa con al menos 20 pares: "
+                                                "la validación no ha terminado."),
+    "COMPLETADO": ("Estado COMPLETADO: 90 días con datos, cobertura y pares suficientes, diario íntegro y "
+                   "recibo de restauración desde copia externa. Diario y recibo no tienen firma externa. "
+                   "No implica habilidad meteorológica."),
 }
 
 
-def _out(base, state, counters, dia=None):
+def _out(base, state, counters):
     key, _, motivo = state.partition(":")
     out = {**base, "estado": state, **counters}
-    if dia:
-        out["dia"] = dia
-    out["resumen"] = SUMMARIES[key].format(dia=dia, motivo=motivo)
+    out["resumen"] = SUMMARIES[key].format(dia=counters.get("dia"), motivo=motivo)
     return out

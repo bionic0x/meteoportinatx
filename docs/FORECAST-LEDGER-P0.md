@@ -66,41 +66,60 @@ Este ejemplo es **sintético**, no una predicción meteorológica real. Para con
 
 ## 5. Campaña prospectiva de 90 días
 
-**Estado actual: la validación de 90 días NO está iniciada ni terminada.** Su estado no se declara en ningún documento: lo calcula `campaign-status` a partir del diario y los registros. Además está **bloqueada por A1** (ver §5.6): con el cableado actual no sale ningún par puntuable.
+**Estado actual: la validación de 90 días NO está iniciada ni terminada, y no se dará por completada anticipadamente.** Su estado no se declara en ningún documento: lo calcula `campaign-status` a partir del diario y los registros, y solo acumulando evidencia real (días con datos, horas reales, cobertura, pares con QC PASS y restauración desde una copia externa). Además está **bloqueada por A1** (ver §5.6): con el cableado actual no sale ningún par puntuable.
 
 ### 5.1 Diario encadenado de ciclos
 
-`<METEO_LEDGER>/journal/cycles.jsonl` es un diario de solo adición. `scripts/forensic_cycle.py` añade un asiento en **todos** los ciclos (`OK`, `NO_DATA`, `DEGRADED`, `ERROR`), así que los huecos y fallos dejan rastro aunque `cycle-health.json` se sobrescriba. Cada asiento lleva `seq`, `timestamp` (UTC, reloj del equipo), `state`, `added_ids` (ids de registros nuevos en `local/` durante el ciclo), `prev_hash` y `hash` (SHA-256 canónico del asiento sin `hash`; el primero enlaza con 64 ceros).
+`<METEO_LEDGER>/journal/cycles.jsonl` es un diario de solo adición. `scripts/forensic_cycle.py` añade un asiento en **todos** los ciclos (`OK`, `NO_DATA`, `DEGRADED`, `ERROR`), así que los huecos y fallos dejan rastro aunque `cycle-health.json` se sobrescriba. Cada asiento lleva `seq`, `timestamp` (UTC, reloj del equipo), `state`, `added_ids`, `added_sha256` (mapa id → SHA-256 del archivo de cada registro añadido), `prev_hash` y `hash` (SHA-256 canónico del asiento sin `hash`; el primero enlaza con 64 ceros).
 
-`verify` recalcula la cadena (secuencia, `prev_hash`, hash, forma canónica, tiempo no decreciente) y exige que exista cada id citado. Si falta un registro o el diario está alterado devuelve `ok: false` con `motivo` (p. ej. `DIARIO_ID_AUSENTE`, `DIARIO_HASH_ALTERADO`, `DIARIO_SECUENCIA_ROTA`) y la CLI sale con código 1. Un ledger antiguo sin diario **no se migra**: `verify` informa `journal.estado=SIN_DIARIO`, `integridad=UNKNOWN`, no «roto». Límites: quien controla el disco puede reescribir la cadena entera de forma coherente (no hay firma ni sello externo); los registros añadidos fuera de `forensic_cycle.py` (p. ej. `nowcast.py export` directo) no figuran en el diario.
+`verify` recalcula la cadena (secuencia, `prev_hash`, hash, forma canónica, tiempo no decreciente), exige que exista cada id citado y que su archivo conserve el SHA-256 anotado, y comprueba que cada recibo de restauración esté íntegro y anclado a un asiento existente. Devuelve en primer nivel `integridad`:
+
+| `integridad` | Cuándo | Código de salida de `verify` |
+|---|---|---|
+| `VERIFICADA` | Diario íntegro y todos los asientos con hash de archivo. | 0 |
+| `ROTA` | Motivo en `motivo`: `DIARIO_ID_AUSENTE`, `DIARIO_REGISTRO_ALTERADO` (valor editado), `DIARIO_HASH_ALTERADO`, `DIARIO_SECUENCIA_ROTA`, `DIARIO_COLA_INCOMPLETA`, `DIARIO_RECIBO_HUERFANO`, `DIARIO_RECIBO_ALTERADO`… | 1 |
+| `UNKNOWN` | Ledger antiguo sin diario (`SIN_DIARIO`, **no se migra**) o asientos del primer formato sin `added_sha256` (`parcial: ASIENTOS_SIN_HASH`): se comprueba la existencia, no el contenido. | 3 |
+
+Un registro con formato inválido sigue saliendo con código 2, como antes. El campo `ok` se mantiene (`ok = integridad ≠ ROTA`). El selftest y el CI solo comprueban estos códigos en tests sintéticos (`tests/test_forecast_ledger.py`, `tests/test_ledger_campaign.py`); ningún paso del CI ni `forensic_cycle.py` depende del código de salida de `verify`.
+
+**Cola incompleta (una línea a medias tras un corte).** `append_journal` no la borra ni la repara: no escribe y devuelve `DIARIO_COLA_INCOMPLETA`; el ciclo sigue capturando y queda `DEGRADED` con ese motivo en `cycle-health.json`, y la campaña pasa a `INVALIDO:DIARIO_COLA_INCOMPLETA`. Recuperación manual (decisión del titular): (1) copiar el root entero a un archivo de solo lectura como evidencia; (2) **no reescribir** el diario antiguo; (3) iniciar una campaña nueva con `METEO_LEDGER` apuntando a un directorio nuevo y vacío. El mismo procedimiento vale para cualquier `INVALIDO`.
+
+**Límites que quedan:** quien controla el disco puede reescribir toda la cadena, los registros y los recibos de forma coherente (no hay firma ni sello externo). Un truncado del final del diario **sin** recibos posteriores no es detectable. Los registros añadidos fuera de `forensic_cycle.py` (p. ej. `nowcast.py export` directo) no figuran en el diario.
 
 ### 5.2 Estados y contadores (`campaign-status`)
 
 ```bash
-python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap-hours 48]
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap-hours 48] [--min-coverage 0.8]
 ```
 
-La función `ledger_campaign.campaign_status(ledger, *, max_gap_hours)` **no acepta fecha de inicio ni de fin**. N = días UTC con al menos un ciclo `OK` en el diario.
+La función `ledger_campaign.campaign_status(ledger, *, max_gap_hours, min_coverage)` **no acepta fecha de inicio ni de fin**. Un *ciclo con datos* es un asiento `OK` con `added_ids` no vacío; un *día con datos* es un día UTC con al menos uno. Un `OK` sin registros nuevos no cuenta.
+
+**Ventana congelada.** La ventana empieza en el primer ciclo con datos y se congela en el *asiento de anclaje*: el primer ciclo con datos en que se cumplen a la vez 90 días con datos y al menos 90 × 24 h reales desde el inicio. Cobertura, pares y huecos se calculan sobre esa ventana. Lo posterior no cambia el estado: se informa en `vigilancia_posterior` (`HUECO_POSTERIOR` si hay un hueco mayor que el umbral).
 
 | Estado | Condición |
 |---|---|
 | `SIN_INICIAR` | Diario ausente o vacío. |
-| `EN_CURSO` (`día N/90`) | Cadena íntegra, sin hueco mayor que el umbral, N < 90. |
-| `INVALIDO:<motivo>` | Cadena rota o id ausente (`DIARIO_…`), registro corrupto, hueco entre ciclos `OK` mayor que el umbral (`HUECO_MAYOR_QUE_UMBRAL`) o tiempo desde el último `OK` mayor que el umbral (`HUECO_ABIERTO_MAYOR_QUE_UMBRAL`). Exige reiniciar la campaña. |
-| `DATOS_COMPLETOS_RESTAURACION_NO_PROBADA` | N ≥ 90 y cadena íntegra, pero sin recibo de restauración válido. **Nunca** se informa como completada. |
-| `COMPLETADO` | N ≥ 90, cadena íntegra y recibo de restauración válido anclado en un asiento del diario igual o posterior al día 90. |
+| `EN_CURSO` (`día N/90`) | Cadena íntegra, sin hueco mayor que el umbral y ventana sin cerrar. |
+| `INVALIDO:<motivo>` | Integridad `ROTA` (`DIARIO_…`), registro corrupto, asiento con `timestamp` posterior a ahora + 10 min (`TIMESTAMP_FUTURO`), hueco entre ciclos con datos mayor que el umbral dentro de la ventana (`HUECO_MAYOR_QUE_UMBRAL`) o, con la ventana abierta, tiempo desde el último ciclo con datos mayor que el umbral (`HUECO_ABIERTO_MAYOR_QUE_UMBRAL`). |
+| `DATOS_COMPLETOS_COBERTURA_INSUFICIENTE` | Ventana cerrada con `ciclos_con_datos / ciclos_esperados` < umbral. |
+| `DATOS_COMPLETOS_PARES_INSUFICIENTES` | Ventana cerrada con menos de **20 pares** con QC PASS cuyo pronóstico entró en la ventana (mínimo de D-021). |
+| `DATOS_COMPLETOS_RESTAURACION_NO_PROBADA` | Lo anterior se cumple, pero no hay recibo válido con `origen: copia_externa`, `n_pares ≥ 20` y anclado en el asiento de anclaje o después. Un recibo `copia_local` nunca basta. |
+| `COMPLETADO` | Todo a la vez: 90 días con datos, ≥ 2160 h reales, cobertura ≥ umbral, ≥ 20 pares, cadena íntegra y recibo válido desde copia externa. |
 
-**Umbral de hueco: 48 h por defecto. Es una decisión del titular**, propuesta por la auditoría y no calibrada; los ciclos `ERROR`/`NO_DATA` no cierran un hueco. El resumen textual solo dice «completado» si el estado es `COMPLETADO`.
+**Umbrales, decisión del titular** (propuestos por la auditoría, no calibrados): hueco máximo 48 h; cobertura mínima 0,8 a cadencia horaria. Los ciclos `ERROR`/`NO_DATA` no cierran un hueco. Los estados `DATOS_COMPLETOS_*` intermedios no pueden convertirse en `COMPLETADO` dentro de la misma campaña salvo el de restauración (basta con un recibo externo válido). El resumen textual solo dice «completado» si el estado es `COMPLETADO` y nunca dice «restauración probada».
 
-Contadores: días con datos; ciclos esperados (horas entre el primer y el último asiento a cadencia horaria) frente a registrados y `OK`; ciclos por estado; huecos (> 1,5 h entre `OK`), hueco máximo y hueco abierto; fracción de observaciones `UNKNOWN`; pares emparejados y exclusiones por motivo. **Límite:** los episodios se cuentan como días (`event_id` = día de la ventana); días consecutivos de un mismo temporal no son independientes. Tampoco se exige aún cobertura horaria mínima ni un mínimo de pares para `COMPLETADO`: con 0 pares, `COMPLETADO` solo certificaría el archivo, no medición alguna.
+Contadores: días con datos, horas reales de la ventana, ciclos esperados / registrados / `OK` / con datos, cobertura, ciclos por estado, huecos (> 1,5 h entre ciclos con datos) y hueco máximo, hueco abierto, fracción de observaciones `UNKNOWN` en la ventana, pares emparejados en la ventana y exclusiones por motivo (del archivo entero). **Límite:** los episodios se cuentan como días (`event_id` = día de la ventana); días consecutivos de un mismo temporal no son independientes.
 
 ### 5.3 Simulacro de restauración
 
 ```bash
+# Solo comprueba que este disco se lee (origen: copia_local; nunca basta para COMPLETADO):
 METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger" python3 scripts/ledger_restore_drill.py
+# Restaura DESDE una copia externa ya existente (otro disco, clon del repositorio privado):
+METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger" python3 scripts/ledger_restore_drill.py --source /media/respaldo/forecast-ledger
 ```
 
-Toma el mismo bloqueo que el ciclo, copia `local/` y `journal/cycles.jsonl` a un directorio limpio temporal, y con el mismo reloj compara `verify`, `score` y el SHA-256 del bundle exportado. Emite un recibo con hash en `journal/restore-receipts/<sha256>.json`. **`import` no sirve para esto:** deja cada registro como `IMPORTED_UNATTESTED`, fuera de la puntuación. El recibo prueba que la copia de este disco se restaura; no prueba que exista una copia externa ni la atestigua. El simulacro debe repetirse sobre la copia externa real (clon del repo privado o disco de respaldo).
+Toma el mismo bloqueo que el ciclo, copia `local/` y `journal/cycles.jsonl` del origen a un directorio limpio temporal y, con el mismo reloj, compara frente al ledger original `verify`, el diario, `score` (con sus exclusiones) y el SHA-256 del bundle. `--source` debe ser un directorio absoluto existente fuera del ledger; la copia debe estar sincronizada con el ledger, o el recibo sale `ok: false`. Emite un recibo con hash en `journal/restore-receipts/<sha256>.json` con `origen`, `journal_seq`, cabeza del diario, `n_pares` restaurados y `mismo_dispositivo` (informativo: el script no puede probar que el origen esté en otro soporte). **`import` no sirve para esto:** deja cada registro como `IMPORTED_UNATTESTED`, fuera de la puntuación. **Límite:** el recibo no está firmado ni sellado; quien controle el disco puede falsificarlo.
 
 ### 5.4 Métricas (tras la campaña)
 
@@ -117,11 +136,12 @@ Nada de esto lo puede hacer el código ni un agente:
 2. **PAT de grano fino o deploy key de alcance mínimo** (solo escritura de contenidos en ese repositorio privado). **Nunca en el repositorio ni en prompts**; vigilar su caducidad.
 3. **Protección de rama** en el repositorio privado (sin force-push ni borrado). Git no es WORM.
 4. **Equipo Linux encendido** con el temporizador systemd instalado, `loginctl enable-linger <usuario>` (sin linger el servicio de usuario se detiene al cerrar sesión), reloj con NTP y **disco cifrado**.
-5. **Umbrales de invalidez** (hueco máximo, cobertura mínima, pares mínimos) y **criterio QC de PORTUS** (gate QC 1 de D-021).
+5. **Umbrales de invalidez** (hueco máximo, 48 h por defecto; cobertura mínima, 0,8 por defecto) y **criterio QC de PORTUS** (gate QC 1 de D-021).
+6. **Copia externa** sincronizada del ledger y un simulacro con `--source` sobre ella al cerrar la ventana.
 
 ### 5.6 Bloqueante A1: 0 pares puntuables con el cableado actual
 
-En Portinatx la precipitación no tiene pluviómetro a ≤ 3 km y la Hs de PORTUS entra como `UNKNOWN`; en Pirineo hay observaciones Météo-France con `INSTRUMENT_QC_PASS` pero ningún pronóstico congelado en esas coordenadas. Resultado: **0 pares puntuables**. Arrancar los 90 días así solo mediría la disponibilidad del archivo. Propuesta (cambio aparte, **no implementado aquí**): congelar pronósticos en las coordenadas de las estaciones Météo-France del Pirineo con QC PASS; para PORTUS, que el titular cierre el criterio QC (qué banderas o controles convierten una Hs en `INSTRUMENT_QC_PASS`).
+En Portinatx la precipitación no tiene pluviómetro a ≤ 3 km y la Hs de PORTUS entra como `UNKNOWN`; en Pirineo hay observaciones Météo-France con `INSTRUMENT_QC_PASS` pero ningún pronóstico congelado en esas coordenadas. Resultado: **0 pares puntuables**. Arrancar los 90 días así acabaría como mucho en `DATOS_COMPLETOS_PARES_INSUFICIENTES`. Propuesta (cambio aparte, **no implementado aquí**): congelar pronósticos en las coordenadas de las estaciones Météo-France del Pirineo con QC PASS; para PORTUS, que el titular cierre el criterio QC (qué banderas o controles convierten una Hs en `INSTRUMENT_QC_PASS`).
 
 **Fuera de alcance deliberadamente:** scraping de ClimayNievePirineos/foros sin permiso, entrenamiento automático de pesos, pronósticos oficiales, publicación pública del archivo de mediciones, ingesta de usuarios y ejecución de alertas. En caso de conflicto entre una descripción del modelo y una medición no comparable, salida `UNKNOWN/NO_COMPARABLE`.
 
@@ -157,7 +177,7 @@ python3 src/forecast_ledger.py --root "$METEO_LEDGER" verify
 
 ## 8. Ciclo supervisado en equipo persistente (Linux, opcional)
 
-`scripts/forensic_cycle.py` ejecuta una captura de Portinatx y verifica el ledger privado. Un bloqueo impide dos ejecuciones simultáneas de este comando; no impide que otro proceso use `nowcast.py` directamente. El proceso exige `METEO_LEDGER` como ruta absoluta fuera del repositorio, crea el directorio privado con modo 700 o rechaza uno existente accesible por grupo u otros y escribe `cycle-health.json` de forma atómica con recuentos, fecha y estado `OK`, `NO_DATA`, `DEGRADED` o `ERROR`. No guarda la salida ni los mensajes de error de proveedores, que podrían incluir credenciales. `OK` solo certifica que el ciclo y la comprobación local terminaron, **no** que la predicción sea buena, que las observaciones tengan QC o que las copias funcionen. Una ejecución sin registros nuevos (incluidos ciclos repetidos en la misma hora) se marca `NO_DATA` y no se considera éxito. La ejecución tiene límite de 20 minutos; un bloqueo activo devuelve código 75. Cada ciclo, sea cual sea su estado, añade además un asiento al diario encadenado (§5.1); si no puede escribirlo, el ciclo queda en `ERROR`.
+`scripts/forensic_cycle.py` ejecuta una captura de Portinatx y verifica el ledger privado. Un bloqueo impide dos ejecuciones simultáneas de este comando; no impide que otro proceso use `nowcast.py` directamente. El proceso exige `METEO_LEDGER` como ruta absoluta fuera del repositorio, crea el directorio privado con modo 700 o rechaza uno existente accesible por grupo u otros y escribe `cycle-health.json` de forma atómica con recuentos, fecha y estado `OK`, `NO_DATA`, `DEGRADED` o `ERROR`. No guarda la salida ni los mensajes de error de proveedores, que podrían incluir credenciales. `OK` solo certifica que el ciclo y la comprobación local terminaron, **no** que la predicción sea buena, que las observaciones tengan QC o que las copias funcionen. Una ejecución sin registros nuevos (incluidos ciclos repetidos en la misma hora) se marca `NO_DATA` y no se considera éxito. La ejecución tiene límite de 20 minutos; un bloqueo activo devuelve código 75. Cada ciclo, sea cual sea su estado, añade además un asiento al diario encadenado (§5.1); si no puede escribirlo, el ciclo queda en `ERROR`, y si el diario tiene la cola incompleta, en `DEGRADED` sin escribir ni reparar nada.
 
 En un Linux de tu propiedad que permanezca encendido, con el repositorio ya instalado y datos/configuración privados del motor, ejecuta primero manualmente:
 
