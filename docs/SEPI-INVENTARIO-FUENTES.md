@@ -39,9 +39,33 @@ Para cada estación y cada variable nival se calcularon los inviernos de diciemb
 
 Las estaciones de esquí de la red nivo (código terminado en 4xx: Les Angles, Formiguère 1.753 m, Ascou-Pailhères, Mijanès, Beille, Guzet, Ax-Bonascre) **no llegan a ningún invierno completo**. Observan solo durante la temporada de apertura, con 0–2 inviernos ≥90 %.
 
-### 2. Red nivo-météorologique: estaciones en la zona (lista auditada fila a fila, 1996–2026)
+### 2. Red nivo-météorologique: estaciones en la zona (generada por `scripts/sepi/audit_nivo.py`, 1996–2026)
 
-Les Angles 2.108 m (1996–), Formiguère 1.753 m (1996–2025), Mijanès 1.530 m, Ascou-Pailhères 1.500 m, Mont d'Olmes 1.472 m, Beille 1.789 m, Guzet 1.384 m (todas desde 1996), Sentein 1.000 m (2001–), Goulier 1.468 m (2002–2025), Font-Romeu-Galinera 2.144 m (2003–), Le Chioula 1.600 m (2005–), St-Pierre-dels-Forcats 2.350 m (2008–2025), Porté-Puymorens 2.087 m (2010–), Puigmal 2.250 m (2023–24, 3 observaciones), Ax-Saquet 1.997 m (2024–), Cambre d'Aze 1.945 m y Station Formiguères 2.095 m (2026). No hay estaciones andorranas ni catalanas. Los ficheros de 2025 y 2026 cambian el separador de `,` a `;`.
+| Estación | Altitud | Años | Id WIGOS |
+|---|---|---|---|
+| Les Angles | 2.108 m | 1996– | — |
+| Formiguère | 1.753 m | 1996–2025 | — |
+| Mijanès | 1.530 m | 1996– | — |
+| Ascou-Pailhères | 1.500 m | 1996– | — |
+| Mont d'Olmes | 1.472 m | 1996– | — |
+| Beille | 1.789 m | 1996– | — |
+| Guzet | 1.384 m | 1996– | — |
+| **Porte Puymorens** | 2.085 m | **1996–2009** | sin id |
+| **Ax-Bonascre** | 1.715 m | **1996–2024** | sin id |
+| Sentein | 1.000 m | 2001– | — |
+| Goulier | 1.468 m | 2002–2025 | — |
+| Font-Romeu-Galinera | 2.144 m | 2003– | — |
+| Le Chioula | 1.600 m | 2005– | — |
+| St-Pierre-dels-Forcats | 2.350 m | 2008–2025 | — |
+| PORTE-PUYMORENS | 2.087 m | 2010– | nuevo id |
+| Puigmal | 2.250 m | 2023–24 | 4 registros |
+| Ax-Saquet | 1.997 m | 2024– | — |
+| Cambre d'Aze | 1.945 m | 2026 | — |
+| Station Formiguères | 2.095 m | 2026 | — |
+
+- No hay estaciones andorranas ni catalanas.
+- Los ficheros de 2025 y 2026 cambian el separador de `,` a `;`.
+- **Las estaciones antiguas no tienen id WIGOS**, así que agrupar solo por id las omite.
 
 ### 3. S2M en CSV
 

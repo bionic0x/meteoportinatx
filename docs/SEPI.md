@@ -10,10 +10,11 @@ Scripts y reproducción: [`scripts/sepi/`](../scripts/sepi/README.md). Inventari
 - La nieve de cada vertiente sigue a su precipitación total, y el contraste de nieve este–oeste sigue al reparto de precipitación entre ambas. Con 17 inviernos **no se detecta** aportación adicional de métricas de régimen o de persistencia (H6) medidas con el viento de una estación. Los intervalos son anchos: no se descarta un efecto moderado.
 - La señal de transiciones NW↔E/SE es frágil (depende de los límites de sector). Decidirla exige regímenes ERA5 a 700 hPa.
 - **Fase 03, 58 inviernos (1968–69 a 2025–26) con S2M y anclas observadas:**
-  - No hay un único «mejor invierno». El orden depende del dominio y de la cota.
-  - 2025–26 es el primero de 58 en Capcir–Puymorens y Cerdagne–Canigou a 1.800 m (clase A/B), pero el 25.º en Haute-Ariège: fue un invierno marcadamente oriental.
+  - No hay un único «mejor invierno» en los macizos franceses y Andorra: el orden depende del dominio y de la cota.
+  - 2025–26 es el primero de 58 en Cerdagne–Canigou a las dos cotas. En Capcir empata con 1971–72 a 1.800 m, y en Haute-Ariège queda el 25.º.
   - 1971–72, 1980–81, 1995–96, 2004–05 y 2013–14 son los otros candidatos.
-  - 1969–1984 depende casi solo del modelo (clase C).
+  - Las anclas que lo apoyan probablemente están asimiladas por SAFRAN: no son una validación independiente.
+  - De 1969 a 1984, el orden depende casi solo del modelo.
 - Hallazgos de datos reutilizables: el cambio de unidades de la variable 38 de la XEMA el 15-11-2021 y que la nivosa de Canigou no representa el flujo de cresta.
 
 # Diseño v0.3
@@ -225,85 +226,112 @@ Los datos abiertos de la XEMA para la variable 38 están en **mm hasta el 14-11-
 
 # Fase 03 — 58 inviernos con S2M y anclas observadas (27-11-2026)
 
-**Estado:** exploratorio. Ranking por dominio, no regional. S2M es un modelo: no es observación ni aviso. Inventario de fuentes y auditoría de datos brutos en [`SEPI-INVENTARIO-FUENTES.md`](SEPI-INVENTARIO-FUENTES.md).
+**Estado:** exploratorio, verificado por un agente independiente; correcciones aplicadas. Ranking por dominio, no regional. S2M es un modelo, no observación ni aviso. Inventario de fuentes y auditoría de datos brutos en [`SEPI-INVENTARIO-FUENTES.md`](SEPI-INVENTARIO-FUENTES.md).
 
 ## Datos
-- **S2M en CSV abierto (Météo-France, Licence Ouverte 2.0)**, descargado el 27-11-2026, último día 26-11-2026.
-  - Macizos: 70 Haute-Ariège, 71 Andorra, 72 Orlu–St-Barthélemy, 73 Capcir–Puymorens y 74 Cerdagne–Canigou, con 69 Couserans como contraste.
-  - Geometrías: plano y N 20°, a 1.800 y 2.100 m (y 1.200–2.400 m para las anclas).
+- **S2M CSV abierto** (Météo-France, Licence Ouverte 2.0), descargado el 27-11-2026; el último día disponible es el 26-11-2026.
+  - Macizos: 70 Haute-Ariège, 71 Andorra, 72 Orlu–St-Barthélemy, 73 Capcir–Puymorens, 74 Cerdagne–Canigou y, como contraste, 69 Couserans.
+  - Geometrías: llano y N 20° a 1.800 y 2.100 m; para las anclas, también 1.200–2.400 m.
   - **No hay macizos de la vertiente catalana.**
-- **Observación diaria de Météo-France (QUOT 66/09, NEIGETOT06)** como anclas, auditada estación a estación. Mont-Louis solo tiene 9 inviernos completos y Porté-Puymorens empieza en 1981. Las anclas largas son Ascou-Lavail (44 inviernos, 1972–2023) y L'Hospitalet (33, 1969–2005).
+- **Anclas: observación diaria de Météo-France** (QUOT 66/09, NEIGETOT06), auditada estación a estación.
+  - Mont-Louis solo tiene 9 inviernos completos (2005–2013).
+  - Porté-Puymorens empieza en 1981.
+  - Las anclas largas son Ascou-Lavail (44 inviernos, 1972–2023) y L'Hospitalet (33, 1969–2005).
 
 ## Método
-- Invierno = 1-dic a 30-abr: 58 inviernos y 8.772 días por serie, sin huecos en S2M.
-- Métricas: espesor medio (HSmed), máximo (HSmax), días ≥30 cm y días ≥100 cm. Se guardan también SWE, fecha del máximo y racha más larga con ≥5 cm.
-- **Índice de rangos:** mediana del percentil de las cuatro métricas.
-- **P90 sobre los 58 valores estacionales.** «Excepcional» = las cuatro métricas ≥ P90 en ese dominio y cota.
-- **Ruptura de 2002** (ERA-40 → ARPEGE): los percentiles se recalculan dentro de cada subperiodo (1969–2002 y 2003–2026). El invierno se marca «sensible» si su decil cambia en ≥2.
-- **Clase de confianza** por invierno y dominio (plano, 1.800 m): **A** si ≥2 anclas observadas caen en el mismo tercil que S2M; **B** si solo coincide 1; **C** si no hay ninguna y el orden depende del modelo.
+- **Invierno:** del 1 de diciembre al 30 de abril. Son 58 inviernos y 8.772 días por serie, sin huecos en S2M.
+- **Métricas:** espesor medio (HSmed), máximo (HSmax), días ≥30 cm y días ≥100 cm. Se guardan también el SWE, la fecha del máximo y la racha más larga con ≥5 cm.
+- **Métricas degeneradas:** se excluye la que tiene P90 = 0 en un dominio y cota. Es el caso de los días ≥100 cm a 1.800 m en Andorra, Capcir y Cerdagne, casi siempre 0; con «≥» todos los inviernos la cumplirían. Allí el índice y la etiqueta «excepcional» usan HSmed, HSmax y d30.
+- **Índice:** mediana del percentil de las métricas usadas. **P90 sobre los 58 valores estacionales.** «Excepcional» significa que todas las métricas usadas están ≥ P90.
+- **Ruptura de 2002** (ERA-40 → ARPEGE): percentiles recalculados por subperiodo, 1969–2002 y 2003–2026. Un invierno es «sensible» si cambia ≥2 deciles. La prueba es interna a S2M: no distingue un artefacto de forzamiento de un cambio climático real.
+- **Clase por invierno y dominio.** Cada ancla se compara con S2M en su propia cota y se le adjudica el tercil:
+  - **A:** ≥2 anclas coinciden en tercil con S2M.
+  - **B:** coincide 1.
+  - **C:** hay anclas y ninguna coincide (discrepan).
+  - **SA:** sin ancla; el orden depende solo del modelo.
+
+  **La clase mide cuántas anclas hay y si coinciden; no es una confianza calibrada.** La clase A solo es posible en Capcir y Cerdagne, y Andorra es siempre SA.
 
 ## Resultados
 
-Puesto de 58 por dominio, en terreno llano. 70 Haute-Ariège · 71 Andorra · 72 Orlu · 73 Capcir · 74 Cerdagne.
+Puesto (de 58) por dominio, en terreno llano. 70 Haute-Ariège · 71 Andorra · 72 Orlu · 73 Capcir · 74 Cerdagne.
 
 | Invierno | 1.800 m: 70 / 71 / 72 / 73 / 74 | Mediana | 2.100 m: 70 / 71 / 72 / 73 / 74 | Mediana |
 |---|---|---|---|---|
-| 1980–81 | 1 / 11 / 3 / 3 / 17 | 3 | — | — |
-| 2025–26 | 25 / 7 / 4 / **1** / **1** | 4 | 27 / 8 / 8 / 3 / **1** | 8 |
-| 1971–72 | 9 / 6 / **1** / 4 / 9 | 6 | 13 / 2 / **1** / **1** / 3 | 2 |
-| 2013–14 | 3 / 2 / 7 / 18 / 31 | 7 | 2 / 3 / 5 / 5 / 17 | 5 |
-| 2004–05 | 2 / 11 / 2 / 8 / 22 | 8 | **1** / 23 / 2 / 7 / 18 | 7 |
-| 1995–96 | 19 / **1** / 15 / 9 / 3 | 9 | 11 / **1** / 15 / 2 / 4 | 4 |
-| 2012–13 | 4 / 10 / 6 / 11 / 40 | 10 | 6 / 14 / 6 / 6 / 22 | 6 |
-| 2017–18 | — | — | 9 / 6 / 16 / 18 / 9 | 9 |
+| 1980–81 | **1** / 6 / 3 / 3 / 15 | 3 | 5 / 18 / 4 / 14 / 34 | 14 |
+| 2025–26 | 25 / 9 / 4 / **1**= / **1** | 4 | 27 / 9 / 8 / 3 / **1** | 8 |
+| 1971–72 | 9 / 6 / **1** / **1**= / 4 | 4 | 13 / **1** / **1** / **1** / 3 | 1 |
+| 2013–14 | 3 / 2 / 7 / 19 / 31 | 7 | 2 / 4 / 5 / 5 / 17 | 5 |
+| 2004–05 | 2 / 13 / 2 / 7 / 25 | 7 | **1** / 25 / 2 / 7 / 18 | 7 |
+| 1995–96 | 19 / **1** / 15 / 9 / 4 | 9 | 11 / 2 / 15 / 2 / 4 | 4 |
+| 2012–13 | 4 / 12 / 6 / 12 / 39 | 12 | 6 / 10 / 6 / 6 / 22 | 6 |
+| 2017–18 | 16 / 4 / 19 / 24 / 6 | 16 | 9 / 5 / 16 / 18 / 9 | 9 |
 
-- **Excepcionales (las 4 métricas ≥ P90, plano, 1.800 m):**
-  - 2025–26 en Capcir (B) y Cerdagne (A).
-  - 1985–86 en Capcir (A).
-  - 1980–81 en Haute-Ariège (B), Capcir (C) y Orlu (C).
-  - 1971–72 en Orlu (B).
-  - 1995–96 en Andorra (C) y Cerdagne (B).
-  - 2004–05 en Haute-Ariège y Orlu (B).
-  - 1991–92 en Cerdagne (B).
-  - 2013–14 en Andorra (C).
-- **Inviernos más pobres** (mediana de puesto ≥51 de 58): 1997–98, 2007–08, 1999–2000, 2010–11, 2022–23 y 1984–85.
-- **Sensibilidad a 2002:** solo dos inviernos cambian ≥2 deciles (Orlu 2003–04 y Couserans 2015–16). El ranking a 1.800 m apenas depende del subperiodo, pero esta prueba no sustituye al contraste con CERRA-Land, que sigue pendiente.
-- **Clases (dominios 70–74, plano, 1.800 m):**
+«=» indica empate. En Capcir a 1.800 m, 2025–26 y 1971–72 comparten el puesto 1. Por espesor medio, 1971–72 es primero (38,3 frente a 38,0 cm). Por espesor máximo y por días ≥30 cm, lo es 2025–26.
 
-| Periodo | A | B | C |
-|---|---|---|---|
-| 1969–1984 | 0 | 18 | 62 |
-| 1985–2002 | 7 | 44 | 39 |
-| 2003–2026 | 16 | 38 | 66 |
+- **Excepcionales** (todas las métricas usadas ≥ P90; llano, 1.800 m):
 
-- **Anclas** (Spearman del HS medio dic–abr observado frente a S2M, IC95 bootstrap):
+| Invierno | Dominio (clase) |
+|---|---|
+| 2025–26 | Capcir (B), Cerdagne (A) |
+| 1985–86 | Capcir (A) |
+| 1980–81 | Haute-Ariège (B), Capcir (SA), Orlu (SA) |
+| 1971–72 | Orlu (B) |
+| 1995–96 | Andorra (SA), Cerdagne (B) |
+| 2004–05 | Haute-Ariège (B), Orlu (B) |
+| 1991–92 | Cerdagne (B) |
+| 2013–14 | Andorra (SA) |
 
-| Estación | Periodo | ρ | IC95 |
-|---|---|---|---|
-| Ascou-Lavail 1.090 m | 1972–2023 | 0,87 | [0,73; 0,94] |
-| L'Hospitalet 1.425 m | 1969–2005 | 0,77 | [0,51; 0,92] |
-| Formiguères | 1984–2026, dos estaciones | 0,93 y 0,96 | — |
-| Ste-Léocadie | — | 0,77 | — |
-| Porté-Puymorens | — | 0,49 | [0,07; 0,78] |
-| Font-Romeu | — | 0,61 | — |
-| Nivosas de cresta (Canigou, Puigmal, Port d'Aula) | — | 0,74–0,86 | — |
+- **Inviernos más pobres** (mediana de puesto ≥ 50 de 58):
+  - A 1.800 m: 1989–90, 2010–11, 2007–08 y 1997–98.
+  - A 2.100 m: además 1992–93, 2006–07, 1988–89, 2023–24 y 2022–23.
+- **Sensibilidad a 2002:** a 1.800 m solo tres inviernos cambian ≥2 deciles (Andorra 1998–99, Orlu 2003–04 y Couserans 2015–16).
+- **Clases** (dominios 70–74, llano, 1.800 m):
 
-  En las nivosas de cresta, S2M queda **30–37 cm por debajo** en HS medio: las nivosas están en sitios expuestos y el macizo es una media.
-- **Vertiente catalana:** el E_acum de la XEMA (fase 01, 2010–2026) frente a S2M Cerdagne–Canigou a 2.100 m da ρ = 0,79 [0,52; 0,90], y frente a Andorra 0,69 [0,32; 0,89].
+| Tramo | A | B | C | SA |
+|---|---|---|---|---|
+| 1969–1984 | 0 | 18 | 12 | 50 |
+| 1985–2002 | 7 | 44 | 18 | 21 |
+| 2003–2026 | 16 | 38 | 7 | 59 |
+
+- **Anclas** (Spearman del espesor medio dic–abr observado frente a S2M en el macizo asignado; IC del 95 % por bootstrap):
+  - Ascou-Lavail → 70: 0,87 [0,73; 0,94].
+  - L'Hospitalet → 72: 0,77 [0,51; 0,92].
+  - Formiguères → 73: 0,93 y 0,96 (dos estaciones).
+  - Ste-Léocadie → 74: 0,77.
+  - Canigou, Puigmal y Port d'Aula (nivosas de cresta): 0,74–0,86, con S2M **30–37 cm por debajo**.
+  - Mont-Louis → 74: 0,65 [−0,08; 0,93], solo 9 inviernos.
+  - Porté-Puymorens → 73: 0,49.
+  - Font-Romeu → 74: 0,61.
+- **Asignación ancla → macizo:** con otro macizo, algunas anclas correlacionan mejor. Font-Romeu da 0,96 con Andorra, Porté-Puymorens 0,64 con Haute-Ariège y L'Hospitalet 0,85 con Couserans. Sin los contornos oficiales de los macizos, la asignación geográfica es **UNKNOWN**, y las clases de Capcir y Cerdagne dependen de ella.
+- **Vertiente catalana:** el E_acum de la XEMA (fase 01, 2010–2026) frente a S2M a 2.100 m da ρ = 0,79 [0,52; 0,91] con Cerdagne–Canigou y 0,68 [0,34; 0,88] con Andorra.
 
 ## Lectura
-- **2025–26 fue un invierno excepcional en el este**: el primero de 58 en Capcir y Cerdagne, con anclas que lo confirman. No lo fue en el Ariège occidental (puesto 25) ni en todo el Pirineo oriental. Coincide con su sesgo mediterráneo de la fase 01 y con los 1.073 aludes que contó el ICGC.
-- **No hay base para un «número 1» regional.** 1971–72 destaca en Orlu y Capcir a 2.100 m. 1995–96 destaca en Andorra. 1980–81 y 2004–05 son inviernos del Ariège. 2013–14 es del oeste y de Andorra y queda flojo en Cerdagne.
-- **2017–18**, el primero en la XEMA catalana 2010–2026, queda en el puesto 9–18 en los macizos franceses. Es la misma diferencia entre vertientes que la XEMA ya mostraba.
-- **1969–1984 depende casi solo del modelo.** No hay ancla catalana ni andorrana abierta. Ransol 1934–2002, por petición al SMN, es la adquisición de más valor.
+- **2025–26 en Cerdagne–Canigou es el resultado más sólido de la fase:** primero de 58 con cualquier índice y a las dos cotas. A 1.800 m tuvo 44 días con ≥100 cm, cuando el siguiente invierno no pasa de 16. En Capcir empata con 1971–72 a 1.800 m y es tercero a 2.100 m. En Haute-Ariège queda vigésimo quinto. Encaja con el sesgo mediterráneo que mostró la fase 01 y con los 1.073 aludes que contó el ICGC. **Las anclas que lo apoyan en Cerdagne son nivosas de cresta que probablemente asimila SAFRAN, así que no son una confirmación independiente.**
+- **No hay base para un número 1 regional.** 1971–72 destaca en Orlu, Capcir y Andorra a 2.100 m. 1995–96 destaca en Andorra. 1980–81 y 2004–05 son inviernos del Ariège. 2013–14 es del oeste y de Andorra. Todo esto vale solo para los macizos franceses y Andorra, sin la vertiente catalana.
+- **2017–18,** el primero en la XEMA catalana de 2010–2026, queda en los puestos 4–24 en los macizos franceses: es la misma diferencia entre vertientes que ya mostró la XEMA.
+- **De 1969 a 1984 el orden es casi solo del modelo** (50 de 80 combinaciones sin ancla). Ransol 1934–2002, que habría que pedir al SMN, es la adquisición de más valor.
+
+## Hallazgos de la verificación independiente (aplicados o declarados)
+- **F1, P1.** El P90 con «≥» y d100 casi siempre en 0 hacían trivial esa métrica. Ahora se excluyen las métricas con P90 = 0.
+- **F2, P1.** «2025–26 excepcional en el este» iba más allá de los datos. Se ha matizado: Cerdagne es sólido, Capcir empata. La posible asimilación de las anclas pasa a la Lectura y al resumen.
+- **F3, P1.** La clase C mezclaba «sin ancla» con «discrepa». Ahora se separan (C/SA), se ha añadido Mont-Louis y se declara que la clase depende del número de anclas.
+- **F4, P1.** El emparejamiento de las anclas con los macizos queda como UNKNOWN. El script calcula la ρ con todos los macizos y la tabla de anclas la muestra.
+- **F5, P2.** El alcance de la prueba de 2002 se ha declarado en el Método.
+- **F6, P2.** Erratas corregidas: lista de inviernos pobres por cota (incluye 1989–90) y puestos de 2017–18.
+- **F7, P2.** La lista de la red nivo omitía las estaciones sin id WIGOS: Porte Puymorens a 2.085 m (1996–2009) y Ax-Bonascre. Ahora la genera `audit_nivo.py`.
+- **F8, P2.** En `fetch_hist.py`:
+  - los nombres de periodo de QUOT se descubren listando el espejo;
+  - los ficheros «latest» y los del año en curso se vuelven a descargar siempre;
+  - la guarda usa `realpath`;
+  - `phase03.py` avisa si la observación no llega al último invierno.
 
 ## Límites
-- **Independencia de las anclas.** SAFRAN asimila observaciones de la red de Météo-France y la red nivo, y por NIVOMET también españolas y andorranas. Las correlaciones con las anclas francesas **sobrestiman la validación**. Qué estaciones entran cada año es UNKNOWN y hay que pedirlo al CNRM-CEN.
-- **Clases A/B/C.** Cuentan coincidencias de tercil; no son una probabilidad calibrada. Con pocas anclas por dominio, una clase B puede deberse al azar.
-- **Prueba de 2002.** Solo es interna a S2M. Falta contrastarla con CERRA-Land (desde 1984), que requiere la cuenta del CDS del titular.
-- **Geometría.** Se usan terreno llano y N 20°; las laderas de 40° y las demás orientaciones no se analizan.
-- **Unidades del CSV.** Que `neigetot` esté en cm y el SWE en mm se ha inferido de los valores; falta confirmarlo con el descriptivo oficial.
-- **Mezcla de canales.** El CSV abierto no se mezcla con S2M AERIS v2020.2.
+- **Independencia de las anclas.** SAFRAN asimila observaciones de la red de Météo-France y de la red nivo, y por NIVOMET también españolas y andorranas. Las correlaciones con las anclas francesas **sobrestiman la validación**. Qué estaciones entran cada año es UNKNOWN; hay que pedirlo al CNRM-CEN.
+- **Clases A/B/C/SA:** recuentos de coincidencia de tercil, no probabilidades. Dependen de cuántas anclas hay y de la asignación al macizo.
+- **Prueba de 2002:** solo es interna a S2M. El contraste con CERRA-Land, desde 1984, requiere la cuenta del CDS del titular.
+- **Geometría:** solo llano y N 20°. La convención de que exposición 0 es el norte es SUPUESTO, pendiente del descriptivo oficial. Tampoco se han confirmado las unidades del CSV (cm y mm, inferidas de los valores).
+- **Versiones:** el CSV abierto no se mezcla con S2M AERIS v2020.2.
 
 ## Siguientes pasos
 1. **Peticiones de datos** (el titular): Ransol 1934–2002 (SMN/FEDA), Núria antes de 1985 (AEMET), el inventario NIVOBS (ICGC) y la lista de estaciones asimiladas en SAFRAN (CNRM-CEN).
