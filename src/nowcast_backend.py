@@ -135,7 +135,7 @@ def _public_warning_changes(original, official):
         if kind == "NUEVO":
             signature = tuple(change.get(k) for k in ("nivel", "tipo", "evento", "onset", "expires"))
             if signature in institutional:
-                result.append(_pick(change, {"kind", "nivel", "tipo", "evento", "onset", "expires"}))
+                result.append(_pick(change, {"kind", "nivel", "tipo", "evento", "onset", "expires", "posible"}))
         elif kind in PUBLIC_WARNING_KINDS:
             if change.get("de") in PUBLIC_LEVELS and change.get("a") in PUBLIC_LEVELS:
                 result.append(_pick(change, {"kind", "de", "a"}))
@@ -171,7 +171,8 @@ def _public_view(domain: str, part: str, original: dict) -> dict:
                                               "fuente_oficial", "fuente_oficial_nota"})
         # CAP/MeteoAlarm institutional event fields; no arbitrary provider fields.
         result["official"]["all"] = [
-            _pick(w, {"nivel", "rank", "tipo", "evento", "desde", "hasta", "activo", "umbral"})
+            _pick(w, {"nivel", "rank", "tipo", "evento", "desde", "hasta", "activo", "umbral", "posible", "vigencia",
+                      "caduca_prudente", "emitido", "area"})
             for w in official.get("all", []) if isinstance(w, dict)
         ]
         result["warning_changes"] = _public_warning_changes(original.get("warning_changes"), official)

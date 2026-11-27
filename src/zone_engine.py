@@ -42,7 +42,9 @@ BUILTINS = {
                'points': [{'id': 'andorra_vella', 'latitude': 42.5078, 'longitude': 1.5211},
                           {'id': 'masella', 'latitude': 42.3500, 'longitude': 1.9000},
                           {'id': 'font_romeu', 'latitude': 42.5047, 'longitude': 2.0392}],
-               'sources': {'metar':['LESU','LFMP'],'warning_feeds':[{'country':'spain','areas':['pirineo de girona','pirineo de lleida']},{'country':'france','areas':['pyrénées-orientales','ariège']},{'country':'andorra','areas':['andorra']}]},
+               # Criterio: solo áreas que contienen algún punto (Masella → Pirineo de Girona, Font-Romeu →
+               # Pyrénées-Orientales, Andorra la Vella → Andorra). Lleida y Ariège no contienen ninguno.
+               'sources': {'metar':['LESU','LFMP'],'warning_feeds':[{'country':'spain','areas':['pirineo de girona']},{'country':'france','areas':['pyrénées-orientales']},{'country':'andorra','areas':['andorra']}]},
                'modules': ['forecast', 'ensemble', 'atmosphere', 'terrain','radar','warnings','observations']},
 }
 

@@ -1,6 +1,6 @@
 """Regional observations, warning feeds and radar tiles; no territorial globals."""
 import base64
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import math
 import re
@@ -13,6 +13,9 @@ import xml.etree.ElementTree as ET
 from weather_core import number
 
 UTC = timezone.utc
+# Igual que portinatx_degen.CAP_SIN_FIN_H y CAP_TZ_HOLGURA_H (docs/AVISOS-VIGENCIA-AMBITO.md); un test lo comprueba.
+NO_EXPIRES_MAX_H = 24
+TZ_SLACK_H = 3
 
 
 def time_utc(value):
@@ -97,7 +100,28 @@ def observations(raw,point,stations,now):
 
 
 def _normal(value):
-    return ''.join(x for x in unicodedata.normalize('NFKD',value.casefold()) if not unicodedata.combining(x))
+    """NFKD sin diacríticos, minúsculas y guiones/espacios unificados («Pyrénées-Orientales» = «pyrenees orientales»)."""
+    plain=''.join(x for x in unicodedata.normalize('NFKD',value.casefold()) if not unicodedata.combining(x))
+    return ' '.join(re.split(r'[\s\-‐-―_]+',plain)).strip()
+
+
+def area_matches(area,keys):
+    """Nombre de área de MeteoAlarm contra claves como palabras completas: «pirineo de girona» ≠ «Prepirineo de Girona»."""
+    return any(re.search(r'(?<!\w)'+re.escape(_normal(key))+r'(?!\w)',_normal(area)) for key in keys)
+
+
+def _when(value):
+    """(instante UTC o None, dudoso). Hora sin zona horaria o ilegible = dudosa, nunca motivo para descartar."""
+    if not value:
+        return None,False
+    try:
+        return time_utc(value),False
+    except (ValueError,TypeError):
+        pass
+    try:
+        return datetime.fromisoformat(value.replace('Z','+00:00')).replace(tzinfo=UTC),True
+    except (ValueError,TypeError):
+        return None,True
 
 
 def warnings(raw,feed,now):
@@ -114,25 +138,34 @@ def warnings(raw,feed,now):
         if entry.tag.split('}')[-1]!='entry':
             continue
         area=tag(entry,'areaDesc')
-        if not any(_normal(key) in _normal(area) for key in feed['areas']):
+        if not area_matches(area,feed['areas']):
             continue
-        try:
-            start,end=time_utc(tag(entry,'onset')),time_utc(tag(entry,'expires'))
-        except (ValueError,TypeError):
+        # Misma regla que portinatx_degen.cap_window: sin onset rige effective; sin expires sigue mientras el feed
+        # lo publique (retirada prudente desde la consulta); hora dudosa = ventana ensanchada y posiblemente activo.
+        (on,d1),(ef,d2),(end,d3)=_when(tag(entry,'onset')),_when(tag(entry,'effective')),_when(tag(entry,'expires'))
+        start=on or ef
+        inverted=bool(start and end and end<start)        # fin anterior al inicio: horario contradictorio
+        doubtful=d1 or d2 or d3 or inverted
+        slack=timedelta(hours=TZ_SLACK_H if doubtful else 0)
+        if end and end+slack<now and not inverted:
             continue
-        if end<=now or end<=start:
-            continue
+        active=(not start or start-slack<=now) and (not end or inverted or now<=end+slack)
+        unverifiable=doubtful or not start
         output.append({'id':tag(entry,'id'),'country':feed['country'],'area':area,
                        'event':tag(entry,'event') or tag(entry,'title'), 'severity':tag(entry,'severity') or 'unknown',
-                       'certainty':tag(entry,'certainty') or 'unknown', 'onset':start.isoformat(),'expires':end.isoformat(),
-                       'state':'active' if start<=now else 'future','source_type':'official-feed'})
+                       'certainty':tag(entry,'certainty') or 'unknown', 'onset':start.isoformat() if start else '',
+                       'expires':end.isoformat() if end else '',
+                       'expires_prudent':'' if end else (now+timedelta(hours=NO_EXPIRES_MAX_H)).isoformat(),
+                       'validity':'time-not-verifiable' if unverifiable else 'declared' if end else 'end-not-declared',
+                       'state':('possibly-active' if unverifiable else 'active') if active else 'future',
+                       'source_type':'official-feed'})
     updated=tag(root,'updated')
     try:
         age=(now-time_utc(updated)).total_seconds()/3600
         feed_state='fresh' if -0.1<=age<=24 else 'stale'
     except (ValueError,TypeError):
         feed_state='unknown'
-    return {'records':output,'feed_updated':updated,'feed_state':feed_state,'areas':feed['areas'],'country':feed['country']}
+    return {'records':output,'unverifiable_time':sum(r['validity']=='time-not-verifiable' for r in output),'feed_updated':updated,'feed_state':feed_state,'areas':feed['areas'],'country':feed['country']}
 
 
 def radar(raw,point,getter,now):
@@ -245,4 +278,8 @@ def validate_data(module,data):
                     if row.get(field) is not None and not number(row[field]):
                         raise ValueError('invalid observation number')
             else:
-                time_utc(row['onset']);time_utc(row['expires'])
+                if row.get('validity','declared') not in ('declared','end-not-declared','time-not-verifiable'):
+                    raise ValueError('invalid warning validity')
+                for field in ('onset','expires','expires_prudent'):
+                    if row.get(field):
+                        time_utc(row[field])

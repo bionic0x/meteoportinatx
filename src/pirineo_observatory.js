@@ -71,6 +71,18 @@
   // Classify at viewing time, not at the time the snapshot was exported.
   function warningTiming(w, now=Date.now()) {
     const start=utc(w?.desde), end=utc(w?.hasta);
+    // Hora dudosa: «posible» dentro de la ventana ensanchada 3 h por cada lado (feeds ES/FR/AD), como en el motor.
+    if(w?.vigencia==='SIN HORARIO VERIFICABLE') {
+      const H=3*3600000;
+      if(Number.isFinite(now) && end && now>end.getTime()+H) return 'FINALIZADO';
+      if(Number.isFinite(now) && start && now<start.getTime()-H) return 'PRÓXIMO';
+      return 'SIN HORARIO VERIFICABLE';
+    }
+    // Sin fin declarado: incierto hasta la retirada prudente del motor (docs/AVISOS-VIGENCIA-AMBITO.md).
+    if(w?.vigencia==='SIN FIN DECLARADO' && start && Number.isFinite(now)) {
+      const limit=utc(w?.caduca_prudente);
+      return limit && now>limit.getTime() ? 'FINALIZADO' : now<start.getTime() ? 'PRÓXIMO' : 'VIGENCIA NO INDICADA';
+    }
     if(!Number.isFinite(now)||!start||!end||end<start) return 'SIN HORARIO VERIFICABLE';
     if(now<start.getTime()) return 'PRÓXIMO';
     if(now<=end.getTime()) return 'VIGENTE';
@@ -93,7 +105,7 @@
     const meteolarmState=delta!=null && valid(ages.avisos) ? source(c.fuentes?.avisos,ages.avisos) : 'UNKNOWN';
     const officialOk=['OK','CACHED'].includes(aemetState) || ['OK','CACHED'].includes(meteolarmState);
     const warn=(c.avisos||[]).filter(x=>!x.error && x.nivel).map(x=>({...x,estado_temporal:warningTiming(x,now)}));
-    const order={'VIGENTE':0,'PRÓXIMO':1,'SIN HORARIO VERIFICABLE':2,'FINALIZADO':3};
+    const order={'VIGENTE':0,'VIGENCIA NO INDICADA':1,'PRÓXIMO':1,'SIN HORARIO VERIFICABLE':2,'FINALIZADO':3};
     warn.sort((a,b)=>order[a.estado_temporal]-order[b.estado_temporal]);
     const freshObs=[...(c.obs||[]),...(c.metar||[])].map(o=>({...o,edad_min:liveAge(o,c.issued,now)})).filter(o=>valid(o.edad_min)&&o.edad_min<=90);
     const profiles={sur:nearest(c.perfil?.sur,current.time), norte:nearest(c.perfil?.norte,current.time)};

@@ -125,8 +125,14 @@ def source_sections(pack, pid):
             rows.append(f'<p>{external(feed["country"])} · estado del boletín en la captura: {external(feed["feed_state"])} · actualizado {external(feed["feed_updated"])} · áreas: {external(", ".join(feed["areas"]))}</p>')
         if data.get('failed_feeds'):
             rows.append(f'<p class="missing">Cobertura parcial: fallaron {external(", ".join(data["failed_feeds"]))}.</p>')
+        doubtful = sum(f.get('unverifiable_time', 0) for f in data.get('feeds', []))
+        if doubtful:
+            rows.append(f'<p class="missing">Avisos con horario no verificable: {doubtful}. Se muestran como posiblemente vigentes.</p>')
         for r in data.get('records',[]):
-            rows.append(f'<p><b>{external(r["event"])}</b> · {external(r["area"])} · severidad {external(r["severity"])} · certeza {external(r["certainty"])}<br>{text(stamp(r["onset"]))} — {text(stamp(r["expires"]))}</p>')
+            start = text(stamp(r["onset"])) if r.get("onset") else "inicio no indicado"
+            end = text(stamp(r["expires"])) if r.get("expires") else "fin no indicado por el emisor: vigencia incierta mientras el boletín lo publique"
+            note = " · horario no verificable (hora sin zona horaria o ilegible)" if r.get("validity") == "time-not-verifiable" else ""
+            rows.append(f'<p><b>{external(r["event"])}</b> · {external(r["area"])} · severidad {external(r["severity"])} · certeza {external(r["certainty"])}<br>{start} — {end}{note}</p>')
         if data and not data.get('records'):
             rows.append('<p>No se encontraron coincidencias en los boletines descargados.</p>')
     if 'radar' in modules:

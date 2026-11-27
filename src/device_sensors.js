@@ -29,6 +29,8 @@ function signalFromCore(core,domain,now=Date.now()){
   if(core.official&&core.official.verificado===true&&Object.hasOwn(ranks,core.official.level_now))found.push(core.official.level_now);
   for(const h of Object.values(core.hazard||{}))if(h&&h.estado==='OBSERVED'&&Object.hasOwn(ranks,h.nivel))found.push(h.nivel);
   if(core.precaution&&core.precaution.insufficient===false&&Object.hasOwn(ranks,core.precaution.level))found.push(core.precaution.level);
+  // Posible aviso con horario no verificable: nunca se reduce a calma.
+  if(core.official&&Array.isArray(core.official.all)&&core.official.all.some(w=>w&&w.posible===true)&&!found.some(x=>x!=='quiet'))return 'unknown';
  }else if(core.fuentes&&/^ok\b/i.test(core.fuentes.avisos||'')&&Array.isArray(core.avisos)){
   found.push('quiet');for(const w of core.avisos){if(!w||typeof w!=='object'||w.error)return 'unknown';const validTime=x=>typeof x==='string'&&/(?:Z|[+-]\d\d:\d\d)$/.test(x)&&Number.isFinite(Date.parse(x));if(!validTime(w.desde)||!validTime(w.hasta))return 'unknown';const start=Date.parse(w.desde),end=Date.parse(w.hasta);if(end<start)return 'unknown';if(start<=now&&now<=end){const c=String(w.color||w.nivel||'').toLowerCase();found.push(/rojo|red/.test(c)?'alarm':/naranja|orange/.test(c)?'alert':'watch');}}
  }

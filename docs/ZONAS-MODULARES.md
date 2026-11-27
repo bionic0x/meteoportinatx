@@ -131,14 +131,14 @@ En un perfil personalizado, además de añadir los módulos deseados, configura 
 "sources": {
   "metar": ["LESU", "LFMP"],
   "warning_feeds": [
-    {"country": "spain", "areas": ["pirineo de girona", "pirineo de lleida"]},
-    {"country": "france", "areas": ["pyrénées-orientales", "ariège"]},
+    {"country": "spain", "areas": ["pirineo de girona"]},
+    {"country": "france", "areas": ["pyrénées-orientales"]},
     {"country": "andorra", "areas": ["andorra"]}
   ]
 }
 ```
 
-Revisar los nombres reales de las áreas del proveedor para cada territorio. Los informes muestran el alcance configurado y los fallos. Las estaciones de la plantilla son referencias cercanas, no instrumentación de cada ladera. `plan` enumera las peticiones iniciales; el radar añade teselas a partir de metadatos y avisos consulta todos los países configurados.
+Incluye solo áreas que contengan algún punto del perfil (en la plantilla `pirineo`: Masella, Font-Romeu y Andorra la Vella; véase `docs/AVISOS-VIGENCIA-AMBITO.md`). Revisar los nombres reales de las áreas del proveedor para cada territorio. Los informes muestran el alcance configurado y los fallos. Las estaciones de la plantilla son referencias cercanas, no instrumentación de cada ladera. `plan` enumera las peticiones iniciales; el radar añade teselas a partir de metadatos y avisos consulta todos los países configurados.
 
 ## Forense: del archivo a la evaluación
 
