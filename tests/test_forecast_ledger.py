@@ -231,8 +231,10 @@ class LedgerTests(unittest.TestCase):
     def test_cli_verify_and_score(self):
         cli = HERE / "src" / "forecast_ledger.py"
         cmd = [sys.executable, str(cli), "--root", str(self.root / "private"), "verify"]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        self.assertTrue(json.loads(result.stdout)["ok"])
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        # Ledger sin diario: integridad UNKNOWN → código 3 (0 solo si VERIFICADA, 1 si ROTA).
+        self.assertEqual(result.returncode, 3)
+        self.assertEqual(json.loads(result.stdout)["integridad"], "UNKNOWN")
         score = subprocess.run(cmd[:-1]+["score"], capture_output=True, text=True, check=True)
         self.assertFalse(json.loads(score.stdout)["meteorological_skill_verified"])
 

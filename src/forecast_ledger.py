@@ -41,6 +41,11 @@ OBSERVATION_FIELDS = frozenset((
     "station_id", "variable", "unit", "value", "qc", "source_type", "source_id", "source_license",
     "dataset_sha256",
 ))
+JOURNAL_STATES = frozenset(("OK", "NO_DATA", "DEGRADED", "ERROR"))
+JOURNAL_FIELDS = frozenset(("seq", "timestamp", "state", "added_ids", "added_sha256", "prev_hash", "hash"))
+JOURNAL_FIELDS_LEGACY = JOURNAL_FIELDS - {"added_sha256"}   # first format: ids without file hashes
+RECEIPTS_DIR = "restore-receipts"
+GENESIS = "0" * 64
 COMMON_REQUIRED = ("event_id", "domain", "site_id", "lat", "lon", "variable", "unit", "source_id", "source_license")
 UTC = timezone.utc
 
@@ -60,6 +65,11 @@ def _canonical(value):
 
 def _hash(raw):
     return hashlib.sha256(raw).hexdigest()
+
+
+def receipt_digest(receipt):
+    """Canonical SHA-256 of a restore receipt, excluding its own `sha256` field."""
+    return _hash(_canonical({k: v for k, v in receipt.items() if k != "sha256"}))
 
 
 def _date(value, field):
@@ -265,17 +275,188 @@ class Ledger:
                 for path in sorted((self.root / section / k).glob("*.json")):
                     yield section, self._load_file(path)
 
+    @property
+    def journal_path(self):
+        return self.root / "journal" / "cycles.jsonl"
+
+    def _local_file_sha(self, key):
+        """SHA-256 of the stored bytes of a local record, or None if it does not exist."""
+        for kind in ("forecast", "observation"):
+            path = self._place("local", kind, key)
+            if path.is_file():
+                return _hash(path.read_bytes())
+        return None
+
+    def _journal_tail(self):
+        """Last complete line of the journal (reads only the end of the file), or a tail problem."""
+        path = self.journal_path
+        if not path.exists() or path.stat().st_size == 0:
+            return None, None
+        size, chunk = path.stat().st_size, 65536
+        with path.open("rb") as fh:
+            while True:
+                fh.seek(max(0, size - chunk))
+                data = fh.read()
+                if not data.endswith(b"\n"):
+                    return None, "COLA_INCOMPLETA"
+                lines = data.splitlines()
+                if len(lines) > 1 or chunk >= size:
+                    return lines[-1], None
+                chunk *= 2
+
+    def append_journal(self, state, added_ids):
+        """Append-only, hash-chained cycle entry, written for every cycle (also NO_DATA/ERROR).
+        Each added id is stored with the SHA-256 of its record file, so later edits are detectable.
+        An incomplete or unreadable tail is never deleted or repaired here: nothing is written and
+        {"estado": "DIARIO_COLA_INCOMPLETA" | "DIARIO_ILEGIBLE"} is returned (manual recovery, docs §5)."""
+        if state not in JOURNAL_STATES:
+            raise ValidationError("invalid journal state")
+        ids = sorted(set(added_ids))
+        if any(not isinstance(i, str) or not HEX.fullmatch(i) for i in ids):
+            raise ValidationError("journal ids must be SHA-256 hex")
+        shas = {i: self._local_file_sha(i) for i in ids}
+        if any(v is None for v in shas.values()):
+            raise ValidationError("journal id without local record")
+        last, problem = self._journal_tail()
+        if problem:
+            return {"estado": "DIARIO_" + problem}
+        prev, seq = GENESIS, 0
+        if last is not None:
+            try:
+                tail = json.loads(last)
+                prev, seq = tail["hash"], tail["seq"] + 1
+            except (ValueError, KeyError, TypeError):
+                return {"estado": "DIARIO_ILEGIBLE"}
+        entry = {"seq": seq, "timestamp": _iso(self._now()), "state": state,
+                 "added_ids": ids, "added_sha256": shas, "prev_hash": prev}
+        entry["hash"] = _hash(_canonical(entry))
+        self.journal_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.journal_path.open("ab") as fh:
+            fh.write(_canonical(entry))
+            fh.flush()
+            os.fsync(fh.fileno())
+        return {"estado": "OK", **entry}
+
+    def journal(self):
+        """(entries, None) if intact; (None, reason) if absent ("SIN_DIARIO") or altered."""
+        path = self.journal_path
+        if not path.exists():
+            return None, "SIN_DIARIO"
+        raw = path.read_bytes()
+        if raw and not raw.endswith(b"\n"):
+            return None, "COLA_INCOMPLETA"
+        entries, prev, last_t, cited = [], GENESIS, None, set()
+        for seq, line in enumerate(raw.splitlines()):
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                return None, "JSON_INVALIDO seq=" + str(seq)
+            if not isinstance(entry, dict) or set(entry) not in (JOURNAL_FIELDS, JOURNAL_FIELDS_LEGACY):
+                return None, "FORMA_INVALIDA seq=" + str(seq)
+            body = {k: v for k, v in entry.items() if k != "hash"}
+            if entry["seq"] != seq:
+                return None, "SECUENCIA_ROTA seq=" + str(seq)
+            if entry["prev_hash"] != prev:
+                return None, "PREV_HASH_ROTO seq=" + str(seq)
+            if entry["hash"] != _hash(_canonical(body)) or line + b"\n" != _canonical(entry):
+                return None, "HASH_ALTERADO seq=" + str(seq)
+            if (entry["state"] not in JOURNAL_STATES or not isinstance(entry["added_ids"], list)
+                    or ("added_sha256" in entry and (not isinstance(entry["added_sha256"], dict)
+                                                     or sorted(entry["added_sha256"]) != entry["added_ids"]))):
+                return None, "CAMPO_INVALIDO seq=" + str(seq)
+            try:
+                when = _date(entry["timestamp"], "timestamp")
+            except ValidationError:
+                return None, "FECHA_INVALIDA seq=" + str(seq)
+            if last_t is not None and when < last_t:
+                return None, "TIEMPO_NO_MONOTONO seq=" + str(seq)
+            if cited & set(entry["added_ids"]):
+                # The same record cannot be counted again as new data in a later cycle.
+                return None, "ID_DUPLICADO seq=" + str(seq)
+            cited.update(entry["added_ids"])
+            entries.append(entry)
+            prev, last_t = entry["hash"], when
+        return entries, None
+
+    def receipts(self):
+        """Restore-drill receipts as (receipt, problem). Not signed: whoever controls the disk can forge one."""
+        out = []
+        for path in sorted((self.root / "journal" / RECEIPTS_DIR).glob("*.json")):
+            try:
+                receipt = json.loads(path.read_bytes())
+            except (OSError, ValueError):
+                out.append((None, "RECIBO_ILEGIBLE"))
+                continue
+            if (not isinstance(receipt, dict) or receipt.get("sha256") != receipt_digest(receipt)
+                    or path.name != str(receipt.get("sha256")) + ".json"):
+                out.append((None, "RECIBO_ALTERADO"))
+                continue
+            out.append((receipt, None))
+        return out
+
+    def _journal_check(self, local_ids, captured):
+        entries, reason = self.journal()
+        if reason == "SIN_DIARIO":
+            # Old ledger: absence of a journal is UNKNOWN, not proof of breakage nor of completeness.
+            return {"estado": "SIN_DIARIO", "integridad": "UNKNOWN"}
+        if reason:
+            return {"estado": "ROTO", "motivo": reason}
+        missing = sorted({i for e in entries for i in e["added_ids"]} - local_ids)
+        if missing:
+            return {"estado": "ROTO", "motivo": "ID_AUSENTE n=" + str(len(missing)), "ids_ausentes": missing[:20]}
+        altered = sorted(i for e in entries for i, sha in e.get("added_sha256", {}).items()
+                         if self._local_file_sha(i) != sha)
+        if altered:
+            return {"estado": "ROTO", "motivo": "REGISTRO_ALTERADO n=" + str(len(altered)), "ids_alterados": altered[:20]}
+        previous = None
+        for e in entries:
+            when = _date(e["timestamp"], "timestamp")
+            late = [i for i in e["added_ids"] if not (previous is None or previous <= captured[i]) or captured[i] > when]
+            if late:
+                # A record must be captured after the previous entry and no later than its own entry.
+                return {"estado": "ROTO", "motivo": "ID_FUERA_DE_INTERVALO seq=" + str(e["seq"]),
+                        "ids_fuera_de_intervalo": sorted(late)[:20]}
+            previous = when
+        by_seq = {e["seq"]: e["hash"] for e in entries}
+        for receipt, problem in self.receipts():
+            if problem:
+                return {"estado": "ROTO", "motivo": problem}
+            head, seq = receipt.get("journal_head_sha256"), receipt.get("journal_seq")
+            if head is not None and (not isinstance(seq, int) or by_seq.get(seq) != head):
+                # Receipt anchored to an entry that no longer exists (e.g. a truncated journal tail).
+                return {"estado": "ROTO", "motivo": "RECIBO_HUERFANO"}
+        legacy = sum("added_sha256" not in e for e in entries)
+        journal = {"estado": "INTEGRO", "entradas": len(entries),
+                   "cabeza_sha256": entries[-1]["hash"] if entries else GENESIS,
+                   "cabeza_seq": entries[-1]["seq"] if entries else None,
+                   "integridad": "VERIFICADA"}
+        if legacy:
+            # Entries without file hashes: existence is checked, record content is not.
+            journal.update(integridad="UNKNOWN", parcial="ASIENTOS_SIN_HASH n=" + str(legacy))
+        return journal
+
     def verify(self):
         counts = Counter()
         seen = set()
+        local_ids = set()
+        captured = {}
         for section, record in self.records():
             identity = (section, record["kind"], record["id"])
             if identity in seen:
                 raise ValidationError("duplicate identity in storage")
             seen.add(identity)
             counts[section + "_" + record["kind"]] += 1
-        return {"ok": True, "records": sum(counts.values()), "counts": dict(sorted(counts.items())),
-                "external_attestation": False, "durability": "USER_MANAGED_FILESYSTEM"}
+            if section == "local":
+                local_ids.add(record["id"])
+                captured[record["id"]] = _date(record["captured_at"], "captured_at")
+        journal = self._journal_check(local_ids, captured)
+        integrity = "ROTA" if journal["estado"] == "ROTO" else journal["integridad"]
+        out = {"ok": integrity != "ROTA", "integridad": integrity, "records": sum(counts.values()),
+               "counts": dict(sorted(counts.items())), "journal": journal,
+               "external_attestation": False, "durability": "USER_MANAGED_FILESYSTEM"}
+        if integrity == "ROTA":
+            out["motivo"] = "DIARIO_" + journal["motivo"]
+        return out
 
     def export(self, path):
         self.verify()
@@ -462,6 +643,10 @@ def main(argv=None):
         cmd = sub.add_parser(name)
         cmd.add_argument("--json", required=True, type=Path)
     sub.add_parser("verify")
+    camp = sub.add_parser("campaign-status", help="estado de la campaña de 90 días, calculado solo del diario")
+    camp.add_argument("--max-gap-hours", type=float, default=48.0)
+    camp.add_argument("--min-coverage", type=float, default=0.8)
+    camp.add_argument("--min-pair-days", type=int, default=10)
     score = sub.add_parser("score")
     score.add_argument("--max-distance-km", type=float, default=3.0)
     exp = sub.add_parser("export")
@@ -475,6 +660,11 @@ def main(argv=None):
             output = ledger.add(args.command[4:], json.loads(args.json.read_text(encoding="utf-8")))
         elif args.command == "verify":
             output = ledger.verify()
+        elif args.command == "campaign-status":
+            import ledger_campaign
+            output = ledger_campaign.campaign_status(ledger, max_gap_hours=args.max_gap_hours,
+                                                     min_coverage=args.min_coverage,
+                                                     min_pair_days=args.min_pair_days)
         elif args.command == "score":
             output = ledger.score(max_distance_km=args.max_distance_km)
         elif args.command == "export":
@@ -482,6 +672,8 @@ def main(argv=None):
         else:
             output = ledger.import_bundle(args.bundle)
         print(json.dumps(output, ensure_ascii=False, indent=2, sort_keys=True))
+        if args.command == "verify":   # 0 VERIFICADA, 1 ROTA, 3 UNKNOWN (p. ej. ledger sin diario)
+            return {"VERIFICADA": 0, "ROTA": 1}.get(output["integridad"], 3)
         return 0
     except (ValidationError, OSError, ValueError, json.JSONDecodeError) as exc:
         print(type(exc).__name__ + ": " + str(exc), file=sys.stderr)

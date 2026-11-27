@@ -6,7 +6,8 @@ observación del mismo lugar y la misma ventana:
 
 - precipitación (mm/h) de cada modelo determinista en el punto de Portinatx, próximas 1–6 h;
 - altura significativa (m) del modelo de oleaje EN LA POSICIÓN de cada boya PORTUS, próximas 1–6 h,
-  más una referencia de persistencia (`baseline=true`: la última Hs medida en esa boya);
+  más una referencia de persistencia (`baseline=true`: la última Hs medida en esa boya, solo si tiene
+  ≤120 min según D-021; si es más antigua no se congela baseline);
 - observaciones de las boyas para las ventanas ya cerradas (valor de la primera muestra de la hora).
 
 Límites declarados (ver docs/FORECAST-LEDGER-P0.md):
@@ -27,6 +28,7 @@ from pathlib import Path
 
 UTC = timezone.utc
 HORIZON_H = 6
+PERSISTENCE_MAX_AGE = timedelta(minutes=120)   # D-021: una Hs de más de 120 min caduca para uso en directo
 
 
 def _parse(t: str | None) -> datetime | None:
@@ -87,6 +89,8 @@ def build_records(srcs: dict, issued: datetime, site: dict, buoy_coords: dict) -
         rows = [r for r in stations.get(name, []) if isinstance(r, dict) and r.get("hm0") is not None and _parse(r.get("t"))]
         rows.sort(key=lambda r: _parse(r["t"]))
         last = next((r for r in reversed(rows) if _parse(r["t"]) <= issued), None)
+        if last is not None and issued - _parse(last["t"]) > PERSISTENCE_MAX_AGE:
+            last = None                         # sin baseline antes que una persistencia caducada
         for t0, v in _future_hours(mod.get("time"), mod.get("wave_height"), issued):
             base = {"event_id": event(t0), "domain": "portinatx", "site_id": sid, "lat": lat, "lon": lon,
                     "valid_from": _iso(t0), "valid_to": _iso(t0 + timedelta(hours=1)), "issued_at": _iso(issued),
