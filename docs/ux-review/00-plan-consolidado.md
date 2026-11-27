@@ -8,6 +8,7 @@ Método: cuatro revisores especialistas del catálogo `design/` de Ante-agency-a
 | [02 UI y sistema visual](02-ui-sistema-visual.md) | UI-01…16 | 3 |
 | [03 Identidad y gráfica](03-identidad-y-grafica.md) | GFX-01…20 | 2 |
 | [04 Personas y accesibilidad](04-personas-y-accesibilidad.md) | PX-01…14, A11Y-01…13 | 3 |
+| [05 Móvil y accesibilidad: auditoría y correcciones](05-movil-accesibilidad-auditoria.md) | A-01…08 | 1 |
 
 Limitaciones comunes: solo había un ciclo de datos (noche de lluvia con avisos amarillos y uno naranja); no hay datos de usuarios reales (todo lo de comprensión es SUPUESTO); no se probó lector de pantalla real, dispositivo físico ni alto contraste forzado.
 
@@ -32,6 +33,8 @@ Limitaciones comunes: solo había un ciclo de datos (noche de lluvia con avisos 
 | 8 | IA-03 | Duplicación de avisos, puntos y modelo entre Decidir, Vigilancia y Ruta | M |
 | 9 | GFX-01 | La capa «Relieve» pinta las cumbres blancas haya o no nieve | S |
 | 10 | GFX-02 | El mapa de temperatura muestra celdas del modelo con aspecto de medición, sin aviso | S |
+
+**Estado (rama `claude/movil-accesibilidad`, ver [05](05-movil-accesibilidad-auditoria.md)):** A11Y-01 corregido en parte (viewport en las dos consolas y doctype en Pirineo; `<html lang>` estático en Pirineo sigue pendiente, lo pone JS). A11Y-02 corregido (GPX con teclado). UI-02 no se ha revisado con datos reales: el test solo comprueba reflujo a 360 px en estado vacío y con datos sintéticos.
 
 ## Hallazgos P1 con más impacto
 
