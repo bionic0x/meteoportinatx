@@ -44,6 +44,11 @@ Lo mismo vale para un aviso sin `onset` ni `effective` o con una hora ilegible. 
   - Su firma de cambio no depende del inicio: es nivel, tipo, inicio y fin, y si falta el inicio se añade el evento.
   - Se notifica una sola vez.
   - Las firmas de los avisos con inicio no cambian, así que los avisos ya vistos no se vuelven a notificar.
+  - **Firma sin `expires`:** caduca 48 h después de verse por última vez (`WARN_SEEN_SIN_FIN_H`).
+    - Mientras el feed lo siga publicando, cada ciclo renueva esa hora y el aviso no se vuelve a notificar.
+    - Si desaparece y vuelve más tarde, por ejemplo 9 días después, se notifica como aviso nuevo.
+    - La purga se hace antes de comparar.
+    - Las firmas con `expires` no cambian: se purgan un día después de su `expires`.
 - **Edad del dato:** junto a los avisos «vigencia no indicada» y «posible aviso», las dos interfaces muestran «según el ciclo de hace X h».
 - **El inicio es `onset` y, si falta, `effective`.** No se usa `sent` como inicio.
 - **«Sin avisos» exige cobertura completa.** Se afirma solo para las fuentes que respondieron. Los países que no respondieron aparecen como UNKNOWN con su nombre. `decision_cards.js` y `device_sensors.js` solo aceptan `fuentes.avisos` cuando empieza por `ok`, así que un estado `parcial` queda como no verificado (`docs/DECISION-P0.md`, punto 4).

@@ -125,6 +125,24 @@ class CapVigenciaAmbito(unittest.TestCase):
         w = pd.parse_cap_documents([cap(onset='')], '645301', NOW, 72)
         self.assertEqual([c['kind'] for c in pd.detect_warning_changes(state, w, NOW)], ['NUEVO'])
         self.assertEqual(pd.detect_warning_changes(state, w, NOW), [])
+        # U-01: sin fechas, sigue en el feed → no se renotifica; desaparece y vuelve 9 días después → se notifica.
+        state = {'official_rank_now': 0}
+        w = pd.parse_cap_documents([cap(onset='', expires='')], '645301', NOW, 72)
+        self.assertEqual(len(w), 1)
+        def nuevos(t):
+            return [c['kind'] for c in pd.detect_warning_changes(state, w, NOW + t) if c['kind'] == 'NUEVO']
+        self.assertEqual(nuevos(timedelta(0)), ['NUEVO'])
+        for h in (24, 47, 94):                       # visto cada día: renueva, nunca se purga ni se renotifica
+            self.assertEqual(nuevos(timedelta(hours=h)), [])
+        pd.detect_warning_changes(state, [], NOW + timedelta(days=4, hours=23))   # ya no está en el feed
+        self.assertEqual(nuevos(timedelta(days=13, hours=22)), ['NUEVO'])
+        # Las firmas con expires no cambian: su valor es la primera vez vista.
+        st2 = {'official_rank_now': 0}
+        w2 = pd.parse_cap_documents([cap()], '645301', NOW, 72)
+        pd.detect_warning_changes(st2, w2, NOW)
+        first = dict(st2['warn_seen'])
+        pd.detect_warning_changes(st2, w2, NOW + timedelta(hours=1))
+        self.assertEqual(st2['warn_seen'], first)
         # Un aviso con horario verificable no lleva la marca.
         w = pd.parse_cap_documents([cap()], '645301', NOW, 72)
         self.assertNotIn('posible', pd.notify_text(pd.detect_warning_changes({'official_rank_now': 0}, w, NOW)))

@@ -2828,15 +2828,28 @@ def update_bias(state: dict, issued: datetime, radar: Channel, gauges: Channel) 
 
 
 # ── cambios de aviso oficial ──
+WARN_SEEN_SIN_FIN_H = 48      # firma de aviso sin expires: caduca a las 48 h de verse por última vez
+
+
 def detect_warning_changes(state: dict, warnings: list[dict], now: datetime) -> list[dict]:
     seen = state.setdefault("warn_seen", {})
+    # Purga antes de comparar: un aviso que vuelve tras caducar su firma se notifica de nuevo.
+    for sig in list(seen):
+        exp = parse_time(sig.split("|")[3])
+        if exp and exp < now - timedelta(days=1):
+            del seen[sig]
+        elif not exp and (parse_time(seen[sig]) or now) < now - timedelta(hours=WARN_SEEN_SIN_FIN_H):
+            del seen[sig]                            # sin expires: caduca 48 h después de verse por última vez
     changes = []
     for w in warnings:
         # Sin inicio también se notifica: la firma no depende del onset (si falta, se distingue por el evento).
         sig = f"{w['nivel']}|{w.get('tipo', '')}|{w.get('onset') or ''}|{w.get('expires') or ''}"
         if not w.get("onset"):
             sig += f"|{w['evento'].lower()}"
-        if sig not in seen:
+        if sig in seen:
+            if not w.get("expires"):
+                seen[sig] = now.isoformat()          # sin expires: renueva «visto por última vez», sin renotificar
+        else:
             seen[sig] = now.isoformat()
             changes.append({"kind": "NUEVO", "nivel": w["nivel"], "tipo": w.get("tipo", ""), "evento": w["evento"],
                             "onset": w.get("onset") or "", "expires": w.get("expires") or "", "id": w.get("id", ""),
@@ -2851,10 +2864,6 @@ def detect_warning_changes(state: dict, warnings: list[dict], now: datetime) -> 
     elif act < prev:
         changes.insert(0, {"kind": "DESCENSO", "de": LEVELS[prev], "a": LEVELS[act]})
     state["official_rank_now"] = act
-    for sig in list(seen):
-        exp = parse_time(sig.split("|")[3])
-        if exp and exp < now - timedelta(days=1):
-            del seen[sig]
     return changes
 
 
