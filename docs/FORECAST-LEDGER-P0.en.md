@@ -66,7 +66,7 @@ This example is **synthetic**, not a real weather forecast. To retain prospectiv
 
 ## 5. Ninety-day prospective campaign
 
-**Current status: the 90-day validation has NOT been started or finished, and it will not be declared complete early.** Its status is not declared in any document: `campaign-status` computes it from the journal and the records, and only by accumulating real evidence (data days, real hours, coverage, QC PASS pairs and a restore from an external copy). It is also **blocked by A1** (see §5.6): the current wiring yields no scorable pair.
+**Current status: the 90-day validation has NOT been started or finished, and it will not be declared complete early.** Its status is not declared in any document: `campaign-status` computes it from the journal and the records. What the code guarantees: `COMPLETADO` requires, all at once, 90 days with cycles that journal new records (no repeated ids, each captured within its interval), 2160 real hours, coverage by UTC hours, 20 distinct QC PASS observations matched and journaled, spread over at least 10 days, and a restore receipt from a copy on another filesystem. What it does **not** guarantee: that the data are authentic against whoever controls the disk (no external signature or timestamp), that `INSTRUMENT_QC_PASS` reflects a real check (the importer declares it), or that "another filesystem" is another physical disk (see the limits in §5.1–5.3). It is also **blocked by A1** (see §5.6): the current wiring yields no scorable pair.
 
 ### 5.1 Hash-chained cycle journal
 
@@ -77,22 +77,22 @@ This example is **synthetic**, not a real weather forecast. To retain prospectiv
 | `integridad` | When | `verify` exit code |
 |---|---|---|
 | `VERIFICADA` | Intact journal and every entry carries file hashes. | 0 |
-| `ROTA` | Reason in `motivo`: `DIARIO_ID_AUSENTE`, `DIARIO_REGISTRO_ALTERADO` (edited value), `DIARIO_HASH_ALTERADO`, `DIARIO_SECUENCIA_ROTA`, `DIARIO_COLA_INCOMPLETA`, `DIARIO_RECIBO_HUERFANO`, `DIARIO_RECIBO_ALTERADO`… | 1 |
+| `ROTA` | Reason in `motivo`: `DIARIO_ID_AUSENTE`, `DIARIO_REGISTRO_ALTERADO` (edited value), `DIARIO_ID_DUPLICADO` (id already journaled in an earlier entry), `DIARIO_ID_FUERA_DE_INTERVALO` (`captured_at` outside the interval between the previous entry and its own), `DIARIO_HASH_ALTERADO`, `DIARIO_SECUENCIA_ROTA`, `DIARIO_COLA_INCOMPLETA`, `DIARIO_RECIBO_HUERFANO`, `DIARIO_RECIBO_ALTERADO`… | 1 |
 | `UNKNOWN` | Old ledger without a journal (`SIN_DIARIO`, **not migrated**) or first-format entries without `added_sha256` (`parcial: ASIENTOS_SIN_HASH`): existence is checked, content is not. | 3 |
 
 A record with an invalid format still exits with code 2, as before. The `ok` field is kept (`ok = integridad ≠ ROTA`). Selftest and CI only check these codes in synthetic tests (`tests/test_forecast_ledger.py`, `tests/test_ledger_campaign.py`); no CI step and not `forensic_cycle.py` depends on the `verify` exit code.
 
 **Incomplete tail (a half-written line after a crash).** `append_journal` neither deletes nor repairs it: it writes nothing and returns `DIARIO_COLA_INCOMPLETA`; the cycle keeps capturing and ends `DEGRADED` with that reason in `cycle-health.json`, and the campaign becomes `INVALIDO:DIARIO_COLA_INCOMPLETA`. Manual recovery (owner's decision): (1) copy the whole root to a read-only archive as evidence; (2) **do not rewrite** the old journal; (3) start a new campaign with `METEO_LEDGER` pointing to a new, empty directory. The same procedure applies to any `INVALIDO`.
 
-**Remaining limits:** whoever controls the disk can rewrite the whole chain, records and receipts consistently (no external signature or timestamp). Truncating the end of the journal is **not** detectable when no later receipt exists. Records added outside `forensic_cycle.py` (e.g. a direct `nowcast.py export`) are not in the journal.
+**Remaining limits:** whoever controls the disk can rewrite the whole chain, records and receipts consistently (no external signature or timestamp). Truncating the end of the journal is **not** detectable when no later receipt exists. The interval check uses the host clock: a clock without NTP can produce false `DIARIO_ID_FUERA_DE_INTERVALO` or hide late captures. Records added outside `forensic_cycle.py` (e.g. a direct `nowcast.py export`) are not in the journal.
 
 ### 5.2 States and counters (`campaign-status`)
 
 ```bash
-python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap-hours 48] [--min-coverage 0.8]
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap-hours 48] [--min-coverage 0.8] [--min-pair-days 10]
 ```
 
-`ledger_campaign.campaign_status(ledger, *, max_gap_hours, min_coverage)` **accepts no start or end date**. A *data cycle* is an `OK` entry with non-empty `added_ids`; a *data day* is a UTC day with at least one. An `OK` without new records does not count.
+`ledger_campaign.campaign_status(ledger, *, max_gap_hours, min_coverage, min_pair_days)` **accepts no start or end date**. A *data cycle* is an `OK` entry with non-empty `added_ids`; a *data day* is a UTC day with at least one. An `OK` without new records does not count.
 
 **Frozen window.** The window starts at the first data cycle and is frozen at the *anchor entry*: the first data cycle at which 90 data days and at least 90 × 24 real hours since the start both hold. Coverage, pairs and gaps are computed over that window. Later events do not change the state: they are reported in `vigilancia_posterior` (`HUECO_POSTERIOR` if a gap exceeds the threshold).
 
@@ -101,14 +101,14 @@ python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap
 | `SIN_INICIAR` | Journal absent or empty. |
 | `EN_CURSO` (`día N/90`) | Intact chain, no gap above the threshold and window still open. |
 | `INVALIDO:<motivo>` | Integrity `ROTA` (`DIARIO_…`), corrupt record, an entry `timestamp` later than now + 10 min (`TIMESTAMP_FUTURO`), a gap between data cycles above the threshold inside the window (`HUECO_MAYOR_QUE_UMBRAL`) or, with the window open, time since the last data cycle above the threshold (`HUECO_ABIERTO_MAYOR_QUE_UMBRAL`). |
-| `DATOS_COMPLETOS_COBERTURA_INSUFICIENTE` | Window closed with `ciclos_con_datos / ciclos_esperados` below the threshold. |
-| `DATOS_COMPLETOS_PARES_INSUFICIENTES` | Window closed with fewer than **20 QC PASS pairs** whose forecast entered in the window (D-021 minimum). |
-| `DATOS_COMPLETOS_RESTAURACION_NO_PROBADA` | All of the above holds, but there is no valid receipt with `origen: copia_externa`, `n_pares ≥ 20` and anchored at or after the anchor entry. A `copia_local` receipt is never enough. |
-| `COMPLETADO` | All at once: 90 data days, ≥ 2160 real hours, coverage ≥ threshold, ≥ 20 pairs, intact chain and a valid receipt from an external copy. |
+| `DATOS_COMPLETOS_COBERTURA_INSUFICIENTE` | Window closed with `horas_con_datos / ciclos_esperados` below the threshold: distinct UTC hours with at least one data cycle versus UTC hours in the window. Several cycles in the same hour count once. |
+| `DATOS_COMPLETOS_PARES_INSUFICIENTES` | Window closed with fewer than **20 distinct QC PASS observations** matched (D-021 minimum) or spread over fewer than **N UTC days** (`--min-pair-days`, 10 by default). Only pairs whose forecast and observation are both journaled inside the window count; the baseline does not count; 20 models against one observation count as 1. |
+| `DATOS_COMPLETOS_RESTAURACION_NO_PROBADA` | All of the above holds, but there is no valid receipt with `origen: copia_externa`, `mismo_dispositivo: false`, `n_observaciones_emparejadas ≥ 20` and anchored at or after the anchor entry. A `copia_local` or same-device receipt is never enough (reason in `motivo_restauracion`). |
+| `COMPLETADO` | All at once: 90 data days, ≥ 2160 real hours, hourly coverage ≥ threshold, ≥ 20 matched observations over ≥ N days, intact chain and a valid receipt from a copy on another device. |
 
-**Thresholds, the owner's decision** (proposed by the audit, not calibrated): maximum gap 48 h; minimum coverage 0.8 at hourly cadence. `ERROR`/`NO_DATA` cycles do not close a gap. The intermediate `DATOS_COMPLETOS_*` states cannot become `COMPLETADO` within the same campaign, except the restore one (a valid external receipt is enough). The text summary only says "completado" when the state is `COMPLETADO` and never says "restauración probada".
+**Thresholds, the owner's decision** (proposed by the audit, not calibrated): maximum gap 48 h; minimum hourly coverage 0.8; matched observations spread over at least 10 UTC days. `ERROR`/`NO_DATA` cycles do not close a gap. The intermediate `DATOS_COMPLETOS_*` states cannot become `COMPLETADO` within the same campaign, except the restore one (a valid external receipt is enough). The text summary only says "completado" when the state is `COMPLETADO` and never says "restauración probada".
 
-Counters: data days, real hours in the window, expected / recorded / `OK` / data cycles, coverage, cycles per state, gaps (> 1.5 h between data cycles) and maximum gap, open gap, fraction of `UNKNOWN` observations in the window, matched pairs in the window and exclusions by reason (whole archive). **Limit:** episodes are counted as days (`event_id` = window day); consecutive days of the same storm are not independent.
+Counters: data days, real hours in the window, expected / recorded / `OK` / data cycles, coverage, cycles per state, gaps (> 1.5 h between data cycles) and maximum gap, open gap, fraction of `UNKNOWN` observations in the window, hours with data, raw pairs, matched observations (no baseline) and days with pairs in the window, and exclusions by reason (whole archive). **Limit:** episodes are counted as days (`event_id` = window day); consecutive days of the same storm are not independent.
 
 ### 5.3 Restore drill
 
@@ -119,7 +119,7 @@ METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger" python3 scripts/ledg
 METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger" python3 scripts/ledger_restore_drill.py --source /media/backup/forecast-ledger
 ```
 
-Takes the same lock as the cycle, copies `local/` and `journal/cycles.jsonl` from the source into a clean temporary directory and, with the same clock, compares against the original ledger `verify`, the journal, `score` (with its exclusions) and the bundle SHA-256. `--source` must be an existing absolute directory outside the ledger; the copy must be in sync with the ledger, otherwise the receipt is `ok: false`. It writes a hashed receipt to `journal/restore-receipts/<sha256>.json` with `origen`, `journal_seq`, journal head, restored `n_pares` and `mismo_dispositivo` (informational: the script cannot prove the source is on another medium). **`import` is not suitable for this:** it leaves every record `IMPORTED_UNATTESTED`, excluded from scoring. **Limit:** the receipt is neither signed nor timestamped; whoever controls the disk can forge it.
+Takes the same lock as the cycle, copies `local/` and `journal/cycles.jsonl` from the source into a clean temporary directory and, with the same clock, compares against the original ledger `verify`, the journal, `score` (with its exclusions) and the bundle SHA-256. `--source` must be an existing absolute directory outside the ledger; the copy must be in sync with the ledger, otherwise the receipt is `ok: false`. It writes a hashed receipt to `journal/restore-receipts/<sha256>.json` with `origen`, `journal_seq`, journal head, restored raw `n_pares` and `n_observaciones_emparejadas`, and `mismo_dispositivo` (same `st_dev` as the ledger). `COMPLETADO` requires `mismo_dispositivo: false`, but another filesystem does not prove another physical disk (it may be another partition of the same disk). **`import` is not suitable for this:** it leaves every record `IMPORTED_UNATTESTED`, excluded from scoring. **Limit:** the receipt is neither signed nor timestamped; whoever controls the disk can forge it.
 
 ### 5.4 Metrics (after the campaign)
 
@@ -136,8 +136,8 @@ None of this can be done by code or by an agent:
 2. **Fine-grained PAT or deploy key with minimal scope** (contents write on that private repository only). **Never in the repository or in prompts**; monitor its expiry.
 3. **Branch protection** on the private repository (no force-push or deletion). Git is not WORM.
 4. **Always-on Linux machine** with the systemd timer installed, `loginctl enable-linger <user>` (without linger the user service stops at logout), NTP-synchronised clock and an **encrypted disk**.
-5. **Invalidity thresholds** (maximum gap, 48 h by default; minimum coverage, 0.8 by default) and the **PORTUS QC criterion** (QC gate 1 of D-021).
-6. An **external copy** of the ledger kept in sync, and a `--source` drill on it when the window closes.
+5. **Invalidity thresholds** (maximum gap, 48 h by default; minimum hourly coverage, 0.8 by default; minimum days with pairs, 10 by default) and the **PORTUS QC criterion** (QC gate 1 of D-021).
+6. An **external copy on another disk** of the ledger kept in sync, and a `--source` drill on it when the window closes.
 
 ### 5.6 Blocker A1: 0 scorable pairs with the current wiring
 

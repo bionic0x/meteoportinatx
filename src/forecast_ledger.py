@@ -345,7 +345,7 @@ class Ledger:
         raw = path.read_bytes()
         if raw and not raw.endswith(b"\n"):
             return None, "COLA_INCOMPLETA"
-        entries, prev, last_t = [], GENESIS, None
+        entries, prev, last_t, cited = [], GENESIS, None, set()
         for seq, line in enumerate(raw.splitlines()):
             try:
                 entry = json.loads(line)
@@ -370,6 +370,10 @@ class Ledger:
                 return None, "FECHA_INVALIDA seq=" + str(seq)
             if last_t is not None and when < last_t:
                 return None, "TIEMPO_NO_MONOTONO seq=" + str(seq)
+            if cited & set(entry["added_ids"]):
+                # The same record cannot be counted again as new data in a later cycle.
+                return None, "ID_DUPLICADO seq=" + str(seq)
+            cited.update(entry["added_ids"])
             entries.append(entry)
             prev, last_t = entry["hash"], when
         return entries, None
@@ -390,7 +394,7 @@ class Ledger:
             out.append((receipt, None))
         return out
 
-    def _journal_check(self, local_ids):
+    def _journal_check(self, local_ids, captured):
         entries, reason = self.journal()
         if reason == "SIN_DIARIO":
             # Old ledger: absence of a journal is UNKNOWN, not proof of breakage nor of completeness.
@@ -404,6 +408,15 @@ class Ledger:
                          if self._local_file_sha(i) != sha)
         if altered:
             return {"estado": "ROTO", "motivo": "REGISTRO_ALTERADO n=" + str(len(altered)), "ids_alterados": altered[:20]}
+        previous = None
+        for e in entries:
+            when = _date(e["timestamp"], "timestamp")
+            late = [i for i in e["added_ids"] if not (previous is None or previous <= captured[i]) or captured[i] > when]
+            if late:
+                # A record must be captured after the previous entry and no later than its own entry.
+                return {"estado": "ROTO", "motivo": "ID_FUERA_DE_INTERVALO seq=" + str(e["seq"]),
+                        "ids_fuera_de_intervalo": sorted(late)[:20]}
+            previous = when
         by_seq = {e["seq"]: e["hash"] for e in entries}
         for receipt, problem in self.receipts():
             if problem:
@@ -426,6 +439,7 @@ class Ledger:
         counts = Counter()
         seen = set()
         local_ids = set()
+        captured = {}
         for section, record in self.records():
             identity = (section, record["kind"], record["id"])
             if identity in seen:
@@ -434,7 +448,8 @@ class Ledger:
             counts[section + "_" + record["kind"]] += 1
             if section == "local":
                 local_ids.add(record["id"])
-        journal = self._journal_check(local_ids)
+                captured[record["id"]] = _date(record["captured_at"], "captured_at")
+        journal = self._journal_check(local_ids, captured)
         integrity = "ROTA" if journal["estado"] == "ROTO" else journal["integridad"]
         out = {"ok": integrity != "ROTA", "integridad": integrity, "records": sum(counts.values()),
                "counts": dict(sorted(counts.items())), "journal": journal,
@@ -631,6 +646,7 @@ def main(argv=None):
     camp = sub.add_parser("campaign-status", help="estado de la campaña de 90 días, calculado solo del diario")
     camp.add_argument("--max-gap-hours", type=float, default=48.0)
     camp.add_argument("--min-coverage", type=float, default=0.8)
+    camp.add_argument("--min-pair-days", type=int, default=10)
     score = sub.add_parser("score")
     score.add_argument("--max-distance-km", type=float, default=3.0)
     exp = sub.add_parser("export")
@@ -647,7 +663,8 @@ def main(argv=None):
         elif args.command == "campaign-status":
             import ledger_campaign
             output = ledger_campaign.campaign_status(ledger, max_gap_hours=args.max_gap_hours,
-                                                     min_coverage=args.min_coverage)
+                                                     min_coverage=args.min_coverage,
+                                                     min_pair_days=args.min_pair_days)
         elif args.command == "score":
             output = ledger.score(max_distance_km=args.max_distance_km)
         elif args.command == "export":

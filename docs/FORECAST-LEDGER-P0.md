@@ -66,7 +66,7 @@ Este ejemplo es **sintético**, no una predicción meteorológica real. Para con
 
 ## 5. Campaña prospectiva de 90 días
 
-**Estado actual: la validación de 90 días NO está iniciada ni terminada, y no se dará por completada anticipadamente.** Su estado no se declara en ningún documento: lo calcula `campaign-status` a partir del diario y los registros, y solo acumulando evidencia real (días con datos, horas reales, cobertura, pares con QC PASS y restauración desde una copia externa). Además está **bloqueada por A1** (ver §5.6): con el cableado actual no sale ningún par puntuable.
+**Estado actual: la validación de 90 días NO está iniciada ni terminada, y no se dará por completada anticipadamente.** Su estado no se declara en ningún documento: lo calcula `campaign-status` a partir del diario y los registros. Lo que el código garantiza: `COMPLETADO` exige a la vez 90 días con ciclos que anotan registros nuevos (sin ids repetidos y capturados en su intervalo), 2160 h reales, cobertura por horas UTC, 20 observaciones QC PASS distintas emparejadas y anotadas en el diario, repartidas en al menos 10 días, y un recibo de restauración desde una copia en otro sistema de archivos. Lo que **no** garantiza: que los datos sean auténticos frente a quien controla el disco (no hay firma ni sello externo), que `INSTRUMENT_QC_PASS` sea un control real (lo declara el importador), ni que «otro sistema de archivos» sea otro disco físico (ver límites en §5.1–5.3). Además está **bloqueada por A1** (ver §5.6): con el cableado actual no sale ningún par puntuable.
 
 ### 5.1 Diario encadenado de ciclos
 
@@ -77,22 +77,22 @@ Este ejemplo es **sintético**, no una predicción meteorológica real. Para con
 | `integridad` | Cuándo | Código de salida de `verify` |
 |---|---|---|
 | `VERIFICADA` | Diario íntegro y todos los asientos con hash de archivo. | 0 |
-| `ROTA` | Motivo en `motivo`: `DIARIO_ID_AUSENTE`, `DIARIO_REGISTRO_ALTERADO` (valor editado), `DIARIO_HASH_ALTERADO`, `DIARIO_SECUENCIA_ROTA`, `DIARIO_COLA_INCOMPLETA`, `DIARIO_RECIBO_HUERFANO`, `DIARIO_RECIBO_ALTERADO`… | 1 |
+| `ROTA` | Motivo en `motivo`: `DIARIO_ID_AUSENTE`, `DIARIO_REGISTRO_ALTERADO` (valor editado), `DIARIO_ID_DUPLICADO` (id ya anotado en un asiento anterior), `DIARIO_ID_FUERA_DE_INTERVALO` (`captured_at` fuera del intervalo entre el asiento anterior y el suyo), `DIARIO_HASH_ALTERADO`, `DIARIO_SECUENCIA_ROTA`, `DIARIO_COLA_INCOMPLETA`, `DIARIO_RECIBO_HUERFANO`, `DIARIO_RECIBO_ALTERADO`… | 1 |
 | `UNKNOWN` | Ledger antiguo sin diario (`SIN_DIARIO`, **no se migra**) o asientos del primer formato sin `added_sha256` (`parcial: ASIENTOS_SIN_HASH`): se comprueba la existencia, no el contenido. | 3 |
 
 Un registro con formato inválido sigue saliendo con código 2, como antes. El campo `ok` se mantiene (`ok = integridad ≠ ROTA`). El selftest y el CI solo comprueban estos códigos en tests sintéticos (`tests/test_forecast_ledger.py`, `tests/test_ledger_campaign.py`); ningún paso del CI ni `forensic_cycle.py` depende del código de salida de `verify`.
 
 **Cola incompleta (una línea a medias tras un corte).** `append_journal` no la borra ni la repara: no escribe y devuelve `DIARIO_COLA_INCOMPLETA`; el ciclo sigue capturando y queda `DEGRADED` con ese motivo en `cycle-health.json`, y la campaña pasa a `INVALIDO:DIARIO_COLA_INCOMPLETA`. Recuperación manual (decisión del titular): (1) copiar el root entero a un archivo de solo lectura como evidencia; (2) **no reescribir** el diario antiguo; (3) iniciar una campaña nueva con `METEO_LEDGER` apuntando a un directorio nuevo y vacío. El mismo procedimiento vale para cualquier `INVALIDO`.
 
-**Límites que quedan:** quien controla el disco puede reescribir toda la cadena, los registros y los recibos de forma coherente (no hay firma ni sello externo). Un truncado del final del diario **sin** recibos posteriores no es detectable. Los registros añadidos fuera de `forensic_cycle.py` (p. ej. `nowcast.py export` directo) no figuran en el diario.
+**Límites que quedan:** quien controla el disco puede reescribir toda la cadena, los registros y los recibos de forma coherente (no hay firma ni sello externo). Un truncado del final del diario **sin** recibos posteriores no es detectable. La comprobación de intervalo usa el reloj del equipo: un reloj sin NTP puede producir falsos `DIARIO_ID_FUERA_DE_INTERVALO` o encubrir capturas tardías. Los registros añadidos fuera de `forensic_cycle.py` (p. ej. `nowcast.py export` directo) no figuran en el diario.
 
 ### 5.2 Estados y contadores (`campaign-status`)
 
 ```bash
-python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap-hours 48] [--min-coverage 0.8]
+python3 src/forecast_ledger.py --root "$METEO_LEDGER" campaign-status [--max-gap-hours 48] [--min-coverage 0.8] [--min-pair-days 10]
 ```
 
-La función `ledger_campaign.campaign_status(ledger, *, max_gap_hours, min_coverage)` **no acepta fecha de inicio ni de fin**. Un *ciclo con datos* es un asiento `OK` con `added_ids` no vacío; un *día con datos* es un día UTC con al menos uno. Un `OK` sin registros nuevos no cuenta.
+La función `ledger_campaign.campaign_status(ledger, *, max_gap_hours, min_coverage, min_pair_days)` **no acepta fecha de inicio ni de fin**. Un *ciclo con datos* es un asiento `OK` con `added_ids` no vacío; un *día con datos* es un día UTC con al menos uno. Un `OK` sin registros nuevos no cuenta.
 
 **Ventana congelada.** La ventana empieza en el primer ciclo con datos y se congela en el *asiento de anclaje*: el primer ciclo con datos en que se cumplen a la vez 90 días con datos y al menos 90 × 24 h reales desde el inicio. Cobertura, pares y huecos se calculan sobre esa ventana. Lo posterior no cambia el estado: se informa en `vigilancia_posterior` (`HUECO_POSTERIOR` si hay un hueco mayor que el umbral).
 
@@ -101,14 +101,14 @@ La función `ledger_campaign.campaign_status(ledger, *, max_gap_hours, min_cover
 | `SIN_INICIAR` | Diario ausente o vacío. |
 | `EN_CURSO` (`día N/90`) | Cadena íntegra, sin hueco mayor que el umbral y ventana sin cerrar. |
 | `INVALIDO:<motivo>` | Integridad `ROTA` (`DIARIO_…`), registro corrupto, asiento con `timestamp` posterior a ahora + 10 min (`TIMESTAMP_FUTURO`), hueco entre ciclos con datos mayor que el umbral dentro de la ventana (`HUECO_MAYOR_QUE_UMBRAL`) o, con la ventana abierta, tiempo desde el último ciclo con datos mayor que el umbral (`HUECO_ABIERTO_MAYOR_QUE_UMBRAL`). |
-| `DATOS_COMPLETOS_COBERTURA_INSUFICIENTE` | Ventana cerrada con `ciclos_con_datos / ciclos_esperados` < umbral. |
-| `DATOS_COMPLETOS_PARES_INSUFICIENTES` | Ventana cerrada con menos de **20 pares** con QC PASS cuyo pronóstico entró en la ventana (mínimo de D-021). |
-| `DATOS_COMPLETOS_RESTAURACION_NO_PROBADA` | Lo anterior se cumple, pero no hay recibo válido con `origen: copia_externa`, `n_pares ≥ 20` y anclado en el asiento de anclaje o después. Un recibo `copia_local` nunca basta. |
-| `COMPLETADO` | Todo a la vez: 90 días con datos, ≥ 2160 h reales, cobertura ≥ umbral, ≥ 20 pares, cadena íntegra y recibo válido desde copia externa. |
+| `DATOS_COMPLETOS_COBERTURA_INSUFICIENTE` | Ventana cerrada con `horas_con_datos / ciclos_esperados` < umbral: horas UTC distintas con al menos un ciclo con datos frente a horas UTC de la ventana. Varios ciclos en la misma hora cuentan una vez. |
+| `DATOS_COMPLETOS_PARES_INSUFICIENTES` | Ventana cerrada con menos de **20 observaciones QC PASS distintas** emparejadas (mínimo de D-021) o repartidas en menos de **N días UTC** (`--min-pair-days`, 10 por defecto). Solo cuentan pares cuyo pronóstico y observación figuran en el diario dentro de la ventana; la baseline no cuenta; 20 modelos contra una observación cuentan como 1. |
+| `DATOS_COMPLETOS_RESTAURACION_NO_PROBADA` | Lo anterior se cumple, pero no hay recibo válido con `origen: copia_externa`, `mismo_dispositivo: false`, `n_observaciones_emparejadas ≥ 20` y anclado en el asiento de anclaje o después. Un recibo `copia_local` o en el mismo dispositivo nunca basta (motivo en `motivo_restauracion`). |
+| `COMPLETADO` | Todo a la vez: 90 días con datos, ≥ 2160 h reales, cobertura horaria ≥ umbral, ≥ 20 observaciones emparejadas en ≥ N días, cadena íntegra y recibo válido desde una copia en otro dispositivo. |
 
-**Umbrales, decisión del titular** (propuestos por la auditoría, no calibrados): hueco máximo 48 h; cobertura mínima 0,8 a cadencia horaria. Los ciclos `ERROR`/`NO_DATA` no cierran un hueco. Los estados `DATOS_COMPLETOS_*` intermedios no pueden convertirse en `COMPLETADO` dentro de la misma campaña salvo el de restauración (basta con un recibo externo válido). El resumen textual solo dice «completado» si el estado es `COMPLETADO` y nunca dice «restauración probada».
+**Umbrales, decisión del titular** (propuestos por la auditoría, no calibrados): hueco máximo 48 h; cobertura horaria mínima 0,8; observaciones emparejadas repartidas en al menos 10 días UTC. Los ciclos `ERROR`/`NO_DATA` no cierran un hueco. Los estados `DATOS_COMPLETOS_*` intermedios no pueden convertirse en `COMPLETADO` dentro de la misma campaña salvo el de restauración (basta con un recibo externo válido). El resumen textual solo dice «completado» si el estado es `COMPLETADO` y nunca dice «restauración probada».
 
-Contadores: días con datos, horas reales de la ventana, ciclos esperados / registrados / `OK` / con datos, cobertura, ciclos por estado, huecos (> 1,5 h entre ciclos con datos) y hueco máximo, hueco abierto, fracción de observaciones `UNKNOWN` en la ventana, pares emparejados en la ventana y exclusiones por motivo (del archivo entero). **Límite:** los episodios se cuentan como días (`event_id` = día de la ventana); días consecutivos de un mismo temporal no son independientes.
+Contadores: días con datos, horas reales de la ventana, ciclos esperados / registrados / `OK` / con datos, cobertura, ciclos por estado, huecos (> 1,5 h entre ciclos con datos) y hueco máximo, hueco abierto, fracción de observaciones `UNKNOWN` en la ventana, horas con datos, pares brutos, observaciones emparejadas (sin baseline) y días con pares en la ventana, y exclusiones por motivo (del archivo entero). **Límite:** los episodios se cuentan como días (`event_id` = día de la ventana); días consecutivos de un mismo temporal no son independientes.
 
 ### 5.3 Simulacro de restauración
 
@@ -119,7 +119,7 @@ METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger" python3 scripts/ledg
 METEO_LEDGER="$HOME/meteoportinatx-private/forecast-ledger" python3 scripts/ledger_restore_drill.py --source /media/respaldo/forecast-ledger
 ```
 
-Toma el mismo bloqueo que el ciclo, copia `local/` y `journal/cycles.jsonl` del origen a un directorio limpio temporal y, con el mismo reloj, compara frente al ledger original `verify`, el diario, `score` (con sus exclusiones) y el SHA-256 del bundle. `--source` debe ser un directorio absoluto existente fuera del ledger; la copia debe estar sincronizada con el ledger, o el recibo sale `ok: false`. Emite un recibo con hash en `journal/restore-receipts/<sha256>.json` con `origen`, `journal_seq`, cabeza del diario, `n_pares` restaurados y `mismo_dispositivo` (informativo: el script no puede probar que el origen esté en otro soporte). **`import` no sirve para esto:** deja cada registro como `IMPORTED_UNATTESTED`, fuera de la puntuación. **Límite:** el recibo no está firmado ni sellado; quien controle el disco puede falsificarlo.
+Toma el mismo bloqueo que el ciclo, copia `local/` y `journal/cycles.jsonl` del origen a un directorio limpio temporal y, con el mismo reloj, compara frente al ledger original `verify`, el diario, `score` (con sus exclusiones) y el SHA-256 del bundle. `--source` debe ser un directorio absoluto existente fuera del ledger; la copia debe estar sincronizada con el ledger, o el recibo sale `ok: false`. Emite un recibo con hash en `journal/restore-receipts/<sha256>.json` con `origen`, `journal_seq`, cabeza del diario, `n_pares` brutos y `n_observaciones_emparejadas` restaurados, y `mismo_dispositivo` (mismo `st_dev` que el ledger). `COMPLETADO` exige `mismo_dispositivo: false`, pero otro sistema de archivos no prueba otro disco físico (puede ser otra partición del mismo disco). **`import` no sirve para esto:** deja cada registro como `IMPORTED_UNATTESTED`, fuera de la puntuación. **Límite:** el recibo no está firmado ni sellado; quien controle el disco puede falsificarlo.
 
 ### 5.4 Métricas (tras la campaña)
 
@@ -136,8 +136,8 @@ Nada de esto lo puede hacer el código ni un agente:
 2. **PAT de grano fino o deploy key de alcance mínimo** (solo escritura de contenidos en ese repositorio privado). **Nunca en el repositorio ni en prompts**; vigilar su caducidad.
 3. **Protección de rama** en el repositorio privado (sin force-push ni borrado). Git no es WORM.
 4. **Equipo Linux encendido** con el temporizador systemd instalado, `loginctl enable-linger <usuario>` (sin linger el servicio de usuario se detiene al cerrar sesión), reloj con NTP y **disco cifrado**.
-5. **Umbrales de invalidez** (hueco máximo, 48 h por defecto; cobertura mínima, 0,8 por defecto) y **criterio QC de PORTUS** (gate QC 1 de D-021).
-6. **Copia externa** sincronizada del ledger y un simulacro con `--source` sobre ella al cerrar la ventana.
+5. **Umbrales de invalidez** (hueco máximo, 48 h por defecto; cobertura horaria mínima, 0,8 por defecto; días mínimos con pares, 10 por defecto) y **criterio QC de PORTUS** (gate QC 1 de D-021).
+6. **Copia externa en otro disco** sincronizada del ledger y un simulacro con `--source` sobre ella al cerrar la ventana.
 
 ### 5.6 Bloqueante A1: 0 pares puntuables con el cableado actual
 

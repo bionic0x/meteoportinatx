@@ -41,6 +41,11 @@ def _external(source, root):
     return source
 
 
+def _same_device(a, b):
+    """Mismo sistema de archivos (st_dev). Otro st_dev no prueba otro disco físico: es un mínimo."""
+    return os.stat(a).st_dev == os.stat(b).st_dev
+
+
 def drill(root, *, source=None, clock=None):
     root = Path(root).resolve()
     origin = root if source is None else _external(source, root)
@@ -65,16 +70,19 @@ def drill(root, *, source=None, clock=None):
                 verified.pop("journal")   # los recibos viven en el original; se compara cabeza y estado
                 bundle = led.export(Path(tmp) / (name + ".json"))
                 sides[name] = {"verify": verified, "journal": led.journal(), "score": led.score(),
-                               "bundle_sha256": bundle["bundle_sha256"]}
+                               "bundle_sha256": bundle["bundle_sha256"],
+                               "observaciones": len({p["observation_id"] for p in led.pairs()[0]
+                                                     if not p["baseline"]})}
         o, r = sides["original"], sides["restaurado"]
         entries = o["journal"][0] or []
         receipt = {
             "schema": 2, "kind": "restore-drill", "at_utc": fl._iso(now),
             "origen": "copia_local" if source is None else "copia_externa",
-            "mismo_dispositivo": os.stat(origin).st_dev == os.stat(root).st_dev,
+            "mismo_dispositivo": _same_device(origin, root),
             "journal_seq": entries[-1]["seq"] if entries else None,
             "journal_head_sha256": entries[-1]["hash"] if entries else None,
             "records": o["verify"]["records"], "n_pares": r["score"]["n_pairs"],
+            "n_observaciones_emparejadas": r["observaciones"],
             "verify_ok": o["verify"]["integridad"] == "VERIFICADA" and r["verify"]["integridad"] == "VERIFICADA",
             "verify_match": o["verify"] == r["verify"] and o["journal"] == r["journal"],
             "score_match": fl._canonical(o["score"]) == fl._canonical(r["score"]),

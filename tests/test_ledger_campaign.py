@@ -44,12 +44,12 @@ class Base(unittest.TestCase):
         self.ledger = fl.Ledger(self.tmp / "private", clock=lambda: self.now)
         self.pending = []
 
-    def forecast(self, begin):
+    def forecast(self, begin, model="m", baseline=False):
         return self.ledger.add("forecast", {
             **SITE, "event_id": f"e{begin:%Y%m%d%H}", "valid_from": begin.isoformat(),
             "valid_to": (begin + timedelta(hours=1)).isoformat(), "issued_at": self.now.isoformat(),
-            "provider_run_at": self.now.isoformat(), "provider": "test", "model": "m", "family": "f",
-            "mode": "amount", "prediction": 1.0, "source_id": "synthetic"})["id"]
+            "provider_run_at": self.now.isoformat(), "provider": "test", "model": model, "family": "f",
+            "mode": "amount", "prediction": 1.0, "source_id": "synthetic", "baseline": baseline})["id"]
 
     def observation(self, begin):
         return self.ledger.add("observation", {
@@ -58,12 +58,12 @@ class Base(unittest.TestCase):
             "value": 1.5, "qc": "INSTRUMENT_QC_PASS", "source_type": "instrument", "source_id": "synthetic"})["id"]
 
     def cycle(self, when, *, pairs=False, state="OK"):
-        """One journaled cycle that freezes a forecast (+1 h) and, optionally, observes closed windows."""
+        """One journaled cycle that freezes a forecast (+1 h) and, optionally, observes the latest closed window."""
         self.now = when
         ids = [self.forecast(when + timedelta(hours=1))]
         if pairs:
             closed = [b for b in self.pending if b + timedelta(hours=1) <= when]
-            ids += [self.observation(b) for b in closed]
+            ids += [self.observation(b) for b in closed[-1:]]
             self.pending = [b for b in self.pending if b not in closed]
         self.pending.append(when + timedelta(hours=1))
         return self.ledger.append_journal(state, ids)
@@ -74,6 +74,11 @@ class Base(unittest.TestCase):
 
     def status(self, **kw):
         return lc.campaign_status(self.ledger, **kw)
+
+    def complete_drill(self, *, other_device=True):
+        """Drill from an external copy; the test tree is on one filesystem, so another device is simulated."""
+        with patch.object(drill, "_same_device", return_value=not other_device):
+            return drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
 
     def external_copy(self):
         copy = self.tmp / "external"
@@ -115,13 +120,13 @@ class Campaign(Base):
         self.assertEqual(out["dias_con_datos"], 90)
         self.assertLess(out["horas_reales_ventana"], 90 * 24)
         self.assertEqual(out["estado"], "EN_CURSO")
-        drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
+        self.complete_drill()
         self.assertEqual(self.status(min_coverage=0)["estado"], "EN_CURSO")
 
     def test_full_window_with_zero_pairs_never_completed(self):
         self.run_cycles(91)
         self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_PARES_INSUFICIENTES")
-        receipt = drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
+        receipt = self.complete_drill()
         self.assertTrue(receipt["ok"])
         out = self.status(min_coverage=0)
         self.assertEqual(out["estado"], "DATOS_COMPLETOS_PARES_INSUFICIENTES")
@@ -145,8 +150,9 @@ class Campaign(Base):
 
     def test_external_receipt_completes_and_window_is_frozen(self):
         self.run_cycles(91, pairs=25)
-        receipt = drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
-        self.assertEqual((receipt["ok"], receipt["origen"], receipt["n_pares"]), (True, "copia_externa", 25))
+        receipt = self.complete_drill()
+        self.assertEqual((receipt["ok"], receipt["origen"], receipt["n_observaciones_emparejadas"],
+                          receipt["mismo_dispositivo"]), (True, "copia_externa", 25, False))
         out = self.status(min_coverage=0)
         self.assertEqual(out["estado"], "COMPLETADO")
         self.assertTrue(out["ventana_congelada"])
@@ -165,6 +171,87 @@ class Campaign(Base):
         self.assertFalse(receipt["ok"])
         self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
 
+    def test_same_device_receipt_is_not_restore_proof(self):
+        self.run_cycles(91, pairs=25)
+        receipt = self.complete_drill(other_device=False)
+        self.assertEqual((receipt["ok"], receipt["mismo_dispositivo"]), (True, True))
+        out = self.status(min_coverage=0)
+        self.assertEqual(out["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+        self.assertEqual(out["motivo_restauracion"], "copia en el mismo dispositivo")
+        self.assertNotIn("copia externa", out["resumen"])
+
+    # --- Ataques de la segunda verificación (probe2) ---
+
+    def test_n1_repeated_id_is_rejected(self):
+        self.now = START
+        rid = self.forecast(START + timedelta(hours=2))
+        self.ledger.append_journal("OK", [rid])
+        self.now += timedelta(hours=1)
+        self.ledger.append_journal("OK", [rid])
+        v = self.ledger.verify()
+        self.assertEqual((v["integridad"], v["motivo"]), ("ROTA", "DIARIO_ID_DUPLICADO seq=1"))
+        self.assertTrue(self.status()["estado"].startswith("INVALIDO:DIARIO_ID_DUPLICADO"))
+
+    def test_n1_many_forecasts_one_observation_is_one_observation(self):
+        self.now = START
+        window = START + timedelta(hours=1)
+        self.ledger.append_journal("OK", [self.forecast(window, model=f"m{i}") for i in range(20)])
+        self.now = START + timedelta(hours=2)
+        self.ledger.append_journal("OK", [self.observation(window)])
+        out = self.status()
+        self.assertEqual((out["pares_brutos"], out["observaciones_emparejadas"], out["dias_con_pares"]), (20, 1, 1))
+
+    def test_baseline_is_not_counted(self):
+        self.now = START
+        window = START + timedelta(hours=1)
+        self.ledger.append_journal("OK", [self.forecast(window, model="persistence", baseline=True)])
+        self.now = START + timedelta(hours=2)
+        self.ledger.append_journal("OK", [self.observation(window)])
+        out = self.status()
+        self.assertEqual((out["pares_brutos"], out["observaciones_emparejadas"]), (1, 0))
+
+    def test_pairs_concentrated_in_few_days_are_insufficient(self):
+        # 25 observaciones en el primer día: suficientes en número, no en días distintos.
+        for k in range(26):
+            self.cycle(START + timedelta(hours=k), pairs=True)
+        for d in range(2, 92):
+            self.cycle(START + timedelta(days=d - 1, hours=2))
+        out = self.status(min_coverage=0)
+        self.assertGreaterEqual(out["observaciones_emparejadas"], 20)
+        self.assertLess(out["dias_con_pares"], 10)
+        self.assertEqual(out["estado"], "DATOS_COMPLETOS_PARES_INSUFICIENTES")
+        self.assertEqual(self.status(min_coverage=0, min_pair_days=1)["estado"],
+                         "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+
+    def test_record_captured_outside_its_entry_interval(self):
+        self.now = START
+        early = self.forecast(START + timedelta(hours=5))
+        self.now += timedelta(minutes=30)
+        self.ledger.append_journal("NO_DATA", [])
+        self.now += timedelta(hours=1)
+        self.ledger.append_journal("OK", [early])   # capturado antes del asiento anterior
+        self.assertTrue(self.ledger.verify()["motivo"].startswith("DIARIO_ID_FUERA_DE_INTERVALO"))
+
+    def test_n2_half_hour_cycles_do_not_inflate_coverage(self):
+        # Dos ciclos por hora durante 12 h y 12 h vacías: 72 asientos en 60 h esperadas (>1 por asientos),
+        # pero solo 36 horas UTC con datos.
+        for day in range(3):
+            for j in range(24):
+                self.cycle(START + timedelta(days=day, minutes=30 * j))
+        out = self.status()
+        self.assertEqual((out["ciclos_con_datos"], out["ciclos_esperados"], out["horas_con_datos"]), (72, 60, 36))
+        self.assertEqual(out["cobertura"], 0.6)
+
+    def test_n4_observation_outside_journal_is_not_a_pair(self):
+        self.now = START
+        window = START + timedelta(hours=1)
+        self.ledger.append_journal("OK", [self.forecast(window)])
+        self.now = START + timedelta(hours=3)
+        self.observation(window)                   # nunca anotada en el diario
+        self.ledger.append_journal("NO_DATA", [])
+        out = self.status()
+        self.assertEqual((out["pares_brutos"], out["observaciones_emparejadas"]), (0, 0))
+
     def test_source_must_be_outside_ledger(self):
         self.run_cycles(1)
         with self.assertRaises(ValueError):
@@ -175,13 +262,14 @@ class Campaign(Base):
         for k in range(90 * 24 + 1):
             if k % 10 == 7:                                  # 10 % de ciclos perdidos: cobertura 0,9
                 continue
-            self.cycle(start + timedelta(hours=k), pairs=k < 30)
+            self.cycle(start + timedelta(hours=k), pairs=k % 96 == 2)
         self.assertEqual(self.status()["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
-        drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
+        self.complete_drill()
         out = self.status()
         self.assertEqual(out["estado"], "COMPLETADO", out)
         self.assertGreaterEqual(out["cobertura"], 0.8)
-        self.assertGreaterEqual(out["pares_emparejados"], 20)
+        self.assertGreaterEqual(out["observaciones_emparejadas"], 20)
+        self.assertGreaterEqual(out["dias_con_pares"], 10)
 
     def test_deleted_record_is_invalid(self):
         self.run_cycles(3)
@@ -265,7 +353,7 @@ class Campaign(Base):
 
     def test_signature_has_no_declared_dates(self):
         params = inspect.signature(lc.campaign_status).parameters
-        self.assertEqual(list(params), ["ledger", "max_gap_hours", "min_coverage"])
+        self.assertEqual(list(params), ["ledger", "max_gap_hours", "min_coverage", "min_pair_days"])
         with self.assertRaises(TypeError):
             lc.campaign_status(self.ledger, start=START)
 
@@ -293,7 +381,7 @@ class Campaign(Base):
         out = self.status()
         self.assertEqual((out["ciclos_registrados"], out["ciclos_ok"], out["ciclos_con_datos"]), (4, 3, 3))
         self.assertEqual(out["ciclos_por_estado"]["NO_DATA"], 1)
-        self.assertEqual(out["pares_emparejados"], 1)
+        self.assertEqual((out["pares_brutos"], out["observaciones_emparejadas"], out["horas_con_datos"]), (1, 1, 3))
         self.assertEqual(out["fraccion_obs_unknown"], 0.0)
 
     def test_cli_exit_codes(self):
