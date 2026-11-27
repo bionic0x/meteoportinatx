@@ -1,14 +1,15 @@
 # SEPI — exceptional snow winters in the eastern Pyrenees
 
-**Status:** experimental research line. Design v0.3 and results of phases 01, 02 and 02b (26-11-2026). Each phase was reviewed by an independent verifier agent and its corrections are applied. **This is not a warning or a forecast**, and it does not replace Météo-France, AEMET, Meteocat or the SMA. No SEPI model is validated; no probability of an exceptional winter is issued.
+**Status:** experimental research line. Design v0.3 and results of phases 01, 02, 02b (26-11-2026) and 03 (27-11-2026). Each phase was reviewed by an independent verifier agent and its corrections are applied. **This is not a warning or a forecast**, and it does not replace Météo-France, AEMET, Meteocat or the SMA. No SEPI model is validated; no probability of an exceptional winter is issued.
 
-Scripts and reproduction: [`scripts/sepi/`](../scripts/sepi/README.md). The Spanish version, [`SEPI.md`](SEPI.md), is the reference.
+Scripts and reproduction: [`scripts/sepi/`](../scripts/sepi/README.md). The Spanish version, [`SEPI.md`](SEPI.md), is the reference. Source inventory 1968–2026 (Spanish only): [`SEPI-INVENTARIO-FUENTES.md`](SEPI-INVENTARIO-FUENTES.md).
 
 ## Summary
 - Using open data (XEMA, Météo-France, NOAA CPC), an objective catalogue of 17 winters (2009–10 to 2025–26) has been built. 2017–18 and 2025–26 are the exceptional ones in the eastern Catalan Pyrenees; the east–west contrast separates Mediterranean-biased winters (2016–17, 2025–26, 2019–20) from Atlantic-biased ones (2013–14, 2012–13).
 - No seasonal teleconnection index (NAO, EA, EA/WR, SCA, AO, ENSO) explains eastern snow after correcting for multiple testing.
 - Snow on each side follows that side's total precipitation, and the east–west snow contrast follows how precipitation is split between the two sides. With 17 winters, **no additional contribution is detected** from regime or persistence metrics (H6) measured with a single station's wind. Intervals are wide: a moderate effect cannot be ruled out.
 - The NW↔E/SE transition signal is fragile (it depends on the sector boundaries). Settling it needs ERA5 regimes at 700 hPa.
+- **Phase 03, 58 winters (1968–69 to 2025–26) with S2M and observed anchors:** there is no single "best winter"; the order depends on domain and elevation. 2025–26 ranks 1st of 58 in Capcir–Puymorens and Cerdagne–Canigou at 1,800 m but 25th in Haute-Ariège (a markedly eastern winter); 1971–72, 1980–81, 1995–96, 2004–05 and 2013–14 are the other candidates. 1969–1984 depends almost only on the model (class C).
 - Reusable data findings: XEMA variable 38 changes units on 15-11-2021, and the Canigou nivose station does not represent crest-level flow.
 
 # Design v0.3
@@ -205,9 +206,20 @@ XEMA open data for variable 38 are in **mm until 14-11-2021** and in **cm from 1
 - V5–V7: no shifted days, no duplicates, no anomalous values (maximum daily 146 mm at Espot).
 - V8, P2: a trivial check (two identical columns) removed.
 
+---
+
+# Phase 03 — 58 winters with S2M and observed anchors (27-11-2026)
+
+**Status:** exploratory; per-domain ranking. S2M is a model, not observation. See the Spanish version for the full tables.
+
+- **Data:** open S2M CSV (Météo-France, Licence Ouverte 2.0, downloaded 27-11-2026), massifs 70–74 (69 as contrast), flat and N 20°, 1,800 and 2,100 m. **No Catalan-side massifs.** Météo-France daily observations (QUOT 66/09, NEIGETOT06) as anchors, audited per station: Mont-Louis has only 9 complete winters, Porté-Puymorens starts in 1981; long anchors are Ascou-Lavail (44 winters) and L'Hospitalet (33).
+- **Method:** Dec 1–Apr 30 (58 winters, 8,772 days per series); mean and maximum depth, days ≥30 and ≥100 cm; rank index = median percentile; P90 over the 58 seasonal values; 2002 break test by subperiod percentiles; confidence class A/B/C by the number of observed anchors in the same tercile as S2M.
+- **Results:** 2025–26 is exceptional (all four metrics ≥ P90) in Capcir and Cerdagne; 1985–86 in Capcir; 1980–81 in Haute-Ariège; 1971–72 in Orlu; 1995–96 in Andorra and Cerdagne; 2004–05 in Haute-Ariège and Orlu. Poorest: 1997–98, 2007–08, 1999–2000, 2010–11, 2022–23, 1984–85. Only two winters are sensitive to the 2002 break. Classes 1969–1984: 0 A, 18 B, 62 C. Anchors vs S2M: ρ 0.77–0.96 except Porté-Puymorens 0.49 and Font-Romeu 0.61; S2M is 30–37 cm lower than the exposed crest nivoses. Catalan XEMA E_acum vs S2M Cerdagne–Canigou 2,100 m: ρ 0.79 [0.52; 0.90].
+- **Limits:** French anchors may be assimilated by SAFRAN (and Spanish/Andorran ones via NIVOMET), so validation is overstated; A/B/C classes are not calibrated probabilities; the 2002 test is internal to S2M (CERRA-Land needs the owner's CDS account); CSV units inferred from values.
+
 ## Next steps
 1. **Priority** once a CDS key is available: ERA5 700 hPa regimes to replace the single-station sector and settle the transition signal; also verify the 10-11-2026 stratospheric warming.
-2. Obtain S2M (AERIS registration or user download) to extend to 1958–2026, gain statistical power and run the 2002 test.
+2. Data requests (owner): Ransol 1934–2002 (SMN/FEDA), Núria before 1985 (AEMET), NIVOBS inventory (ICGC), list of stations assimilated by SAFRAN (CNRM-CEN). S2M CSV is already downloaded (phase 03).
 3. Download the UB WeMO when the server responds; another route to regime classification.
 4. Add Ransol and Sorteny (SMA) and manual Núria (AEMET) to lengthen the eastern series.
 

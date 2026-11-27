@@ -11,6 +11,9 @@ python scripts/sepi/phase01.py                # catálogo de inviernos, telecone
 python scripts/sepi/phase02.py                # H6 y H1/H2 con precipitación independiente
 python scripts/sepi/phase02b.py               # control del dominio oeste
 python scripts/sepi/sens_trans.py             # sensibilidad de la señal de transiciones
+python scripts/sepi/fetch_hist.py             # ~700 MB de tráfico; S2M CSV 1958→, QUOT 66/09, red nivo; sin credenciales
+python scripts/sepi/audit_quot.py             # auditoría de la nieve observada por estación e invierno
+python scripts/sepi/phase03.py                # 58 inviernos por dominio con S2M, anclas y prueba de 2002 (necesita out_catalogo.csv de phase01)
 ```
 
 Dependencias: `numpy`, `pandas`, `scipy`, `xarray` con `netCDF4`.
@@ -21,5 +24,8 @@ Dependencias: `numpy`, `pandas`, `scipy`, `xarray` con `netCDF4`.
 | `phase02.py` | `out_fase02.csv`, `out_fase02_tests.csv` |
 | `phase02b.py` | `out_fase02b.csv`, `out_fase02b_tests.csv` |
 | `sens_trans.py` | `out_sens_transiciones.csv` |
+| `fetch_hist.py` | `s2m/`, `s2m_ref_69_74.csv.gz`, `mfquot/`, `nivose/`, `meta/`, `descarga.json` |
+| `audit_quot.py` | `out_cobertura_mf_nieve.csv` |
+| `phase03.py` | `out_f03_metricas.csv`, `out_f03_ranking.csv`, `out_f03_anclas.csv`, `out_f03_resumen.txt` |
 
 Bootstrap con semillas fijas: dos ejecuciones sobre los mismos datos dan las mismas cifras. Los datos abiertos pueden revisarse con el tiempo; las cifras de `docs/SEPI.md` corresponden a la descarga del 26-11-2026.
