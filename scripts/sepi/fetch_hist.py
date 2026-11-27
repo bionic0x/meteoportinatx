@@ -115,13 +115,22 @@ def main():
     if not quot:
         fallos.append("QUOT: el espejo no lista ficheros 66/09")
     vigentes = {k.rsplit("/", 1)[1] for k in quot}
-    for f in os.listdir(os.path.join(BASE, "mfquot")):
-        if f.endswith(".csv.gz") and f not in vigentes:  # periodo antiguo sustituido por otro
-            os.remove(os.path.join(BASE, "mfquot", f))
+    ok_quot = set()
     for k in quot:
         f = k.rsplit("/", 1)[1]
-        if not get(f"{MF}/{k}", os.path.join(BASE, "mfquot", f), refrescar="latest" in f):
+        if get(f"{MF}/{k}", os.path.join(BASE, "mfquot", f), refrescar="latest" in f):
+            ok_quot.add(f)
+        else:
             fallos.append(f)
+    # Solo se retiran periodos antiguos si el listado es completo (previous y latest para 66 y 09)
+    # y todos los ficheros vigentes se han descargado bien: un listado vacío o parcial no borra nada.
+    completo = all(any(f"Q_{d}_{p}" in v for v in vigentes) for d in ("66", "09") for p in ("previous", "latest"))
+    if completo and ok_quot == vigentes:
+        for f in os.listdir(os.path.join(BASE, "mfquot")):
+            if f.endswith(".csv.gz") and f not in vigentes:  # periodo antiguo sustituido por otro
+                os.remove(os.path.join(BASE, "mfquot", f))
+    elif quot:
+        fallos.append("QUOT: listado o descarga incompletos; no se retira ningún periodo antiguo")
     for d in ("66", "09"):
         get(f"{MF}/data/stations/stations_{d}.geojson", os.path.join(BASE, "meta", f"stations_{d}.geojson"))
     for y in range(1996, HOY.year + 1):

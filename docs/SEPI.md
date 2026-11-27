@@ -309,7 +309,7 @@ Puesto (de 58) por dominio, en terreno llano. 70 Haute-Ariège · 71 Andorra · 
 ## Lectura
 - **2025–26 en Cerdagne–Canigou es el resultado más sólido de la fase:** primero de 58 con cualquier índice y a las dos cotas. A 1.800 m tuvo 44 días con ≥100 cm, cuando el siguiente invierno no pasa de 16. En Capcir empata con 1971–72 a 1.800 m y es tercero a 2.100 m. En Haute-Ariège queda vigésimo quinto. Encaja con el sesgo mediterráneo que mostró la fase 01 y con los 1.073 aludes que contó el ICGC. **Las anclas que lo apoyan en Cerdagne son nivosas de cresta que probablemente asimila SAFRAN, así que no son una confirmación independiente.**
 - **No hay base para un número 1 regional.** 1971–72 destaca en Orlu, Capcir y Andorra a 2.100 m. 1995–96 destaca en Andorra. 1980–81 y 2004–05 son inviernos del Ariège. 2013–14 es del oeste y de Andorra. Todo esto vale solo para los macizos franceses y Andorra, sin la vertiente catalana.
-- **2017–18,** el primero en la XEMA catalana de 2010–2026, queda en los puestos 4–24 en los macizos franceses: es la misma diferencia entre vertientes que ya mostró la XEMA.
+- **2017–18,** el primero en la XEMA catalana de 2010–2026, queda en los puestos 4–24 en los macizos franceses y Andorra: es la misma diferencia entre vertientes que ya mostró la XEMA.
 - **De 1969 a 1984 el orden es casi solo del modelo** (50 de 80 combinaciones sin ancla). Ransol 1934–2002, que habría que pedir al SMN, es la adquisición de más valor.
 
 ## Hallazgos de la verificación independiente (aplicados o declarados)
