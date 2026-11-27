@@ -38,13 +38,13 @@ CASES = [
     ('sin_expires_sin_sent_onset_hace_30h', cap(expires='', sent='', onset='2026-10-16T06:00:00+00:00'),
      '645301', 1, True, 'SIN FIN DECLARADO'),
     ('sin_onset_con_effective', cap(onset='', effective='2026-10-17T10:00:00+00:00'), '645301', 1, True, 'DECLARADA'),
-    # V-02/V-03: hora sin zona horaria = posiblemente activo, nunca descartado por leerla como UTC.
-    ('sin_zona_horaria', cap(onset='2026-10-17T13:30:00'), '645301', 1, True, 'SIN HORARIO VERIFICABLE'),
+    # R-01: hora sin zona horaria = «posible» (visible, nunca activo); holgura de 3 h, no se descarta por leerla UTC.
+    ('sin_zona_horaria', cap(onset='2026-10-17T13:30:00'), '645301', 1, False, 'SIN HORARIO VERIFICABLE'),
     ('sin_zona_horaria_expires_pasado_en_utc', cap(onset='2026-10-16T09:00:00', expires='2026-10-17T11:30:00'),
-     '645301', 1, True, 'SIN HORARIO VERIFICABLE'),
-    ('sin_zona_horaria_expires_muy_pasado', cap(onset='2026-10-15T09:00:00', expires='2026-10-16T11:30:00'),
+     '645301', 1, False, 'SIN HORARIO VERIFICABLE'),
+    ('sin_zona_horaria_termino_hace_13h', cap(onset='2026-10-16T09:00:00', expires='2026-10-16T23:00:00'),
      '645301', 0, None, None),
-    ('sin_onset_ni_effective', cap(onset=''), '645301', 1, True, 'SIN HORARIO VERIFICABLE'),
+    ('sin_onset_ni_effective', cap(onset=''), '645301', 1, False, 'SIN HORARIO VERIFICABLE'),
     ('zona_ajena_mallorca', cap(zone='645203', emma='ES872', area='Mallorca'), '645301', 0, None, None),
     ('ibiza_pedido_para_pirineo_691701', cap(), '691701', 0, None, None),
     ('ibiza_solo_emma_pedido_para_691701', cap(zone=''), '691701', 0, None, None),
@@ -76,16 +76,34 @@ class CapVigenciaAmbito(unittest.TestCase):
         self.assertEqual(zs.NO_EXPIRES_MAX_H, pd.CAP_SIN_FIN_H)
         self.assertEqual(zs.TZ_SLACK_H, pd.CAP_TZ_HOLGURA_H)
 
-    def test_aviso_sin_zona_horaria_cuenta_en_el_estado_oficial(self):
+    def test_posible_por_ventana(self):
+        # R-01: tz dudosa con holgura de 3 h: terminó hace 13 h → fuera; empieza en 12 h → no posible ni activo.
+        self.assertIsNone(pd.cap_window(NOW, '2026-10-16T20:00:00', '2026-10-16T23:00:00'))
+        w = pd.cap_window(NOW, '2026-10-18T00:00:00', '2026-10-18T12:00:00')
+        self.assertEqual((w['activo'], w['posible']), (False, False))
+        w = pd.cap_window(NOW, '2026-10-17T10:00:00', '2026-10-18T12:00:00')
+        self.assertEqual((w['activo'], w['posible']), (False, True))
+
+    def test_posible_visible_sin_ser_hecho_ni_alarm(self):
         w = pd.parse_cap_documents([cap(onset='2026-10-17T09:00:00', expires='2026-10-18T14:00:00')], '645301', NOW, 72)
-        st = pd.official_state(pd.Channel('aviso_aemet_activo', 3, 'institutional'),
-                               pd.Channel('aviso_aemet', 3, 'institutional'), w)
-        self.assertEqual(st['vigente']['nivel'], 'naranja')
-        self.assertEqual(st['vigentes'][0]['vigencia'], 'SIN HORARIO VERIFICABLE')
-        src = pd.SourceResult(name='aemet_cap', status='ok', payload={'warnings': w})
-        ch = pd.ch_institutional(src, active_only=True)
-        self.assertEqual(ch.level, 2, 'el suelo institucional no se rebaja por una hora sin zona horaria')
-        self.assertTrue(any('POSIBLEMENTE ACTIVO' in e for e in ch.evidence))
+        self.assertTrue(w and w[0]['posible_ahora'] and not w[0]['activo_ahora'])
+        src = pd.SourceResult(name='aemet_cap', status='ok', payload={'warnings': [{**w[0], 'nivel': 'rojo', 'rank': 3}]})
+        for active_only in (True, False):
+            with self.subTest(active_only=active_only):
+                ch = pd.ch_institutional(src, active_only=active_only)
+                self.assertEqual(ch.level, 0, 'no es suelo institucional ni nivel oficial')
+                self.assertTrue(any('posible aviso ROJO' in e and 'horario no verificable' in e for e in ch.evidence))
+                self.assertNotEqual(pd.fuse([ch])['proposed'], 'alarm')
+        st = pd.official_state(pd.ch_institutional(src, active_only=True), pd.ch_institutional(src), w)
+        self.assertEqual(st['level_now'], 'quiet')
+        self.assertIsNone(st['vigente'])
+        claims = pd.build_claims(NOW, [], w, {}, True)
+        self.assertFalse(any('mantiene aviso' in c.text for c in claims))
+        pos = [c for c in claims if c.id.startswith('C-OFF-POS')]
+        self.assertEqual(len(pos), 1)
+        self.assertEqual(pos[0].epistemic, 'UNKNOWN')
+        self.assertEqual(pos[0].label, 'HORARIO_NO_VERIFICABLE')
+        self.assertIn('horario no verificable', pos[0].text)
 
 
 def atom(*entries):

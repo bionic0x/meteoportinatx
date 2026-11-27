@@ -902,8 +902,11 @@ function setAxis(id, lv){ const a=$(id); a.className = a.className.replace(/l-\w
 // Misma regla que cap_window del motor: un aviso nunca desaparece ni se rebaja por falta de metadatos.
 function warnTiming(w, now){
   const s = Date.parse(w.desde||""), e = Date.parse(w.hasta||""), p = Date.parse(w.caduca_prudente||"");
-  if (w.vigencia === "SIN HORARIO VERIFICABLE" || !Number.isFinite(s))   // posiblemente activo: holgura de 14 h
-    return Number.isFinite(e) && now > e + 14*36e5 ? "FINALIZADO" : "SIN HORARIO VERIFICABLE";
+  if (w.vigencia === "SIN HORARIO VERIFICABLE" || !Number.isFinite(s)) {  // «posible»: holgura de 3 h (ES/FR/AD)
+    if (Number.isFinite(e) && now > e + 3*36e5) return "FINALIZADO";
+    if (Number.isFinite(s) && now < s - 3*36e5) return "PRÓXIMO";
+    return "SIN HORARIO VERIFICABLE";
+  }
   const end = Number.isFinite(e) ? e : p;            // sin expires: retirada prudente del motor
   if (Number.isFinite(end) && now > end) return "FINALIZADO";
   if (now < s) return "PRÓXIMO";
@@ -916,21 +919,30 @@ function renderAxes(){
   if (ch.length) ban.innerHTML = `<div class="banner">${uiText("Cambio de aviso oficial en este ciclo:","Official warning changed in this cycle:")} ${ch.map(x=> x.kind==="NUEVO" ? `${uiText("nuevo","new")} ${esc(x.nivel)} ${esc(x.tipo)} · ${esc(x.evento)} (${fmtDT(x.onset)}→${fmtDT(x.expires)})` : `${esc(x.kind)} ${esc(x.de)}→${esc(x.a)}`).join(" · ")}</div>`;
   // oficial
   const o = c.official, now = Date.now();
-  // El eje oficial no muestra calma si, a la hora actual, hay un aviso en vigor o posiblemente en vigor.
-  const live = (o.all||[]).map(w => ({lv: NIVEL_LV[w.nivel], t: warnTiming(w, now)}))
-    .filter(x => x.lv && ["VIGENTE","VIGENCIA NO INDICADA","SIN HORARIO VERIFICABLE"].includes(x.t));
-  const lvLive = live.reduce((m, x) => LV.indexOf(x.lv) > LV.indexOf(m) ? x.lv : m, "quiet");
+  // El eje oficial no muestra calma si, a la hora actual, hay un aviso en vigor. Un aviso con horario no
+  // verificable es «posible»: se muestra como incertidumbre, sin subir el nivel oficial.
+  const timed = (o.all||[]).map(w => ({lv: NIVEL_LV[w.nivel], nivel: w.nivel, t: warnTiming(w, now)})).filter(x => x.lv);
+  const topLv = xs => xs.reduce((m, x) => LV.indexOf(x.lv) > LV.indexOf(m.lv) ? x : m, {lv: "quiet"});
+  const live = timed.filter(x => ["VIGENTE","VIGENCIA NO INDICADA"].includes(x.t)), lvLive = topLv(live).lv;
+  const pos = topLv(timed.filter(x => x.t === "SIN HORARIO VERIFICABLE"));
   const lvO = o.verificado && LV.indexOf(lvLive) > LV.indexOf(o.level_now) ? lvLive : (o.level_now || "unknown");
   const doubt = live.some(x => x.lv === lvO && x.t !== "VIGENTE");
-  setAxis("ax-off", lvO);
-  $("off-level").innerHTML = o.verificado ? (lvO==="quiet" ? "Sin aviso vigente" : pill(lvO, {watch:"Amarillo",alert:"Naranja",alarm:"Rojo"}[lvO]) + (doubt ? ` <span class="ev">${uiText("vigencia incierta (horario o fin no indicados)","uncertain validity (time or end not stated)")}</span>` : "")) : pill("unknown","No verificado");
+  const posTxt = pos.lv !== "quiet" && LV.indexOf(pos.lv) > LV.indexOf(lvO)
+    ? uiText(`posible aviso ${pos.nivel} · horario no verificable`, `possible ${pos.nivel} warning · time not verifiable`) : "";
+  setAxis("ax-off", lvO === "quiet" && posTxt ? "unknown" : lvO);
+  $("off-level").innerHTML = !o.verificado ? pill("unknown","No verificado")
+    : lvO === "quiet" ? (posTxt ? pill("unknown", posTxt) : "Sin aviso vigente")
+    : pill(lvO, {watch:"Amarillo",alert:"Naranja",alarm:"Rojo"}[lvO]) + (doubt ? ` <span class="ev">${uiText("vigencia incierta (fin no indicado)","uncertain validity (end not stated)")}</span>` : "")
+      + (posTxt ? ` <span class="ev">${esc(posTxt)}</span>` : "");
+  const cyc = (now - Date.parse(c.issued || "")) / 36e5;
+  const cycTxt = Number.isFinite(cyc) ? uiText(` · según el ciclo de hace ${cyc<1?"<1":Math.round(cyc)} h`, ` · per the cycle from ${cyc<1?"<1":Math.round(cyc)} h ago`) : "";
   // Vigencia recalculada con la hora actual, no la del ciclo (misma regla que warningTiming del Pirineo).
   const list = (o.all||[]).map(w => ({...w, t: warnTiming(w, now)})).filter(w => w.t !== "FINALIZADO").slice(0, 10);
   const tTxt = {VIGENTE:uiText("activo","active"), "PRÓXIMO":uiText("próximo","upcoming"),
     "VIGENCIA NO INDICADA":uiText("vigencia no indicada por el emisor: incierta","end time not stated by the issuer: uncertain"),
-    "SIN HORARIO VERIFICABLE":uiText("horario no verificable: posiblemente en vigor","time not verifiable: possibly in force")};
+    "SIN HORARIO VERIFICABLE":uiText("posible aviso · horario no verificable","possible warning · time not verifiable")};
   const age = iso => { const h=(now-Date.parse(iso))/36e5; return Number.isFinite(h) ? uiText(` (hace ${h<1?"<1":Math.round(h)} h)`,` (${h<1?"<1":Math.round(h)} h ago)`) : ""; };
-  $("off-list").innerHTML = list.length ? list.map(w => `<li class="warn">${pill(NIVEL_LV[w.nivel]||"unknown", w.nivel)}<span><b>${esc(w.evento.replace(/^Aviso de /,"").replace(/ de nivel \w+$/,""))}</b>${w.tipo==="costero"&&!/coster/i.test(w.evento)?" · costero":""} · <b${w.t==="VIGENTE"?' style="color:var(--x)"':""}>${tTxt[w.t]}</b>${w.umbral?" — "+esc(w.umbral):""}${w.area?` · <span data-source-text lang="und">${esc(w.area)}</span>`:""}</span><span class="when">${fmtDT(w.desde)} → ${w.hasta?fmtDT(w.hasta):uiText("fin no indicado","end not stated")}${w.emitido?` · ${uiText("emitido","issued")} ${fmtDT(w.emitido)}${age(w.emitido)}`:""}</span></li>`).join("")
+  $("off-list").innerHTML = list.length ? list.map(w => `<li class="warn">${pill(NIVEL_LV[w.nivel]||"unknown", w.nivel)}<span><b>${esc(w.evento.replace(/^Aviso de /,"").replace(/ de nivel \w+$/,""))}</b>${w.tipo==="costero"&&!/coster/i.test(w.evento)?" · costero":""} · <b${w.t==="VIGENTE"?' style="color:var(--x)"':""}>${tTxt[w.t]}</b>${["VIGENCIA NO INDICADA","SIN HORARIO VERIFICABLE"].includes(w.t)?cycTxt:""}${w.umbral?" — "+esc(w.umbral):""}${w.area?` · <span data-source-text lang="und">${esc(w.area)}</span>`:""}</span><span class="when">${fmtDT(w.desde)} → ${w.hasta?fmtDT(w.hasta):uiText("fin no indicado","end not stated")}${w.emitido?` · ${uiText("emitido","issued")} ${fmtDT(w.emitido)}${age(w.emitido)}`:""}</span></li>`).join("")
     : (o.verificado ? '<li class="empty">Sin avisos en las próximas 36 h.</li>' : '<li class="empty">No verificado: no se pudo consultar la fuente oficial. No equivale a ausencia de avisos.</li>');
   $("off-src").textContent = "Fuente: CAP de AEMET vía MeteoAlarm (una sola raíz).";
   if (o.fuente_oficial && o.fuente_oficial !== "AEMET_CAP+METEOALARM")

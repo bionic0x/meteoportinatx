@@ -47,6 +47,11 @@
                          NINGUNA: 'Sin fuente oficial disponible en este ciclo.'};
     const note = SOURCE_NOTE[v.fuente_oficial] || '';
     const detail = names.length ? names.join(' · ') : 'Situación del último ciclo verificado; comprobar AEMET.';
+    // Horario no verificable: incertidumbre visible, nunca calma ni nivel oficial.
+    const possible = Array.isArray(v.all) && v.all.some(w => w && w.posible === true);
+    if (v.level_now === 'quiet' && possible) {
+      return {kind: 'unknown', title: 'Posible aviso oficial · horario no verificable', detail: 'Comprobar AEMET directamente.'};
+    }
     return {kind: v.level_now === 'quiet' ? 'neutral' : 'official',
             title: `Aviso oficial interpretado: ${v.level_now}`,
             detail: note ? `${note} ${detail}` : detail};
@@ -57,6 +62,9 @@
     if (!verified) return {kind: 'unknown', title: 'Avisos: fuente sin verificar', detail: 'Comprobar AEMET, SMA y Météo-France.'};
     const active = Array.isArray(core.avisos) ? core.avisos.filter(w => w && w.vigente === true) : [];
     const events = active.map(w => String(w.evento || '').slice(0, 100)).filter(Boolean).slice(0, 2);
+    if (!active.length && Array.isArray(core.avisos) && core.avisos.some(w => w && w.posible === true)) {
+      return {kind: 'unknown', title: 'Posible aviso oficial · horario no verificable', detail: 'Comprobar AEMET, SMA y Météo-France.'};
+    }
     return {kind: active.length ? 'official' : 'neutral',
             title: active.length ? `Avisos oficiales: ${active.length} vigente(s)` : 'No constan avisos vigentes en este ciclo',
             detail: events.length ? events.join(' · ') : 'No equivale a ausencia de peligro; verificar los organismos oficiales.'};

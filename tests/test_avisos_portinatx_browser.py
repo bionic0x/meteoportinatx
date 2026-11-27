@@ -29,7 +29,7 @@ const [chrome, file] = process.argv.slice(1);
   // Vigencia recalculada con la hora actual (el ciclo decía «activo» para todos).
   txt = await page.evaluate(() => {
    const h = n => new Date(Date.now()+n*3600000).toISOString();
-   S.core={precaution:{level:'quiet', transition:''}, official:{level_now:'alert', verificado:true, all:[
+   S.core={issued:h(-2), precaution:{level:'quiet', transition:''}, official:{level_now:'alert', verificado:true, all:[
     {nivel:'naranja', evento:'Aviso de lluvias', desde:h(-5), hasta:h(-1), activo:true, area:'Ibiza y Formentera', emitido:h(-6)},
     {nivel:'amarillo', evento:'Aviso de viento', desde:h(-1), hasta:h(3), activo:true, area:'Ibiza y Formentera', emitido:h(-2)},
     {nivel:'amarillo', evento:'Aviso de tormentas', desde:h(2), hasta:h(8), activo:true, area:'Ibiza y Formentera', emitido:h(-2)},
@@ -41,7 +41,8 @@ const [chrome, file] = process.argv.slice(1);
   assert.ok(!txt.some(t=>/lluvias/.test(t)));
   assert.match(txt[0], /viento · activo.*Ibiza y Formentera/); assert.match(txt[0], /emitido .*hace 2 h/);
   assert.match(txt[1], /tormentas · próximo/);
-  assert.match(txt[2], /vigencia no indicada.*fin no indicado/);
+  assert.match(txt[2], /vigencia no indicada.*según el ciclo de hace 2 h.*fin no indicado/);
+  assert.doesNotMatch(txt[0], /según el ciclo/);
   assert.match(txt[3], /horario no verificable/);
   // V-02: aviso rojo en curso con hora sin zona horaria → la cabecera nunca dice «Sin aviso vigente».
   const head = await page.evaluate(() => {
@@ -50,7 +51,8 @@ const [chrome, file] = process.argv.slice(1);
     {nivel:'rojo', rank:3, evento:'Aviso de lluvias', desde:h(-2), hasta:h(10), activo:false, vigencia:'SIN HORARIO VERIFICABLE'}]}};
    renderAxes(); return document.querySelector('#off-level').textContent;
   });
-  assert.doesNotMatch(head, /Sin aviso vigente/); assert.match(head, /Rojo/); assert.match(head, /vigencia incierta/);
+  assert.doesNotMatch(head, /Sin aviso vigente/); assert.match(head, /posible aviso rojo · horario no verificable/);
+  assert.doesNotMatch(head, /^Rojo/, 'a doubtful time is not an official fact');
  } finally { await browser.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});
 '''

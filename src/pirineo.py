@@ -631,7 +631,7 @@ def src_warnings() -> list[dict]:
             on, ex = win["start"], win["end"]
             out.append({"pais": country, "area": area, "nivel": lv, "evento": pd._tag(e, "cap:event") or title,
                         "desde": on.isoformat() if on else "", "hasta": ex.isoformat() if ex else "",
-                        "vigente": win["activo"], "vigencia": win["vigencia"],
+                        "vigente": win["activo"], "posible": win["posible"], "vigencia": win["vigencia"],
                         "caduca_prudente": win["caduca_prudente"], "emitido": pd._tag(e, "cap:sent")})
     return out
 
@@ -758,6 +758,7 @@ def src_aemet_cap() -> list[dict]:
             out.append({"pais": "spain", "fuente": "AEMET", "zona": zone, "area": w.get("area") or zname,
                         "nivel": w.get("nivel"), "evento": w.get("evento"), "desde": w.get("onset") or "",
                         "hasta": w.get("expires") or "", "vigente": bool(w.get("activo_ahora")),
+                        "posible": bool(w.get("posible_ahora")),
                         "vigencia": w.get("vigencia", ""), "caduca_prudente": w.get("caduca_prudente", ""),
                         "emitido": w.get("sent", ""), "descripcion": w.get("descripcion") or ""})
     return out

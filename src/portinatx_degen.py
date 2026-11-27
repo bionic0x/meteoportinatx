@@ -634,9 +634,10 @@ def src_aemet_obs() -> SourceResult:
 # - sin <expires>: «SIN FIN DECLARADO»; sigue mientras el feed lo publique. caduca_prudente = hora de la consulta
 #   + CAP_SIN_FIN_H: solo sirve para retirarlo de una instantánea vieja, nunca de un feed que aún lo lista;
 # - hora sin zona horaria o ilegible: «SIN HORARIO VERIFICABLE»; la ventana se ensancha CAP_TZ_HOLGURA_H
-#   horas por cada lado (cualquier huso, UTC−12 a UTC+14) y, dentro de ella, cuenta como posiblemente activo.
+#   horas por cada lado (los feeds son ES, FR y AD: UTC+0 a UTC+2, más margen) y, dentro de ella, el aviso es
+#   «posible» (posible_ahora): visible como incertidumbre, nunca activo, ni suelo institucional, ni nivel oficial.
 CAP_SIN_FIN_H = 24
-CAP_TZ_HOLGURA_H = 14
+CAP_TZ_HOLGURA_H = 3
 _TZ_SUFFIX = re.compile(r"(Z|[+-]\d\d:?\d\d)$")
 
 
@@ -652,13 +653,14 @@ def cap_window(now: datetime, onset: str | None = "", expires: str | None = "",
     if end and end + slack < now:
         return None
     unverifiable = dudosa or not start
+    in_window = bool((not start or start - slack <= now) and (not end or now <= end + slack))
     return {"start": start, "end": end,
             "caduca_prudente": "" if end else (now + timedelta(hours=CAP_SIN_FIN_H)).isoformat(),
             "vigencia": ("SIN HORARIO VERIFICABLE" if unverifiable
                          else "SIN FIN DECLARADO" if not end else "DECLARADA"),
             "tz": "ASUMIDA_UTC" if dudosa else "",
-            # Sin inicio verificable o con hora dudosa: posiblemente activo (incertidumbre, no calma).
-            "activo": bool((not start or start - slack <= now) and (not end or now <= end + slack))}
+            # Sin inicio verificable o con hora dudosa: «posible» (incertidumbre), nunca un hecho ni calma.
+            "activo": in_window and not unverifiable, "posible": in_window and unverifiable}
 
 
 def parse_cap_documents(blobs: list[bytes], zone: str, now: datetime,
@@ -715,7 +717,7 @@ def parse_cap_documents(blobs: list[bytes], zone: str, now: datetime,
                     "evento": info.findtext("c:event", "", ns),
                     "onset": onset.isoformat() if onset else "",
                     "expires": expires.isoformat() if expires else "",
-                    "activo_ahora": win["activo"], "vigencia": win["vigencia"], "tz": win["tz"],
+                    "activo_ahora": win["activo"], "posible_ahora": win["posible"], "vigencia": win["vigencia"], "tz": win["tz"],
                     "caduca_prudente": win["caduca_prudente"],
                     "parametro": params.get("AEMET-Meteoalerta parametro", ""),
                     "probabilidad": params.get("AEMET-Meteoalerta probabilidad", ""),
@@ -780,7 +782,7 @@ def src_meteoalarm() -> SourceResult:
             continue
         warns.append({"nivel": lv, "rank": WARN_RANK.get(lv, 0), "evento": _tag(e, "cap:event"),
                       "onset": onset.isoformat() if onset else "", "expires": exp.isoformat() if exp else "",
-                      "activo_ahora": win["activo"], "vigencia": win["vigencia"], "tz": win["tz"],
+                      "activo_ahora": win["activo"], "posible_ahora": win["posible"], "vigencia": win["vigencia"], "tz": win["tz"],
                       "caduca_prudente": win["caduca_prudente"], "sent": _tag(e, "cap:sent"), "area": area,
                       "parametro": area, "probabilidad": _tag(e, "cap:certainty"), "descripcion": title})
     return SourceResult(name="meteoalarm", status="ok", kind="institutional",
@@ -1616,6 +1618,12 @@ def ch_institutional(src: SourceResult, alt: SourceResult | None = None, *,
                            f"MeteoAlarm: {alt.detail if alt else '—'}. Usa --floor <nivel> si lo ves en aemet.es")
         return ch
     ch.evidence.append(f"fuentes de aviso: {', '.join(used)}")
+    # Horario no verificable: visible como incertidumbre, nunca nivel oficial ni suelo de la precaución.
+    for w in warns:
+        if w.get("vigencia") == "SIN HORARIO VERIFICABLE" and (w.get("posible_ahora") or not active_only):
+            ch.evidence.append(f"⚠ posible aviso {w['nivel'].upper()} {w['evento']} · horario no verificable: "
+                               "no cuenta como nivel oficial ni como suelo")
+    warns = [w for w in warns if w.get("vigencia") != "SIN HORARIO VERIFICABLE"]
     if active_only:
         warns = [w for w in warns if w.get("activo_ahora")]
     else:
@@ -1636,8 +1644,7 @@ def ch_institutional(src: SourceResult, alt: SourceResult | None = None, *,
         seen.add(key)
         span = (f"{on.astimezone(MADRID):%a %d %H:%M}→{ex.astimezone(MADRID):%a %d %H:%M} local"
                 if on and ex else "")
-        mark = {"SIN HORARIO VERIFICABLE": " (POSIBLEMENTE ACTIVO · horario no verificable)",
-                "SIN FIN DECLARADO": " (ACTIVO · fin no indicado por el emisor)"}.get(w.get("vigencia", ""), " (ACTIVO)")
+        mark = " (ACTIVO · fin no indicado por el emisor)" if w.get("vigencia") == "SIN FIN DECLARADO" else " (ACTIVO)"
         ch.evidence.append(f"{w['nivel'].upper()} {w['evento']} {span}{mark if w['activo_ahora'] else ''}"
                            f" · {w.get('descripcion') or w['parametro']}".rstrip(" ·"))
     return ch
@@ -2503,6 +2510,11 @@ def build_claims(issued: datetime, channels: list[Channel], warnings: list[dict]
         out.append(Claim(f"C-OFF{i}", f"AEMET mantiene aviso {w['nivel']} ({w.get('tipo', '?')}): {w['evento']} — "
                                       f"{w.get('descripcion') or w.get('parametro', '')}"[:200],
                          "EVIDENCE", "aemet", w.get("area") or "zona 645301", w.get("expires") or exp_obs, "OFFICIAL"))
+    # Horario no verificable: afirmación INCIERTA (UNKNOWN), nunca «AEMET mantiene aviso».
+    for i, w in enumerate(w for w in warnings if w.get("posible_ahora")):
+        out.append(Claim(f"C-OFF-POS{i}", f"posible aviso {w['nivel']} ({w.get('tipo', '?')}): {w['evento']} — horario "
+                                          "no verificable (hora sin zona horaria o ilegible); no consta que esté en vigor"[:200],
+                         "UNKNOWN", "aemet", w.get("area") or "zona 645301", exp_obs, "HORARIO_NO_VERIFICABLE"))
     # 2. Canales
     for c in channels:
         root = channel_root(c.name)
@@ -4388,7 +4400,7 @@ def build_app(snap: dict, state: dict) -> dict[str, dict]:
         seen.add(k)
         wl.append({"nivel": w["nivel"], "rank": w["rank"], "tipo": w.get("tipo", ""), "evento": w["evento"],
                    "desde": w.get("onset"), "hasta": w.get("expires"), "activo": bool(w.get("activo_ahora")),
-                   "vigencia": w.get("vigencia", ""), "caduca_prudente": w.get("caduca_prudente", ""),
+                   "posible": bool(w.get("posible_ahora")), "vigencia": w.get("vigencia", ""), "caduca_prudente": w.get("caduca_prudente", ""),
                    "emitido": w.get("sent", ""), "area": w.get("area", ""),
                    "umbral": w.get("descripcion") or w.get("parametro", "")})
     hist = []

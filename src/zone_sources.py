@@ -15,7 +15,7 @@ from weather_core import number
 UTC = timezone.utc
 # Igual que portinatx_degen.CAP_SIN_FIN_H y CAP_TZ_HOLGURA_H (docs/AVISOS-VIGENCIA-AMBITO.md); un test lo comprueba.
 NO_EXPIRES_MAX_H = 24
-TZ_SLACK_H = 14
+TZ_SLACK_H = 3
 
 
 def time_utc(value):

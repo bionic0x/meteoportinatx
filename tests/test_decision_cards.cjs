@@ -248,4 +248,11 @@ test('episode: stale or insufficient cycles expose no values or level',()=>{
   const c=episodeCore();c.precaution.insufficient=true;
   assert.equal(M.project('meteo',c,'snapshot','font_romeu',NOW).episode.engine.insufficient,true);
 });
+test('a warning with an unverifiable time is uncertainty, never calm nor an official fact',()=>{
+  const pos={nivel:'rojo',evento:'Aviso de lluvias',activo:false,posible:true,vigencia:'SIN HORARIO VERIFICABLE'};
+  const coast=M.officialCoast({official:{verificado:true,level_now:'quiet',all:[pos]}});
+  assert.equal(coast.kind,'unknown'); assert.match(coast.title,/horario no verificable/);
+  const mountain=M.mountainOfficial({fuentes:{avisos:'ok'},avisos:[{...pos,vigente:false}]});
+  assert.equal(mountain.kind,'unknown'); assert.doesNotMatch(mountain.title,/No constan/);
+});
 console.log(`PASS ${n} decision tests`);

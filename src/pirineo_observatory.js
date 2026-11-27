@@ -71,8 +71,13 @@
   // Classify at viewing time, not at the time the snapshot was exported.
   function warningTiming(w, now=Date.now()) {
     const start=utc(w?.desde), end=utc(w?.hasta);
-    // Hora dudosa: posiblemente en vigor hasta 14 h después del fin leído (cualquier huso), como en el motor.
-    if(w?.vigencia==='SIN HORARIO VERIFICABLE') return end && Number.isFinite(now) && now>end.getTime()+14*3600000 ? 'FINALIZADO' : 'SIN HORARIO VERIFICABLE';
+    // Hora dudosa: «posible» dentro de la ventana ensanchada 3 h por cada lado (feeds ES/FR/AD), como en el motor.
+    if(w?.vigencia==='SIN HORARIO VERIFICABLE') {
+      const H=3*3600000;
+      if(Number.isFinite(now) && end && now>end.getTime()+H) return 'FINALIZADO';
+      if(Number.isFinite(now) && start && now<start.getTime()-H) return 'PRÓXIMO';
+      return 'SIN HORARIO VERIFICABLE';
+    }
     // Sin fin declarado: incierto hasta la retirada prudente del motor (docs/AVISOS-VIGENCIA-AMBITO.md).
     if(w?.vigencia==='SIN FIN DECLARADO' && start && Number.isFinite(now)) {
       const limit=utc(w?.caduca_prudente);

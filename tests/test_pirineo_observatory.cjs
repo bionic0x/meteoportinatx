@@ -42,8 +42,9 @@ assert.equal(O.warningTiming({desde:start,vigencia:'SIN FIN DECLARADO',caduca_pr
 assert.equal(O.warningTiming({desde:end,vigencia:'SIN FIN DECLARADO',caduca_prudente:prudent},now),'PRÓXIMO');
 assert.equal(O.warningTiming({desde:start,vigencia:'SIN FIN DECLARADO',caduca_prudente:prudent},now+6*3600000),'FINALIZADO','prudent expiry retires it');
 assert.equal(O.warningTiming({desde:start,hasta:end,vigencia:'SIN HORARIO VERIFICABLE'},now),'SIN HORARIO VERIFICABLE','time without zone is not verifiable');
-assert.equal(O.warningTiming({desde:start,hasta:end,vigencia:'SIN HORARIO VERIFICABLE'},now+10*3600000),'SIN HORARIO VERIFICABLE','doubtful time stays possibly in force within 14 h of its end');
-assert.equal(O.warningTiming({desde:start,hasta:end,vigencia:'SIN HORARIO VERIFICABLE'},now+16*3600000),'FINALIZADO');
+assert.equal(O.warningTiming({desde:start,hasta:end,vigencia:'SIN HORARIO VERIFICABLE'},now+3*3600000),'SIN HORARIO VERIFICABLE','doubtful time stays a possible warning within 3 h of its end');
+assert.equal(O.warningTiming({desde:start,hasta:end,vigencia:'SIN HORARIO VERIFICABLE'},now+5*3600000),'FINALIZADO','13 h after a doubtful end it no longer counts');
+assert.equal(O.warningTiming({desde:new Date(now+12*3600000).toISOString(),hasta:new Date(now+20*3600000).toISOString(),vigencia:'SIN HORARIO VERIFICABLE'},now),'PRÓXIMO','starting in 12 h is not possibly active');
 const warnings=[{nivel:'amarillo',desde:'2026-11-11T16:00:00Z',hasta:'2026-11-11T18:00:00Z'}, {nivel:'rojo',desde:start,hasta:end}, {nivel:'naranja'}];
 assert.deepEqual(O.derive({...core,avisos:warnings},series,null,{now}).warnings.map(w=>w.estado_temporal),['VIGENTE','PRÓXIMO','SIN HORARIO VERIFICABLE']);
 const elements={'pov-point':{dataset:{}},'pov-model-point':{dataset:{}},'pov-model-note':{}};
