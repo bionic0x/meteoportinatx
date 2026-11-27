@@ -21,6 +21,7 @@ import argparse
 import fcntl
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -48,22 +49,38 @@ MOUNTINFO = Path("/proc/self/mountinfo")
 VOLATILE_FS = ("overlay", "tmpfs", "ramfs", "squashfs")   # y cualquier fuse.*
 
 
+def _unescape(value):
+    """Escapes octales de mountinfo (\\040 espacio, \\011 tabulador, \\012, \\134…)."""
+    return re.sub(r"\\([0-7]{3})", lambda m: chr(int(m.group(1), 8)), value)
+
+
 def _fs_type(path):
-    """Tipo de sistema de archivos de `path` según mountinfo (punto de montaje más largo), o None."""
+    """Tipo de sistema de archivos de `path` según mountinfo, o None si no se puede leer.
+
+    Primero por dispositivo: el campo `major:minor` igual a `os.stat(path).st_dev`. Si no hay
+    coincidencia, por ruta: punto de montaje más largo, con todos los escapes octales traducidos."""
     try:
         lines = MOUNTINFO.read_text(encoding="utf-8").splitlines()
+        dev = os.stat(path).st_dev
     except OSError:
         return None
-    target, best = str(Path(path).resolve()), (-1, None)
+    device = f"{os.major(dev)}:{os.minor(dev)}"
+    target, by_dev, best = str(Path(path).resolve()), (-1, None), (-1, None)
     for line in lines:
         left, sep, right = line.partition(" - ")
         fields = left.split()
         if not sep or len(fields) < 5 or not right.split():
             continue
-        mount = fields[4].replace("\\040", " ")
-        if (target == mount or target.startswith(mount.rstrip("/") + "/")) and len(mount) > best[0]:
-            best = (len(mount), right.split()[0])
-    return best[1]
+        mount, fstype = _unescape(fields[4]), right.split()[0]
+        inside = target == mount or target.startswith(mount.rstrip("/") + "/")
+        if fields[2] == device:
+            # Varias entradas del mismo dispositivo (bind mounts): la que contiene la ruta, si la hay.
+            rank = len(mount) if inside else 0
+            if rank > by_dev[0]:
+                by_dev = (rank, fstype)
+        if inside and len(mount) > best[0]:
+            best = (len(mount), fstype)
+    return by_dev[1] or best[1]
 
 
 def _origin_problem(origin, root, fs_type):

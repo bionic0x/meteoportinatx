@@ -8,6 +8,7 @@ from __future__ import annotations
 import importlib.util
 import inspect
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -313,11 +314,31 @@ class Campaign(Base):
 
     # --- Cuarta verificación ---
 
-    def mountinfo(self, fstype):
+    def mountinfo(self, fstype, mount=None, device="0:9999"):
+        """Mountinfo simulado; dispositivos ficticios para que decida la ruta salvo que se pase `device`."""
         info = self.tmp / "mountinfo"
-        info.write_text("22 27 0:21 / / rw,relatime - ext4 /dev/sda1 rw\n"
-                        f"90 22 0:99 / {self.tmp / 'external'} rw,relatime - {fstype} {fstype} rw\n")
+        mount = mount or str(self.tmp / "external")
+        info.write_text("22 27 0:9998 / / rw,relatime - ext4 /dev/sda1 rw\n"
+                        f"90 22 {device} / {mount} rw,relatime - {fstype} {fstype} rw\n")
         return info
+
+    def test_mountinfo_device_decides_over_path(self):
+        src = self.tmp / "dev-src"
+        src.mkdir()
+        dev = os.stat(src).st_dev
+        # Ruta del montaje irreconocible; el major:minor del origen decide.
+        with patch.object(drill, "MOUNTINFO", self.mountinfo(
+                "overlay", mount="/otra/ruta", device=f"{os.major(dev)}:{os.minor(dev)}")):
+            self.assertEqual(drill._fs_type(src), "overlay")
+        with patch.object(drill, "MOUNTINFO", self.mountinfo("overlay", mount="/otra/ruta")):
+            self.assertEqual(drill._fs_type(src), "ext4")
+
+    def test_mountinfo_octal_escapes_in_path(self):
+        src = self.tmp / "con\ttab y espacio"
+        src.mkdir()
+        escaped = str(src).replace("\t", "\\011").replace(" ", "\\040")
+        with patch.object(drill, "MOUNTINFO", self.mountinfo("overlay", mount=escaped)):
+            self.assertEqual(drill._fs_type(src), "overlay")
 
     def test_overlay_source_is_rejected_by_mountinfo(self):
         self.run_cycles(91, pairs=25)
