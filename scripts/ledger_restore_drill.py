@@ -4,7 +4,9 @@
 Sin `--source` copia `local/` y `journal/cycles.jsonl` del propio ledger a un directorio limpio y
 declara `origen: copia_local`: solo prueba que ESTE disco se lee, no que exista una copia de
 seguridad. Con `--source RUTA` restaura DESDE una copia ya existente fuera del ledger (otro disco,
-clon del repositorio privado…) y declara `origen: copia_externa`. En ambos casos compara, con el
+clon del repositorio privado…) y declara `origen: copia_externa`. Un origen con cualquier enlace
+simbólico (ORIGEN_CON_ENLACES) o con archivos que comparten (st_dev, st_ino) con el ledger
+(ORIGEN_ES_EL_LEDGER) no se restaura: el recibo sale `ok: false` con ese motivo. En ambos casos compara, con el
 mismo reloj, `verify`, `score` (incluidas exclusiones) y el SHA-256 del bundle exportado frente al
 ledger original. El recibo se guarda en `<ledger>/journal/restore-receipts/<sha256>.json`.
 
@@ -28,6 +30,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "scripts"))
 import forecast_ledger as fl  # noqa: E402
+import ledger_campaign  # noqa: E402
 from forensic_cycle import private_root  # noqa: E402
 
 
@@ -39,6 +42,28 @@ def _external(source, root):
     if source == root or root in source.parents or source in root.parents:
         raise ValueError("--source debe estar fuera del ledger")
     return source
+
+
+def _origin_problem(origin, root):
+    """Motivo para rechazar una copia externa que no es independiente del ledger, o None.
+
+    Cualquier enlace simbólico en el árbol de origen se rechaza (podría apuntar al propio ledger), y
+    ningún archivo del origen puede compartir (st_dev, st_ino) con uno del ledger (enlace duro o el
+    mismo árbol montado en otra ruta)."""
+    for base, dirs, files in os.walk(origin):
+        if any(Path(base, n).is_symlink() for n in dirs + files):
+            return "ORIGEN_CON_ENLACES"
+    inodes = set()
+    for base, _, files in os.walk(root):
+        for n in files:
+            st = os.lstat(Path(base, n))
+            inodes.add((st.st_dev, st.st_ino))
+    for base, _, files in os.walk(origin):
+        for n in files:
+            st = os.lstat(Path(base, n))
+            if (st.st_dev, st.st_ino) in inodes:
+                return "ORIGEN_ES_EL_LEDGER"
+    return None
 
 
 def _same_device(a, b):
@@ -54,15 +79,18 @@ def drill(root, *, source=None, clock=None):
         now = (clock or fl.Ledger(root)._now)()
         fixed = lambda: now  # noqa: E731 — mismo instante en ambos lados de la comparación
         original = fl.Ledger(root, clock=fixed)
+        problem = None if source is None else _origin_problem(origin, root)
+        if problem:
+            return _write(root, _rejected(original, now, problem, _same_device(origin, root)))
         with tempfile.TemporaryDirectory(prefix="ledger-restore-") as tmp:
             target = Path(tmp) / "restored"
             target.mkdir(mode=0o700)
             if (origin / "local").is_dir():
-                shutil.copytree(origin / "local", target / "local")
+                shutil.copytree(origin / "local", target / "local", symlinks=True)  # segunda barrera
             journal = origin / "journal" / "cycles.jsonl"
             if journal.is_file():
                 (target / "journal").mkdir()
-                shutil.copy2(journal, target / "journal" / "cycles.jsonl")
+                shutil.copy2(journal, target / "journal" / "cycles.jsonl", follow_symlinks=False)
             restored = fl.Ledger(target, clock=fixed)
             sides = {}
             for name, led in (("original", original), ("restaurado", restored)):
@@ -71,8 +99,8 @@ def drill(root, *, source=None, clock=None):
                 bundle = led.export(Path(tmp) / (name + ".json"))
                 sides[name] = {"verify": verified, "journal": led.journal(), "score": led.score(),
                                "bundle_sha256": bundle["bundle_sha256"],
-                               "observaciones": len({p["observation_id"] for p in led.pairs()[0]
-                                                     if not p["baseline"]})}
+                               "observaciones": len(ledger_campaign.independent_observations(
+                                                   led, led.pairs()[0]))}
         o, r = sides["original"], sides["restaurado"]
         entries = o["journal"][0] or []
         receipt = {
@@ -92,10 +120,25 @@ def drill(root, *, source=None, clock=None):
             "limite": "recibo sin firma ni sello externo; falsificable por quien controle el disco",
         }
         receipt["ok"] = all(receipt[k] for k in ("verify_ok", "verify_match", "score_match", "bundle_match"))
-        receipt["sha256"] = fl.receipt_digest(receipt)
-        path = root / "journal" / fl.RECEIPTS_DIR / (receipt["sha256"] + ".json")
-        fl.Ledger._link_immutable(path, fl._canonical(receipt))
-        return receipt
+        return _write(root, receipt)
+
+
+def _rejected(original, now, problem, same_device):
+    """Recibo fallido, anclado al diario, cuando la copia de origen no es independiente."""
+    entries = original.journal()[0] or []
+    return {"schema": 2, "kind": "restore-drill", "at_utc": fl._iso(now), "origen": "copia_externa",
+            "mismo_dispositivo": same_device,
+            "journal_seq": entries[-1]["seq"] if entries else None,
+            "journal_head_sha256": entries[-1]["hash"] if entries else None,
+            "motivo": problem, "ok": False, "external_attestation": False,
+            "limite": "recibo sin firma ni sello externo; falsificable por quien controle el disco"}
+
+
+def _write(root, receipt):
+    receipt["sha256"] = fl.receipt_digest(receipt)
+    path = root / "journal" / fl.RECEIPTS_DIR / (receipt["sha256"] + ".json")
+    fl.Ledger._link_immutable(path, fl._canonical(receipt))
+    return receipt
 
 
 def main(argv=None):

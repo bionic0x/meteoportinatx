@@ -32,6 +32,28 @@ def _gaps(times):
     return [b - a for a, b in zip(times, times[1:])]
 
 
+def independent_observations(ledger, pairs):
+    """Observaciones QC PASS emparejadas (sin baseline) que cuentan como unidades independientes.
+
+    Por sitio y variable, las ventanas solapadas cuentan una sola vez: se eligen ventanas sin solape
+    por orden de fin (máximo conjunto disjunto). Veinte ventanas de 1–20 h que empiezan a la misma
+    hora son un único periodo físico. Devuelve {id: (inicio, fin)} de las observaciones contadas."""
+    obs_by_id = {r["id"]: r for _, r in ledger.records("observation", include_imported=False)}
+    groups = {}
+    for oid in {p["observation_id"] for p in pairs if not p["baseline"]}:
+        d = obs_by_id[oid]["data"]
+        window = (fl._date(d["observed_from"], "observed_from"), fl._date(d["observed_to"], "observed_to"))
+        groups.setdefault((d["site_id"], d["variable"]), []).append((window[1], window[0], oid))
+    counted = {}
+    for items in groups.values():
+        last_end = None
+        for end, start, oid in sorted(items):
+            if last_end is None or start >= last_end:
+                counted[oid] = (start, end)
+                last_end = end
+    return counted
+
+
 def _hour(t):
     return t.replace(minute=0, second=0, microsecond=0)
 
@@ -82,9 +104,8 @@ def campaign_status(ledger, *, max_gap_hours=DEFAULT_MAX_GAP_HOURS, min_coverage
     pairs, excluded = ledger.pairs()
     # Un par cuenta solo si pronóstico Y observación figuran en el diario dentro de la ventana.
     pairs_w = [p for p in pairs if p["forecast_id"] in window_ids and p["observation_id"] in window_ids]
-    scored = {p["observation_id"]: p for p in pairs_w if not p["baseline"]}
-    obs_by_id = {r["id"]: r for _, r in ledger.records("observation", include_imported=False)}
-    pair_days = {fl._date(obs_by_id[i]["data"]["observed_from"], "observed_from").date() for i in scored}
+    scored = independent_observations(ledger, pairs_w)
+    pair_days = {start.date() for start, _ in scored.values()}
     obs = [r for _, r in ledger.records("observation", include_imported=False) if r["id"] in window_ids]
     gaps = _gaps(data_w)
     days_w = {t.date() for t in data_w}

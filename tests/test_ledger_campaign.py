@@ -80,6 +80,10 @@ class Base(unittest.TestCase):
         with patch.object(drill, "_same_device", return_value=not other_device):
             return drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
 
+    def complete_drill_from(self, src):
+        with patch.object(drill, "_same_device", return_value=False):
+            return drill.drill(self.ledger.root, source=src, clock=lambda: self.now)
+
     def external_copy(self):
         copy = self.tmp / "external"
         shutil.rmtree(copy, ignore_errors=True)
@@ -251,6 +255,57 @@ class Campaign(Base):
         self.ledger.append_journal("NO_DATA", [])
         out = self.status()
         self.assertEqual((out["pares_brutos"], out["observaciones_emparejadas"]), (0, 0))
+
+    # --- Tercera verificación (probe3) ---
+
+    def test_symlinked_source_is_rejected(self):
+        self.run_cycles(91, pairs=25)
+        src = self.tmp / "fake-external"
+        src.mkdir()
+        (src / "local").symlink_to(self.ledger.root / "local")
+        (src / "journal").symlink_to(self.ledger.root / "journal")
+        receipt = self.complete_drill_from(src)
+        self.assertEqual((receipt["ok"], receipt["motivo"]), (False, "ORIGEN_CON_ENLACES"))
+        self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+
+    def test_nested_symlink_in_source_is_rejected(self):
+        self.run_cycles(3)
+        src = self.external_copy()
+        victim = next((src / "local" / "forecast").glob("*.json"))
+        victim.unlink()
+        victim.symlink_to(self.ledger.root / "local" / "forecast" / victim.name)
+        self.assertEqual(self.complete_drill_from(src)["motivo"], "ORIGEN_CON_ENLACES")
+
+    def test_hardlinked_source_is_the_ledger(self):
+        self.run_cycles(91, pairs=25)
+        src = self.tmp / "hardlinked"
+        shutil.copytree(self.ledger.root, src, copy_function=lambda a, b: Path(b).hardlink_to(a),
+                        ignore=shutil.ignore_patterns("restore-receipts"))
+        receipt = self.complete_drill_from(src)
+        self.assertEqual((receipt["ok"], receipt["motivo"]), (False, "ORIGEN_ES_EL_LEDGER"))
+        self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+
+    def test_overlapping_windows_count_once(self):
+        # 20 ventanas de 1–20 h que empiezan a la misma hora: un único periodo físico.
+        self.now = START
+        begin = START + timedelta(hours=1)
+        ids = []
+        for h in range(1, 21):
+            ids.append(self.ledger.add("forecast", {
+                **SITE, "event_id": "solape", "valid_from": begin.isoformat(),
+                "valid_to": (begin + timedelta(hours=h)).isoformat(), "issued_at": START.isoformat(),
+                "provider_run_at": START.isoformat(), "provider": "test", "model": f"m{h}", "family": "f",
+                "mode": "amount", "prediction": 1.0, "source_id": "synthetic"})["id"])
+        self.ledger.append_journal("OK", ids)
+        self.now = START + timedelta(hours=22)
+        obs = [self.ledger.add("observation", {
+            **SITE, "event_id": "solape", "observed_from": begin.isoformat(),
+            "observed_to": (begin + timedelta(hours=h)).isoformat(), "station_id": "rain-gauge",
+            "value": 1.5, "qc": "INSTRUMENT_QC_PASS", "source_type": "instrument",
+            "source_id": "synthetic"})["id"] for h in range(1, 21)]
+        self.ledger.append_journal("OK", obs)
+        out = self.status()
+        self.assertEqual((out["pares_brutos"], out["observaciones_emparejadas"]), (20, 1))
 
     def test_source_must_be_outside_ledger(self):
         self.run_cycles(1)
