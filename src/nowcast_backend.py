@@ -135,7 +135,7 @@ def _public_warning_changes(original, official):
         if kind == "NUEVO":
             signature = tuple(change.get(k) for k in ("nivel", "tipo", "evento", "onset", "expires"))
             if signature in institutional:
-                result.append(_pick(change, {"kind", "nivel", "tipo", "evento", "onset", "expires"}))
+                result.append(_pick(change, {"kind", "nivel", "tipo", "evento", "onset", "expires", "posible"}))
         elif kind in PUBLIC_WARNING_KINDS:
             if change.get("de") in PUBLIC_LEVELS and change.get("a") in PUBLIC_LEVELS:
                 result.append(_pick(change, {"kind", "de", "a"}))

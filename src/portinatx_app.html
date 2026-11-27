@@ -916,7 +916,7 @@ function renderAxes(){
   const c = S.core; if(!c) return;
   const ban = $("banner"); const ch = (c.warning_changes||[]).filter(x=>x.kind!=="INICIAL");
   ban.hidden = !ch.length;
-  if (ch.length) ban.innerHTML = `<div class="banner">${uiText("Cambio de aviso oficial en este ciclo:","Official warning changed in this cycle:")} ${ch.map(x=> x.kind==="NUEVO" ? `${uiText("nuevo","new")} ${esc(x.nivel)} ${esc(x.tipo)} · ${esc(x.evento)} (${fmtDT(x.onset)}→${fmtDT(x.expires)})` : `${esc(x.kind)} ${esc(x.de)}→${esc(x.a)}`).join(" · ")}</div>`;
+  if (ch.length) ban.innerHTML = `<div class="banner">${uiText("Cambio de aviso oficial en este ciclo:","Official warning changed in this cycle:")} ${ch.map(x=> x.kind==="NUEVO" ? `${uiText("nuevo","new")} ${esc(x.nivel)} ${esc(x.tipo)} · ${esc(x.evento)} (${fmtDT(x.onset)}→${fmtDT(x.expires)})${x.posible?uiText(" (posible · horario no verificable)"," (possible · time not verifiable)"):""}` : `${esc(x.kind)} ${esc(x.de)}→${esc(x.a)}`).join(" · ")}</div>`;
   // oficial
   const o = c.official, now = Date.now();
   // El eje oficial no muestra calma si, a la hora actual, hay un aviso en vigor. Un aviso con horario no

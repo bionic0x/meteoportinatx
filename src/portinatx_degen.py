@@ -1619,10 +1619,11 @@ def ch_institutional(src: SourceResult, alt: SourceResult | None = None, *,
         return ch
     ch.evidence.append(f"fuentes de aviso: {', '.join(used)}")
     # Horario no verificable: visible como incertidumbre, nunca nivel oficial ni suelo de la precaución.
-    for w in warns:
-        if w.get("vigencia") == "SIN HORARIO VERIFICABLE" and (w.get("posible_ahora") or not active_only):
-            ch.evidence.append(f"⚠ posible aviso {w['nivel'].upper()} {w['evento']} · horario no verificable: "
-                               "no cuenta como nivel oficial ni como suelo")
+    pos = [w for w in warns if w.get("vigencia") == "SIN HORARIO VERIFICABLE"
+           and (w.get("posible_ahora") or not active_only)]
+    pos_txt = [f"⚠ posible aviso {w['nivel']} · horario no verificable · {w['evento']}: "
+               "no cuenta como nivel oficial ni como suelo" for w in pos]
+    ch.evidence += pos_txt
     warns = [w for w in warns if w.get("vigencia") != "SIN HORARIO VERIFICABLE"]
     if active_only:
         warns = [w for w in warns if w.get("activo_ahora")]
@@ -1630,8 +1631,9 @@ def ch_institutional(src: SourceResult, alt: SourceResult | None = None, *,
         horizon = now_utc() + timedelta(hours=CFG["lookahead_h"])
         warns = [w for w in warns if not parse_time(w.get("onset")) or parse_time(w["onset"]) <= horizon]
     if not warns:
-        ch.evidence.append(f"sin avisos {'activos ahora' if active_only else 'en las próximas %d h' % CFG['lookahead_h']} "
-                           f"en zona {CFG['aemet_zone']}")
+        if not pos_txt:  # nunca «sin avisos» si hay un posible aviso: la evidencia ya acaba nombrándolo
+            ch.evidence.append(f"sin avisos {'activos ahora' if active_only else 'en las próximas %d h' % CFG['lookahead_h']} "
+                               f"en zona {CFG['aemet_zone']}")
         return ch
     top = max(warns, key=lambda w: w["rank"])
     ch.level = top["rank"]
@@ -2262,6 +2264,9 @@ def official_state(inst_now: Channel, inst_all: Channel, warnings: list[dict]) -
                           "desde": w["onset"], "hasta": w["expires"], "vigencia": w.get("vigencia", ""),
                           "umbral": w.get("descripcion") or w.get("parametro", "")}
                          for w in sorted(act, key=lambda w: -w["rank"])],
+            # Horario no verificable: se nombra como incertidumbre, sin nivel oficial (docs/AVISOS-VIGENCIA-AMBITO.md).
+            "posibles": [{"nivel": w["nivel"], "tipo": w.get("tipo", ""), "evento": w["evento"]}
+                         for w in sorted(warnings, key=lambda w: -w["rank"]) if w.get("posible_ahora")],
             "verificado": inst_now.available}
 
 
@@ -2827,13 +2832,15 @@ def detect_warning_changes(state: dict, warnings: list[dict], now: datetime) -> 
     seen = state.setdefault("warn_seen", {})
     changes = []
     for w in warnings:
+        # Sin inicio también se notifica: la firma no depende del onset (si falta, se distingue por el evento).
+        sig = f"{w['nivel']}|{w.get('tipo', '')}|{w.get('onset') or ''}|{w.get('expires') or ''}"
         if not w.get("onset"):
-            continue
-        sig = f"{w['nivel']}|{w.get('tipo', '')}|{w['onset']}|{w['expires']}"
+            sig += f"|{w['evento'].lower()}"
         if sig not in seen:
             seen[sig] = now.isoformat()
             changes.append({"kind": "NUEVO", "nivel": w["nivel"], "tipo": w.get("tipo", ""), "evento": w["evento"],
-                            "onset": w["onset"], "expires": w["expires"], "id": w.get("id", "")})
+                            "onset": w.get("onset") or "", "expires": w.get("expires") or "", "id": w.get("id", ""),
+                            "posible": bool(w.get("posible_ahora"))})
     act = max((w["rank"] for w in warnings if w.get("activo_ahora")), default=0)
     first = "official_rank_now" not in state
     prev = state.get("official_rank_now", 0)
@@ -2851,6 +2858,12 @@ def detect_warning_changes(state: dict, warnings: list[dict], now: datetime) -> 
     return changes
 
 
+def notify_text(changes: list[dict]) -> str:
+    """Texto del push. Un posible aviso se notifica con la misma prioridad, marcado como incierto."""
+    return "; ".join(f"{c['kind']} {c.get('nivel') or c.get('a')} {c.get('evento', '')}"
+                     + (" (posible · horario no verificable)" if c.get("posible") else "") for c in changes)[:900]
+
+
 def notify(changes: list[dict], cid: str) -> str:
     """Registra en alerts.jsonl y, si NTFY_URL está definido, envía un push. Nunca bloquea el ciclo."""
     if not changes:
@@ -2861,7 +2874,7 @@ def notify(changes: list[dict], cid: str) -> str:
     url = os.environ.get("NTFY_URL", "")
     if not url:
         return "registrado (sin NTFY_URL)"
-    txt = "; ".join(f"{c['kind']} {c.get('nivel') or c.get('a')} {c.get('evento', '')}" for c in changes)[:900]
+    txt = notify_text(changes)
     try:
         req = urllib.request.Request(url, data=txt.encode(), headers={"Title": "Portinatx: cambio de aviso",
                                                                       "Priority": "high"})
@@ -3057,6 +3070,25 @@ def cycle(state: dict) -> dict:
             "_srcs": srcs, "_forense": {**forensic_bundle(state, srcs, None), "archivado_ciclo": archived}}
 
 
+def official_lines(ow: dict) -> list[str]:
+    """Líneas del eje oficial del informe de texto. Nunca «ninguno» si hay un posible aviso."""
+    L, v = [], ow["vigente"]
+    em = EMOJI.get(ow["level_now"], "✖")
+    if v:
+        for w in ow.get("vigentes") or [v]:
+            on, ex = parse_time(w["desde"]), parse_time(w["hasta"])
+            span = f"{on.astimezone(MADRID):%d %H:%M}→{ex.astimezone(MADRID):%d %H:%M}" if on and ex else "manual"
+            L.append(f"{em}  AVISO OFICIAL        {w['nivel'].upper()} {w.get('tipo', '')} · {w['evento']} · "
+                     f"{span} local · {w['umbral'][:90]}")
+    elif not ow.get("posibles"):
+        L.append(f"{em}  AVISO OFICIAL        {'ninguno vigente' if ow['verificado'] else 'NO VERIFICADO'} "
+                 f"(próximas 36 h: {ow['level_36h']})")
+    for w in ow.get("posibles") or []:
+        L.append(f"?  AVISO OFICIAL        posible aviso {w['nivel']} · horario no verificable · "
+                 f"{w.get('tipo', '')} · {w['evento']} (próximas 36 h: {ow['level_36h']})")
+    return L
+
+
 def render(snap: dict) -> str:
     L = []
     L.append(f"━━ {snap['cycle_id']} · PORTINATX DEGEN {snap['engine']} ━━")
@@ -3067,20 +3099,11 @@ def render(snap: dict) -> str:
             L.append(f"⚠⚠ CAMBIO DE AVISO OFICIAL: {c['kind']} {c['de']}→{c['a']}  [{snap.get('notify', '')}]")
         else:
             L.append(f"⚠  aviso nuevo en el feed: {c['nivel'].upper()} {c['tipo']} · {c['evento']} · "
-                     f"{c['onset'][:16]}→{c['expires'][:16]}")
+                     f"{c['onset'][:16]}→{c['expires'][:16]}"
+                     + (" (posible · horario no verificable)" if c.get("posible") else ""))
     ow = snap.get("official_warning")
     if ow:
-        v = ow["vigente"]
-        em = EMOJI.get(ow["level_now"], "✖")
-        if v:
-            for w in ow.get("vigentes") or [v]:
-                on, ex = parse_time(w["desde"]), parse_time(w["hasta"])
-                span = f"{on.astimezone(MADRID):%d %H:%M}→{ex.astimezone(MADRID):%d %H:%M}" if on and ex else "manual"
-                L.append(f"{em}  AVISO OFICIAL        {w['nivel'].upper()} {w.get('tipo', '')} · {w['evento']} · "
-                         f"{span} local · {w['umbral'][:90]}")
-        else:
-            L.append(f"{em}  AVISO OFICIAL        {'ninguno vigente' if ow['verificado'] else 'NO VERIFICADO'} "
-                     f"(próximas 36 h: {ow['level_36h']})")
+        L += official_lines(ow)
         hz = snap["observed_local_hazard"]
         L.append("    PELIGRO LOCAL       " + " · ".join(
             f"{k}={v['estado'] if v['estado'] != 'OBSERVED' else v['nivel']}" for k, v in hz.items()))

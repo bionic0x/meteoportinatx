@@ -92,7 +92,8 @@ class CapVigenciaAmbito(unittest.TestCase):
             with self.subTest(active_only=active_only):
                 ch = pd.ch_institutional(src, active_only=active_only)
                 self.assertEqual(ch.level, 0, 'no es suelo institucional ni nivel oficial')
-                self.assertTrue(any('posible aviso ROJO' in e and 'horario no verificable' in e for e in ch.evidence))
+                self.assertIn('posible aviso rojo · horario no verificable', ch.evidence[-1])
+                self.assertFalse(any('sin avisos' in e for e in ch.evidence))
                 self.assertNotEqual(pd.fuse([ch])['proposed'], 'alarm')
         st = pd.official_state(pd.ch_institutional(src, active_only=True), pd.ch_institutional(src), w)
         self.assertEqual(st['level_now'], 'quiet')
@@ -104,6 +105,29 @@ class CapVigenciaAmbito(unittest.TestCase):
         self.assertEqual(pos[0].epistemic, 'UNKNOWN')
         self.assertEqual(pos[0].label, 'HORARIO_NO_VERIFICABLE')
         self.assertIn('horario no verificable', pos[0].text)
+        # T-01: el informe de texto nombra el posible aviso y nunca dice «ninguno».
+        st = pd.official_state(pd.ch_institutional(src, active_only=True), pd.ch_institutional(src),
+                               [{**w[0], 'nivel': 'rojo', 'rank': 3}])
+        lines = '\n'.join(pd.official_lines(st))
+        self.assertIn('posible aviso rojo · horario no verificable', lines)
+        self.assertNotIn('ninguno', lines)
+        self.assertIn('ninguno vigente', '\n'.join(pd.official_lines({**st, 'posibles': []})))
+
+    def test_notificacion_de_posible_aviso_y_sin_inicio(self):
+        # T-02: el posible aviso se notifica, marcado como incierto.
+        w = pd.parse_cap_documents([cap(onset='2026-10-17T09:00:00', expires='2026-10-18T14:00:00')], '645301', NOW, 72)
+        ch = pd.detect_warning_changes({'official_rank_now': 0}, w, NOW)
+        nuevo = [c for c in ch if c['kind'] == 'NUEVO']
+        self.assertEqual(len(nuevo), 1)
+        self.assertIn('(posible · horario no verificable)', pd.notify_text(ch))
+        # T-03: sin onset ni effective también se notifica, una sola vez.
+        state = {'official_rank_now': 0}
+        w = pd.parse_cap_documents([cap(onset='')], '645301', NOW, 72)
+        self.assertEqual([c['kind'] for c in pd.detect_warning_changes(state, w, NOW)], ['NUEVO'])
+        self.assertEqual(pd.detect_warning_changes(state, w, NOW), [])
+        # Un aviso con horario verificable no lleva la marca.
+        w = pd.parse_cap_documents([cap()], '645301', NOW, 72)
+        self.assertNotIn('posible', pd.notify_text(pd.detect_warning_changes({'official_rank_now': 0}, w, NOW)))
 
 
 def atom(*entries):

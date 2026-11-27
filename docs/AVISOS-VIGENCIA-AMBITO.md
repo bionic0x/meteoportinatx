@@ -19,8 +19,13 @@ Correcciones de la auditoría de solo lectura sobre la vigencia y el ámbito de 
 - **Visible:** la cabecera de Portinatx muestra «posible aviso [nivel] · horario no verificable», nunca «Sin aviso vigente». Las tarjetas de decisión lo muestran como incierto y la señal del dispositivo como `unknown`.
 - **Nunca es un hecho oficial:** no entra en `level_now`, ni en `vigente`/`vigentes`, ni en el suelo institucional. Por tanto, `fuse` no sube la precaución por esa vía y no puede forzar ALARM. El canal institucional solo lleva la marca «⚠ posible aviso … · horario no verificable: no cuenta como nivel oficial ni como suelo».
 - **En `build_claims`:** se registra como afirmación `UNKNOWN` con la etiqueta `HORARIO_NO_VERIFICABLE`, nunca como «AEMET mantiene aviso».
+- **Nunca «ninguno» ni «sin avisos»:**
+  - `official_state` lo expone en `posibles`.
+  - El informe de texto (`official_lines`) escribe «AVISO OFICIAL posible aviso [nivel] · horario no verificable · …» en lugar de «ninguno vigente».
+  - La evidencia de `ch_institutional` termina nombrándolo, no con «sin avisos activos ahora».
+- **Notificación:** un posible aviso nuevo se notifica con la misma prioridad que cualquier aviso nuevo, añadiendo «(posible · horario no verificable)» al texto del push (`notify_text`), al informe y al aviso de cambio de la interfaz. Un aviso real no se silencia.
 
-Lo mismo vale para un aviso sin `onset` ni `effective` o con una hora ilegible. | `cap_window`, `ch_institutional`, `build_claims`, `zone_sources.warnings`, `zone_report.py`, `nowcast_backend.py` (proyección pública), `decision_cards.js`, `device_sensors.js`, interfaces |
+Lo mismo vale para un aviso sin `onset` ni `effective` o con una hora ilegible. | `cap_window`, `ch_institutional`, `official_state`, `official_lines`, `build_claims`, `detect_warning_changes`, `notify_text`, `zone_sources.warnings`, `zone_report.py`, `nowcast_backend.py` (proyección pública), `decision_cards.js`, `device_sensors.js`, interfaces |
 | A-10 (P2) | Portinatx no mostraba la hora de emisión, la edad ni la zona. | `official.all` incluye `emitido` (el campo `sent`), `area`, `vigencia` y `caduca_prudente`. La interfaz muestra la zona, la hora de emisión y la edad («hace N h»). En el Pirineo se muestra la hora de emisión. | `portinatx_degen.py`, `portinatx_app.html`, `pirineo_app.html` |
 
 ## Decisiones
@@ -35,6 +40,10 @@ Lo mismo vale para un aviso sin `onset` ni `effective` o con una hora ilegible. 
   - Es «posible» desde 3 h antes de su inicio. Uno que empieza dentro de 12 h aparece como próximo, no como posible.
   - Siempre lleva la marca «horario no verificable» y nunca se presenta como hecho oficial ni fuerza ALARM.
 - **Sin inicio (ni `onset` ni `effective`): posible aviso** hasta su `expires`, si lo hay. Nunca se descarta por esa falta.
+- **Aviso nuevo sin inicio:** también se notifica (`detect_warning_changes`).
+  - Su firma de cambio no depende del inicio: es nivel, tipo, inicio y fin, y si falta el inicio se añade el evento.
+  - Se notifica una sola vez.
+  - Las firmas de los avisos con inicio no cambian, así que los avisos ya vistos no se vuelven a notificar.
 - **Edad del dato:** junto a los avisos «vigencia no indicada» y «posible aviso», las dos interfaces muestran «según el ciclo de hace X h».
 - **El inicio es `onset` y, si falta, `effective`.** No se usa `sent` como inicio.
 - **«Sin avisos» exige cobertura completa.** Se afirma solo para las fuentes que respondieron. Los países que no respondieron aparecen como UNKNOWN con su nombre. `decision_cards.js` y `device_sensors.js` solo aceptan `fuentes.avisos` cuando empieza por `ok`, así que un estado `parcial` queda como no verificado (`docs/DECISION-P0.md`, punto 4).
@@ -54,6 +63,8 @@ Lo mismo vale para un aviso sin `onset` ni `effective` o con una hora ilegible. 
   - sin `onset` pero con `effective`, y sin `onset` ni `effective` (posiblemente activo);
   - hora sin zona horaria: en curso, con `expires` pasado hace menos de 3 h leído como UTC (se conserva) y terminado hace 13 h (se retira); uno que empieza dentro de 12 h no es posible ni activo;
   - posible aviso: visible, sin nivel oficial ni suelo, `fuse` no propone ALARM y la afirmación es `UNKNOWN` con la etiqueta `HORARIO_NO_VERIFICABLE`;
+  - el informe de texto y la evidencia lo nombran, nunca «ninguno» ni «sin avisos»;
+  - notificación marcada «(posible · horario no verificable)»; un aviso sin inicio se notifica una sola vez;
   - zona ajena;
   - aviso de Ibiza pedido para la zona 691701, con geocode y solo con EMMA_ID;
   - feed de Francia caído y filtro de ámbito: «Litoral sur de Girona», «Prepirineo de Girona», «Pirineo de Gerona», mayúsculas, tildes en NFD y «Pyrénées Orientales» con espacio;
@@ -83,5 +94,4 @@ Los tests de Python se descubren con `python src/nowcast.py selftest` (`unittest
   - Nunca baja de `level_now`, aunque un aviso haya caducado desde el ciclo.
   - Los posibles avisos solo añaden la marca de incertidumbre.
   - La precaución sigue siendo la del ciclo.
-- **Notificación de aviso nuevo (`detect_warning_changes`).** Un posible aviso nuevo se notifica igual que cualquier aviso nuevo del feed, sin la marca «horario no verificable» en el texto de la notificación.
 - **Caché `_cached` (180 min) frente a `expires`.** No se ha revisado.
