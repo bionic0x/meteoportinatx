@@ -1070,7 +1070,7 @@ function renderCharts(){
   if (ws.length){
     const xmin=Date.now()-3*3600e3, xmax=Math.max(Date.now()+36*3600e3, ...ws.map(w=>+new Date(w.hasta)));
     // El nivel visible sale de `nivel`, la misma fuente que el color; si el texto del aviso dice otro nivel, se señala.
-    const nv=w=>`de nivel ${NIVEL_LV[w.nivel]?w.nivel:"sin verificar"}`, txtLv=w=>(/ de nivel (\w+)$/.exec(w.evento)||[])[1], dif=w=>txtLv(w)&&txtLv(w)!==w.nivel?txtLv(w):"";
+    const nv=w=>`de nivel ${NIVEL_LV[w.nivel]?w.nivel:"sin verificar"}`, txtLv=w=>(/ de nivel (\w+)$/.exec(w.evento)||[])[1], dif=w=>txtLv(w)&&txtLv(w).toLowerCase()!==String(w.nivel||"").toLowerCase()?txtLv(w):"";
     const full=w=>w.evento.replace(/ de nivel \w+$/,"")+(w.tipo==="costero"?" (costa)":""), nm=w=>{const n=full(w).replace(/^Aviso de /,""); return n.length>22?n.slice(0,21)+"…":n;};
     const rowH=ws.map(w=>dif(w)?38:28), Y0=rowH.map((_,i)=>rowH.slice(0,i).reduce((a,b)=>a+b,0));
     const W=600, P={l:150,r:10,t:6,b:18}, H=P.t+P.b+rowH.reduce((a,b)=>a+b,0), X=t=>P.l+(Math.min(Math.max(t,xmin),xmax)-xmin)/(xmax-xmin)*(W-P.l-P.r);

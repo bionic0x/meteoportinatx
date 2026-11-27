@@ -71,7 +71,8 @@ Antes de las correcciones el resultado era **NO CONFORMA** (1.4.10, 1.1.1 y 1.4.
 - **Gantt.** La etiqueta visible del evento se recorta a 22 caracteres con «…», por ejemplo «fenómenos costeros (c…». El nombre completo está en el nombre accesible.
 - **Estados en inglés que quedan en Portinatx.** No se han traducido los resultados de las predicciones (HIT, MISS, PENDING…) ni otros estados de fuentes y canales que se muestran tal cual. Están fuera de V-04; conviene revisarlos en un cambio aparte.
 - **Historial.** El resumen en texto da el nivel del **último** ciclo. Los ciclos anteriores siguen identificándose por color y por `<title>`, que ya está en español.
-- **Idioma.** Los nombres accesibles nuevos están solo en español. Con la traducción parcial al inglés activada, siguen en español.
+- **Idioma.** Los nombres accesibles nuevos están solo en español. Con la traducción parcial al inglés activada, siguen en español, igual que las pastillas «Desconocido (UNKNOWN)» y las fases del episodio (Activo… Cerrado). En ese modo es un pequeño retroceso: antes salían en inglés.
+- **Gantt, nivel del texto.** La comparación entre el nivel que nombra el texto del aviso y `nivel` no distingue mayúsculas: «de nivel Amarillo» con `nivel` amarillo no genera aviso de discrepancia.
 - **Enter en el GPX.** No se garantiza: en Chrome headless es intermitente (ver arriba). Falta comprobarlo en navegadores y dispositivos reales.
 - **Pirineo.** `lang` sigue poniéndolo JS; no se añadió `<html lang>` estático.
 - **Texto pequeño.** A-06 (texto de las gráficas a unos 4,7 px en móvil) queda abierto: requiere cambiar el `viewBox` o la fuente según el ancho, con esfuerzo M.
