@@ -64,6 +64,9 @@ ul.plain{margin:0;padding-left:18px}
 footer{font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 .drop{border:1px dashed var(--line);border-radius:6px;padding:10px 12px}
 .drop.over{border-color:var(--accent)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.vh:focus-visible+label{outline:2px solid var(--ice);outline-offset:2px}
+header a,select,input[type=range]{min-height:24px}
 </style>
 </head>
 <body>
@@ -82,8 +85,8 @@ footer{font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padd
     <h2>1 · Tu ruta y tu salida</h2>
     <div class="row">
       <div class="drop" id="drop">
+        <input type="file" id="file" class="vh" accept=".gpx,application/gpx+xml,text/xml,application/xml">
         <label class="btn" for="file">Subir track GPX</label>
-        <input type="file" id="file" accept=".gpx,application/gpx+xml,text/xml,application/xml" hidden>
         <span class="note">o arrastra aquí el fichero. Exporta a GPX desde Garmin, Suunto, Wikiloc, etc.</span>
       </div>
       <button class="btn" id="demo" type="button" disabled>Ruta de demostración (sintética)</button>
@@ -126,12 +129,12 @@ footer{font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padd
     <div class="card" style="margin-bottom:14px">
       <h2>4 · Mapa del recorrido</h2>
       <div class="row" id="hbtn" style="margin-bottom:8px"></div>
-      <div class="wrap" id="map"><canvas id="cmap"></canvas><div class="tip" id="tip" hidden></div></div>
+      <div class="wrap" id="map"><canvas id="cmap" role="img" aria-label="Mapa del recorrido con los peligros por tramo"></canvas><div class="tip" id="tip" hidden></div></div>
       <div class="legend" id="lg-map"></div>
     </div>
     <div class="card" style="margin-bottom:14px">
       <h2>5 · Perfil y peligros a lo largo de la ruta</h2>
-      <div class="wrap" id="prof"><canvas id="cprof"></canvas></div>
+      <div class="wrap" id="prof"><canvas id="cprof" role="img" aria-label="Perfil de altitud y peligros a lo largo de la ruta"></canvas></div>
       <div class="legend" id="lg-prof"></div>
     </div>
     <div class="card" style="margin-bottom:14px"><h2>6 · Tramos afectados</h2><div class="tbl"><table id="runs"><thead><tr><th>Peligro</th><th>Tramo</th><th>Hora estimada (ventana)</th><th>Nivel máximo</th></tr></thead><tbody></tbody></table></div></div>
