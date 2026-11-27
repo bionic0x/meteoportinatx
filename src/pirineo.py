@@ -43,6 +43,7 @@ import mf_obs  # noqa: E402  (verificación: archivo horario oficial de Météo-
 import meteo_france_obs as mf  # noqa: E402  (tiempo real: API DPObs, clave del propietario)
 import pirineo_orografia as oro  # noqa: E402  (relieve fino: cota efectiva y cubeta fría, EXPERIMENTAL)
 import pirineo_carreteras as roads  # noqa: E402  (estado oficial de las vías y exposición, EXPERIMENTAL)
+from zone_sources import area_matches  # noqa: E402  (nombres de área de MeteoAlarm, misma regla en ambos motores)
 
 VERSION = "0.6.1"
 UTC = timezone.utc
@@ -126,7 +127,8 @@ FOEHN_NORTH_SECTOR = (300.0, 30.0)
 # Áreas de MeteoAlarm por país, comparadas como palabras completas: «girona» suelto dejaba entrar «Litoral sur de
 # Girona». España = las zonas Meteoalerta de AEMET_ZONES («Pirineo de Lleida» y «Pirineo oscense» vistas en el feed
 # real el 26/11/2026; las otras dos siguen el mismo formato, SUPUESTO). 66 y 09 son departamentos enteros.
-WARN_AREAS = {"spain": ("pirineo de girona", "pirineo de lleida", "prepirineo de barcelona", "pirineo oscense"),
+WARN_AREAS = {"spain": ("pirineo de girona", "pirineo de gerona", "pirineo de lleida", "prepirineo de barcelona",
+                        "pirineo oscense"),
               "france": ("pyrénées-orientales", "pyrenees-orientales", "ariège", "ariege"), "andorra": ("andorra",)}
 WARN_SCOPE = {"spain": ("España", "Pirineo de Girona, Pirineo de Lleida, Prepirineo de Barcelona y Pirineo oscense"),
               "france": ("Francia", "departamentos de Pyrénées-Orientales (66) y Ariège (09), ámbito departamental: "
@@ -595,8 +597,7 @@ def src_metar() -> list[dict]:
 
 
 def warn_area_match(area: str, keys) -> bool:
-    a = area.lower()
-    return any(re.search(rf"(?<!\w){re.escape(k)}(?!\w)", a) for k in keys)
+    return area_matches(area, keys)          # misma normalización que el motor de zonas
 
 
 def warn_coverage_status(cob: dict) -> str:
@@ -624,8 +625,7 @@ def src_warnings() -> list[dict]:
                 continue
             title = pd._tag(e, "title")
             lv = next((v for k, v in color.items() if title.lower().startswith(k)), "")
-            win = pd.cap_window(now, pd._tag(e, "cap:onset"), pd._tag(e, "cap:expires"), pd._tag(e, "cap:effective"),
-                                pd._tag(e, "cap:sent"))
+            win = pd.cap_window(now, pd._tag(e, "cap:onset"), pd._tag(e, "cap:expires"), pd._tag(e, "cap:effective"))
             if win is None:
                 continue
             on, ex = win["start"], win["end"]

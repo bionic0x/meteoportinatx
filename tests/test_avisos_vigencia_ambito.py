@@ -32,10 +32,19 @@ CASES = [
     ('futuro', cap(onset='2026-10-18T09:00:00+02:00'), '645301', 1, False, 'DECLARADA'),
     ('en_vigor', cap(), '645301', 1, True, 'DECLARADA'),
     ('sin_expires', cap(expires=''), '645301', 1, True, 'SIN FIN DECLARADO'),
-    ('sin_expires_ya_retirado', cap(expires='', sent='2026-10-16T09:00:00+00:00', onset='2026-10-16T10:00:00+00:00'),
-     '645301', 0, None, None),
+    # V-01: mientras el feed lo publique, un aviso sin fin sigue visible aunque su emisión sea antigua.
+    ('sin_expires_sent_hace_25h', cap(expires='', sent='2026-10-16T11:00:00+00:00', onset='2026-10-16T12:00:00+00:00'),
+     '645301', 1, True, 'SIN FIN DECLARADO'),
+    ('sin_expires_sin_sent_onset_hace_30h', cap(expires='', sent='', onset='2026-10-16T06:00:00+00:00'),
+     '645301', 1, True, 'SIN FIN DECLARADO'),
     ('sin_onset_con_effective', cap(onset='', effective='2026-10-17T10:00:00+00:00'), '645301', 1, True, 'DECLARADA'),
-    ('sin_zona_horaria', cap(onset='2026-10-17T13:30:00'), '645301', 1, False, 'SIN HORARIO VERIFICABLE'),
+    # V-02/V-03: hora sin zona horaria = posiblemente activo, nunca descartado por leerla como UTC.
+    ('sin_zona_horaria', cap(onset='2026-10-17T13:30:00'), '645301', 1, True, 'SIN HORARIO VERIFICABLE'),
+    ('sin_zona_horaria_expires_pasado_en_utc', cap(onset='2026-10-16T09:00:00', expires='2026-10-17T11:30:00'),
+     '645301', 1, True, 'SIN HORARIO VERIFICABLE'),
+    ('sin_zona_horaria_expires_muy_pasado', cap(onset='2026-10-15T09:00:00', expires='2026-10-16T11:30:00'),
+     '645301', 0, None, None),
+    ('sin_onset_ni_effective', cap(onset=''), '645301', 1, True, 'SIN HORARIO VERIFICABLE'),
     ('zona_ajena_mallorca', cap(zone='645203', emma='ES872', area='Mallorca'), '645301', 0, None, None),
     ('ibiza_pedido_para_pirineo_691701', cap(), '691701', 0, None, None),
     ('ibiza_solo_emma_pedido_para_691701', cap(zone=''), '691701', 0, None, None),
@@ -56,8 +65,8 @@ class CapVigenciaAmbito(unittest.TestCase):
     def test_sin_expires_documenta_retirada_prudente(self):
         w = pd.parse_cap_documents([cap(expires='')], '645301', NOW, 72)[0]
         self.assertEqual(w['expires'], '')
-        self.assertEqual(w['caduca_prudente'], (datetime(2026, 10, 17, 9, 16, 9, tzinfo=UTC)
-                                                + timedelta(hours=pd.CAP_SIN_FIN_H)).isoformat())
+        # V-01: la retirada prudente cuenta desde la consulta, no desde sent.
+        self.assertEqual(w['caduca_prudente'], (NOW + timedelta(hours=pd.CAP_SIN_FIN_H)).isoformat())
 
     def test_sin_zona_horaria_se_marca(self):
         self.assertEqual(pd.parse_cap_documents([cap(onset='2026-10-17T13:30:00')], '645301', NOW, 72)[0]['tz'],
@@ -65,6 +74,18 @@ class CapVigenciaAmbito(unittest.TestCase):
 
     def test_mismo_plazo_en_motor_de_zonas(self):
         self.assertEqual(zs.NO_EXPIRES_MAX_H, pd.CAP_SIN_FIN_H)
+        self.assertEqual(zs.TZ_SLACK_H, pd.CAP_TZ_HOLGURA_H)
+
+    def test_aviso_sin_zona_horaria_cuenta_en_el_estado_oficial(self):
+        w = pd.parse_cap_documents([cap(onset='2026-10-17T09:00:00', expires='2026-10-18T14:00:00')], '645301', NOW, 72)
+        st = pd.official_state(pd.Channel('aviso_aemet_activo', 3, 'institutional'),
+                               pd.Channel('aviso_aemet', 3, 'institutional'), w)
+        self.assertEqual(st['vigente']['nivel'], 'naranja')
+        self.assertEqual(st['vigentes'][0]['vigencia'], 'SIN HORARIO VERIFICABLE')
+        src = pd.SourceResult(name='aemet_cap', status='ok', payload={'warnings': w})
+        ch = pd.ch_institutional(src, active_only=True)
+        self.assertEqual(ch.level, 2, 'el suelo institucional no se rebaja por una hora sin zona horaria')
+        self.assertTrue(any('POSIBLEMENTE ACTIVO' in e for e in ch.evidence))
 
 
 def atom(*entries):
@@ -85,7 +106,12 @@ class PirineoAvisos(unittest.TestCase):
                      ('Prepirineo de Girona', '2026-10-17T08:00:00+01:00', '2026-10-18T23:00:00+01:00'),
                      ('Ibiza y Formentera', '2026-10-17T08:00:00+01:00', '2026-10-18T23:00:00+01:00'),
                      ('Pirineo de Lleida', '2026-10-17T08:00:00+01:00', '2026-10-18T23:00:00+01:00'),
-                     ('Pirineo oscense', '2026-10-17T08:00:00+01:00', ''))
+                     ('Pirineo oscense', '2026-10-17T08:00:00+01:00', ''),
+                     ('Pirineo de Gerona', '2026-10-17T08:00:00+01:00', '2026-10-18T23:00:00+01:00'),
+                     ('PIRINEO DE GIRONA', '2026-10-17T08:00:00+01:00', '2026-10-18T23:00:00+01:00'))
+        france = atom(('Pyre\u0301ne\u0301es-Orientales', '2026-10-17T08:00:00+01:00', '2026-10-18T23:00:00+01:00'),
+                      ('Pyrénées Orientales', '2026-10-17T08:00:00+01:00', '2026-10-18T23:00:00+01:00'),
+                      ('Pyrénées-Atlantiques', '2026-10-17T08:00:00+01:00', '2026-10-18T23:00:00+01:00'))
 
         def fake(url, *a, **k):
             if url.endswith('france'):
@@ -93,7 +119,10 @@ class PirineoAvisos(unittest.TestCase):
             return spain if url.endswith('spain') else b'<feed></feed>'
         out = self.run_feeds(fake)
         areas = [w.get('area') for w in out if not w.get('error')]
-        self.assertEqual(areas, ['Pirineo de Lleida', 'Pirineo oscense'])
+        self.assertEqual(areas, ['Pirineo de Lleida', 'Pirineo oscense', 'Pirineo de Gerona', 'PIRINEO DE GIRONA'])
+        # V-04: NFD (tildes descompuestas) y espacio en lugar de guion.
+        fr = self.run_feeds(lambda url, *a, **k: france if url.endswith('france') else b'<feed></feed>')
+        self.assertEqual([w['area'] for w in fr], ['Pyre\u0301ne\u0301es-Orientales', 'Pyrénées Orientales'])
         self.assertEqual([w['pais'] for w in out if w.get('error')], ['france'])
         sin_fin = [w for w in out if w.get('area') == 'Pirineo oscense'][0]
         self.assertEqual(sin_fin['vigencia'], 'SIN FIN DECLARADO')
@@ -127,18 +156,27 @@ class MotorDeZonas(unittest.TestCase):
         on = f'<cap:onset>{(NOW - timedelta(hours=1)).isoformat()}</cap:onset>'
         sent = f'<cap:sent>{(NOW - timedelta(hours=2)).isoformat()}</cap:sent>'
         old = f'<cap:sent>{(NOW - timedelta(hours=30)).isoformat()}</cap:sent>'
+        naive_on = f'<cap:onset>{(NOW - timedelta(hours=1)).replace(tzinfo=None).isoformat()}</cap:onset>'
+        naive_ex = f'<cap:expires>{(NOW - timedelta(hours=1)).replace(tzinfo=None).isoformat()}</cap:expires>'
         ex = f'<cap:expires>{(NOW + timedelta(hours=1)).isoformat()}</cap:expires>'
-        area = {'country': 'spain', 'areas': ['pirineo de girona']}
+        area = {'country': 'spain', 'areas': ['pirineo de girona', 'pirineo de gerona']}
         for name, extra, n, validity in (
                 ('en_vigor', ('Pirineo de Girona', on + ex), 1, 'declared'),
                 ('prepirineo_no_es_pirineo', ('Prepirineo de Girona', on + ex), 0, None),
                 ('sin_expires', ('Pirineo de Girona', sent + on), 1, 'end-not-declared'),
-                ('sin_expires_retirado', ('Pirineo de Girona', old + on), 0, None)):
+                ('sin_expires_emision_antigua_sigue', ('Pirineo de Girona', old + on), 1, 'end-not-declared'),
+                ('sin_zona_horaria', ('Pirineo de Girona', naive_on + naive_ex), 1, 'time-not-verifiable'),
+                ('sin_onset_ni_effective', ('Pirineo de Girona', ex), 1, 'time-not-verifiable'),
+                ('nfd_y_gerona', ('Pirineo de Gerona', on + ex), 1, 'declared')):
             with self.subTest(name):
-                rec = zs.warnings(self.feed(extra), area, NOW)['records']
+                res = zs.warnings(self.feed(extra), area, NOW)
+                rec = res['records']
                 self.assertEqual(len(rec), n)
                 if n:
                     self.assertEqual(rec[0]['validity'], validity)
+                    if validity == 'time-not-verifiable':
+                        self.assertEqual(rec[0]['state'], 'possibly-active')
+                        self.assertEqual(res['unverifiable_time'], 1)
                     zs.validate_data('warnings', {'schema': 1, 'kind': 'warnings', 'records': rec})
 
 

@@ -630,29 +630,35 @@ def src_aemet_obs() -> SourceResult:
                         payload={"series": out, "prec_mode": mode})
 
 
-# Aviso sin <expires>: no queda vigente para siempre ni se borra en silencio. Se marca «SIN FIN DECLARADO» y se
-# retira a las CAP_SIN_FIN_H horas de su emisión (sent; si falta, del inicio). Decisión en docs/AVISOS-VIGENCIA-AMBITO.md.
+# Un aviso oficial nunca desaparece ni se rebaja por falta de metadatos (docs/AVISOS-VIGENCIA-AMBITO.md):
+# - sin <expires>: «SIN FIN DECLARADO»; sigue mientras el feed lo publique. caduca_prudente = hora de la consulta
+#   + CAP_SIN_FIN_H: solo sirve para retirarlo de una instantánea vieja, nunca de un feed que aún lo lista;
+# - hora sin zona horaria o ilegible: «SIN HORARIO VERIFICABLE»; la ventana se ensancha CAP_TZ_HOLGURA_H
+#   horas por cada lado (cualquier huso, UTC−12 a UTC+14) y, dentro de ella, cuenta como posiblemente activo.
 CAP_SIN_FIN_H = 24
+CAP_TZ_HOLGURA_H = 14
 _TZ_SUFFIX = re.compile(r"(Z|[+-]\d\d:?\d\d)$")
 
 
-def cap_window(now: datetime, onset: str | None = "", expires: str | None = "", effective: str | None = "",
-               sent: str | None = "") -> dict | None:
-    """Ventana temporal de un aviso CAP 1.2. None si ya ha caducado (expires, o la caducidad prudente)."""
-    raw = [(v or "").strip() for v in (onset, expires, effective, sent)]
-    tz_asumida = any(v and not _TZ_SUFFIX.search(v) for v in raw[:3])  # hora sin zona: parse_time supone UTC
-    start = parse_time(raw[0]) or parse_time(raw[2])                    # CAP 1.2: sin onset rige effective
-    end = parse_time(raw[1])
-    ref = None if end else (parse_time(raw[3]) or start)
-    prudente = ref + timedelta(hours=CAP_SIN_FIN_H) if ref else None
-    limit = end or prudente
-    if limit and limit < now:
+def cap_window(now: datetime, onset: str | None = "", expires: str | None = "",
+               effective: str | None = "") -> dict | None:
+    """Ventana temporal de un aviso CAP 1.2 en la consulta `now`. None solo si su expires ya pasó con seguridad."""
+    raw = [(v or "").strip() for v in (onset, expires, effective)]
+    parsed = [parse_time(v) for v in raw]
+    dudosa = any(v and (not _TZ_SUFFIX.search(v) or p is None) for v, p in zip(raw, parsed))
+    start = parsed[0] or parsed[2]                       # CAP 1.2: sin onset rige effective
+    end = parsed[1]
+    slack = timedelta(hours=CAP_TZ_HOLGURA_H if dudosa else 0)
+    if end and end + slack < now:
         return None
-    return {"start": start, "end": end, "caduca_prudente": prudente.isoformat() if prudente else "",
-            "vigencia": ("SIN HORARIO VERIFICABLE" if tz_asumida or not start
+    unverifiable = dudosa or not start
+    return {"start": start, "end": end,
+            "caduca_prudente": "" if end else (now + timedelta(hours=CAP_SIN_FIN_H)).isoformat(),
+            "vigencia": ("SIN HORARIO VERIFICABLE" if unverifiable
                          else "SIN FIN DECLARADO" if not end else "DECLARADA"),
-            "tz": "ASUMIDA_UTC" if tz_asumida else "",
-            "activo": bool(not tz_asumida and start and start <= now and (not limit or limit >= now))}
+            "tz": "ASUMIDA_UTC" if dudosa else "",
+            # Sin inicio verificable o con hora dudosa: posiblemente activo (incertidumbre, no calma).
+            "activo": bool((not start or start - slack <= now) and (not end or now <= end + slack))}
 
 
 def parse_cap_documents(blobs: list[bytes], zone: str, now: datetime,
@@ -687,7 +693,7 @@ def parse_cap_documents(blobs: list[bytes], zone: str, now: datetime,
                 nivel = {"yellow": "amarillo", "orange": "naranja", "red": "rojo",
                          "green": "verde"}.get(aw[1].strip().lower() if len(aw) > 1 else "", "")
             win = cap_window(now, info.findtext("c:onset", None, ns), info.findtext("c:expires", None, ns),
-                             info.findtext("c:effective", None, ns), sent)
+                             info.findtext("c:effective", None, ns))
             # El EMMA_ID de Ibiza (ES113) solo vale para la zona de Portinatx, nunca para otra zona pedida.
             emma = CFG["emma_id"] if zone == CFG["aemet_zone"] else None
             for area in info.findall("c:area", ns):
@@ -753,8 +759,7 @@ def src_meteoalarm() -> SourceResult:
             continue
         title = _tag(e, "title")
         lv = next((v for k, v in color.items() if title.lower().startswith(k)), "")
-        win = cap_window(now, _tag(e, "cap:onset"), _tag(e, "cap:expires"), _tag(e, "cap:effective"),
-                         _tag(e, "cap:sent"))
+        win = cap_window(now, _tag(e, "cap:onset"), _tag(e, "cap:expires"), _tag(e, "cap:effective"))
         if win is None or (win["start"] and win["start"] > horizon):
             continue
         onset, exp = win["start"], win["end"]
@@ -1631,7 +1636,9 @@ def ch_institutional(src: SourceResult, alt: SourceResult | None = None, *,
         seen.add(key)
         span = (f"{on.astimezone(MADRID):%a %d %H:%M}→{ex.astimezone(MADRID):%a %d %H:%M} local"
                 if on and ex else "")
-        ch.evidence.append(f"{w['nivel'].upper()} {w['evento']} {span}{' (ACTIVO)' if w['activo_ahora'] else ''}"
+        mark = {"SIN HORARIO VERIFICABLE": " (POSIBLEMENTE ACTIVO · horario no verificable)",
+                "SIN FIN DECLARADO": " (ACTIVO · fin no indicado por el emisor)"}.get(w.get("vigencia", ""), " (ACTIVO)")
+        ch.evidence.append(f"{w['nivel'].upper()} {w['evento']} {span}{mark if w['activo_ahora'] else ''}"
                            f" · {w.get('descripcion') or w['parametro']}".rstrip(" ·"))
     return ch
 
@@ -2245,7 +2252,7 @@ def official_state(inst_now: Channel, inst_all: Channel, warnings: list[dict]) -
                          "hasta": top["expires"], "umbral": top.get("descripcion") or top.get("parametro", "")}
                         if top else None),
             "vigentes": [{"nivel": w["nivel"], "tipo": w.get("tipo", ""), "evento": w["evento"],
-                          "desde": w["onset"], "hasta": w["expires"],
+                          "desde": w["onset"], "hasta": w["expires"], "vigencia": w.get("vigencia", ""),
                           "umbral": w.get("descripcion") or w.get("parametro", "")}
                          for w in sorted(act, key=lambda w: -w["rank"])],
             "verificado": inst_now.available}

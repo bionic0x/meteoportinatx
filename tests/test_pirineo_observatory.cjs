@@ -42,6 +42,8 @@ assert.equal(O.warningTiming({desde:start,vigencia:'SIN FIN DECLARADO',caduca_pr
 assert.equal(O.warningTiming({desde:end,vigencia:'SIN FIN DECLARADO',caduca_prudente:prudent},now),'PRÓXIMO');
 assert.equal(O.warningTiming({desde:start,vigencia:'SIN FIN DECLARADO',caduca_prudente:prudent},now+6*3600000),'FINALIZADO','prudent expiry retires it');
 assert.equal(O.warningTiming({desde:start,hasta:end,vigencia:'SIN HORARIO VERIFICABLE'},now),'SIN HORARIO VERIFICABLE','time without zone is not verifiable');
+assert.equal(O.warningTiming({desde:start,hasta:end,vigencia:'SIN HORARIO VERIFICABLE'},now+10*3600000),'SIN HORARIO VERIFICABLE','doubtful time stays possibly in force within 14 h of its end');
+assert.equal(O.warningTiming({desde:start,hasta:end,vigencia:'SIN HORARIO VERIFICABLE'},now+16*3600000),'FINALIZADO');
 const warnings=[{nivel:'amarillo',desde:'2026-11-11T16:00:00Z',hasta:'2026-11-11T18:00:00Z'}, {nivel:'rojo',desde:start,hasta:end}, {nivel:'naranja'}];
 assert.deepEqual(O.derive({...core,avisos:warnings},series,null,{now}).warnings.map(w=>w.estado_temporal),['VIGENTE','PRÓXIMO','SIN HORARIO VERIFICABLE']);
 const elements={'pov-point':{dataset:{}},'pov-model-point':{dataset:{}},'pov-model-note':{}};

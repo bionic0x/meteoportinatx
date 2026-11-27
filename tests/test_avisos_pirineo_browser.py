@@ -51,6 +51,9 @@ const [chrome, dir] = process.argv.slice(1);
   const h=n=>new Date(Date.now()+n*3600000).toISOString();
   txt=await render([es,fr,ad],[{pais:'spain',area:'Pirineo de Lleida',nivel:'amarillo',evento:'Nieve',desde:h(-1),hasta:'',vigencia:'SIN FIN DECLARADO',caduca_prudente:h(10),vigente:true}],{avisos:'parcial: no se pudo consultar Francia',aemet_cap:'sin clave'});
   assert.match(txt,/Nieve/); assert.match(txt,/vigencia no indicada/); assert.match(txt,/no se pudo consultar: Francia/);
+  // Aviso rojo con hora sin zona horaria: visible como posiblemente en vigor, nunca «sin avisos».
+  txt=await render([es,{...fr,estado:'ok'},ad],[{pais:'spain',area:'Pirineo de Lleida',nivel:'rojo',evento:'Nieve',desde:h(-2).slice(0,19),hasta:h(5).slice(0,19),vigencia:'SIN HORARIO VERIFICABLE',vigente:true}],{avisos:'ok',aemet_cap:'sin clave'});
+  assert.match(txt,/posiblemente en vigor/); assert.doesNotMatch(txt,/Sin avisos/);
  } finally { await browser.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});
 '''

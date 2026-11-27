@@ -43,6 +43,14 @@ const [chrome, file] = process.argv.slice(1);
   assert.match(txt[1], /tormentas · próximo/);
   assert.match(txt[2], /vigencia no indicada.*fin no indicado/);
   assert.match(txt[3], /horario no verificable/);
+  // V-02: aviso rojo en curso con hora sin zona horaria → la cabecera nunca dice «Sin aviso vigente».
+  const head = await page.evaluate(() => {
+   const h = n => new Date(Date.now()+n*3600000).toISOString().slice(0,19);
+   S.core={precaution:{level:'quiet', transition:''}, official:{level_now:'quiet', level_36h:'alarm', verificado:true, all:[
+    {nivel:'rojo', rank:3, evento:'Aviso de lluvias', desde:h(-2), hasta:h(10), activo:false, vigencia:'SIN HORARIO VERIFICABLE'}]}};
+   renderAxes(); return document.querySelector('#off-level').textContent;
+  });
+  assert.doesNotMatch(head, /Sin aviso vigente/); assert.match(head, /Rojo/); assert.match(head, /vigencia incierta/);
  } finally { await browser.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});
 '''
