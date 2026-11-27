@@ -36,8 +36,8 @@ def independent_observations(ledger, pairs):
     """Observaciones QC PASS emparejadas (sin baseline) que cuentan como unidades independientes.
 
     Por sitio y variable, las ventanas solapadas cuentan una sola vez: se eligen ventanas sin solape
-    por orden de fin (máximo conjunto disjunto). Veinte ventanas de 1–20 h que empiezan a la misma
-    hora son un único periodo físico. Devuelve {id: (inicio, fin)} de las observaciones contadas."""
+    por orden de fin, y como máximo una por hora UTC de inicio. Veinte ventanas de 1–20 h que empiezan
+    a la misma hora, o de 3 min dentro de una hora, son un único periodo físico. Devuelve {id: (inicio, fin)} de las observaciones contadas."""
     obs_by_id = {r["id"]: r for _, r in ledger.records("observation", include_imported=False)}
     groups = {}
     for oid in {p["observation_id"] for p in pairs if not p["baseline"]}:
@@ -46,11 +46,13 @@ def independent_observations(ledger, pairs):
         groups.setdefault((d["site_id"], d["variable"]), []).append((window[1], window[0], oid))
     counted = {}
     for items in groups.values():
-        last_end = None
+        last_end, hours = None, set()
         for end, start, oid in sorted(items):
-            if last_end is None or start >= last_end:
+            # Como máximo una por hora UTC de inicio: 20 ventanas de 3 min en la misma hora cuentan 1.
+            if (last_end is None or start >= last_end) and _hour(start) not in hours:
                 counted[oid] = (start, end)
                 last_end = end
+                hours.add(_hour(start))
     return counted
 
 

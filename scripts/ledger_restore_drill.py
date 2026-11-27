@@ -44,12 +44,37 @@ def _external(source, root):
     return source
 
 
-def _origin_problem(origin, root):
+MOUNTINFO = Path("/proc/self/mountinfo")
+VOLATILE_FS = ("overlay", "tmpfs", "ramfs", "squashfs")   # y cualquier fuse.*
+
+
+def _fs_type(path):
+    """Tipo de sistema de archivos de `path` según mountinfo (punto de montaje más largo), o None."""
+    try:
+        lines = MOUNTINFO.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    target, best = str(Path(path).resolve()), (-1, None)
+    for line in lines:
+        left, sep, right = line.partition(" - ")
+        fields = left.split()
+        if not sep or len(fields) < 5 or not right.split():
+            continue
+        mount = fields[4].replace("\\040", " ")
+        if (target == mount or target.startswith(mount.rstrip("/") + "/")) and len(mount) > best[0]:
+            best = (len(mount), right.split()[0])
+    return best[1]
+
+
+def _origin_problem(origin, root, fs_type):
     """Motivo para rechazar una copia externa que no es independiente del ledger, o None.
 
-    Cualquier enlace simbólico en el árbol de origen se rechaza (podría apuntar al propio ledger), y
-    ningún archivo del origen puede compartir (st_dev, st_ino) con uno del ledger (enlace duro o el
-    mismo árbol montado en otra ruta)."""
+    Se rechaza un origen en un sistema de archivos no duradero o superpuesto (overlay, tmpfs, ramfs,
+    squashfs, fuse.*), cualquier enlace simbólico en el árbol de origen (podría apuntar al propio
+    ledger) y cualquier archivo que comparta (st_dev, st_ino) con uno del ledger (enlace duro o bind
+    mount). Un tipo de FS desconocido no bloquea: queda `fs_origen: UNKNOWN` en el recibo."""
+    if fs_type in VOLATILE_FS or (fs_type or "").startswith("fuse"):
+        return "ORIGEN_FS_NO_DURADERO"
     for base, dirs, files in os.walk(origin):
         if any(Path(base, n).is_symlink() for n in dirs + files):
             return "ORIGEN_CON_ENLACES"
@@ -79,9 +104,10 @@ def drill(root, *, source=None, clock=None):
         now = (clock or fl.Ledger(root)._now)()
         fixed = lambda: now  # noqa: E731 — mismo instante en ambos lados de la comparación
         original = fl.Ledger(root, clock=fixed)
-        problem = None if source is None else _origin_problem(origin, root)
+        fs_type = None if source is None else (_fs_type(origin) or "UNKNOWN")
+        problem = None if source is None else _origin_problem(origin, root, fs_type)
         if problem:
-            return _write(root, _rejected(original, now, problem, _same_device(origin, root)))
+            return _write(root, _rejected(original, now, problem, _same_device(origin, root), fs_type))
         with tempfile.TemporaryDirectory(prefix="ledger-restore-") as tmp:
             target = Path(tmp) / "restored"
             target.mkdir(mode=0o700)
@@ -107,6 +133,7 @@ def drill(root, *, source=None, clock=None):
             "schema": 2, "kind": "restore-drill", "at_utc": fl._iso(now),
             "origen": "copia_local" if source is None else "copia_externa",
             "mismo_dispositivo": _same_device(origin, root),
+            "fs_origen": fs_type,
             "journal_seq": entries[-1]["seq"] if entries else None,
             "journal_head_sha256": entries[-1]["hash"] if entries else None,
             "records": o["verify"]["records"], "n_pares": r["score"]["n_pairs"],
@@ -123,11 +150,11 @@ def drill(root, *, source=None, clock=None):
         return _write(root, receipt)
 
 
-def _rejected(original, now, problem, same_device):
+def _rejected(original, now, problem, same_device, fs_type):
     """Recibo fallido, anclado al diario, cuando la copia de origen no es independiente."""
     entries = original.journal()[0] or []
     return {"schema": 2, "kind": "restore-drill", "at_utc": fl._iso(now), "origen": "copia_externa",
-            "mismo_dispositivo": same_device,
+            "mismo_dispositivo": same_device, "fs_origen": fs_type,
             "journal_seq": entries[-1]["seq"] if entries else None,
             "journal_head_sha256": entries[-1]["hash"] if entries else None,
             "motivo": problem, "ok": False, "external_attestation": False,

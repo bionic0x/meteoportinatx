@@ -76,12 +76,15 @@ class Base(unittest.TestCase):
         return lc.campaign_status(self.ledger, **kw)
 
     def complete_drill(self, *, other_device=True):
-        """Drill from an external copy; the test tree is on one filesystem, so another device is simulated."""
-        with patch.object(drill, "_same_device", return_value=not other_device):
+        """Drill from an external copy; the test tree is on one filesystem (possibly tmpfs), so another
+        device with a durable filesystem is simulated."""
+        with patch.object(drill, "_same_device", return_value=not other_device), \
+                patch.object(drill, "_fs_type", return_value="ext4"):
             return drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
 
     def complete_drill_from(self, src):
-        with patch.object(drill, "_same_device", return_value=False):
+        with patch.object(drill, "_same_device", return_value=False), \
+                patch.object(drill, "_fs_type", return_value="ext4"):
             return drill.drill(self.ledger.root, source=src, clock=lambda: self.now)
 
     def external_copy(self):
@@ -171,8 +174,9 @@ class Campaign(Base):
         self.run_cycles(91, pairs=25)
         copy = self.external_copy()
         self.cycle(self.now + timedelta(hours=1))           # el ledger avanza; la copia queda vieja
-        receipt = drill.drill(self.ledger.root, source=copy, clock=lambda: self.now)
+        receipt = self.complete_drill_from(copy)
         self.assertFalse(receipt["ok"])
+        self.assertNotIn("motivo", receipt)                 # falla la comparación, no el origen
         self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
 
     def test_same_device_receipt_is_not_restore_proof(self):
@@ -303,6 +307,66 @@ class Campaign(Base):
             "observed_to": (begin + timedelta(hours=h)).isoformat(), "station_id": "rain-gauge",
             "value": 1.5, "qc": "INSTRUMENT_QC_PASS", "source_type": "instrument",
             "source_id": "synthetic"})["id"] for h in range(1, 21)]
+        self.ledger.append_journal("OK", obs)
+        out = self.status()
+        self.assertEqual((out["pares_brutos"], out["observaciones_emparejadas"]), (20, 1))
+
+    # --- Cuarta verificación ---
+
+    def mountinfo(self, fstype):
+        info = self.tmp / "mountinfo"
+        info.write_text("22 27 0:21 / / rw,relatime - ext4 /dev/sda1 rw\n"
+                        f"90 22 0:99 / {self.tmp / 'external'} rw,relatime - {fstype} {fstype} rw\n")
+        return info
+
+    def test_overlay_source_is_rejected_by_mountinfo(self):
+        self.run_cycles(91, pairs=25)
+        src = self.external_copy()
+        for fstype in ("overlay", "tmpfs", "fuse.sshfs"):
+            with patch.object(drill, "MOUNTINFO", self.mountinfo(fstype)), \
+                    patch.object(drill, "_same_device", return_value=False):
+                receipt = drill.drill(self.ledger.root, source=src, clock=lambda: self.now)
+            self.assertEqual((receipt["ok"], receipt["motivo"], receipt["fs_origen"]),
+                             (False, "ORIGEN_FS_NO_DURADERO", fstype))
+        self.assertEqual(self.status(min_coverage=0)["estado"], "DATOS_COMPLETOS_RESTAURACION_NO_PROBADA")
+
+    def test_durable_fs_from_mountinfo_is_accepted(self):
+        self.run_cycles(91, pairs=25)
+        src = self.external_copy()
+        with patch.object(drill, "MOUNTINFO", self.mountinfo("ext4")), \
+                patch.object(drill, "_same_device", return_value=False):
+            receipt = drill.drill(self.ledger.root, source=src, clock=lambda: self.now)
+        self.assertEqual((receipt["ok"], receipt["fs_origen"]), (True, "ext4"))
+        self.assertEqual(self.status(min_coverage=0)["estado"], "COMPLETADO")
+
+    def test_unreadable_mountinfo_is_unknown_not_blocking(self):
+        self.run_cycles(3)
+        with patch.object(drill, "MOUNTINFO", self.tmp / "missing-mountinfo"), \
+                patch.object(drill, "_same_device", return_value=False):
+            receipt = drill.drill(self.ledger.root, source=self.external_copy(), clock=lambda: self.now)
+        self.assertEqual((receipt["ok"], receipt["fs_origen"]), (True, "UNKNOWN"))
+
+    def test_short_windows_in_one_hour_count_once(self):
+        # 20 ventanas de 3 min dentro de la misma hora: una sola observación.
+        self.now = START
+        begin = START + timedelta(hours=1)
+        ids, obs = [], []
+        for j in range(20):
+            b = begin + timedelta(minutes=3 * j)
+            ids.append(self.ledger.add("forecast", {
+                **SITE, "event_id": "corto", "valid_from": b.isoformat(),
+                "valid_to": (b + timedelta(minutes=3)).isoformat(), "issued_at": START.isoformat(),
+                "provider_run_at": START.isoformat(), "provider": "test", "model": "m", "family": "f",
+                "mode": "amount", "prediction": 1.0, "source_id": "synthetic"})["id"])
+        self.ledger.append_journal("OK", ids)
+        self.now = START + timedelta(hours=3)
+        for j in range(20):
+            b = begin + timedelta(minutes=3 * j)
+            obs.append(self.ledger.add("observation", {
+                **SITE, "event_id": "corto", "observed_from": b.isoformat(),
+                "observed_to": (b + timedelta(minutes=3)).isoformat(), "station_id": "rain-gauge",
+                "value": 1.5, "qc": "INSTRUMENT_QC_PASS", "source_type": "instrument",
+                "source_id": "synthetic"})["id"])
         self.ledger.append_journal("OK", obs)
         out = self.status()
         self.assertEqual((out["pares_brutos"], out["observaciones_emparejadas"]), (20, 1))
