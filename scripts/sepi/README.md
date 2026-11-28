@@ -16,6 +16,8 @@ python scripts/sepi/audit_quot.py             # auditoría de la nieve observada
 python scripts/sepi/audit_nivo.py             # estaciones de la red nivo en el Pirineo oriental
 python scripts/sepi/phase03.py                # F03 v1 exploratoria (inmutable; necesita out_catalogo.csv de phase01)
 python scripts/sepi/phase03_v2.py             # F03 v2 según el protocolo congelado (necesita la salida de phase03.py)
+python scripts/sepi/phase04_climatology.py    # F04: objetivos y climatologías bimestrales, solo descriptivas (SEPI-P §9)
+python scripts/sepi/phase04_transitions.py --sintetico   # código de transiciones; sobre S2M, bloqueado hasta congelar el protocolo
 ```
 
 Dependencias: `numpy`, `pandas`, `scipy`, `xarray` con `netCDF4`.
@@ -38,6 +40,7 @@ python scripts/sepi/earthkit_ingest.py --system 51 --years 1993   # solo muestra
 | `audit_nivo.py` | `nivose_pyr_or.csv.gz`, `out_nivo_estaciones.csv` |
 | `phase03.py` | `out_f03_metricas.csv`, `out_f03_ranking.csv`, `out_f03_anclas.csv`, `out_f03_resumen.txt` |
 | `phase03_v2.py` | `f03v2/*.csv` (copia en `docs/datos/sepi-f03-v2/`) |
+| `phase04_climatology.py` | `f04/bimonthly_*.csv`, `f04/degenerate_variables.csv`, `f04/manifest.json` (copia en `docs/datos/sepi-f04/`) |
 | `earthkit_ingest.py --download` | `cds/seasonal/<sha256>.grib` y `<sha256>.json` (petición, SHA-256 y hora) |
 
 Bootstrap con semillas fijas: dos ejecuciones sobre los mismos datos dan las mismas cifras. Los datos abiertos pueden revisarse con el tiempo; las cifras de `docs/SEPI.md` corresponden a la descarga del 26-11-2026.

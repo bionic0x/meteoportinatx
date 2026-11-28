@@ -1,0 +1,71 @@
+{
+  "generado_utc": "2026-11-28T12:08:50+00:00",
+  "script": "scripts/sepi/phase04_climatology.py",
+  "commit_repo": "a0044f42e8f03f275f68565ec3a2330a3c1479c0",
+  "entrada": {
+    "archivo": "s2m_ref_v2_69_74.csv.gz",
+    "sha256": "c3103469e3b7abe0ad87a4f68d0ad816eb5baedb39560a99e723d3d77b2d92e1",
+    "filas": 1936350,
+    "ultima_fecha": "2026-11-26"
+  },
+  "protocolo": {
+    "archivo": "docs/SEPI-P-PROTOCOLO.md",
+    "sha256": "67a262183f14acca3f420add61659e89a597b87b19ae9aa90dc3441b873cbcf6",
+    "congelado": false
+  },
+  "inviernos": [
+    1968,
+    2025
+  ],
+  "periodos": {
+    "P1": "nov–dic",
+    "P2": "ene–feb",
+    "P3": "mar–abr"
+  },
+  "estratos": [
+    {
+      "altitude": 2100,
+      "geo": "llano",
+      "rol": "primario"
+    },
+    {
+      "altitude": 1800,
+      "geo": "llano",
+      "rol": "secundario"
+    },
+    {
+      "altitude": 1800,
+      "geo": "N20",
+      "rol": "secundario"
+    },
+    {
+      "altitude": 1800,
+      "geo": "NO20",
+      "rol": "secundario"
+    }
+  ],
+  "percentiles": [
+    10,
+    25,
+    33,
+    50,
+    67,
+    75,
+    90
+  ],
+  "degeneracion": "P90 = 0 en el conjunto completo, solo para variables no negativas; descriptivo (en el PR 3 se evalúa por pliegue)",
+  "metodo_percentiles": "tipo 7 (lineal); fecha de formación: tipo 1 con censura a 31-dic (rango 62)",
+  "unidades": {
+    "swe": "kg/m² (= mm)",
+    "hs": "cm",
+    "formation_day": "días desde el 1-nov (1 = 1-nov)"
+  },
+  "alcance": "Descriptivo por periodo. Sin relaciones entre periodos ni habilidad (protocolo §9).",
+  "salidas": [
+    "bimonthly_climatology.csv",
+    "bimonthly_coverage.csv",
+    "bimonthly_metrics.csv",
+    "bimonthly_percentiles.csv",
+    "degenerate_variables.csv"
+  ]
+}
