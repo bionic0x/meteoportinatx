@@ -188,8 +188,16 @@ def _number(value):
 def daily_diagnostics(data):
     """Same point diagnostics in every zone, retaining variable-level coverage."""
     from collections import defaultdict
-    from weather_core import wet_bulb_c
+    from weather_core import wet_bulb_c, wet_bulb_psychro, pressure_hpa_at
     hourly = data['hourly']
+    elevation = data.get('elevation')
+    # En montaña Stull (1013 hPa) da un bulbo húmedo ~0,5 °C más frío con humedad media; con la cota
+    # del punto se usa la ecuación psicrométrica a la presión estándar de esa altitud.
+    if _number(elevation) and -500 <= elevation <= 9000:
+        p_hpa = pressure_hpa_at(elevation)
+        wet_bulb, wet_bulb_method = (lambda t, d: wet_bulb_psychro(t, d, p_hpa)), 'psicrométrica a la presión de la cota'
+    else:
+        wet_bulb, wet_bulb_method = wet_bulb_c, 'Stull (1013 hPa; sin cota del punto)'
     groups = defaultdict(list)
     for i, stamp in enumerate(hourly['time']):
         groups[stamp[:10]].append(i)
@@ -208,9 +216,10 @@ def daily_diagnostics(data):
         temp = hourly.get('temperature_2m', [None] * len(hourly['time']))
         dew = hourly.get('dew_point_2m', [None] * len(hourly['time']))
         celsius = all(data.get('hourly_units', {}).get(field) == '°C' for field in ('temperature_2m','dew_point_2m'))
-        wet = [wet_bulb_c(temp[i], dew[i]) for i in indices if celsius and _number(temp[i]) and _number(dew[i]) and -100 <= temp[i] <= 70 and -100 <= dew[i] <= 70]
+        wet = [wet_bulb(temp[i], dew[i]) for i in indices if celsius and _number(temp[i]) and _number(dew[i]) and -100 <= temp[i] <= 70 and -100 <= dew[i] <= 70]
         row['values']['wet_bulb_min_c'] = min(wet) if full and len(wet) == 24 else None
         row['coverage']['wet_bulb'] = {'valid': len(wet), 'expected': 24}
+        row['wet_bulb_method'] = wet_bulb_method
         row['units'] = data.get('hourly_units', {})
         row['basis'] = 'provider forecast; diagnostic only; no local alert thresholds'
         out[day] = row
