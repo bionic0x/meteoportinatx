@@ -1,0 +1,445 @@
+num_massif,dominio,altitude,geo,period,periodo,variable,P90,degenerada
+69,Couserans (control),1800,N20,P1,nov–dic,g_swe,297.900,False
+69,Couserans (control),1800,N20,P1,nov–dic,l_swe,127.200,False
+69,Couserans (control),1800,N20,P1,nov–dic,g_hs,145.900,False
+69,Couserans (control),1800,N20,P1,nov–dic,d30,48.300,False
+69,Couserans (control),1800,N20,P1,nov–dic,swe_end,242.200,False
+69,Couserans (control),1800,N20,P1,nov–dic,hs_end,85.900,False
+69,Couserans (control),1800,N20,P2,ene–feb,g_swe,446.200,False
+69,Couserans (control),1800,N20,P2,ene–feb,l_swe,101.500,False
+69,Couserans (control),1800,N20,P2,ene–feb,g_hs,195.600,False
+69,Couserans (control),1800,N20,P2,ene–feb,d30,60.000,False
+69,Couserans (control),1800,N20,P2,ene–feb,swe_end,550.500,False
+69,Couserans (control),1800,N20,P2,ene–feb,hs_end,175.600,False
+69,Couserans (control),1800,N20,P3,mar–abr,g_swe,305.600,False
+69,Couserans (control),1800,N20,P3,mar–abr,l_swe,427.200,False
+69,Couserans (control),1800,N20,P3,mar–abr,g_hs,149.000,False
+69,Couserans (control),1800,N20,P3,mar–abr,d30,61.000,False
+69,Couserans (control),1800,N20,P3,mar–abr,swe_end,622.800,False
+69,Couserans (control),1800,N20,P3,mar–abr,hs_end,171.500,False
+69,Couserans (control),1800,NO20,P1,nov–dic,g_swe,308.000,False
+69,Couserans (control),1800,NO20,P1,nov–dic,l_swe,134.900,False
+69,Couserans (control),1800,NO20,P1,nov–dic,g_hs,154.500,False
+69,Couserans (control),1800,NO20,P1,nov–dic,d30,47.600,False
+69,Couserans (control),1800,NO20,P1,nov–dic,swe_end,236.100,False
+69,Couserans (control),1800,NO20,P1,nov–dic,hs_end,84.100,False
+69,Couserans (control),1800,NO20,P2,ene–feb,g_swe,453.300,False
+69,Couserans (control),1800,NO20,P2,ene–feb,l_swe,115.300,False
+69,Couserans (control),1800,NO20,P2,ene–feb,g_hs,197.900,False
+69,Couserans (control),1800,NO20,P2,ene–feb,d30,60.000,False
+69,Couserans (control),1800,NO20,P2,ene–feb,swe_end,566.800,False
+69,Couserans (control),1800,NO20,P2,ene–feb,hs_end,177.300,False
+69,Couserans (control),1800,NO20,P3,mar–abr,g_swe,310.900,False
+69,Couserans (control),1800,NO20,P3,mar–abr,l_swe,438.400,False
+69,Couserans (control),1800,NO20,P3,mar–abr,g_hs,154.500,False
+69,Couserans (control),1800,NO20,P3,mar–abr,d30,61.000,False
+69,Couserans (control),1800,NO20,P3,mar–abr,swe_end,635.900,False
+69,Couserans (control),1800,NO20,P3,mar–abr,hs_end,173.000,False
+69,Couserans (control),1800,llano,P1,nov–dic,g_swe,261.700,False
+69,Couserans (control),1800,llano,P1,nov–dic,l_swe,126.700,False
+69,Couserans (control),1800,llano,P1,nov–dic,g_hs,131.500,False
+69,Couserans (control),1800,llano,P1,nov–dic,d30,36.700,False
+69,Couserans (control),1800,llano,P1,nov–dic,swe_end,177.700,False
+69,Couserans (control),1800,llano,P1,nov–dic,hs_end,66.600,False
+69,Couserans (control),1800,llano,P2,ene–feb,g_swe,398.100,False
+69,Couserans (control),1800,llano,P2,ene–feb,l_swe,128.100,False
+69,Couserans (control),1800,llano,P2,ene–feb,g_hs,172.300,False
+69,Couserans (control),1800,llano,P2,ene–feb,d30,59.000,False
+69,Couserans (control),1800,llano,P2,ene–feb,swe_end,439.300,False
+69,Couserans (control),1800,llano,P2,ene–feb,hs_end,138.400,False
+69,Couserans (control),1800,llano,P3,mar–abr,g_swe,260.500,False
+69,Couserans (control),1800,llano,P3,mar–abr,l_swe,476.600,False
+69,Couserans (control),1800,llano,P3,mar–abr,g_hs,133.800,False
+69,Couserans (control),1800,llano,P3,mar–abr,d30,61.000,False
+69,Couserans (control),1800,llano,P3,mar–abr,swe_end,389.300,False
+69,Couserans (control),1800,llano,P3,mar–abr,hs_end,98.500,False
+69,Couserans (control),2100,llano,P1,nov–dic,g_swe,361.700,False
+69,Couserans (control),2100,llano,P1,nov–dic,l_swe,104.500,False
+69,Couserans (control),2100,llano,P1,nov–dic,g_hs,174.400,False
+69,Couserans (control),2100,llano,P1,nov–dic,d30,52.300,False
+69,Couserans (control),2100,llano,P1,nov–dic,swe_end,295.700,False
+69,Couserans (control),2100,llano,P1,nov–dic,hs_end,102.900,False
+69,Couserans (control),2100,llano,P2,ene–feb,g_swe,467.500,False
+69,Couserans (control),2100,llano,P2,ene–feb,l_swe,65.600,False
+69,Couserans (control),2100,llano,P2,ene–feb,g_hs,206.800,False
+69,Couserans (control),2100,llano,P2,ene–feb,d30,60.000,False
+69,Couserans (control),2100,llano,P2,ene–feb,d100,56.300,False
+69,Couserans (control),2100,llano,P2,ene–feb,swe_end,647.300,False
+69,Couserans (control),2100,llano,P2,ene–feb,hs_end,200.600,False
+69,Couserans (control),2100,llano,P3,mar–abr,g_swe,353.500,False
+69,Couserans (control),2100,llano,P3,mar–abr,l_swe,431.200,False
+69,Couserans (control),2100,llano,P3,mar–abr,g_hs,172.600,False
+69,Couserans (control),2100,llano,P3,mar–abr,d30,61.000,False
+69,Couserans (control),2100,llano,P3,mar–abr,d100,61.000,False
+69,Couserans (control),2100,llano,P3,mar–abr,swe_end,834.000,False
+69,Couserans (control),2100,llano,P3,mar–abr,hs_end,219.900,False
+70,Haute-Ariège,1800,N20,P1,nov–dic,g_swe,251.700,False
+70,Haute-Ariège,1800,N20,P1,nov–dic,l_swe,105.600,False
+70,Haute-Ariège,1800,N20,P1,nov–dic,g_hs,132.900,False
+70,Haute-Ariège,1800,N20,P1,nov–dic,d30,44.000,False
+70,Haute-Ariège,1800,N20,P1,nov–dic,swe_end,204.300,False
+70,Haute-Ariège,1800,N20,P1,nov–dic,hs_end,74.000,False
+70,Haute-Ariège,1800,N20,P2,ene–feb,g_swe,394.000,False
+70,Haute-Ariège,1800,N20,P2,ene–feb,l_swe,88.000,False
+70,Haute-Ariège,1800,N20,P2,ene–feb,g_hs,172.600,False
+70,Haute-Ariège,1800,N20,P2,ene–feb,d30,59.300,False
+70,Haute-Ariège,1800,N20,P2,ene–feb,swe_end,491.900,False
+70,Haute-Ariège,1800,N20,P2,ene–feb,hs_end,150.100,False
+70,Haute-Ariège,1800,N20,P3,mar–abr,g_swe,244.000,False
+70,Haute-Ariège,1800,N20,P3,mar–abr,l_swe,463.700,False
+70,Haute-Ariège,1800,N20,P3,mar–abr,g_hs,130.300,False
+70,Haute-Ariège,1800,N20,P3,mar–abr,d30,61.000,False
+70,Haute-Ariège,1800,N20,P3,mar–abr,swe_end,453.400,False
+70,Haute-Ariège,1800,N20,P3,mar–abr,hs_end,113.800,False
+70,Haute-Ariège,1800,NO20,P1,nov–dic,g_swe,251.500,False
+70,Haute-Ariège,1800,NO20,P1,nov–dic,l_swe,108.300,False
+70,Haute-Ariège,1800,NO20,P1,nov–dic,g_hs,133.500,False
+70,Haute-Ariège,1800,NO20,P1,nov–dic,d30,43.300,False
+70,Haute-Ariège,1800,NO20,P1,nov–dic,swe_end,203.000,False
+70,Haute-Ariège,1800,NO20,P1,nov–dic,hs_end,73.000,False
+70,Haute-Ariège,1800,NO20,P2,ene–feb,g_swe,402.000,False
+70,Haute-Ariège,1800,NO20,P2,ene–feb,l_swe,100.100,False
+70,Haute-Ariège,1800,NO20,P2,ene–feb,g_hs,177.700,False
+70,Haute-Ariège,1800,NO20,P2,ene–feb,d30,59.300,False
+70,Haute-Ariège,1800,NO20,P2,ene–feb,swe_end,492.000,False
+70,Haute-Ariège,1800,NO20,P2,ene–feb,hs_end,150.700,False
+70,Haute-Ariège,1800,NO20,P3,mar–abr,g_swe,251.800,False
+70,Haute-Ariège,1800,NO20,P3,mar–abr,l_swe,462.300,False
+70,Haute-Ariège,1800,NO20,P3,mar–abr,g_hs,132.200,False
+70,Haute-Ariège,1800,NO20,P3,mar–abr,d30,61.000,False
+70,Haute-Ariège,1800,NO20,P3,mar–abr,swe_end,435.300,False
+70,Haute-Ariège,1800,NO20,P3,mar–abr,hs_end,108.500,False
+70,Haute-Ariège,1800,llano,P1,nov–dic,g_swe,213.000,False
+70,Haute-Ariège,1800,llano,P1,nov–dic,l_swe,103.300,False
+70,Haute-Ariège,1800,llano,P1,nov–dic,g_hs,114.900,False
+70,Haute-Ariège,1800,llano,P1,nov–dic,d30,33.000,False
+70,Haute-Ariège,1800,llano,P1,nov–dic,swe_end,166.500,False
+70,Haute-Ariège,1800,llano,P1,nov–dic,hs_end,55.600,False
+70,Haute-Ariège,1800,llano,P2,ene–feb,g_swe,320.300,False
+70,Haute-Ariège,1800,llano,P2,ene–feb,l_swe,114.800,False
+70,Haute-Ariège,1800,llano,P2,ene–feb,g_hs,153.300,False
+70,Haute-Ariège,1800,llano,P2,ene–feb,d30,59.000,False
+70,Haute-Ariège,1800,llano,P2,ene–feb,swe_end,375.100,False
+70,Haute-Ariège,1800,llano,P2,ene–feb,hs_end,122.100,False
+70,Haute-Ariège,1800,llano,P3,mar–abr,g_swe,209.600,False
+70,Haute-Ariège,1800,llano,P3,mar–abr,l_swe,443.200,False
+70,Haute-Ariège,1800,llano,P3,mar–abr,g_hs,112.000,False
+70,Haute-Ariège,1800,llano,P3,mar–abr,d30,61.000,False
+70,Haute-Ariège,1800,llano,P3,mar–abr,swe_end,213.300,False
+70,Haute-Ariège,1800,llano,P3,mar–abr,hs_end,57.600,False
+70,Haute-Ariège,2100,llano,P1,nov–dic,g_swe,303.800,False
+70,Haute-Ariège,2100,llano,P1,nov–dic,l_swe,95.300,False
+70,Haute-Ariège,2100,llano,P1,nov–dic,g_hs,151.700,False
+70,Haute-Ariège,2100,llano,P1,nov–dic,d30,44.300,False
+70,Haute-Ariège,2100,llano,P1,nov–dic,swe_end,271.600,False
+70,Haute-Ariège,2100,llano,P1,nov–dic,hs_end,93.200,False
+70,Haute-Ariège,2100,llano,P2,ene–feb,g_swe,390.400,False
+70,Haute-Ariège,2100,llano,P2,ene–feb,l_swe,63.000,False
+70,Haute-Ariège,2100,llano,P2,ene–feb,g_hs,179.700,False
+70,Haute-Ariège,2100,llano,P2,ene–feb,d30,60.000,False
+70,Haute-Ariège,2100,llano,P2,ene–feb,d100,50.300,False
+70,Haute-Ariège,2100,llano,P2,ene–feb,swe_end,548.200,False
+70,Haute-Ariège,2100,llano,P2,ene–feb,hs_end,179.800,False
+70,Haute-Ariège,2100,llano,P3,mar–abr,g_swe,295.300,False
+70,Haute-Ariège,2100,llano,P3,mar–abr,l_swe,408.100,False
+70,Haute-Ariège,2100,llano,P3,mar–abr,g_hs,158.300,False
+70,Haute-Ariège,2100,llano,P3,mar–abr,d30,61.000,False
+70,Haute-Ariège,2100,llano,P3,mar–abr,d100,61.000,False
+70,Haute-Ariège,2100,llano,P3,mar–abr,swe_end,600.600,False
+70,Haute-Ariège,2100,llano,P3,mar–abr,hs_end,161.400,False
+71,Andorra,1800,N20,P1,nov–dic,g_swe,115.100,False
+71,Andorra,1800,N20,P1,nov–dic,l_swe,60.800,False
+71,Andorra,1800,N20,P1,nov–dic,g_hs,61.300,False
+71,Andorra,1800,N20,P1,nov–dic,d30,10.200,False
+71,Andorra,1800,N20,P1,nov–dic,swe_end,81.000,False
+71,Andorra,1800,N20,P1,nov–dic,hs_end,33.500,False
+71,Andorra,1800,N20,P2,ene–feb,g_swe,170.200,False
+71,Andorra,1800,N20,P2,ene–feb,l_swe,71.500,False
+71,Andorra,1800,N20,P2,ene–feb,g_hs,80.600,False
+71,Andorra,1800,N20,P2,ene–feb,d30,54.300,False
+71,Andorra,1800,N20,P2,ene–feb,swe_end,193.900,False
+71,Andorra,1800,N20,P2,ene–feb,hs_end,70.300,False
+71,Andorra,1800,N20,P3,mar–abr,g_swe,104.600,False
+71,Andorra,1800,N20,P3,mar–abr,l_swe,250.000,False
+71,Andorra,1800,N20,P3,mar–abr,g_hs,57.900,False
+71,Andorra,1800,N20,P3,mar–abr,d30,44.600,False
+71,Andorra,1800,N20,P3,mar–abr,swe_end,46.700,False
+71,Andorra,1800,N20,P3,mar–abr,hs_end,15.200,False
+71,Andorra,1800,NO20,P1,nov–dic,g_swe,112.500,False
+71,Andorra,1800,NO20,P1,nov–dic,l_swe,62.700,False
+71,Andorra,1800,NO20,P1,nov–dic,g_hs,60.500,False
+71,Andorra,1800,NO20,P1,nov–dic,d30,10.200,False
+71,Andorra,1800,NO20,P1,nov–dic,swe_end,82.500,False
+71,Andorra,1800,NO20,P1,nov–dic,hs_end,32.300,False
+71,Andorra,1800,NO20,P2,ene–feb,g_swe,172.400,False
+71,Andorra,1800,NO20,P2,ene–feb,l_swe,82.700,False
+71,Andorra,1800,NO20,P2,ene–feb,g_hs,83.900,False
+71,Andorra,1800,NO20,P2,ene–feb,d30,51.500,False
+71,Andorra,1800,NO20,P2,ene–feb,swe_end,189.200,False
+71,Andorra,1800,NO20,P2,ene–feb,hs_end,66.900,False
+71,Andorra,1800,NO20,P3,mar–abr,g_swe,106.000,False
+71,Andorra,1800,NO20,P3,mar–abr,l_swe,245.100,False
+71,Andorra,1800,NO20,P3,mar–abr,g_hs,57.600,False
+71,Andorra,1800,NO20,P3,mar–abr,d30,37.600,False
+71,Andorra,1800,NO20,P3,mar–abr,swe_end,37.000,False
+71,Andorra,1800,NO20,P3,mar–abr,hs_end,12.600,False
+71,Andorra,1800,llano,P1,nov–dic,g_swe,101.600,False
+71,Andorra,1800,llano,P1,nov–dic,l_swe,63.200,False
+71,Andorra,1800,llano,P1,nov–dic,g_hs,53.800,False
+71,Andorra,1800,llano,P1,nov–dic,d30,5.900,False
+71,Andorra,1800,llano,P1,nov–dic,swe_end,68.700,False
+71,Andorra,1800,llano,P1,nov–dic,hs_end,26.300,False
+71,Andorra,1800,llano,P2,ene–feb,g_swe,147.800,False
+71,Andorra,1800,llano,P2,ene–feb,l_swe,101.900,False
+71,Andorra,1800,llano,P2,ene–feb,g_hs,71.600,False
+71,Andorra,1800,llano,P2,ene–feb,d30,35.000,False
+71,Andorra,1800,llano,P2,ene–feb,swe_end,138.900,False
+71,Andorra,1800,llano,P2,ene–feb,hs_end,43.900,False
+71,Andorra,1800,llano,P3,mar–abr,g_swe,87.600,False
+71,Andorra,1800,llano,P3,mar–abr,l_swe,187.700,False
+71,Andorra,1800,llano,P3,mar–abr,g_hs,47.000,False
+71,Andorra,1800,llano,P3,mar–abr,d30,18.600,False
+71,Andorra,1800,llano,P3,mar–abr,swe_end,7.200,False
+71,Andorra,1800,llano,P3,mar–abr,hs_end,3.300,False
+71,Andorra,2100,llano,P1,nov–dic,g_swe,151.600,False
+71,Andorra,2100,llano,P1,nov–dic,l_swe,67.900,False
+71,Andorra,2100,llano,P1,nov–dic,g_hs,79.200,False
+71,Andorra,2100,llano,P1,nov–dic,d30,25.000,False
+71,Andorra,2100,llano,P1,nov–dic,swe_end,118.200,False
+71,Andorra,2100,llano,P1,nov–dic,hs_end,46.300,False
+71,Andorra,2100,llano,P2,ene–feb,g_swe,176.000,False
+71,Andorra,2100,llano,P2,ene–feb,l_swe,63.300,False
+71,Andorra,2100,llano,P2,ene–feb,g_hs,86.200,False
+71,Andorra,2100,llano,P2,ene–feb,d30,59.000,False
+71,Andorra,2100,llano,P2,ene–feb,d100,0.000,True
+71,Andorra,2100,llano,P2,ene–feb,swe_end,230.300,False
+71,Andorra,2100,llano,P2,ene–feb,hs_end,77.600,False
+71,Andorra,2100,llano,P3,mar–abr,g_swe,160.000,False
+71,Andorra,2100,llano,P3,mar–abr,l_swe,276.800,False
+71,Andorra,2100,llano,P3,mar–abr,g_hs,84.900,False
+71,Andorra,2100,llano,P3,mar–abr,d30,57.200,False
+71,Andorra,2100,llano,P3,mar–abr,d100,0.000,True
+71,Andorra,2100,llano,P3,mar–abr,swe_end,150.200,False
+71,Andorra,2100,llano,P3,mar–abr,hs_end,45.100,False
+72,Orlu–St-Barthélemy,1800,N20,P1,nov–dic,g_swe,276.400,False
+72,Orlu–St-Barthélemy,1800,N20,P1,nov–dic,l_swe,116.600,False
+72,Orlu–St-Barthélemy,1800,N20,P1,nov–dic,g_hs,136.600,False
+72,Orlu–St-Barthélemy,1800,N20,P1,nov–dic,d30,40.900,False
+72,Orlu–St-Barthélemy,1800,N20,P1,nov–dic,swe_end,238.100,False
+72,Orlu–St-Barthélemy,1800,N20,P1,nov–dic,hs_end,90.000,False
+72,Orlu–St-Barthélemy,1800,N20,P2,ene–feb,g_swe,445.700,False
+72,Orlu–St-Barthélemy,1800,N20,P2,ene–feb,l_swe,93.800,False
+72,Orlu–St-Barthélemy,1800,N20,P2,ene–feb,g_hs,185.300,False
+72,Orlu–St-Barthélemy,1800,N20,P2,ene–feb,d30,59.300,False
+72,Orlu–St-Barthélemy,1800,N20,P2,ene–feb,swe_end,541.600,False
+72,Orlu–St-Barthélemy,1800,N20,P2,ene–feb,hs_end,177.000,False
+72,Orlu–St-Barthélemy,1800,N20,P3,mar–abr,g_swe,280.400,False
+72,Orlu–St-Barthélemy,1800,N20,P3,mar–abr,l_swe,474.000,False
+72,Orlu–St-Barthélemy,1800,N20,P3,mar–abr,g_hs,138.300,False
+72,Orlu–St-Barthélemy,1800,N20,P3,mar–abr,d30,61.000,False
+72,Orlu–St-Barthélemy,1800,N20,P3,mar–abr,swe_end,552.600,False
+72,Orlu–St-Barthélemy,1800,N20,P3,mar–abr,hs_end,136.200,False
+72,Orlu–St-Barthélemy,1800,NO20,P1,nov–dic,g_swe,272.400,False
+72,Orlu–St-Barthélemy,1800,NO20,P1,nov–dic,l_swe,122.900,False
+72,Orlu–St-Barthélemy,1800,NO20,P1,nov–dic,g_hs,139.200,False
+72,Orlu–St-Barthélemy,1800,NO20,P1,nov–dic,d30,40.900,False
+72,Orlu–St-Barthélemy,1800,NO20,P1,nov–dic,swe_end,238.900,False
+72,Orlu–St-Barthélemy,1800,NO20,P1,nov–dic,hs_end,88.600,False
+72,Orlu–St-Barthélemy,1800,NO20,P2,ene–feb,g_swe,452.800,False
+72,Orlu–St-Barthélemy,1800,NO20,P2,ene–feb,l_swe,112.800,False
+72,Orlu–St-Barthélemy,1800,NO20,P2,ene–feb,g_hs,192.200,False
+72,Orlu–St-Barthélemy,1800,NO20,P2,ene–feb,d30,59.000,False
+72,Orlu–St-Barthélemy,1800,NO20,P2,ene–feb,swe_end,530.400,False
+72,Orlu–St-Barthélemy,1800,NO20,P2,ene–feb,hs_end,169.700,False
+72,Orlu–St-Barthélemy,1800,NO20,P3,mar–abr,g_swe,282.500,False
+72,Orlu–St-Barthélemy,1800,NO20,P3,mar–abr,l_swe,480.900,False
+72,Orlu–St-Barthélemy,1800,NO20,P3,mar–abr,g_hs,137.500,False
+72,Orlu–St-Barthélemy,1800,NO20,P3,mar–abr,d30,61.000,False
+72,Orlu–St-Barthélemy,1800,NO20,P3,mar–abr,swe_end,535.200,False
+72,Orlu–St-Barthélemy,1800,NO20,P3,mar–abr,hs_end,132.600,False
+72,Orlu–St-Barthélemy,1800,llano,P1,nov–dic,g_swe,242.700,False
+72,Orlu–St-Barthélemy,1800,llano,P1,nov–dic,l_swe,114.600,False
+72,Orlu–St-Barthélemy,1800,llano,P1,nov–dic,g_hs,123.500,False
+72,Orlu–St-Barthélemy,1800,llano,P1,nov–dic,d30,34.500,False
+72,Orlu–St-Barthélemy,1800,llano,P1,nov–dic,swe_end,183.900,False
+72,Orlu–St-Barthélemy,1800,llano,P1,nov–dic,hs_end,69.300,False
+72,Orlu–St-Barthélemy,1800,llano,P2,ene–feb,g_swe,377.500,False
+72,Orlu–St-Barthélemy,1800,llano,P2,ene–feb,l_swe,128.100,False
+72,Orlu–St-Barthélemy,1800,llano,P2,ene–feb,g_hs,166.000,False
+72,Orlu–St-Barthélemy,1800,llano,P2,ene–feb,d30,59.000,False
+72,Orlu–St-Barthélemy,1800,llano,P2,ene–feb,swe_end,422.500,False
+72,Orlu–St-Barthélemy,1800,llano,P2,ene–feb,hs_end,138.300,False
+72,Orlu–St-Barthélemy,1800,llano,P3,mar–abr,g_swe,251.000,False
+72,Orlu–St-Barthélemy,1800,llano,P3,mar–abr,l_swe,459.800,False
+72,Orlu–St-Barthélemy,1800,llano,P3,mar–abr,g_hs,126.200,False
+72,Orlu–St-Barthélemy,1800,llano,P3,mar–abr,d30,61.000,False
+72,Orlu–St-Barthélemy,1800,llano,P3,mar–abr,swe_end,251.500,False
+72,Orlu–St-Barthélemy,1800,llano,P3,mar–abr,hs_end,68.100,False
+72,Orlu–St-Barthélemy,2100,llano,P1,nov–dic,g_swe,324.100,False
+72,Orlu–St-Barthélemy,2100,llano,P1,nov–dic,l_swe,98.600,False
+72,Orlu–St-Barthélemy,2100,llano,P1,nov–dic,g_hs,162.300,False
+72,Orlu–St-Barthélemy,2100,llano,P1,nov–dic,d30,48.300,False
+72,Orlu–St-Barthélemy,2100,llano,P1,nov–dic,swe_end,285.800,False
+72,Orlu–St-Barthélemy,2100,llano,P1,nov–dic,hs_end,100.800,False
+72,Orlu–St-Barthélemy,2100,llano,P2,ene–feb,g_swe,426.000,False
+72,Orlu–St-Barthélemy,2100,llano,P2,ene–feb,l_swe,71.800,False
+72,Orlu–St-Barthélemy,2100,llano,P2,ene–feb,g_hs,193.800,False
+72,Orlu–St-Barthélemy,2100,llano,P2,ene–feb,d30,60.000,False
+72,Orlu–St-Barthélemy,2100,llano,P2,ene–feb,d100,51.500,False
+72,Orlu–St-Barthélemy,2100,llano,P2,ene–feb,swe_end,594.800,False
+72,Orlu–St-Barthélemy,2100,llano,P2,ene–feb,hs_end,187.300,False
+72,Orlu–St-Barthélemy,2100,llano,P3,mar–abr,g_swe,321.500,False
+72,Orlu–St-Barthélemy,2100,llano,P3,mar–abr,l_swe,439.000,False
+72,Orlu–St-Barthélemy,2100,llano,P3,mar–abr,g_hs,166.800,False
+72,Orlu–St-Barthélemy,2100,llano,P3,mar–abr,d30,61.000,False
+72,Orlu–St-Barthélemy,2100,llano,P3,mar–abr,d100,61.000,False
+72,Orlu–St-Barthélemy,2100,llano,P3,mar–abr,swe_end,662.200,False
+72,Orlu–St-Barthélemy,2100,llano,P3,mar–abr,hs_end,171.600,False
+73,Capcir–Puymorens,1800,N20,P1,nov–dic,g_swe,138.300,False
+73,Capcir–Puymorens,1800,N20,P1,nov–dic,l_swe,68.000,False
+73,Capcir–Puymorens,1800,N20,P1,nov–dic,g_hs,73.900,False
+73,Capcir–Puymorens,1800,N20,P1,nov–dic,d30,25.000,False
+73,Capcir–Puymorens,1800,N20,P1,nov–dic,swe_end,109.800,False
+73,Capcir–Puymorens,1800,N20,P1,nov–dic,hs_end,39.600,False
+73,Capcir–Puymorens,1800,N20,P2,ene–feb,g_swe,197.800,False
+73,Capcir–Puymorens,1800,N20,P2,ene–feb,l_swe,79.900,False
+73,Capcir–Puymorens,1800,N20,P2,ene–feb,g_hs,90.800,False
+73,Capcir–Puymorens,1800,N20,P2,ene–feb,d30,59.000,False
+73,Capcir–Puymorens,1800,N20,P2,ene–feb,swe_end,249.900,False
+73,Capcir–Puymorens,1800,N20,P2,ene–feb,hs_end,83.900,False
+73,Capcir–Puymorens,1800,N20,P3,mar–abr,g_swe,122.600,False
+73,Capcir–Puymorens,1800,N20,P3,mar–abr,l_swe,295.300,False
+73,Capcir–Puymorens,1800,N20,P3,mar–abr,g_hs,67.600,False
+73,Capcir–Puymorens,1800,N20,P3,mar–abr,d30,51.000,False
+73,Capcir–Puymorens,1800,N20,P3,mar–abr,swe_end,54.900,False
+73,Capcir–Puymorens,1800,N20,P3,mar–abr,hs_end,16.900,False
+73,Capcir–Puymorens,1800,NO20,P1,nov–dic,g_swe,129.200,False
+73,Capcir–Puymorens,1800,NO20,P1,nov–dic,l_swe,66.600,False
+73,Capcir–Puymorens,1800,NO20,P1,nov–dic,g_hs,68.200,False
+73,Capcir–Puymorens,1800,NO20,P1,nov–dic,d30,15.300,False
+73,Capcir–Puymorens,1800,NO20,P1,nov–dic,swe_end,101.100,False
+73,Capcir–Puymorens,1800,NO20,P1,nov–dic,hs_end,38.200,False
+73,Capcir–Puymorens,1800,NO20,P2,ene–feb,g_swe,199.400,False
+73,Capcir–Puymorens,1800,NO20,P2,ene–feb,l_swe,101.700,False
+73,Capcir–Puymorens,1800,NO20,P2,ene–feb,g_hs,92.400,False
+73,Capcir–Puymorens,1800,NO20,P2,ene–feb,d30,56.300,False
+73,Capcir–Puymorens,1800,NO20,P2,ene–feb,swe_end,235.400,False
+73,Capcir–Puymorens,1800,NO20,P2,ene–feb,hs_end,82.300,False
+73,Capcir–Puymorens,1800,NO20,P3,mar–abr,g_swe,116.600,False
+73,Capcir–Puymorens,1800,NO20,P3,mar–abr,l_swe,285.600,False
+73,Capcir–Puymorens,1800,NO20,P3,mar–abr,g_hs,66.200,False
+73,Capcir–Puymorens,1800,NO20,P3,mar–abr,d30,47.900,False
+73,Capcir–Puymorens,1800,NO20,P3,mar–abr,swe_end,33.100,False
+73,Capcir–Puymorens,1800,NO20,P3,mar–abr,hs_end,14.300,False
+73,Capcir–Puymorens,1800,llano,P1,nov–dic,g_swe,126.000,False
+73,Capcir–Puymorens,1800,llano,P1,nov–dic,l_swe,64.300,False
+73,Capcir–Puymorens,1800,llano,P1,nov–dic,g_hs,67.900,False
+73,Capcir–Puymorens,1800,llano,P1,nov–dic,d30,8.300,False
+73,Capcir–Puymorens,1800,llano,P1,nov–dic,swe_end,75.900,False
+73,Capcir–Puymorens,1800,llano,P1,nov–dic,hs_end,29.600,False
+73,Capcir–Puymorens,1800,llano,P2,ene–feb,g_swe,173.100,False
+73,Capcir–Puymorens,1800,llano,P2,ene–feb,l_swe,118.600,False
+73,Capcir–Puymorens,1800,llano,P2,ene–feb,g_hs,86.600,False
+73,Capcir–Puymorens,1800,llano,P2,ene–feb,d30,38.300,False
+73,Capcir–Puymorens,1800,llano,P2,ene–feb,swe_end,179.100,False
+73,Capcir–Puymorens,1800,llano,P2,ene–feb,hs_end,63.300,False
+73,Capcir–Puymorens,1800,llano,P3,mar–abr,g_swe,92.500,False
+73,Capcir–Puymorens,1800,llano,P3,mar–abr,l_swe,233.900,False
+73,Capcir–Puymorens,1800,llano,P3,mar–abr,g_hs,49.600,False
+73,Capcir–Puymorens,1800,llano,P3,mar–abr,d30,27.300,False
+73,Capcir–Puymorens,1800,llano,P3,mar–abr,swe_end,20.900,False
+73,Capcir–Puymorens,1800,llano,P3,mar–abr,hs_end,5.800,False
+73,Capcir–Puymorens,2100,llano,P1,nov–dic,g_swe,178.600,False
+73,Capcir–Puymorens,2100,llano,P1,nov–dic,l_swe,77.900,False
+73,Capcir–Puymorens,2100,llano,P1,nov–dic,g_hs,87.500,False
+73,Capcir–Puymorens,2100,llano,P1,nov–dic,d30,26.600,False
+73,Capcir–Puymorens,2100,llano,P1,nov–dic,swe_end,144.600,False
+73,Capcir–Puymorens,2100,llano,P1,nov–dic,hs_end,57.600,False
+73,Capcir–Puymorens,2100,llano,P2,ene–feb,g_swe,227.000,False
+73,Capcir–Puymorens,2100,llano,P2,ene–feb,l_swe,65.800,False
+73,Capcir–Puymorens,2100,llano,P2,ene–feb,g_hs,101.000,False
+73,Capcir–Puymorens,2100,llano,P2,ene–feb,d30,59.000,False
+73,Capcir–Puymorens,2100,llano,P2,ene–feb,d100,11.300,False
+73,Capcir–Puymorens,2100,llano,P2,ene–feb,swe_end,287.000,False
+73,Capcir–Puymorens,2100,llano,P2,ene–feb,hs_end,95.300,False
+73,Capcir–Puymorens,2100,llano,P3,mar–abr,g_swe,164.900,False
+73,Capcir–Puymorens,2100,llano,P3,mar–abr,l_swe,337.500,False
+73,Capcir–Puymorens,2100,llano,P3,mar–abr,g_hs,90.200,False
+73,Capcir–Puymorens,2100,llano,P3,mar–abr,d30,61.000,False
+73,Capcir–Puymorens,2100,llano,P3,mar–abr,d100,18.900,False
+73,Capcir–Puymorens,2100,llano,P3,mar–abr,swe_end,202.500,False
+73,Capcir–Puymorens,2100,llano,P3,mar–abr,hs_end,49.200,False
+74,Cerdagne–Canigou,1800,N20,P1,nov–dic,g_swe,153.600,False
+74,Cerdagne–Canigou,1800,N20,P1,nov–dic,l_swe,52.000,False
+74,Cerdagne–Canigou,1800,N20,P1,nov–dic,g_hs,75.800,False
+74,Cerdagne–Canigou,1800,N20,P1,nov–dic,d30,18.600,False
+74,Cerdagne–Canigou,1800,N20,P1,nov–dic,swe_end,99.300,False
+74,Cerdagne–Canigou,1800,N20,P1,nov–dic,hs_end,38.800,False
+74,Cerdagne–Canigou,1800,N20,P2,ene–feb,g_swe,241.600,False
+74,Cerdagne–Canigou,1800,N20,P2,ene–feb,l_swe,71.200,False
+74,Cerdagne–Canigou,1800,N20,P2,ene–feb,g_hs,121.500,False
+74,Cerdagne–Canigou,1800,N20,P2,ene–feb,d30,59.000,False
+74,Cerdagne–Canigou,1800,N20,P2,ene–feb,swe_end,250.700,False
+74,Cerdagne–Canigou,1800,N20,P2,ene–feb,hs_end,93.300,False
+74,Cerdagne–Canigou,1800,N20,P3,mar–abr,g_swe,211.100,False
+74,Cerdagne–Canigou,1800,N20,P3,mar–abr,l_swe,353.600,False
+74,Cerdagne–Canigou,1800,N20,P3,mar–abr,g_hs,109.500,False
+74,Cerdagne–Canigou,1800,N20,P3,mar–abr,d30,54.900,False
+74,Cerdagne–Canigou,1800,N20,P3,mar–abr,swe_end,62.300,False
+74,Cerdagne–Canigou,1800,N20,P3,mar–abr,hs_end,24.400,False
+74,Cerdagne–Canigou,1800,NO20,P1,nov–dic,g_swe,144.600,False
+74,Cerdagne–Canigou,1800,NO20,P1,nov–dic,l_swe,62.800,False
+74,Cerdagne–Canigou,1800,NO20,P1,nov–dic,g_hs,68.300,False
+74,Cerdagne–Canigou,1800,NO20,P1,nov–dic,d30,15.600,False
+74,Cerdagne–Canigou,1800,NO20,P1,nov–dic,swe_end,86.900,False
+74,Cerdagne–Canigou,1800,NO20,P1,nov–dic,hs_end,36.000,False
+74,Cerdagne–Canigou,1800,NO20,P2,ene–feb,g_swe,226.000,False
+74,Cerdagne–Canigou,1800,NO20,P2,ene–feb,l_swe,84.300,False
+74,Cerdagne–Canigou,1800,NO20,P2,ene–feb,g_hs,116.600,False
+74,Cerdagne–Canigou,1800,NO20,P2,ene–feb,d30,54.100,False
+74,Cerdagne–Canigou,1800,NO20,P2,ene–feb,swe_end,235.000,False
+74,Cerdagne–Canigou,1800,NO20,P2,ene–feb,hs_end,81.900,False
+74,Cerdagne–Canigou,1800,NO20,P3,mar–abr,g_swe,196.500,False
+74,Cerdagne–Canigou,1800,NO20,P3,mar–abr,l_swe,320.000,False
+74,Cerdagne–Canigou,1800,NO20,P3,mar–abr,g_hs,101.900,False
+74,Cerdagne–Canigou,1800,NO20,P3,mar–abr,d30,44.000,False
+74,Cerdagne–Canigou,1800,NO20,P3,mar–abr,swe_end,54.600,False
+74,Cerdagne–Canigou,1800,NO20,P3,mar–abr,hs_end,18.300,False
+74,Cerdagne–Canigou,1800,llano,P1,nov–dic,g_swe,143.900,False
+74,Cerdagne–Canigou,1800,llano,P1,nov–dic,l_swe,69.800,False
+74,Cerdagne–Canigou,1800,llano,P1,nov–dic,g_hs,71.200,False
+74,Cerdagne–Canigou,1800,llano,P1,nov–dic,d30,10.600,False
+74,Cerdagne–Canigou,1800,llano,P1,nov–dic,swe_end,86.500,False
+74,Cerdagne–Canigou,1800,llano,P1,nov–dic,hs_end,31.200,False
+74,Cerdagne–Canigou,1800,llano,P2,ene–feb,g_swe,231.800,False
+74,Cerdagne–Canigou,1800,llano,P2,ene–feb,l_swe,103.900,False
+74,Cerdagne–Canigou,1800,llano,P2,ene–feb,g_hs,121.800,False
+74,Cerdagne–Canigou,1800,llano,P2,ene–feb,d30,47.300,False
+74,Cerdagne–Canigou,1800,llano,P2,ene–feb,swe_end,230.300,False
+74,Cerdagne–Canigou,1800,llano,P2,ene–feb,hs_end,70.300,False
+74,Cerdagne–Canigou,1800,llano,P3,mar–abr,g_swe,177.800,False
+74,Cerdagne–Canigou,1800,llano,P3,mar–abr,l_swe,327.800,False
+74,Cerdagne–Canigou,1800,llano,P3,mar–abr,g_hs,94.600,False
+74,Cerdagne–Canigou,1800,llano,P3,mar–abr,d30,31.000,False
+74,Cerdagne–Canigou,1800,llano,P3,mar–abr,swe_end,4.300,False
+74,Cerdagne–Canigou,1800,llano,P3,mar–abr,hs_end,1.300,False
+74,Cerdagne–Canigou,2100,llano,P1,nov–dic,g_swe,251.900,False
+74,Cerdagne–Canigou,2100,llano,P1,nov–dic,l_swe,78.800,False
+74,Cerdagne–Canigou,2100,llano,P1,nov–dic,g_hs,119.800,False
+74,Cerdagne–Canigou,2100,llano,P1,nov–dic,d30,32.300,False
+74,Cerdagne–Canigou,2100,llano,P1,nov–dic,swe_end,195.900,False
+74,Cerdagne–Canigou,2100,llano,P1,nov–dic,hs_end,73.900,False
+74,Cerdagne–Canigou,2100,llano,P2,ene–feb,g_swe,264.800,False
+74,Cerdagne–Canigou,2100,llano,P2,ene–feb,l_swe,73.200,False
+74,Cerdagne–Canigou,2100,llano,P2,ene–feb,g_hs,144.200,False
+74,Cerdagne–Canigou,2100,llano,P2,ene–feb,d30,59.000,False
+74,Cerdagne–Canigou,2100,llano,P2,ene–feb,d100,34.500,False
+74,Cerdagne–Canigou,2100,llano,P2,ene–feb,swe_end,393.600,False
+74,Cerdagne–Canigou,2100,llano,P2,ene–feb,hs_end,113.700,False
+74,Cerdagne–Canigou,2100,llano,P3,mar–abr,g_swe,292.600,False
+74,Cerdagne–Canigou,2100,llano,P3,mar–abr,l_swe,407.500,False
+74,Cerdagne–Canigou,2100,llano,P3,mar–abr,g_hs,149.100,False
+74,Cerdagne–Canigou,2100,llano,P3,mar–abr,d30,61.000,False
+74,Cerdagne–Canigou,2100,llano,P3,mar–abr,d100,37.400,False
+74,Cerdagne–Canigou,2100,llano,P3,mar–abr,swe_end,322.200,False
+74,Cerdagne–Canigou,2100,llano,P3,mar–abr,hs_end,84.900,False
