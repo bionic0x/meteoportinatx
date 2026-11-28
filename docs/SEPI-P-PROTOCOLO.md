@@ -214,7 +214,7 @@ Se cumple ΔSWE = G_SWE − L_SWE.
 |---|---|
 | PASS-R | Habilidad demostrada con el estado inicial retrospectivo (criterios 1–3) |
 | PASS-O | Habilidad demostrada con datos disponibles en la fecha de emisión (modelos O). Hoy no se puede alcanzar |
-| REJECT | Evidencia suficiente de que no hay mejora o de que hay deterioro: el IC al 90 % de D̄ queda entero por debajo de 0, o su cota superior está por debajo de una mejora de CRPSS de 0,05 |
+| REJECT | Evidencia suficiente de que no hay mejora útil o de que hay deterioro: la cota superior del IC al 90 % del CRPSS es < 0,05. Eso incluye que el IC quede entero por debajo de 0 |
 | UNKNOWN | Evidencia insuficiente, datos ausentes o validación incompleta |
 
 No superar el umbral de significación **no equivale a REJECT**: puede significar que faltan datos para demostrar la habilidad.
