@@ -1,0 +1,353 @@
+punto,nombre,dem,metodo,z_dem,alt_ref,dif_m
+carlit,Pic Carlit,GLO-30,pixel_proximo,2842.8,2921,-78.2
+carlit,Pic Carlit,GLO-30,bilineal,2850.5,2921,-70.5
+carlit,Pic Carlit,GLO-30,max_90m,2891.9,2921,-29.1
+carlit,Pic Carlit,GLO-30,max_250m,2908.0,2921,-13.0
+cambre_aze,Cambre d'Aze,GLO-30,pixel_proximo,2699.0,2711,-12.0
+cambre_aze,Cambre d'Aze,GLO-30,bilineal,2697.6,2711,-13.4
+cambre_aze,Cambre d'Aze,GLO-30,max_90m,2700.7,2711,-10.3
+cambre_aze,Cambre d'Aze,GLO-30,max_250m,2700.7,2711,-10.3
+tossa_alp,Tossa d'Alp,GLO-30,pixel_proximo,2436.1,2531,-94.9
+tossa_alp,Tossa d'Alp,GLO-30,bilineal,2429.7,2531,-101.3
+tossa_alp,Tossa d'Alp,GLO-30,max_90m,2437.4,2531,-93.6
+tossa_alp,Tossa d'Alp,GLO-30,max_250m,2441.0,2531,-90.0
+puigmal,Puigmal,GLO-30,pixel_proximo,2905.6,2913,-7.4
+puigmal,Puigmal,GLO-30,bilineal,2901.8,2913,-11.2
+puigmal,Puigmal,GLO-30,max_90m,2906.2,2913,-6.8
+puigmal,Puigmal,GLO-30,max_250m,2906.2,2913,-6.8
+pic_st_barthelemy,Pic de Saint-Barthélemy,GLO-30,pixel_proximo,2318.2,2348,-29.8
+pic_st_barthelemy,Pic de Saint-Barthélemy,GLO-30,bilineal,2320.4,2348,-27.6
+pic_st_barthelemy,Pic de Saint-Barthélemy,GLO-30,max_90m,2340.3,2348,-7.7
+pic_st_barthelemy,Pic de Saint-Barthélemy,GLO-30,max_250m,2340.3,2348,-7.7
+pic_soularac,Pic de Soularac,GLO-30,pixel_proximo,2259.1,2368,-108.9
+pic_soularac,Pic de Soularac,GLO-30,bilineal,2269.9,2368,-98.1
+pic_soularac,Pic de Soularac,GLO-30,max_90m,2335.6,2368,-32.4
+pic_soularac,Pic de Soularac,GLO-30,max_250m,2352.0,2368,-16.0
+mont_fourcat,Mont Fourcat,GLO-30,pixel_proximo,1972.5,2001,-28.5
+mont_fourcat,Mont Fourcat,GLO-30,bilineal,1972.9,2001,-28.1
+mont_fourcat,Mont Fourcat,GLO-30,max_90m,1996.4,2001,-4.6
+mont_fourcat,Mont Fourcat,GLO-30,max_250m,1998.6,2001,-2.4
+pic_tarbesou,Pic de Tarbésou,GLO-30,pixel_proximo,2360.6,2364,-3.4
+pic_tarbesou,Pic de Tarbésou,GLO-30,bilineal,2355.4,2364,-8.6
+pic_tarbesou,Pic de Tarbésou,GLO-30,max_90m,2360.6,2364,-3.4
+pic_tarbesou,Pic de Tarbésou,GLO-30,max_250m,2360.6,2364,-3.4
+pic_rulhe,Pic de Rulhe,GLO-30,pixel_proximo,2736.3,2783,-46.7
+pic_rulhe,Pic de Rulhe,GLO-30,bilineal,2747.0,2783,-36.0
+pic_rulhe,Pic de Rulhe,GLO-30,max_90m,2755.0,2783,-28.0
+pic_rulhe,Pic de Rulhe,GLO-30,max_250m,2755.0,2783,-28.0
+pic_thoumasset,Pic de Thoumasset,GLO-30,pixel_proximo,2727.0,2741,-14.0
+pic_thoumasset,Pic de Thoumasset,GLO-30,bilineal,2719.8,2741,-21.2
+pic_thoumasset,Pic de Thoumasset,GLO-30,max_90m,2727.0,2741,-14.0
+pic_thoumasset,Pic de Thoumasset,GLO-30,max_250m,2727.0,2741,-14.0
+pic_baxouillade,Pic de Baxouillade,GLO-30,pixel_proximo,2500.4,2546,-45.6
+pic_baxouillade,Pic de Baxouillade,GLO-30,bilineal,2497.8,2546,-48.2
+pic_baxouillade,Pic de Baxouillade,GLO-30,max_90m,2507.5,2546,-38.5
+pic_baxouillade,Pic de Baxouillade,GLO-30,max_250m,2507.5,2546,-38.5
+pic_nerassol,Pic de Nérassol,GLO-30,pixel_proximo,2627.7,2633,-5.3
+pic_nerassol,Pic de Nérassol,GLO-30,bilineal,2623.5,2633,-9.5
+pic_nerassol,Pic de Nérassol,GLO-30,max_90m,2627.7,2633,-5.3
+pic_nerassol,Pic de Nérassol,GLO-30,max_250m,2627.7,2633,-5.3
+pic_cabaneta,Pic de la Cabaneta,GLO-30,pixel_proximo,2810.3,2818,-7.7
+pic_cabaneta,Pic de la Cabaneta,GLO-30,bilineal,2804.3,2818,-13.7
+pic_cabaneta,Pic de la Cabaneta,GLO-30,max_90m,2813.4,2818,-4.6
+pic_cabaneta,Pic de la Cabaneta,GLO-30,max_250m,2813.4,2818,-4.6
+pic_fontargente,Pic de Fontargente,GLO-30,pixel_proximo,2610.2,2618,-7.8
+pic_fontargente,Pic de Fontargente,GLO-30,bilineal,2602.5,2618,-15.5
+pic_fontargente,Pic de Fontargente,GLO-30,max_90m,2610.2,2618,-7.8
+pic_fontargente,Pic de Fontargente,GLO-30,max_250m,2610.2,2618,-7.8
+pic_escobes,Pic d'Escobes,GLO-30,pixel_proximo,2727.1,2779,-51.9
+pic_escobes,Pic d'Escobes,GLO-30,bilineal,2726.2,2779,-52.8
+pic_escobes,Pic d'Escobes,GLO-30,max_90m,2730.3,2779,-48.7
+pic_escobes,Pic d'Escobes,GLO-30,max_250m,2730.3,2779,-48.7
+pic_serrera,Pic de la Serrera,GLO-30,pixel_proximo,2899.4,2912,-12.6
+pic_serrera,Pic de la Serrera,GLO-30,bilineal,2893.1,2912,-18.9
+pic_serrera,Pic de la Serrera,GLO-30,max_90m,2902.2,2912,-9.8
+pic_serrera,Pic de la Serrera,GLO-30,max_250m,2904.8,2912,-7.2
+pic_font_blanca,Pic de Font Blanca,GLO-30,pixel_proximo,2865.7,2903,-37.3
+pic_font_blanca,Pic de Font Blanca,GLO-30,bilineal,2839.9,2903,-63.1
+pic_font_blanca,Pic de Font Blanca,GLO-30,max_90m,2891.8,2903,-11.2
+pic_font_blanca,Pic de Font Blanca,GLO-30,max_250m,2891.8,2903,-11.2
+pic_tristaina,Pic de Tristaina,GLO-30,pixel_proximo,2832.3,2878,-45.7
+pic_tristaina,Pic de Tristaina,GLO-30,bilineal,2815.9,2878,-62.1
+pic_tristaina,Pic de Tristaina,GLO-30,max_90m,2861.6,2878,-16.4
+pic_tristaina,Pic de Tristaina,GLO-30,max_250m,2865.1,2878,-12.9
+puig_pedros_n,Puig Pedrós (Lanós),GLO-30,pixel_proximo,2805.6,2842,-36.4
+puig_pedros_n,Puig Pedrós (Lanós),GLO-30,bilineal,2807.2,2842,-34.8
+puig_pedros_n,Puig Pedrós (Lanós),GLO-30,max_90m,2820.8,2842,-21.2
+puig_pedros_n,Puig Pedrós (Lanós),GLO-30,max_250m,2820.8,2842,-21.2
+pic_mina,Pic de la Mina,GLO-30,pixel_proximo,2410.1,2682,-271.9
+pic_mina,Pic de la Mina,GLO-30,bilineal,2413.9,2682,-268.1
+pic_mina,Pic de la Mina,GLO-30,max_90m,2454.1,2682,-227.9
+pic_mina,Pic de la Mina,GLO-30,max_250m,2606.1,2682,-75.9
+puig_peric,Puig Peric,GLO-30,pixel_proximo,2804.6,2810,-5.4
+puig_peric,Puig Peric,GLO-30,bilineal,2803.3,2810,-6.7
+puig_peric,Puig Peric,GLO-30,max_90m,2804.6,2810,-5.4
+puig_peric,Puig Peric,GLO-30,max_250m,2804.6,2810,-5.4
+pic_montcalm,Pic de Montcalm,GLO-30,pixel_proximo,3053.5,3077,-23.5
+pic_montcalm,Pic de Montcalm,GLO-30,bilineal,3042.9,3077,-34.1
+pic_montcalm,Pic de Montcalm,GLO-30,max_90m,3074.1,3077,-2.9
+pic_montcalm,Pic de Montcalm,GLO-30,max_250m,3074.1,3077,-2.9
+pica_estats,Pica d'Estats,GLO-30,pixel_proximo,3106.4,3143,-36.6
+pica_estats,Pica d'Estats,GLO-30,bilineal,3099.1,3143,-43.9
+pica_estats,Pica d'Estats,GLO-30,max_90m,3118.5,3143,-24.5
+pica_estats,Pica d'Estats,GLO-30,max_250m,3118.5,3143,-24.5
+pic_medecourbe,Pic de Medécourbe,GLO-30,pixel_proximo,2896.6,2914,-17.4
+pic_medecourbe,Pic de Medécourbe,GLO-30,bilineal,2891.1,2914,-22.9
+pic_medecourbe,Pic de Medécourbe,GLO-30,max_90m,2897.9,2914,-16.1
+pic_medecourbe,Pic de Medécourbe,GLO-30,max_250m,2897.9,2914,-16.1
+puig_coma_dor,Puig de Coma d'Or,GLO-30,pixel_proximo,2770.9,2826,-55.1
+puig_coma_dor,Puig de Coma d'Or,GLO-30,bilineal,2753.1,2826,-72.9
+puig_coma_dor,Puig de Coma d'Or,GLO-30,max_90m,2809.6,2826,-16.4
+puig_coma_dor,Puig de Coma d'Or,GLO-30,max_250m,2819.9,2826,-6.1
+pic_estanyo,Pic de l'Estanyó,GLO-30,pixel_proximo,2894.0,2915,-21.0
+pic_estanyo,Pic de l'Estanyó,GLO-30,bilineal,2882.4,2915,-32.6
+pic_estanyo,Pic de l'Estanyó,GLO-30,max_90m,2907.6,2915,-7.4
+pic_estanyo,Pic de l'Estanyó,GLO-30,max_250m,2907.6,2915,-7.4
+pic_coma_pedrosa,Pic de Coma Pedrosa,GLO-30,pixel_proximo,2887.7,2943,-55.3
+pic_coma_pedrosa,Pic de Coma Pedrosa,GLO-30,bilineal,2879.9,2943,-63.1
+pic_coma_pedrosa,Pic de Coma Pedrosa,GLO-30,max_90m,2920.5,2943,-22.5
+pic_coma_pedrosa,Pic de Coma Pedrosa,GLO-30,max_250m,2931.9,2943,-11.1
+pic_casamanya,Pic de Casamanya,GLO-30,pixel_proximo,2711.8,2749,-37.2
+pic_casamanya,Pic de Casamanya,GLO-30,bilineal,2686.1,2749,-62.9
+pic_casamanya,Pic de Casamanya,GLO-30,max_90m,2737.8,2749,-11.2
+pic_casamanya,Pic de Casamanya,GLO-30,max_250m,2737.8,2749,-11.2
+pic_envalira,"Pic d'Envalira (nombre y cota de GeoNames, por verificar)",GLO-30,pixel_proximo,2662.3,2664,-1.7
+pic_envalira,"Pic d'Envalira (nombre y cota de GeoNames, por verificar)",GLO-30,bilineal,2669.0,2664,5.0
+pic_envalira,"Pic d'Envalira (nombre y cota de GeoNames, por verificar)",GLO-30,max_90m,2726.3,2664,62.3
+pic_envalira,"Pic d'Envalira (nombre y cota de GeoNames, por verificar)",GLO-30,max_250m,2731.5,2664,67.5
+pic_pessons,Pic dels Pessons,GLO-30,pixel_proximo,2849.1,2864,-14.9
+pic_pessons,Pic dels Pessons,GLO-30,bilineal,2851.7,2864,-12.3
+pic_pessons,Pic dels Pessons,GLO-30,max_90m,2854.5,2864,-9.5
+pic_pessons,Pic dels Pessons,GLO-30,max_250m,2854.5,2864,-9.5
+puigpedros,Puigpedrós,GLO-30,pixel_proximo,2911.2,2915,-3.8
+puigpedros,Puigpedrós,GLO-30,bilineal,2909.1,2915,-5.9
+puigpedros,Puigpedrós,GLO-30,max_90m,2911.2,2915,-3.8
+puigpedros,Puigpedrós,GLO-30,max_250m,2911.2,2915,-3.8
+tossa_plana_lles,Tossa Plana de Lles,GLO-30,pixel_proximo,2902.5,2905,-2.5
+tossa_plana_lles,Tossa Plana de Lles,GLO-30,bilineal,2901.0,2905,-4.0
+tossa_plana_lles,Tossa Plana de Lles,GLO-30,max_90m,2902.5,2905,-2.5
+tossa_plana_lles,Tossa Plana de Lles,GLO-30,max_250m,2902.5,2905,-2.5
+pic_calm_colomer,Pic de Calm Colomer,GLO-30,pixel_proximo,2861.4,2869,-7.6
+pic_calm_colomer,Pic de Calm Colomer,GLO-30,bilineal,2848.8,2869,-20.2
+pic_calm_colomer,Pic de Calm Colomer,GLO-30,max_90m,2864.0,2869,-5.0
+pic_calm_colomer,Pic de Calm Colomer,GLO-30,max_250m,2864.0,2869,-5.0
+roc_colom,Roc Colom,GLO-30,pixel_proximo,2656.7,2680,-23.3
+roc_colom,Roc Colom,GLO-30,bilineal,2650.6,2680,-29.4
+roc_colom,Roc Colom,GLO-30,max_90m,2658.9,2680,-21.1
+roc_colom,Roc Colom,GLO-30,max_250m,2658.9,2680,-21.1
+pic_noufonts,Pic de Noufonts,GLO-30,pixel_proximo,2524.5,2851,-326.5
+pic_noufonts,Pic de Noufonts,GLO-30,bilineal,2523.4,2851,-327.6
+pic_noufonts,Pic de Noufonts,GLO-30,max_90m,2552.1,2851,-298.9
+pic_noufonts,Pic de Noufonts,GLO-30,max_250m,2657.1,2851,-193.9
+pic_infern,Pic de l'Infern,GLO-30,pixel_proximo,2856.6,2868,-11.4
+pic_infern,Pic de l'Infern,GLO-30,bilineal,2850.4,2868,-17.6
+pic_infern,Pic de l'Infern,GLO-30,max_90m,2856.6,2868,-11.4
+pic_infern,Pic de l'Infern,GLO-30,max_250m,2856.6,2868,-11.4
+gra_fajol,Gra de Fajol,GLO-30,pixel_proximo,2704.7,2714,-9.3
+gra_fajol,Gra de Fajol,GLO-30,bilineal,2690.6,2714,-23.4
+gra_fajol,Gra de Fajol,GLO-30,max_90m,2704.7,2714,-9.3
+gra_fajol,Gra de Fajol,GLO-30,max_250m,2704.7,2714,-9.3
+puig_redon,Puig Redon,GLO-30,pixel_proximo,2665.9,2677,-11.1
+puig_redon,Puig Redon,GLO-30,bilineal,2665.7,2677,-11.3
+puig_redon,Puig Redon,GLO-30,max_90m,2671.7,2677,-5.3
+puig_redon,Puig Redon,GLO-30,max_250m,2671.7,2677,-5.3
+pic_orri,Pic de l'Orri,GLO-30,pixel_proximo,2553.0,2561,-8.0
+pic_orri,Pic de l'Orri,GLO-30,bilineal,2543.4,2561,-17.6
+pic_orri,Pic de l'Orri,GLO-30,max_90m,2553.0,2561,-8.0
+pic_orri,Pic de l'Orri,GLO-30,max_250m,2557.4,2561,-3.6
+comabona,Comabona (Cadí),GLO-30,pixel_proximo,2543.0,2548,-5.0
+comabona,Comabona (Cadí),GLO-30,bilineal,2533.4,2548,-14.6
+comabona,Comabona (Cadí),GLO-30,max_90m,2543.0,2548,-5.0
+comabona,Comabona (Cadí),GLO-30,max_250m,2543.0,2548,-5.0
+pedraforca,Pedraforca,GLO-30,pixel_proximo,2466.4,2506,-39.6
+pedraforca,Pedraforca,GLO-30,bilineal,2457.3,2506,-48.7
+pedraforca,Pedraforca,GLO-30,max_90m,2477.6,2506,-28.4
+pedraforca,Pedraforca,GLO-30,max_250m,2477.6,2506,-28.4
+pic_madres,Pic de Madres,GLO-30,pixel_proximo,2408.8,2469,-60.2
+pic_madres,Pic de Madres,GLO-30,bilineal,2412.6,2469,-56.4
+pic_madres,Pic de Madres,GLO-30,max_90m,2438.2,2469,-30.8
+pic_madres,Pic de Madres,GLO-30,max_250m,2459.8,2469,-9.2
+puig_tossa,Puig de la Tossa,GLO-30,pixel_proximo,2028.7,2034,-5.3
+puig_tossa,Puig de la Tossa,GLO-30,bilineal,2027.2,2034,-6.8
+puig_tossa,Puig de la Tossa,GLO-30,max_90m,2032.9,2034,-1.1
+puig_tossa,Puig de la Tossa,GLO-30,max_250m,2034.4,2034,0.4
+canigo,Pic du Canigou,GLO-30,pixel_proximo,2750.9,2784,-33.1
+canigo,Pic du Canigou,GLO-30,bilineal,2753.7,2784,-30.3
+canigo,Pic du Canigou,GLO-30,max_90m,2757.4,2784,-26.6
+canigo,Pic du Canigou,GLO-30,max_250m,2757.4,2784,-26.6
+carlit,Pic Carlit,GLO-90,pixel_proximo,2839.0,2921,-82.0
+carlit,Pic Carlit,GLO-90,bilineal,2834.2,2921,-86.8
+carlit,Pic Carlit,GLO-90,max_90m,2875.4,2921,-45.6
+carlit,Pic Carlit,GLO-90,max_250m,2895.7,2921,-25.3
+cambre_aze,Cambre d'Aze,GLO-90,pixel_proximo,2691.8,2711,-19.2
+cambre_aze,Cambre d'Aze,GLO-90,bilineal,2670.8,2711,-40.2
+cambre_aze,Cambre d'Aze,GLO-90,max_90m,2691.8,2711,-19.2
+cambre_aze,Cambre d'Aze,GLO-90,max_250m,2691.8,2711,-19.2
+tossa_alp,Tossa d'Alp,GLO-90,pixel_proximo,2424.8,2531,-106.2
+tossa_alp,Tossa d'Alp,GLO-90,bilineal,2419.3,2531,-111.7
+tossa_alp,Tossa d'Alp,GLO-90,max_90m,2424.8,2531,-106.2
+tossa_alp,Tossa d'Alp,GLO-90,max_250m,2433.1,2531,-97.9
+puigmal,Puigmal,GLO-90,pixel_proximo,2902.1,2913,-10.9
+puigmal,Puigmal,GLO-90,bilineal,2888.5,2913,-24.5
+puigmal,Puigmal,GLO-90,max_90m,2902.1,2913,-10.9
+puigmal,Puigmal,GLO-90,max_250m,2902.1,2913,-10.9
+pic_st_barthelemy,Pic de Saint-Barthélemy,GLO-90,pixel_proximo,2305.2,2348,-42.8
+pic_st_barthelemy,Pic de Saint-Barthélemy,GLO-90,bilineal,2312.2,2348,-35.8
+pic_st_barthelemy,Pic de Saint-Barthélemy,GLO-90,max_90m,2331.1,2348,-16.9
+pic_st_barthelemy,Pic de Saint-Barthélemy,GLO-90,max_250m,2331.1,2348,-16.9
+pic_soularac,Pic de Soularac,GLO-90,pixel_proximo,2235.2,2368,-132.8
+pic_soularac,Pic de Soularac,GLO-90,bilineal,2264.1,2368,-103.9
+pic_soularac,Pic de Soularac,GLO-90,max_90m,2308.3,2368,-59.7
+pic_soularac,Pic de Soularac,GLO-90,max_250m,2333.7,2368,-34.3
+mont_fourcat,Mont Fourcat,GLO-90,pixel_proximo,1967.2,2001,-33.8
+mont_fourcat,Mont Fourcat,GLO-90,bilineal,1967.7,2001,-33.3
+mont_fourcat,Mont Fourcat,GLO-90,max_90m,1986.5,2001,-14.5
+mont_fourcat,Mont Fourcat,GLO-90,max_250m,1990.1,2001,-10.9
+pic_tarbesou,Pic de Tarbésou,GLO-90,pixel_proximo,2349.6,2364,-14.4
+pic_tarbesou,Pic de Tarbésou,GLO-90,bilineal,2325.5,2364,-38.5
+pic_tarbesou,Pic de Tarbésou,GLO-90,max_90m,2349.6,2364,-14.4
+pic_tarbesou,Pic de Tarbésou,GLO-90,max_250m,2349.6,2364,-14.4
+pic_rulhe,Pic de Rulhe,GLO-90,pixel_proximo,2731.0,2783,-52.0
+pic_rulhe,Pic de Rulhe,GLO-90,bilineal,2715.0,2783,-68.0
+pic_rulhe,Pic de Rulhe,GLO-90,max_90m,2745.7,2783,-37.3
+pic_rulhe,Pic de Rulhe,GLO-90,max_250m,2745.7,2783,-37.3
+pic_thoumasset,Pic de Thoumasset,GLO-90,pixel_proximo,2705.9,2741,-35.1
+pic_thoumasset,Pic de Thoumasset,GLO-90,bilineal,2655.4,2741,-85.6
+pic_thoumasset,Pic de Thoumasset,GLO-90,max_90m,2705.9,2741,-35.1
+pic_thoumasset,Pic de Thoumasset,GLO-90,max_250m,2705.9,2741,-35.1
+pic_baxouillade,Pic de Baxouillade,GLO-90,pixel_proximo,2486.9,2546,-59.1
+pic_baxouillade,Pic de Baxouillade,GLO-90,bilineal,2482.5,2546,-63.5
+pic_baxouillade,Pic de Baxouillade,GLO-90,max_90m,2487.7,2546,-58.3
+pic_baxouillade,Pic de Baxouillade,GLO-90,max_250m,2487.7,2546,-58.3
+pic_nerassol,Pic de Nérassol,GLO-90,pixel_proximo,2619.9,2633,-13.1
+pic_nerassol,Pic de Nérassol,GLO-90,bilineal,2609.4,2633,-23.6
+pic_nerassol,Pic de Nérassol,GLO-90,max_90m,2619.9,2633,-13.1
+pic_nerassol,Pic de Nérassol,GLO-90,max_250m,2619.9,2633,-13.1
+pic_cabaneta,Pic de la Cabaneta,GLO-90,pixel_proximo,2810.0,2818,-8.0
+pic_cabaneta,Pic de la Cabaneta,GLO-90,bilineal,2797.7,2818,-20.3
+pic_cabaneta,Pic de la Cabaneta,GLO-90,max_90m,2810.0,2818,-8.0
+pic_cabaneta,Pic de la Cabaneta,GLO-90,max_250m,2810.0,2818,-8.0
+pic_fontargente,Pic de Fontargente,GLO-90,pixel_proximo,2592.3,2618,-25.7
+pic_fontargente,Pic de Fontargente,GLO-90,bilineal,2582.5,2618,-35.5
+pic_fontargente,Pic de Fontargente,GLO-90,max_90m,2592.3,2618,-25.7
+pic_fontargente,Pic de Fontargente,GLO-90,max_250m,2592.3,2618,-25.7
+pic_escobes,Pic d'Escobes,GLO-90,pixel_proximo,2718.5,2779,-60.5
+pic_escobes,Pic d'Escobes,GLO-90,bilineal,2690.6,2779,-88.4
+pic_escobes,Pic d'Escobes,GLO-90,max_90m,2718.5,2779,-60.5
+pic_escobes,Pic d'Escobes,GLO-90,max_250m,2718.5,2779,-60.5
+pic_serrera,Pic de la Serrera,GLO-90,pixel_proximo,2881.0,2912,-31.0
+pic_serrera,Pic de la Serrera,GLO-90,bilineal,2844.6,2912,-67.4
+pic_serrera,Pic de la Serrera,GLO-90,max_90m,2881.0,2912,-31.0
+pic_serrera,Pic de la Serrera,GLO-90,max_250m,2883.3,2912,-28.7
+pic_font_blanca,Pic de Font Blanca,GLO-90,pixel_proximo,2857.7,2903,-45.3
+pic_font_blanca,Pic de Font Blanca,GLO-90,bilineal,2799.3,2903,-103.7
+pic_font_blanca,Pic de Font Blanca,GLO-90,max_90m,2857.7,2903,-45.3
+pic_font_blanca,Pic de Font Blanca,GLO-90,max_250m,2868.8,2903,-34.2
+pic_tristaina,Pic de Tristaina,GLO-90,pixel_proximo,2829.7,2878,-48.3
+pic_tristaina,Pic de Tristaina,GLO-90,bilineal,2785.0,2878,-93.0
+pic_tristaina,Pic de Tristaina,GLO-90,max_90m,2829.7,2878,-48.3
+pic_tristaina,Pic de Tristaina,GLO-90,max_250m,2849.7,2878,-28.3
+puig_pedros_n,Puig Pedrós (Lanós),GLO-90,pixel_proximo,2801.3,2842,-40.7
+puig_pedros_n,Puig Pedrós (Lanós),GLO-90,bilineal,2765.3,2842,-76.7
+puig_pedros_n,Puig Pedrós (Lanós),GLO-90,max_90m,2801.3,2842,-40.7
+puig_pedros_n,Puig Pedrós (Lanós),GLO-90,max_250m,2806.1,2842,-35.9
+pic_mina,Pic de la Mina,GLO-90,pixel_proximo,2404.1,2682,-277.9
+pic_mina,Pic de la Mina,GLO-90,bilineal,2407.3,2682,-274.7
+pic_mina,Pic de la Mina,GLO-90,max_90m,2428.5,2682,-253.5
+pic_mina,Pic de la Mina,GLO-90,max_250m,2572.3,2682,-109.7
+puig_peric,Puig Peric,GLO-90,pixel_proximo,2789.1,2810,-20.9
+puig_peric,Puig Peric,GLO-90,bilineal,2782.7,2810,-27.3
+puig_peric,Puig Peric,GLO-90,max_90m,2792.9,2810,-17.1
+puig_peric,Puig Peric,GLO-90,max_250m,2792.9,2810,-17.1
+pic_montcalm,Pic de Montcalm,GLO-90,pixel_proximo,3049.4,3077,-27.6
+pic_montcalm,Pic de Montcalm,GLO-90,bilineal,3016.7,3077,-60.3
+pic_montcalm,Pic de Montcalm,GLO-90,max_90m,3049.4,3077,-27.6
+pic_montcalm,Pic de Montcalm,GLO-90,max_250m,3061.3,3077,-15.7
+pica_estats,Pica d'Estats,GLO-90,pixel_proximo,3104.6,3143,-38.4
+pica_estats,Pica d'Estats,GLO-90,bilineal,3090.1,3143,-52.9
+pica_estats,Pica d'Estats,GLO-90,max_90m,3104.6,3143,-38.4
+pica_estats,Pica d'Estats,GLO-90,max_250m,3104.6,3143,-38.4
+pic_medecourbe,Pic de Medécourbe,GLO-90,pixel_proximo,2868.7,2914,-45.3
+pic_medecourbe,Pic de Medécourbe,GLO-90,bilineal,2855.5,2914,-58.5
+pic_medecourbe,Pic de Medécourbe,GLO-90,max_90m,2868.7,2914,-45.3
+pic_medecourbe,Pic de Medécourbe,GLO-90,max_250m,2871.5,2914,-42.5
+puig_coma_dor,Puig de Coma d'Or,GLO-90,pixel_proximo,2756.1,2826,-69.9
+puig_coma_dor,Puig de Coma d'Or,GLO-90,bilineal,2712.4,2826,-113.6
+puig_coma_dor,Puig de Coma d'Or,GLO-90,max_90m,2756.1,2826,-69.9
+puig_coma_dor,Puig de Coma d'Or,GLO-90,max_250m,2806.7,2826,-19.3
+pic_estanyo,Pic de l'Estanyó,GLO-90,pixel_proximo,2885.8,2915,-29.2
+pic_estanyo,Pic de l'Estanyó,GLO-90,bilineal,2868.3,2915,-46.7
+pic_estanyo,Pic de l'Estanyó,GLO-90,max_90m,2885.8,2915,-29.2
+pic_estanyo,Pic de l'Estanyó,GLO-90,max_250m,2891.4,2915,-23.6
+pic_coma_pedrosa,Pic de Coma Pedrosa,GLO-90,pixel_proximo,2870.7,2943,-72.3
+pic_coma_pedrosa,Pic de Coma Pedrosa,GLO-90,bilineal,2849.8,2943,-93.2
+pic_coma_pedrosa,Pic de Coma Pedrosa,GLO-90,max_90m,2875.8,2943,-67.2
+pic_coma_pedrosa,Pic de Coma Pedrosa,GLO-90,max_250m,2917.5,2943,-25.5
+pic_casamanya,Pic de Casamanya,GLO-90,pixel_proximo,2681.5,2749,-67.5
+pic_casamanya,Pic de Casamanya,GLO-90,bilineal,2626.6,2749,-122.4
+pic_casamanya,Pic de Casamanya,GLO-90,max_90m,2681.5,2749,-67.5
+pic_casamanya,Pic de Casamanya,GLO-90,max_250m,2730.4,2749,-18.6
+pic_envalira,"Pic d'Envalira (nombre y cota de GeoNames, por verificar)",GLO-90,pixel_proximo,2662.3,2664,-1.7
+pic_envalira,"Pic d'Envalira (nombre y cota de GeoNames, por verificar)",GLO-90,bilineal,2679.9,2664,15.9
+pic_envalira,"Pic d'Envalira (nombre y cota de GeoNames, por verificar)",GLO-90,max_90m,2717.2,2664,53.2
+pic_envalira,"Pic d'Envalira (nombre y cota de GeoNames, por verificar)",GLO-90,max_250m,2717.2,2664,53.2
+pic_pessons,Pic dels Pessons,GLO-90,pixel_proximo,2839.1,2864,-24.9
+pic_pessons,Pic dels Pessons,GLO-90,bilineal,2826.0,2864,-38.0
+pic_pessons,Pic dels Pessons,GLO-90,max_90m,2839.1,2864,-24.9
+pic_pessons,Pic dels Pessons,GLO-90,max_250m,2839.1,2864,-24.9
+puigpedros,Puigpedrós,GLO-90,pixel_proximo,2905.9,2915,-9.1
+puigpedros,Puigpedrós,GLO-90,bilineal,2900.3,2915,-14.7
+puigpedros,Puigpedrós,GLO-90,max_90m,2905.9,2915,-9.1
+puigpedros,Puigpedrós,GLO-90,max_250m,2905.9,2915,-9.1
+tossa_plana_lles,Tossa Plana de Lles,GLO-90,pixel_proximo,2894.7,2905,-10.3
+tossa_plana_lles,Tossa Plana de Lles,GLO-90,bilineal,2885.8,2905,-19.2
+tossa_plana_lles,Tossa Plana de Lles,GLO-90,max_90m,2896.8,2905,-8.2
+tossa_plana_lles,Tossa Plana de Lles,GLO-90,max_250m,2896.8,2905,-8.2
+pic_calm_colomer,Pic de Calm Colomer,GLO-90,pixel_proximo,2855.4,2869,-13.6
+pic_calm_colomer,Pic de Calm Colomer,GLO-90,bilineal,2822.2,2869,-46.8
+pic_calm_colomer,Pic de Calm Colomer,GLO-90,max_90m,2855.4,2869,-13.6
+pic_calm_colomer,Pic de Calm Colomer,GLO-90,max_250m,2861.8,2869,-7.2
+roc_colom,Roc Colom,GLO-90,pixel_proximo,2644.4,2680,-35.6
+roc_colom,Roc Colom,GLO-90,bilineal,2612.4,2680,-67.6
+roc_colom,Roc Colom,GLO-90,max_90m,2644.4,2680,-35.6
+roc_colom,Roc Colom,GLO-90,max_250m,2648.8,2680,-31.2
+pic_noufonts,Pic de Noufonts,GLO-90,pixel_proximo,2527.1,2851,-323.9
+pic_noufonts,Pic de Noufonts,GLO-90,bilineal,2541.7,2851,-309.3
+pic_noufonts,Pic de Noufonts,GLO-90,max_90m,2556.9,2851,-294.1
+pic_noufonts,Pic de Noufonts,GLO-90,max_250m,2664.4,2851,-186.6
+pic_infern,Pic de l'Infern,GLO-90,pixel_proximo,2832.8,2868,-35.2
+pic_infern,Pic de l'Infern,GLO-90,bilineal,2789.3,2868,-78.7
+pic_infern,Pic de l'Infern,GLO-90,max_90m,2832.8,2868,-35.2
+pic_infern,Pic de l'Infern,GLO-90,max_250m,2832.8,2868,-35.2
+gra_fajol,Gra de Fajol,GLO-90,pixel_proximo,2676.8,2714,-37.2
+gra_fajol,Gra de Fajol,GLO-90,bilineal,2635.1,2714,-78.9
+gra_fajol,Gra de Fajol,GLO-90,max_90m,2676.8,2714,-37.2
+gra_fajol,Gra de Fajol,GLO-90,max_250m,2682.6,2714,-31.4
+puig_redon,Puig Redon,GLO-90,pixel_proximo,2651.0,2677,-26.0
+puig_redon,Puig Redon,GLO-90,bilineal,2650.3,2677,-26.7
+puig_redon,Puig Redon,GLO-90,max_90m,2659.8,2677,-17.2
+puig_redon,Puig Redon,GLO-90,max_250m,2659.8,2677,-17.2
+pic_orri,Pic de l'Orri,GLO-90,pixel_proximo,2543.7,2561,-17.3
+pic_orri,Pic de l'Orri,GLO-90,bilineal,2523.2,2561,-37.8
+pic_orri,Pic de l'Orri,GLO-90,max_90m,2543.7,2561,-17.3
+pic_orri,Pic de l'Orri,GLO-90,max_250m,2543.7,2561,-17.3
+comabona,Comabona (Cadí),GLO-90,pixel_proximo,2538.2,2548,-9.8
+comabona,Comabona (Cadí),GLO-90,bilineal,2513.5,2548,-34.5
+comabona,Comabona (Cadí),GLO-90,max_90m,2538.2,2548,-9.8
+comabona,Comabona (Cadí),GLO-90,max_250m,2538.2,2548,-9.8
+pedraforca,Pedraforca,GLO-90,pixel_proximo,2461.4,2506,-44.6
+pedraforca,Pedraforca,GLO-90,bilineal,2433.6,2506,-72.4
+pedraforca,Pedraforca,GLO-90,max_90m,2461.4,2506,-44.6
+pedraforca,Pedraforca,GLO-90,max_250m,2461.4,2506,-44.6
+pic_madres,Pic de Madres,GLO-90,pixel_proximo,2388.1,2469,-80.9
+pic_madres,Pic de Madres,GLO-90,bilineal,2405.6,2469,-63.4
+pic_madres,Pic de Madres,GLO-90,max_90m,2423.9,2469,-45.1
+pic_madres,Pic de Madres,GLO-90,max_250m,2452.2,2469,-16.8
+puig_tossa,Puig de la Tossa,GLO-90,pixel_proximo,2029.4,2034,-4.6
+puig_tossa,Puig de la Tossa,GLO-90,bilineal,2017.6,2034,-16.4
+puig_tossa,Puig de la Tossa,GLO-90,max_90m,2029.4,2034,-4.6
+puig_tossa,Puig de la Tossa,GLO-90,max_250m,2029.6,2034,-4.4
+canigo,Pic du Canigou,GLO-90,pixel_proximo,2741.9,2784,-42.1
+canigo,Pic du Canigou,GLO-90,bilineal,2719.2,2784,-64.8
+canigo,Pic du Canigou,GLO-90,max_90m,2741.9,2784,-42.1
+canigo,Pic du Canigou,GLO-90,max_250m,2741.9,2784,-42.1

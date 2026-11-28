@@ -1,0 +1,193 @@
+{
+  "generado_utc": "2026-11-28T12:24:51+00:00",
+  "script": "scripts/build_terrain_derivatives.py",
+  "entradas": {
+    "glo30": [
+      {
+        "archivo": "Copernicus_DSM_COG_10_N41_00_E000_00_DEM.tif",
+        "sha256": "1e73a91e4b39e9bc4e3319dfee5a165a191f0a7752dac4b5fdc66781e20a40f2"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N41_00_E001_00_DEM.tif",
+        "sha256": "da2bb4db5cbe10e0bd60d35fa0ac809cf3de9aa590d2d7897634e7ab343e71f8"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N41_00_E002_00_DEM.tif",
+        "sha256": "1e32cf23530c6d820dc1e0dafbb15bdf7ae7058271f7a39f0fe375842a5609c3"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N41_00_W001_00_DEM.tif",
+        "sha256": "c2aaece6339ae67bbd85129a7df82d186f5b42c744f7bebc3925c2965753c92b"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N42_00_E000_00_DEM.tif",
+        "sha256": "5eaed2f61e759d502b945e1f01a130eb88dd4d047ffa1d44dac6f49c0fc00c8f"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N42_00_E001_00_DEM.tif",
+        "sha256": "dc92fae94fa1e78dedd5da1ec4864763baeeae67d6e11c7d5d3d26d1d2fe2bad"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N42_00_E002_00_DEM.tif",
+        "sha256": "327c8c5fc6c630a89df61b17e84003b5fda1e169aff83824f1eece1509e0524d"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N42_00_W001_00_DEM.tif",
+        "sha256": "8de22cc0acebb4d203bca3cdfe3735a201cae9f95bbc4b264f6da423c7dba130"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N43_00_E000_00_DEM.tif",
+        "sha256": "a1cf59303e1a69be1c701cf34382845b82432c782565a006bd97a45aa665df0c"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N43_00_E001_00_DEM.tif",
+        "sha256": "4d29425ec0632eacf5446044c434e6ef69a1dcc2e13018714d77b1099bd49a03"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N43_00_E002_00_DEM.tif",
+        "sha256": "a8c8d52fb2727dcb100eb2a8d975b617aa83ed5f03bf37e65d43fd411701e0c5"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_10_N43_00_W001_00_DEM.tif",
+        "sha256": "445fee30e4abea597eb9d3fbdaf6514d8aae1d41a6c075bbc49bfd3ae9fc2247"
+      }
+    ],
+    "glo90": [
+      {
+        "archivo": "Copernicus_DSM_COG_30_N41_00_E000_00_DEM.tif",
+        "sha256": "2d790e92851e3d6e93ccab56256060e242d5d71ef3dc66dea125647c4e680378"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N41_00_E001_00_DEM.tif",
+        "sha256": "6032aae16d9f3a49d39b9b82f1d8afb11ff2cf747fbf5be1a6a82562e9c07867"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N41_00_E002_00_DEM.tif",
+        "sha256": "8288f62f546826a063e26fb6d7b20a6eff79821bc38c7af1e232c1292069aceb"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N41_00_W001_00_DEM.tif",
+        "sha256": "b897f0297389ccb678f8a3bdd20710f0f2aba4fc1f28451b068098ac4547c283"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N42_00_E000_00_DEM.tif",
+        "sha256": "1f27c593bb686738d4e276943a66eb6df261450175eb5b02f0188421f544c7c4"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N42_00_E001_00_DEM.tif",
+        "sha256": "f3d7ce54cdc6ac7f00297a54b2e3c28814a069360d1ae2ecd9d76358c76cdf43"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N42_00_E002_00_DEM.tif",
+        "sha256": "32757828d7bd8304b398dcd6b14f2cb2305dbee936650971d646482955587ea2"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N42_00_W001_00_DEM.tif",
+        "sha256": "862c0f46bbf8ef1a421be18049d900f4d3de71c9fd466a4dff1659b6e398dad5"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N43_00_E000_00_DEM.tif",
+        "sha256": "49ba5ee81dc9495c2e723b195314d7efa882f36e22ba60470c5da3971682f3a2"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N43_00_E001_00_DEM.tif",
+        "sha256": "80d0a653d0a7033a01ca171c18da1ebfc7730969e9d1f5b61b176660a6b1b5f6"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N43_00_E002_00_DEM.tif",
+        "sha256": "d17c559494abefcad670c37f7ad5520b972757b5630f8b1a822c9b2c852d0a5a"
+      },
+      {
+        "archivo": "Copernicus_DSM_COG_30_N43_00_W001_00_DEM.tif",
+        "sha256": "aa144547c8a8769f91f87eabafa144e77c6b93a721c374d40516e35564fd63b1"
+      }
+    ],
+    "pirineo_orografia.json": "617c091fc7ca9d328a772e238f289860660447bd140e61bac38f9f73a3b619eb"
+  },
+  "crs_trabajo": "EPSG:32631",
+  "crs_origen": "EPSG:4326",
+  "vertical": "EGM2008",
+  "dominio_motor": {
+    "lat_s": 42.15,
+    "lat_n": 43.05,
+    "lon_w": 1.15,
+    "lon_e": 2.65,
+    "step": 0.01
+  },
+  "buffer_m": 22000.0,
+  "caja_utm": [
+    325080,
+    4644450,
+    493560,
+    4790070
+  ],
+  "rejillas": {
+    "V1": {
+      "celdas": 3028896,
+      "nodata": 0,
+      "nodata_nucleo": 0,
+      "z_min": 93.19198592937386,
+      "z_max": 3089.8507680305056,
+      "dx_m": 90.0
+    },
+    "V2": {
+      "celdas": 3028896,
+      "nodata": 0,
+      "nodata_nucleo": 0,
+      "z_min": 92.54383447730667,
+      "z_max": 3104.2262678917537,
+      "dx_m": 90.0
+    },
+    "V3": {
+      "celdas": 27260064,
+      "nodata": 0,
+      "nodata_nucleo": 0,
+      "z_min": 91.27933699414424,
+      "z_max": 3112.8272131192152,
+      "dx_m": 30.0
+    }
+  },
+  "parametros": {
+    "tpi_radios_m": [
+      250,
+      500,
+      1000,
+      3000,
+      5000
+    ],
+    "tpi_caja_v0_semilados_m": [
+      3339.6,
+      3277.6931095267532
+    ],
+    "svf": {
+      "n_az": 32,
+      "max_dist": 10000.0
+    },
+    "exposicion": {
+      "sectors": [
+        0.0,
+        22.5,
+        45.0,
+        67.5,
+        90.0,
+        112.5,
+        135.0,
+        157.5,
+        180.0,
+        202.5,
+        225.0,
+        247.5,
+        270.0,
+        292.5,
+        315.0,
+        337.5
+      ],
+      "max_dist": 20000.0,
+      "step": 90.0
+    },
+    "reproyeccion": "bilineal",
+    "v2": "media de bloques 3×3 de V3"
+  },
+  "puntos": 129,
+  "alcance": "Diagnóstico. No modifica src/pirineo_orografia.json ni el motor operativo."
+}
