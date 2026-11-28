@@ -146,9 +146,9 @@ e6092e2d8fef4742bc1bba08d6620eefd290c9b4638bc47db22a537a856b684b  docs/datos/sep
 b743ef2f6354b265a5a405e8dc32aabf258d88a849ba4892601e8b6d48bddfd3  docs/ux-review/03-identidad-y-grafica.md
 fd226caf621a09eec1754b30a4ba8b2a2750d4219e1f75fa0ab521ae4ec7a1a5  docs/ux-review/04-personas-y-accesibilidad.md
 0e05d0cc099e13b91a6303034cadcf5cdd00cf4605ef4c7b2ed8002fc2cba2cb  docs/ux-review/05-movil-accesibilidad-auditoria.md
-4a2a59b2070e5f48359c91081c0add5fd222e3492871e5480067c787cc932f2a  docs/ux-review/UI-00/BRIEF-NEXUS.md
+2eeabc4eaae2457ba518d043df991ffb94ae2b0e7c77505fd8cd0bc69b592f9e  docs/ux-review/UI-00/BRIEF-NEXUS.md
 4b1883a3efc1a8283eb61b928399e7cfb6ed1741427e5d7cb201dff1fcdb02a6  docs/ux-review/UI-00/MATRIZ.md
-1176bc5707d7c06e36482f7aad1aaeca3baa950be2efe92e7db373b2b5f7ab7f  docs/ux-review/UI-00/README.md
+22a94a72dd530a7ee0915c4d43982ef23208d307f9e74e8aae6564eb0443c490  docs/ux-review/UI-00/README.md
 6b3b6f03dee3464a0a258bc9c86e4779bf96347194d8230a098e585d5fb88ec7  docs/ux-review/UI-00/capturas/capturas.json
 136f7a75c4b67836bcee0d5f7fb0cd5b3d03f0d85122cd84fd487c3d838c69c0  docs/ux-review/UI-00/capturas/decidir-1440.png
 7e5d3578ac87dd11f279cbe1acef69402e394f40b06b04d5137704c69086efc3  docs/ux-review/UI-00/capturas/decidir-390.png
@@ -326,6 +326,7 @@ f30d8c66c47f915e75a73b9764aee6e6b5fcdf5ab916b7a50fd81415351e89f5  docs/ux-review
 a3d82501ffee5a903cc577b82cc42544398809476c18c283dd604c0cbb8ab97c  docs/ux-review/img/ui-ruta-1440.png
 48a2c01f7d57edfe7f9cc5ed8a66fbea4c2890f4b5d3e952794342dba0dd254e  docs/ux-review/img/ui-ruta-390.png
 c938459c760909dc6385592d831cae532dbcfdd3487555db22a7a7c70298b126  docs/ux-review/img/ui-ruta-768.png
+833e7aa7f5b0c50d9d85cedcf80a22baf2ed54209abb69d37232f045e3613666  docs/ux-review/vNext/CONTRATO-ESTADO-VISUAL.md
 c2ace828e0be6bab51b7650e54d4dad3ca088adbd0ca99b4d4e7ba82fb5b27a9  render.yaml
 790216faf9aff830d78bba66afbf37949e1d4353e30feedcf22f1e1c33cfa743  scripts/Abrir Portinatx (Mac).command
 74e79d5498ee58678cae5c987b465b62b0c4d8e2556357427fae40ecb46c1143  scripts/Abrir Portinatx (Windows).bat

@@ -28,17 +28,29 @@ desplegar ni fusionar**.
 | B · Diseño | `design-ui-designer`, `design-brand-guardian`, `design-visual-storyteller` | Tokens ES/EN, **3 direcciones visuales distintas** sobre F1, F2, F4 y F6; semántica de color única (resuelve «un color, varios significados») | G1: elige el usuario |
 | C · 2D | `gis-web-gis-developer`, `engineering-data-visualization-engineer` | MapLibre frente a la pila actual; línea de tiempo sincronizada; leyenda con fuente, hora y unidades | G2 |
 | D · 3D | `gis-3d-scene-developer`, `academic-geographer` | Partir de GEO-06 (`lab/terrain/`, MapLibre 5.24.1, Terrarium); cortes verticales y capas de nieve; no cargar el DEM bruto | G3 |
-| E · Movimiento | técnico de animación + C + D | Distinguir reproducción observada (`radar.frames`), fotogramas de modelo (`grid.time`), interpolación de render y escenarios esquemáticos GEO-07. Pausa, movimiento reducido y fotogramas ausentes visibles | G3 |
+| E · Movimiento | `technical-artist` (`game-development/`) + C + D | Distinguir reproducción observada (`radar.frames`), fotogramas de modelo (`grid.time`), interpolación de render y escenarios esquemáticos GEO-07. Pausa, movimiento reducido y fotogramas ausentes visibles | G3 |
+| **C · D · E: contrato común** | — | Los tres trabajan desde el primer día contra [`../vNext/CONTRATO-ESTADO-VISUAL.md`](../vNext/CONTRATO-ESTADO-VISUAL.md): un único estado de territorio, foco, hora válida, modelo, nivel, capas y generación. Prohibido crear un mapa, un explorador 3D y un simulador de frentes independientes | **G1** (CE-01 a CE-12) |
 | F · Ingeniería | `engineering-frontend-developer`, `engineering-software-architect` | Adaptadores sobre `public_fetch.js` (una sola generación), interruptor de vista previa, sin credenciales, sin dependencia obligatoria de Earthkit | G2–G4 |
 | G · QA independiente | `design-ui-finish-gate-reviewer`, `testing-evidence-collector`, `testing-performance-benchmarker`, `testing-reality-checker`, `gis-qa-engineer`, `engineering-section-508-specialist` | WCAG 2.2 AA, móvil, rendimiento medido, semántica física y geoespacial, los 8 escenarios de fallo. **Nunca el mismo agente que construyó** | G5 |
 | Transversal | `specialized-strategic-assurance-lead` | Registro de decisiones y de afirmaciones; alcance y fuera de alcance | todos |
 
-## Primera tarea propuesta (2-12-2026, NEXUS-Sprint)
+## Agenda del 2-12-2026 (definida por el titular el 28-11-2026)
 
-1. `testing-evidence-collector` revisa este paquete UI-00 y lo acepta o lo rechaza como evidencia G0.
-2. A (2 perfiles) y B (`design-ui-designer`) en paralelo, porque son independientes, con salida en documentos.
-3. `testing-reality-checker` contrasta A y B con las capturas.
-4. Al usuario: elegir dirección visual y arquitectura de información (G1). Hasta entonces no se escribe código.
+| Perfil | Primera misión |
+|---|---|
+| `academic-statistician` | Inferencia y multiplicidad de SEPI F03 v2 y F05 |
+| `testing-reality-checker` | Reproducción independiente (F03 v2 y F04) |
+| `academic-geographer` | GEO-01 y GEO-06 |
+| `engineering-code-reviewer` | Núcleo físico GEO-07 (#83) y fugas temporales de SEPI-P |
+| `testing-evidence-collector` | Aceptación o rechazo del paquete UI-00 como evidencia G0 |
+| `design-ux-architect` | Arquitectura de información unificada, de mapa primero |
+| `design-ui-designer` | Tres direcciones visuales |
+| `gis-3d-scene-developer` | Revisión y ampliación del contrato de estado visual |
+| `technical-artist` (`game-development/`) | Sistema de animación atmosférica sobre el mismo contrato |
+
+Los verificadores parten del protocolo congelado y de los datos originales; quien construye no verifica. Hasta
+G1 (dirección visual y arquitectura de información elegidas por el titular, con el contrato de estado incluido)
+no se escribe código de la nueva interfaz.
 
 ## Fuera de alcance
 
