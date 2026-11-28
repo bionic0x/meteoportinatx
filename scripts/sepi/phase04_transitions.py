@@ -45,8 +45,8 @@ def main():
         return
     with open(os.path.join(_REPO, "docs", "SEPI-P-PROTOCOLO.md"), encoding="utf-8") as f:
         fc.require_frozen_protocol(f.read())
-    raise SystemExit("La ejecución sobre S2M se implementa en el PR 3, con los terciles calculados solo con el "
-                     "entrenamiento de cada pliegue (protocolo §6).")
+    raise SystemExit("Protocolo congelado: las matrices sobre S2M se calculan en phase05_persistence.py "
+                     "(transition_matrix.csv), con límites de tercil por origen móvil (concreción C16).")
 
 
 if __name__ == "__main__":
