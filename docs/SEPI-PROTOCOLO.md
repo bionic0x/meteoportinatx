@@ -32,7 +32,7 @@ Toda afirmación lleva una de tres clases:
 | QUOT 66/09 y red nivo (NIVOSE) | **Auditados** | `audit_quot.py`, `audit_nivo.py`, `SEPI-INVENTARIO-FUENTES.md` |
 | XEMA 2009–2026 | **Incorporado** | fase 01 |
 | Ranking F3 original (v1) | **Exploratorio** | PR #66 |
-| Ranking F3 v2 | Pendiente | este protocolo, §4 |
+| Ranking F3 v2 | Calculado, pendiente de verificación independiente | `SEPI-FASE03-V2.md`, `SEPI-FASE03-COMPARATIVA.md` |
 | Independencia observacional de las anclas | **UNKNOWN** | se desconoce qué estaciones asimila SAFRAN |
 | Ruptura de 2002 | Parcialmente evaluada (solo interna a S2M) | falta el contraste con CERRA-Land y con estaciones estables |
 | H6 | Exploratoria | fases 02 y 02b |
@@ -188,7 +188,7 @@ Toda afirmación lleva una de tres clases:
 | T04 Solicitar Ransol, FEDA y AR+I | P0 | Pendiente (lo hace el titular) |
 | T05 AEMET, ICGC y ERHIN | P0 | Pendiente (lo hace el titular) |
 | T06 ETL, control de calidad y homogeneización | P0 | Parcial (S2M y QUOT) |
-| T07 Rankings de los 58 inviernos | P0 | v1 exploratoria; v2 en curso |
+| T07 Rankings de los 58 inviernos | P0 | v1 exploratoria; v2 calculada (pendiente de verificación) |
 | T08 Validación y ruptura de 2002 | P0 | Parcial; CERRA pendiente |
 | T09 Controles de satélite y de T/P | P1 | Pendiente |
 | T10 Índices WeMO, SSW y ERA5 | P1 | Pendiente |
@@ -218,6 +218,8 @@ Toda afirmación lleva una de tres clases:
 | 28-11-2026 | Referencia alternativa 1991–2020 y sensibilidad sin tendencia | Protocolo | Sí |
 | 28-11-2026 | Independencia de las anclas UNKNOWN mientras no se documente la asimilación por SAFRAN; por tanto, ninguna clase A es posible hoy | Protocolo | Sí |
 | 28-11-2026 | Umbrales G3 y G5 y particiones temporales como propuestas, no estándares | Protocolo | Sí |
+| 28-11-2026 | Implementación v2: percentil de rango medio frente a la referencia, I redondeado a 1e-9 (los empates exactos son empates), bootstrap circular con bloques de 5 inviernos y 2.000 réplicas, «1991–2020» = inviernos 1990–91 a 2019–20 | Concreción del protocolo | Sí |
+| 28-11-2026 | Clases v2: sin ancla válida → C (esencialmente modelo); anclas solo discordantes → C con la marca «discrepancia»; la concordancia se mide por tercil del HS medio en la cota del ancla | Concreción del §5 | Sí |
 
 ## 11. Referencias nucleares
 

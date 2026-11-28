@@ -86,7 +86,9 @@ def s2m_year(y):
     return True
 
 
-def s2m_reducido(y0=1958):
+def s2m_reducido(y0=1958, v2=False):
+    """Tabla reducida para phase03 (v1: llano y N 20°) o phase03_v2 (v2: llano, N 20° y NO 20°)."""
+    geos = [(-1, 0), (0, 20)] + ([(315, 20)] if v2 else [])
     out = []
     for y in range(y0, HOY.year + 1):
         f = os.path.join(BASE, "s2m", f"s2m_pyr_{y}.csv.gz")
@@ -94,9 +96,10 @@ def s2m_reducido(y0=1958):
             continue
         d = pd.read_csv(f, sep=";")
         sel = (d.num_massif.between(69, 74) & d.altitude.isin([1200, 1500, 1800, 2100, 2400])
-               & (((d.exposition == -1) & (d.pente == 0)) | ((d.exposition == 0) & (d.pente == 20))))
+               & pd.Series(list(zip(d.exposition, d.pente)), index=d.index).isin(geos))
         out.append(d.loc[sel, ["num_massif", "dat", "altitude", "exposition", "pente", "neigetot", "equivalent_eau"]])
-    pd.concat(out).to_csv(os.path.join(BASE, "s2m_ref_69_74.csv.gz"), index=False)
+    nombre = "s2m_ref_v2_69_74.csv.gz" if v2 else "s2m_ref_69_74.csv.gz"
+    pd.concat(out).to_csv(os.path.join(BASE, nombre), index=False)
 
 
 def main():
@@ -109,6 +112,7 @@ def main():
         if not s2m_year(y):
             fallos.append(f"S2M {y}")
     s2m_reducido()
+    s2m_reducido(v2=True)
     # Los nombres de periodo de QUOT cambian cada año (p. ej. previous-1950-2024, latest-2025-2026):
     # se descubren listando el espejo. Los «latest» se vuelven a descargar siempre.
     quot = [k for k in listar("data/synchro_ftp/BASE/QUOT/") if re.search(r"/Q_(66|09)_.*\.csv\.gz$", k)]
