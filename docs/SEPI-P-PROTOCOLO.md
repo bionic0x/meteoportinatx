@@ -99,7 +99,7 @@ Se cumple ΔSWE = G_SWE − L_SWE.
 | Días ≥ 30 y ≥ 100 cm | Cobertura ≥ 90 % de los días del periodo, informando los ausentes |
 | Formación del manto | Secuencia de 7 días verificable (ver arriba) |
 
-**Regla de degeneración:** una variable cuyo P90 en el entrenamiento sea 0 en un estrato se excluye de ese estrato en ese pliegue, y se informa.
+**Regla de degeneración:** una variable **no negativa** (G, L, G_HS, días con umbral, SWE y HS al cierre) cuyo P90 en el entrenamiento sea 0 en un estrato se excluye de ese estrato en ese pliegue, y se informa. No se aplica a ΔSWE, que tiene signo: en ΔSWE, un P90 = 0 no indica falta de varianza.
 
 **Coherencia física:** toda distribución predictiva de ΔSWE se restringe a SWE₀ + ΔSWE ≥ 0. Los miembros por debajo se truncan en −SWE₀, y se registra la proporción de predicciones truncadas por modelo, periodo y dominio.
 
@@ -301,5 +301,6 @@ Salidas: `SEPI_DATA/f04/`, con copia de las tablas en `docs/datos/sepi-f04/`.
 | Fecha | Decisión | Tipo |
 |---|---|---|
 | 28-11-2026 | v0.3: borrador solo con SEAS5 (PR #72) | Borrador |
+| 28-11-2026 | Regla de degeneración limitada a variables no negativas, no aplicable a ΔSWE. Surgió en la climatología descriptiva del PR #75 y la aprobó el titular | Candidato a congelación |
 | 28-11-2026 | v0.4-rc: decisiones del §12; reglas de formación del manto y de cobertura; coherencia física SWE ≥ 0; definición matemática de los análogos y sus reglas; contraste pareado con bootstrap centrado y Holm; nueva etiqueta del criterio 3; estados PASS-R, PASS-O, REJECT y UNKNOWN; índices I_AM e I_NS; referencia incremental elegida por validación interna; origen móvil como validación principal de SEAS5. Concreciones de redacción: entrenamiento interno inicial de 15 inviernos y umbral de REJECT por CRPSS 0,05 | Candidato a congelación |
 | 28-11-2026 | v0.4: tres periodos; ΔSWE como objetivo primario y G/L como secundarios; d100 excluido en P1 y limitado a 2.100 m en P2 y P3; nieve nueva y lluvia sobre nieve en UNKNOWN; separación de modelos R y O; hipótesis H-P1 a H-P3 con Holm; origen móvil 1968–1990 / 1991–2025; matrices de transición bloqueadas hasta la congelación. Aprobado metodológicamente por el titular; pendiente de congelación | Borrador |
