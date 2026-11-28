@@ -70,7 +70,7 @@ Script: `scripts/sepi/phase03_v2.py`. Tablas en `docs/datos/sepi-f03-v2/`. Deriv
 | 1985–2002 | 49 | 41 |
 | 2003–2026 | 54 | 66 |
 
-  No hay ninguna clase A.
+  No hay ninguna clase A. En la v1, 2025–26 en Cerdagne era clase A; aquí es B por el cambio de criterio sobre la independencia (ver la comparativa).
 
 ## Límites y pendiente
 - **S2M es un modelo.** No tiene macizos en la vertiente catalana: la Cerdanya catalana, Núria y Cadí no están representadas.
