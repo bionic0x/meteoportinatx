@@ -1,6 +1,6 @@
 """GEO-07, fase 07-1: núcleo físico reducido de la interacción flujo–relieve (Python puro, probado en el CI).
 
-Sigue docs/GEO-07-PROTOCOLO.md v0.1, §4 (BORRADOR; PR #82). Diagnóstico experimental: no es un aviso ni una
+Sigue docs/GEO-07-PROTOCOLO.md v0.1, §4 (fusionado en #82; borrador, no congelado). Diagnóstico experimental: no es un aviso ni una
 predicción validada. **Ningún umbral está calibrado**: los valores por defecto de `regime` son las hipótesis
 del protocolo y solo se ajustarán con episodios de entrenamiento (fase 07-3).
 

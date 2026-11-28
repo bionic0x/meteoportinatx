@@ -1,6 +1,6 @@
 # GEO-07 · Fase 07-0 — Inventario de datos para verificar la interacción frente/tormenta–relieve
 
-**Estado:** borrador, 28-11-2026. Depende del protocolo `docs/GEO-07-PROTOCOLO.md` v0.1 (PR #82, sin fusionar).
+**Estado:** borrador, 28-11-2026. Depende del protocolo `docs/GEO-07-PROTOCOLO.md` v0.1 (fusionado en #82; sigue en borrador, no congelado).
 **Alcance:** qué observaciones existen para verificar los submódulos 07a–h, con qué profundidad de archivo,
 licencia y coste. No descarga nada, no activa proveedores y no toca el motor operativo.
 **Sin verificación independiente:** los agentes revisores (Ante/NEXUS) no están disponibles hasta el 2-12-2026.
