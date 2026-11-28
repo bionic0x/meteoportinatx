@@ -1,0 +1,145 @@
+num_massif,dominio,altitude,geo,de,a,tercil_origen,bajo,medio,alto
+69,Couserans (control),2100,llano,P1,P2,bajo,4,2,1
+69,Couserans (control),2100,llano,P1,P2,medio,4,4,4
+69,Couserans (control),2100,llano,P1,P2,alto,6,6,4
+69,Couserans (control),2100,llano,P2,P3,bajo,9,4,1
+69,Couserans (control),2100,llano,P2,P3,medio,9,2,1
+69,Couserans (control),2100,llano,P2,P3,alto,5,4,0
+70,Haute-Ariège,2100,llano,P1,P2,bajo,4,4,0
+70,Haute-Ariège,2100,llano,P1,P2,medio,7,4,5
+70,Haute-Ariège,2100,llano,P1,P2,alto,1,5,5
+70,Haute-Ariège,2100,llano,P2,P3,bajo,7,5,0
+70,Haute-Ariège,2100,llano,P2,P3,medio,10,2,1
+70,Haute-Ariège,2100,llano,P2,P3,alto,8,1,1
+71,Andorra,2100,llano,P1,P2,bajo,2,6,3
+71,Andorra,2100,llano,P1,P2,medio,5,2,4
+71,Andorra,2100,llano,P1,P2,alto,3,4,6
+71,Andorra,2100,llano,P2,P3,bajo,1,3,6
+71,Andorra,2100,llano,P2,P3,medio,3,8,1
+71,Andorra,2100,llano,P2,P3,alto,12,0,1
+72,Orlu–St-Barthélemy,2100,llano,P1,P2,bajo,4,5,0
+72,Orlu–St-Barthélemy,2100,llano,P1,P2,medio,3,5,6
+72,Orlu–St-Barthélemy,2100,llano,P1,P2,alto,2,6,4
+72,Orlu–St-Barthélemy,2100,llano,P2,P3,bajo,6,3,0
+72,Orlu–St-Barthélemy,2100,llano,P2,P3,medio,13,2,1
+72,Orlu–St-Barthélemy,2100,llano,P2,P3,alto,9,1,0
+73,Capcir–Puymorens,2100,llano,P1,P2,bajo,6,3,2
+73,Capcir–Puymorens,2100,llano,P1,P2,medio,4,3,4
+73,Capcir–Puymorens,2100,llano,P1,P2,alto,2,4,7
+73,Capcir–Puymorens,2100,llano,P2,P3,bajo,1,9,2
+73,Capcir–Puymorens,2100,llano,P2,P3,medio,3,6,1
+73,Capcir–Puymorens,2100,llano,P2,P3,alto,13,0,0
+74,Cerdagne–Canigou,2100,llano,P1,P2,bajo,5,6,1
+74,Cerdagne–Canigou,2100,llano,P1,P2,medio,2,2,4
+74,Cerdagne–Canigou,2100,llano,P1,P2,alto,5,6,4
+74,Cerdagne–Canigou,2100,llano,P2,P3,bajo,1,8,3
+74,Cerdagne–Canigou,2100,llano,P2,P3,medio,6,7,1
+74,Cerdagne–Canigou,2100,llano,P2,P3,alto,8,1,0
+69,Couserans (control),1800,llano,P1,P2,bajo,3,4,4
+69,Couserans (control),1800,llano,P1,P2,medio,4,4,1
+69,Couserans (control),1800,llano,P1,P2,alto,6,4,5
+69,Couserans (control),1800,llano,P2,P3,bajo,4,7,2
+69,Couserans (control),1800,llano,P2,P3,medio,10,1,1
+69,Couserans (control),1800,llano,P2,P3,alto,10,0,0
+70,Haute-Ariège,1800,llano,P1,P2,bajo,5,3,3
+70,Haute-Ariège,1800,llano,P1,P2,medio,5,3,3
+70,Haute-Ariège,1800,llano,P1,P2,alto,3,6,4
+70,Haute-Ariège,1800,llano,P2,P3,bajo,0,8,5
+70,Haute-Ariège,1800,llano,P2,P3,medio,7,4,1
+70,Haute-Ariège,1800,llano,P2,P3,alto,9,1,0
+71,Andorra,1800,llano,P1,P2,bajo,2,7,3
+71,Andorra,1800,llano,P1,P2,medio,2,0,7
+71,Andorra,1800,llano,P1,P2,alto,7,1,6
+71,Andorra,1800,llano,P2,P3,bajo,0,4,7
+71,Andorra,1800,llano,P2,P3,medio,1,5,2
+71,Andorra,1800,llano,P2,P3,alto,14,2,0
+72,Orlu–St-Barthélemy,1800,llano,P1,P2,bajo,3,3,3
+72,Orlu–St-Barthélemy,1800,llano,P1,P2,medio,3,6,3
+72,Orlu–St-Barthélemy,1800,llano,P1,P2,alto,4,6,4
+72,Orlu–St-Barthélemy,1800,llano,P2,P3,bajo,0,6,4
+72,Orlu–St-Barthélemy,1800,llano,P2,P3,medio,10,4,1
+72,Orlu–St-Barthélemy,1800,llano,P2,P3,alto,10,0,0
+73,Capcir–Puymorens,1800,llano,P1,P2,bajo,1,7,5
+73,Capcir–Puymorens,1800,llano,P1,P2,medio,4,2,2
+73,Capcir–Puymorens,1800,llano,P1,P2,alto,6,5,3
+73,Capcir–Puymorens,1800,llano,P2,P3,bajo,0,4,7
+73,Capcir–Puymorens,1800,llano,P2,P3,medio,1,10,3
+73,Capcir–Puymorens,1800,llano,P2,P3,alto,10,0,0
+74,Cerdagne–Canigou,1800,llano,P1,P2,bajo,3,3,7
+74,Cerdagne–Canigou,1800,llano,P1,P2,medio,5,0,3
+74,Cerdagne–Canigou,1800,llano,P1,P2,alto,5,3,6
+74,Cerdagne–Canigou,1800,llano,P2,P3,bajo,0,5,8
+74,Cerdagne–Canigou,1800,llano,P2,P3,medio,1,5,0
+74,Cerdagne–Canigou,1800,llano,P2,P3,alto,12,4,0
+69,Couserans (control),1800,N20,P1,P2,bajo,3,6,2
+69,Couserans (control),1800,N20,P1,P2,medio,4,3,1
+69,Couserans (control),1800,N20,P1,P2,alto,5,6,5
+69,Couserans (control),1800,N20,P2,P3,bajo,6,6,0
+69,Couserans (control),1800,N20,P2,P3,medio,13,1,1
+69,Couserans (control),1800,N20,P2,P3,alto,6,1,1
+70,Haute-Ariège,1800,N20,P1,P2,bajo,4,4,2
+70,Haute-Ariège,1800,N20,P1,P2,medio,5,3,4
+70,Haute-Ariège,1800,N20,P1,P2,alto,4,7,2
+70,Haute-Ariège,1800,N20,P2,P3,bajo,5,7,1
+70,Haute-Ariège,1800,N20,P2,P3,medio,13,0,1
+70,Haute-Ariège,1800,N20,P2,P3,alto,7,0,1
+71,Andorra,1800,N20,P1,P2,bajo,2,6,3
+71,Andorra,1800,N20,P1,P2,medio,3,3,4
+71,Andorra,1800,N20,P1,P2,alto,3,3,8
+71,Andorra,1800,N20,P2,P3,bajo,1,3,4
+71,Andorra,1800,N20,P2,P3,medio,3,8,1
+71,Andorra,1800,N20,P2,P3,alto,13,2,0
+72,Orlu–St-Barthélemy,1800,N20,P1,P2,bajo,3,4,3
+72,Orlu–St-Barthélemy,1800,N20,P1,P2,medio,4,4,2
+72,Orlu–St-Barthélemy,1800,N20,P1,P2,alto,3,7,5
+72,Orlu–St-Barthélemy,1800,N20,P2,P3,bajo,4,6,0
+72,Orlu–St-Barthélemy,1800,N20,P2,P3,medio,13,1,1
+72,Orlu–St-Barthélemy,1800,N20,P2,P3,alto,9,1,0
+73,Capcir–Puymorens,1800,N20,P1,P2,bajo,3,4,3
+73,Capcir–Puymorens,1800,N20,P1,P2,medio,5,3,3
+73,Capcir–Puymorens,1800,N20,P1,P2,alto,4,6,4
+73,Capcir–Puymorens,1800,N20,P2,P3,bajo,1,3,8
+73,Capcir–Puymorens,1800,N20,P2,P3,medio,4,7,2
+73,Capcir–Puymorens,1800,N20,P2,P3,alto,10,0,0
+74,Cerdagne–Canigou,1800,N20,P1,P2,bajo,4,3,2
+74,Cerdagne–Canigou,1800,N20,P1,P2,medio,3,4,5
+74,Cerdagne–Canigou,1800,N20,P1,P2,alto,4,5,5
+74,Cerdagne–Canigou,1800,N20,P2,P3,bajo,2,3,6
+74,Cerdagne–Canigou,1800,N20,P2,P3,medio,4,8,0
+74,Cerdagne–Canigou,1800,N20,P2,P3,alto,9,2,1
+69,Couserans (control),1800,NO20,P1,P2,bajo,3,6,2
+69,Couserans (control),1800,NO20,P1,P2,medio,5,3,2
+69,Couserans (control),1800,NO20,P1,P2,alto,4,6,4
+69,Couserans (control),1800,NO20,P2,P3,bajo,6,6,0
+69,Couserans (control),1800,NO20,P2,P3,medio,12,2,1
+69,Couserans (control),1800,NO20,P2,P3,alto,6,2,0
+70,Haute-Ariège,1800,NO20,P1,P2,bajo,3,5,2
+70,Haute-Ariège,1800,NO20,P1,P2,medio,6,3,2
+70,Haute-Ariège,1800,NO20,P1,P2,alto,3,5,6
+70,Haute-Ariège,1800,NO20,P2,P3,bajo,4,7,1
+70,Haute-Ariège,1800,NO20,P2,P3,medio,11,1,1
+70,Haute-Ariège,1800,NO20,P2,P3,alto,9,1,0
+71,Andorra,1800,NO20,P1,P2,bajo,2,5,5
+71,Andorra,1800,NO20,P1,P2,medio,3,3,5
+71,Andorra,1800,NO20,P1,P2,alto,3,3,6
+71,Andorra,1800,NO20,P2,P3,bajo,0,5,3
+71,Andorra,1800,NO20,P2,P3,medio,1,9,1
+71,Andorra,1800,NO20,P2,P3,alto,13,3,0
+72,Orlu–St-Barthélemy,1800,NO20,P1,P2,bajo,3,3,3
+72,Orlu–St-Barthélemy,1800,NO20,P1,P2,medio,4,5,1
+72,Orlu–St-Barthélemy,1800,NO20,P1,P2,alto,3,7,6
+72,Orlu–St-Barthélemy,1800,NO20,P2,P3,bajo,3,6,1
+72,Orlu–St-Barthélemy,1800,NO20,P2,P3,medio,12,2,1
+72,Orlu–St-Barthélemy,1800,NO20,P2,P3,alto,8,2,0
+73,Capcir–Puymorens,1800,NO20,P1,P2,bajo,2,6,4
+73,Capcir–Puymorens,1800,NO20,P1,P2,medio,5,2,3
+73,Capcir–Puymorens,1800,NO20,P1,P2,alto,4,5,4
+73,Capcir–Puymorens,1800,NO20,P2,P3,bajo,1,1,9
+73,Capcir–Puymorens,1800,NO20,P2,P3,medio,4,8,1
+73,Capcir–Puymorens,1800,NO20,P2,P3,alto,11,0,0
+74,Cerdagne–Canigou,1800,NO20,P1,P2,bajo,4,3,4
+74,Cerdagne–Canigou,1800,NO20,P1,P2,medio,2,2,6
+74,Cerdagne–Canigou,1800,NO20,P1,P2,alto,3,5,6
+74,Cerdagne–Canigou,1800,NO20,P2,P3,bajo,0,2,7
+74,Cerdagne–Canigou,1800,NO20,P2,P3,medio,3,6,1
+74,Cerdagne–Canigou,1800,NO20,P2,P3,alto,10,6,0

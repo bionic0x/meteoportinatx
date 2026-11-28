@@ -1,0 +1,426 @@
+{
+ "protocolo": "1ae92c1",
+ "concreciones": "docs/SEPI-F05-CONCRECIONES.md",
+ "emisiones": [
+  {
+   "archivo": "P1_1991.json",
+   "sha256": "b1ce30217f562018c2f7edfe9770550f80c6e29534f06c184d9c466d43d01293"
+  },
+  {
+   "archivo": "P1_1992.json",
+   "sha256": "92299eb6ad20f3ac8de68cf7f96e0ca8478048bfd73429a8b494ad8f48aa9626"
+  },
+  {
+   "archivo": "P1_1993.json",
+   "sha256": "3f30f10cfe9fbde057217f3ce43179971bb161497d6fee22d2a1776bb7d32ec9"
+  },
+  {
+   "archivo": "P1_1994.json",
+   "sha256": "77a889fb1d7f29a45c7723da918b6c185228f92152911cd001e1ecc3d3153647"
+  },
+  {
+   "archivo": "P1_1995.json",
+   "sha256": "bfc3723053faee18f88c440cee35075c2eba75bd82a03d68ef8dcc8933abc96a"
+  },
+  {
+   "archivo": "P1_1996.json",
+   "sha256": "0d7e244301a6e63c88d084b2fcbdb8bc38eb8753d163f320ac03384a428648e0"
+  },
+  {
+   "archivo": "P1_1997.json",
+   "sha256": "dcc9e0f9327f1ebac7f0d827fd4b2a991bf9d8cc7d041e9aec0cdabfbfb5c292"
+  },
+  {
+   "archivo": "P1_1998.json",
+   "sha256": "af9b0e9ea259596647f3bbf21076b3803c8f7c6b5800f59bc9f072ead92e6206"
+  },
+  {
+   "archivo": "P1_1999.json",
+   "sha256": "c63fb3bd6f5d7bad9dc128d5fdd38d99fbb005a9a2195f30f58a5d9c9ccad1be"
+  },
+  {
+   "archivo": "P1_2000.json",
+   "sha256": "091b691ba7f0a4c462439d96968a7f631859dab6935d4af2d799801275336aca"
+  },
+  {
+   "archivo": "P1_2001.json",
+   "sha256": "f32a47829d11f4b379a739c65640aa394fb6d1ab4de1051c17818c1bc5c7d06e"
+  },
+  {
+   "archivo": "P1_2002.json",
+   "sha256": "c0ab26d31846d1faefce0baf76ced2fd4338eb741de9354b840bca664c0e3499"
+  },
+  {
+   "archivo": "P1_2003.json",
+   "sha256": "4263eb6b0cf07bb38962955bfbae055fabf3160b0c148af8363f9954cd0aa543"
+  },
+  {
+   "archivo": "P1_2004.json",
+   "sha256": "2eb61b19daa6c33c6adfa8a88026adbfc9d6a839c16c0aff68d69cee56bfd5de"
+  },
+  {
+   "archivo": "P1_2005.json",
+   "sha256": "f27f1e6e6df1934efab706ee7c92c9f85caafe3af550cb7c8933b75934bc5330"
+  },
+  {
+   "archivo": "P1_2006.json",
+   "sha256": "d6c19f596a6f0cd54b09e2b164862d858d12d2f4a5f57b94c1139052ef68a01a"
+  },
+  {
+   "archivo": "P1_2007.json",
+   "sha256": "7ddb4b738f173cef9b7111677992882a7cc6bc114f3cb89cc81f55afcbe2dd7d"
+  },
+  {
+   "archivo": "P1_2008.json",
+   "sha256": "fc9fa2179a14a1793ad7b3c1b5847d992d0681d838b4635bc76c3f1733e53d47"
+  },
+  {
+   "archivo": "P1_2009.json",
+   "sha256": "bcb0dc86407fe6119f21abe920b8f709909ece84a34f056c232b77bdb0565202"
+  },
+  {
+   "archivo": "P1_2010.json",
+   "sha256": "b68e5881ec1cf5bebe3fd475c3e6601a0d5f9a2127df15ef1ce2073c843b1433"
+  },
+  {
+   "archivo": "P1_2011.json",
+   "sha256": "48d47abd63f40ab96a0ece1bf2aeed7efb9d2af8fa887e1a9f0000a062792dc3"
+  },
+  {
+   "archivo": "P1_2012.json",
+   "sha256": "4a888d5f5f306bb730096431aca14ff48b954d9afafc25997f3b2d6dae2a8f0a"
+  },
+  {
+   "archivo": "P1_2013.json",
+   "sha256": "b8a5decdd49d341b6ac45993c8318f8f36d16ca3ad3843d7d29944d71425e623"
+  },
+  {
+   "archivo": "P1_2014.json",
+   "sha256": "d2b3722e7ff0d9d27dac48019a9bb2b5e72063905b7d91bcc679d338e26223da"
+  },
+  {
+   "archivo": "P1_2015.json",
+   "sha256": "9e7e7dee1ae56ac803d83ae1f60b64c27b23328ac517776b9fa84f9b96d250f8"
+  },
+  {
+   "archivo": "P1_2016.json",
+   "sha256": "124c16f488d94fff1050ec8a8aede49c62a318d0630230b63ab3cae0e4636fdd"
+  },
+  {
+   "archivo": "P1_2017.json",
+   "sha256": "8b1bdf1a360d7e3e8747366990e3335709f1b49ace2f1f444d9dbe561d30aa7e"
+  },
+  {
+   "archivo": "P1_2018.json",
+   "sha256": "15e99d86a3325664cb9187a54a0fdc1f1e2e6c259f9922a415845a8336308bcc"
+  },
+  {
+   "archivo": "P1_2019.json",
+   "sha256": "9de918ff3b3328bac75a54fd5c6ea40ed70d075f2725d5048906f9b9bf167b0d"
+  },
+  {
+   "archivo": "P1_2020.json",
+   "sha256": "e784662099b6b0b2d2c00d19e34f8f2a2d46e2dbe77c33f6dc43351764af8568"
+  },
+  {
+   "archivo": "P1_2021.json",
+   "sha256": "d5fe6387d9e8333f6331ed6b9dcdbe3ee26963b1fa358e59ab73b5b83232788d"
+  },
+  {
+   "archivo": "P1_2022.json",
+   "sha256": "6ec590cfdd7579b78892a21963ce6d8a2c9fddb03e7f7ba82812a93f2e0513ee"
+  },
+  {
+   "archivo": "P1_2023.json",
+   "sha256": "a499be07d5424ea218aa1a9214048f9592d70c335ad72a375d9cc9ffd958ff63"
+  },
+  {
+   "archivo": "P1_2024.json",
+   "sha256": "2f694a454150e5ed43046b227c99d5777efa7a309f0990460082c48514cafdac"
+  },
+  {
+   "archivo": "P1_2025.json",
+   "sha256": "a6bc3ff20c1d89a9527b2f78b6a7497086d8259d73dfef410ea428b60628b4c5"
+  },
+  {
+   "archivo": "P2_1991.json",
+   "sha256": "b9ea393a40f1d357b777446abfaa016b5519ab781dfad47f9b7fa6756b1e9bc6"
+  },
+  {
+   "archivo": "P2_1992.json",
+   "sha256": "56352d2aaa0f8293c8fd3293741b68a6893d8411fea6aac0502aa8e96e68506b"
+  },
+  {
+   "archivo": "P2_1993.json",
+   "sha256": "7a5c584c5bdf3894e6244e960b3154ae7c152805ffd47c513790b7099963fa55"
+  },
+  {
+   "archivo": "P2_1994.json",
+   "sha256": "ff03de2549414285ee11be9360c7facaca7dcd77a35a7231e04ea31283c0a104"
+  },
+  {
+   "archivo": "P2_1995.json",
+   "sha256": "59dda99974d8060722e471f0d8669cd029084bafb044bf2e425873e972e1949f"
+  },
+  {
+   "archivo": "P2_1996.json",
+   "sha256": "8f923e4b07d294e0ab13ebd0d08db6e4060b9edcf21a6440da5533fea17c6678"
+  },
+  {
+   "archivo": "P2_1997.json",
+   "sha256": "28a231b99f158f413a5842c1d1299b9c5b449a93eeb37562f7425a60080255b8"
+  },
+  {
+   "archivo": "P2_1998.json",
+   "sha256": "5c3ae7130b76bd0243d084ea0fd217389508f519f263da860d1530152e963914"
+  },
+  {
+   "archivo": "P2_1999.json",
+   "sha256": "1b70434d75b2dad46456ec46efa40d4177e7bae951b2bcc5990fe510ae3dfc5f"
+  },
+  {
+   "archivo": "P2_2000.json",
+   "sha256": "e6b18b8a0ea173451e300688e92c9a15d6bc1fc30b63ec0764667552f248fe13"
+  },
+  {
+   "archivo": "P2_2001.json",
+   "sha256": "3994a5ccdc6048d68fc5b5b1635b6258cbe33a28750f621f18d7183303c819dc"
+  },
+  {
+   "archivo": "P2_2002.json",
+   "sha256": "18ee0ef918cda895d5d34a85642b5565b09185d3a20d12b2f2e817e3c5452280"
+  },
+  {
+   "archivo": "P2_2003.json",
+   "sha256": "49b2ac900d7f0c437a787918ecc2c37a0e1e2e94751fd6c902438530b8589081"
+  },
+  {
+   "archivo": "P2_2004.json",
+   "sha256": "888e9464a0dafcc4ac110254aa65437061fb5a26227b64201ff446e365dbe706"
+  },
+  {
+   "archivo": "P2_2005.json",
+   "sha256": "586388bdbbc458ea000af15d723ddfe8c31cd07877d1e1979074ba841d5ecf1f"
+  },
+  {
+   "archivo": "P2_2006.json",
+   "sha256": "42d242cf1577aaeb28b9a69e1a59056ad6c5274b9f67c79e2e466df0cb0dcde2"
+  },
+  {
+   "archivo": "P2_2007.json",
+   "sha256": "997581d7ed3e8313f4ab8f1a1f9651cd75c2bbba37a36f005f26da5783ffbd75"
+  },
+  {
+   "archivo": "P2_2008.json",
+   "sha256": "40b900e21e9a2c77ade844c03b71767a0eac8e83c7afdc8fe1a7a84c6db1241f"
+  },
+  {
+   "archivo": "P2_2009.json",
+   "sha256": "38c68f447dfa546893f1b917e860880b9e2aeb0b79e6175cb5e4c51fdb1d7dbe"
+  },
+  {
+   "archivo": "P2_2010.json",
+   "sha256": "bd5c30dea1538f1ad3bf9b0201ae30a9cd6f426858f1de88f5c2509904e2b1a2"
+  },
+  {
+   "archivo": "P2_2011.json",
+   "sha256": "dc1f4432cecd212636f5332718a78e25f424ad4fce8aa3afbdd05298d75e8260"
+  },
+  {
+   "archivo": "P2_2012.json",
+   "sha256": "016fd96a10df8243dff32c17c741156dad13d47d25acb68cefa325a78b26d666"
+  },
+  {
+   "archivo": "P2_2013.json",
+   "sha256": "6c05d654c989fd6014a1b1726592b9447a69dc3726dc41e8082ec1d8e66cf897"
+  },
+  {
+   "archivo": "P2_2014.json",
+   "sha256": "7cf9ef913102120db4a7deee0e4049284b1fffea1fdc5d2181c35d87280b3a2c"
+  },
+  {
+   "archivo": "P2_2015.json",
+   "sha256": "42940e955a484c4dc81cb1696ff66f4c84e94555d315d938a85cb158977b19b9"
+  },
+  {
+   "archivo": "P2_2016.json",
+   "sha256": "6733aeaebcf79be547d1adaff4fb4a305696097519f2a78f77acc2e453d7ff58"
+  },
+  {
+   "archivo": "P2_2017.json",
+   "sha256": "0012830ed23c5c47374bf7dcb4da882945a9ae58b35db980053776be3688efa2"
+  },
+  {
+   "archivo": "P2_2018.json",
+   "sha256": "c4e37cc0f26859757b2253707937d9c76afb706d8a41e14349c0c66da61963c5"
+  },
+  {
+   "archivo": "P2_2019.json",
+   "sha256": "ede5281eb0933986868bf89a3018e6b718589a146251db4cd6821da76df33bea"
+  },
+  {
+   "archivo": "P2_2020.json",
+   "sha256": "24b0b702bde072e5a58b0134ba69699d3af40ad1b32a45d5c5fc4ba00ed8eefa"
+  },
+  {
+   "archivo": "P2_2021.json",
+   "sha256": "ca6f6bbc2414d5ae8b1f2de0b0369fc4dccea6d1431cf838a6a752c8c9ac9764"
+  },
+  {
+   "archivo": "P2_2022.json",
+   "sha256": "4bb1de615bf7acdc16548e98774bd1031450fdb0bc01822873f07d7247b39224"
+  },
+  {
+   "archivo": "P2_2023.json",
+   "sha256": "fbe44faf6e39b2fc8590404818e4a6f5846701c5e41eb889d58e94ac5bc6c134"
+  },
+  {
+   "archivo": "P2_2024.json",
+   "sha256": "63092d40ce4d26acab790fb281d6c63f64e53f35829642526790c0ab2972079a"
+  },
+  {
+   "archivo": "P2_2025.json",
+   "sha256": "ce61031e4983315a28b9bd5a76000e4049896073ffbed1db11b31c8a5b67a00d"
+  },
+  {
+   "archivo": "P3_1991.json",
+   "sha256": "433dff3ffec2312f26788616b8d66c3ee763838dd6c6dc018ccf7adfe99df3b1"
+  },
+  {
+   "archivo": "P3_1992.json",
+   "sha256": "859564cc276b222db7b3ac1994fd3af38dd03c565cf620668c65f0d3f6784728"
+  },
+  {
+   "archivo": "P3_1993.json",
+   "sha256": "c37f5b44eb12c3139be04bc2e0e44d5fbcdfe71dd8657e9ffdcaeec60da796f9"
+  },
+  {
+   "archivo": "P3_1994.json",
+   "sha256": "16a1485f779f4d16577e069b8d0c143803cc72944e5e28143c85c7d994a6df0c"
+  },
+  {
+   "archivo": "P3_1995.json",
+   "sha256": "2cd116b3c190a0a5dfabfe105b4241c2987b6a50a6737d2bec66d936ff0fe7cb"
+  },
+  {
+   "archivo": "P3_1996.json",
+   "sha256": "fb844c80a82aebcfd971b983ac7f34a6d457e495c30fd00bb757285d9f185fa2"
+  },
+  {
+   "archivo": "P3_1997.json",
+   "sha256": "10a76394efedcc47a3aa2a219e634b9d045e3dd3e16bafe62104310a0df50529"
+  },
+  {
+   "archivo": "P3_1998.json",
+   "sha256": "945b81613503c837a7eb9947aad098b78d41e9d72f98c5ea5d53e959d42018ad"
+  },
+  {
+   "archivo": "P3_1999.json",
+   "sha256": "46c52e0859c1542fbeeb4417bfc63fe1d87afe59b3d528e6d3e629e041b71955"
+  },
+  {
+   "archivo": "P3_2000.json",
+   "sha256": "ce88c1cec6f78ddca16275744b88ca004fcd564eb12ceab48b067030431bc21a"
+  },
+  {
+   "archivo": "P3_2001.json",
+   "sha256": "71db8db954cde8a1738490c93ab4bd2a5a22a785be52a8ae8885d998e24daed1"
+  },
+  {
+   "archivo": "P3_2002.json",
+   "sha256": "1320ee42b1f2dae846e6c37bef65cd18f1c4c503d0f037d3390ac80c79705e80"
+  },
+  {
+   "archivo": "P3_2003.json",
+   "sha256": "f06521e2fa94665cfb79a4cc75a56039c70dc85b2438a8d657af91d55339d435"
+  },
+  {
+   "archivo": "P3_2004.json",
+   "sha256": "73158cace519a88aca1389862c8cd5cfc29e677b19c0ce0bb4ef83bc2f0dcec9"
+  },
+  {
+   "archivo": "P3_2005.json",
+   "sha256": "e0dea6a848620ef3c60d4d5750ed8e9df43fab407eacd778220cfa6ee8eac704"
+  },
+  {
+   "archivo": "P3_2006.json",
+   "sha256": "c7e1989f04ff3443c2312461551d845593c9e361b0583088266b6302eabfbbfe"
+  },
+  {
+   "archivo": "P3_2007.json",
+   "sha256": "98033b27183a7baae32b08a53aec973f0ae1e4282cb706ee18934264ac5bb171"
+  },
+  {
+   "archivo": "P3_2008.json",
+   "sha256": "44ceae49acb8bd0bf44ffc98210319e239e9992d80a66e2011da666664f98dae"
+  },
+  {
+   "archivo": "P3_2009.json",
+   "sha256": "2936be1dadaf8df1fffe5fce2ac602441abfa4841ce01b206c41d42284f2f9fa"
+  },
+  {
+   "archivo": "P3_2010.json",
+   "sha256": "7d5b35b5b885870c191944c8ad91bd265e248e9090c819c681daf4b20bb03d56"
+  },
+  {
+   "archivo": "P3_2011.json",
+   "sha256": "9c90decad9083e95938e1723f8450a58fd9ef1aa0f393c1947fc486fa9b044c2"
+  },
+  {
+   "archivo": "P3_2012.json",
+   "sha256": "45c754dd895bbea827f13ce62b24682bbcf71ecdb8a595fc1c5e304973fcfbfc"
+  },
+  {
+   "archivo": "P3_2013.json",
+   "sha256": "680213c8dae08f0eaa95d97086f6be85163ac75a2dd7a852b1f2d39c423ffd39"
+  },
+  {
+   "archivo": "P3_2014.json",
+   "sha256": "47aff7f78a43653057cdffae82a8462aea2e51664a3bb60363257aaa854a8142"
+  },
+  {
+   "archivo": "P3_2015.json",
+   "sha256": "af8df539731ecc1138035dea4837d4090984af73852ee514aa1519aaeb15b50d"
+  },
+  {
+   "archivo": "P3_2016.json",
+   "sha256": "19342035dc450baf1803a0a60e80e755d1b01b88086dbfec841b63236d7b52df"
+  },
+  {
+   "archivo": "P3_2017.json",
+   "sha256": "ecc3b2151402de18b5c3055ef23034649e05a2d8c95e77abce7a434cad8b2385"
+  },
+  {
+   "archivo": "P3_2018.json",
+   "sha256": "feb9b9f8d6ed2f0597f40e78740589f48f34347a5b2ba6a332e3f05bd4a1ae94"
+  },
+  {
+   "archivo": "P3_2019.json",
+   "sha256": "dc124f7a3468332b6fbaa4c7a7fb3ddf8f7b74aa5290e3185627017b3b38faa0"
+  },
+  {
+   "archivo": "P3_2020.json",
+   "sha256": "4f71d26aaa6017a917b9fdb9b34e1d22d840e149a3e8aa0742abc0fd3dc62058"
+  },
+  {
+   "archivo": "P3_2021.json",
+   "sha256": "1d5cb98b49a939737b529a55afdb360480e60afb01d3f3af2d628c72b98b9f11"
+  },
+  {
+   "archivo": "P3_2022.json",
+   "sha256": "aad1cabaef4d52575b34105d7cd472a2bb062bae07696a5553d48c12e1bea74a"
+  },
+  {
+   "archivo": "P3_2023.json",
+   "sha256": "c77f703a13f522034a6d9dd155906e932d02326304bc153f49850b4854ddd641"
+  },
+  {
+   "archivo": "P3_2024.json",
+   "sha256": "5bf70e3446666388b354ffb8c9e9c17d7126ecdc57de3189f1ff44b90435a040"
+  },
+  {
+   "archivo": "P3_2025.json",
+   "sha256": "71eeb3c9f55220a3baea68e7767a0482643c8a0f69357e5964d118daeafc7fe6"
+  }
+ ]
+}
