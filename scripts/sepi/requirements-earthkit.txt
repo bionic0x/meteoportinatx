@@ -1,0 +1,6 @@
+# Optional experimental environment; resolve and lock after compatibility tests.
+earthkit-data
+cdsapi
+xarray
+numpy
+pandas
