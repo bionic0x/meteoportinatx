@@ -1,4 +1,6 @@
-# ECMWF Earthkit en MeteoPortinatx (SEPI-EK-01)
+# ECMWF Earthkit en MeteoPortinatx: bulbo húmedo y licencias (complemento de SEPI-EK-01)
+
+Complementa [`SEPI-EARTHKIT.md`](SEPI-EARTHKIT.md), que describe la ingesta (PR #70). El entorno opcional es el que define `scripts/sepi/requirements-earthkit.txt`.
 
 **Estado:** integración mínima y opcional (28-11-2026). Earthkit **no** es dependencia del motor, ni de las consolas, ni del CI.
 
@@ -7,12 +9,7 @@
 - **El núcleo no lo necesita:** el motor y las consolas funcionan con la biblioteca estándar y pocas dependencias, y así deben seguir.
 - **Dónde sí aporta:** en los scripts por lotes que leen GRIB/NetCDF del CDS (hindcasts de SEAS5, CERRA, ERA5) y calculan anomalías, percentiles de ensembles y regrids. Es decir, en SEPI-EK-02 y en la ingesta.
 
-Instalación en un entorno aparte:
-
-```bash
-python -m venv ~/.venv-earthkit && . ~/.venv-earthkit/bin/activate
-pip install -r scripts/requirements-earthkit.txt
-```
+La instalación se hace en un entorno aparte con `scripts/sepi/requirements-earthkit.txt`. Para reproducir la referencia del bulbo húmedo hay que añadir `earthkit-meteo` (la comparación se hizo con la versión 1.3.0).
 
 Earthkit **no** elimina la autenticación del CDS. La clave la pone el titular en su entorno (`~/.cdsapirc`), nunca en el repositorio ni en prompts.
 
