@@ -11,7 +11,8 @@ ha preparado una sola persona (Claude) y debe revisarlo `testing-evidence-collec
 | [`contratos/`](contratos/) | Forma de las 13 partes JSON (Portinatx 8, Pirineo 5), extraída de la generación publicada |
 | [`MATRIZ.md`](MATRIZ.md) | Funcionalidades × páginas × contratos |
 | [`fixtures/escenarios.json`](fixtures/escenarios.json) | 8 escenarios meteorológicos **sintéticos** para diseñar y probar estados límite |
-| [`BRIEF-NEXUS.md`](BRIEF-NEXUS.md) | Encargo acotado por equipo (A–G del #77) |
+| [`BRIEF-NEXUS.md`](BRIEF-NEXUS.md) | Encargo acotado por equipo (A–G del #77) y agenda del 2-12 |
+| [`../vNext/CONTRATO-ESTADO-VISUAL.md`](../vNext/CONTRATO-ESTADO-VISUAL.md) | Contrato de estado común 2D/3D/animación (requisito de G1) |
 
 ## 1. Cómo se obtuvo
 
