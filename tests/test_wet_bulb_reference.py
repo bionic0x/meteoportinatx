@@ -2,7 +2,7 @@
 
 Los valores se generaron una vez con earthkit.meteo.thermo.wet_bulb_temperature_from_dewpoint
 (Apache-2.0), con la presión estándar de cada cota; earthkit NO es dependencia del CI.
-Ver docs/earthkit.md.
+Ver docs/SEPI-EARTHKIT.md.
 """
 import math
 import sys

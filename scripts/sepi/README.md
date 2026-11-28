@@ -20,6 +20,13 @@ python scripts/sepi/phase03_v2.py             # F03 v2 según el protocolo conge
 
 Dependencias: `numpy`, `pandas`, `scipy`, `xarray` con `netCDF4`.
 
+### Ingesta estacional (opcional, experimental)
+`earthkit_ingest.py` prepara las peticiones de SEAS5 al CDS. Necesita un entorno aparte con [`requirements-earthkit.txt`](requirements-earthkit.txt) (unos 1,2 GB con eccodes) y la clave del CDS del titular en `~/.cdsapirc`, nunca en el repositorio. Por defecto solo muestra las peticiones; descarga únicamente con `--download`. Uso, puertas y licencias en [`docs/SEPI-EARTHKIT.md`](../../docs/SEPI-EARTHKIT.md); validación en [`docs/SEPI-P-PROTOCOLO.md`](../../docs/SEPI-P-PROTOCOLO.md), que todavía es un borrador.
+
+```bash
+python scripts/sepi/earthkit_ingest.py --system 51 --years 1993   # solo muestra las peticiones; sin red
+```
+
 | Script | Salidas en `SEPI_DATA` |
 |---|---|
 | `phase01.py` | `out_catalogo.csv`, `out_correlaciones.csv`, `out_h6.csv`, `out_xema_*.csv`, `out_mf_*.csv`, `out_indices.csv` |
@@ -31,5 +38,6 @@ Dependencias: `numpy`, `pandas`, `scipy`, `xarray` con `netCDF4`.
 | `audit_nivo.py` | `nivose_pyr_or.csv.gz`, `out_nivo_estaciones.csv` |
 | `phase03.py` | `out_f03_metricas.csv`, `out_f03_ranking.csv`, `out_f03_anclas.csv`, `out_f03_resumen.txt` |
 | `phase03_v2.py` | `f03v2/*.csv` (copia en `docs/datos/sepi-f03-v2/`) |
+| `earthkit_ingest.py --download` | `cds/seasonal/<sha256>.grib` y `<sha256>.json` (petición, SHA-256 y hora) |
 
 Bootstrap con semillas fijas: dos ejecuciones sobre los mismos datos dan las mismas cifras. Los datos abiertos pueden revisarse con el tiempo; las cifras de `docs/SEPI.md` corresponden a la descarga del 26-11-2026.

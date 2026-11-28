@@ -35,7 +35,7 @@ Ambos perfiles comparten adquisición modular, diagnósticos, indicadores de cob
 - **Planificador de rutas:** carga un GPX en el navegador y explora condiciones por tramo y hora. El recorrido permanece en el navegador. Sus límites y variables están documentados en [Rutas Pirineo](docs/RUTAS-PIRINEO.md).
 - **Paquetes de zona:** prepara, verifica e instala capturas con datos, diagnósticos, cobertura y hashes; también puedes generar informes HTML sin conexión. [Guía de zonas](docs/ZONAS-MODULARES.md).
 - **Contexto climatológico:** el proyecto incluye conocimiento con procedencia y herramientas experimentales para sidecars, sin confundir contexto con una observación o una alerta. [Catálogo de fuentes](docs/CATALOGO-FUENTES.md).
-- **Investigación SEPI:** línea experimental sobre los inviernos de nieve excepcional en el Pirineo oriental, con datos abiertos y scripts reproducibles. No emite pronósticos ni probabilidades. [Diseño y resultados](docs/SEPI.md).
+- **Investigación SEPI:** línea experimental sobre los inviernos de nieve excepcional en el Pirineo oriental, con datos abiertos y scripts reproducibles. No emite pronósticos ni probabilidades. [Diseño y resultados](docs/SEPI.md); protocolo de la predicción estacional en borrador ([SEPI-P](docs/SEPI-P-PROTOCOLO.md)) con ingesta opcional mediante ECMWF Earthkit ([SEPI-EARTHKIT](docs/SEPI-EARTHKIT.md)), que no es dependencia del motor ni del CI.
 
 En **Atmósfera · Pirineo**, el perfil detallado compara puntos representativos de las vertientes norte y sur: perfiles térmicos, hodógrafa, cizalladura e indicadores por hora. Son campos modelizados; los niveles bajo terreno se excluyen y los campos no disponibles se muestran como `UNKNOWN`. Los índices experimentales no están calibrados en Pirineos.
 
