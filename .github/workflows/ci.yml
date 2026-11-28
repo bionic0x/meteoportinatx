@@ -50,6 +50,8 @@ jobs:
         run: node tests/test_pirineo_atmos.cjs
       - name: Mountain observatory evidence contract (Node)
         run: node tests/test_pirineo_observatory.cjs
+      - name: Terrain explorer pure functions (Node, GEO-06)
+        run: node tests/test_terrain_core.cjs
       - name: Build one portable application
         run: python scripts/build.py
       - name: Confirm that Pages workflow is separately gated

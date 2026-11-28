@@ -1,0 +1,98 @@
+{
+  "generado_utc": "2026-11-28T13:17:06+00:00",
+  "script": "scripts/build_terrain_tiles.py",
+  "fuente": "Copernicus DEM GLO-30 (DSM; incluye dosel y edificios), EGM2008",
+  "licencia": "© DLR e.V. 2010-2014 y © Airbus Defence and Space GmbH 2014-2018, Copernicus (UE/ESA)",
+  "teselas_fuente": [
+    {
+      "archivo": "Copernicus_DSM_COG_10_N41_00_E000_00_DEM.tif",
+      "sha256": "1e73a91e4b39e9bc4e3319dfee5a165a191f0a7752dac4b5fdc66781e20a40f2"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N41_00_E001_00_DEM.tif",
+      "sha256": "da2bb4db5cbe10e0bd60d35fa0ac809cf3de9aa590d2d7897634e7ab343e71f8"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N41_00_E002_00_DEM.tif",
+      "sha256": "1e32cf23530c6d820dc1e0dafbb15bdf7ae7058271f7a39f0fe375842a5609c3"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N41_00_W001_00_DEM.tif",
+      "sha256": "c2aaece6339ae67bbd85129a7df82d186f5b42c744f7bebc3925c2965753c92b"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N42_00_E000_00_DEM.tif",
+      "sha256": "5eaed2f61e759d502b945e1f01a130eb88dd4d047ffa1d44dac6f49c0fc00c8f"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N42_00_E001_00_DEM.tif",
+      "sha256": "dc92fae94fa1e78dedd5da1ec4864763baeeae67d6e11c7d5d3d26d1d2fe2bad"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N42_00_E002_00_DEM.tif",
+      "sha256": "327c8c5fc6c630a89df61b17e84003b5fda1e169aff83824f1eece1509e0524d"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N42_00_W001_00_DEM.tif",
+      "sha256": "8de22cc0acebb4d203bca3cdfe3735a201cae9f95bbc4b264f6da423c7dba130"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N43_00_E000_00_DEM.tif",
+      "sha256": "a1cf59303e1a69be1c701cf34382845b82432c782565a006bd97a45aa665df0c"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N43_00_E001_00_DEM.tif",
+      "sha256": "4d29425ec0632eacf5446044c434e6ef69a1dcc2e13018714d77b1099bd49a03"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N43_00_E002_00_DEM.tif",
+      "sha256": "a8c8d52fb2727dcb100eb2a8d975b617aa83ed5f03bf37e65d43fd411701e0c5"
+    },
+    {
+      "archivo": "Copernicus_DSM_COG_10_N43_00_W001_00_DEM.tif",
+      "sha256": "445fee30e4abea597eb9d3fbdaf6514d8aae1d41a6c075bbc49bfd3ae9fc2247"
+    }
+  ],
+  "dominio_bbox": [
+    0.9,
+    41.95,
+    2.9,
+    43.25
+  ],
+  "zooms_dem": [
+    7,
+    10
+  ],
+  "metros_por_pixel_aprox": 112.5,
+  "zoom_max_pendiente": 10,
+  "teselas_por_zoom": {
+    "7": 4,
+    "8": 9,
+    "9": 16,
+    "10": 42
+  },
+  "bytes": {
+    "dem": 8585895,
+    "slope": 566909,
+    "total": 13248470
+  },
+  "codificacion": "terrarium (v = z + 32768; R*256 + G + B/256 − 32768)",
+  "curvas": {
+    "intervalo_m": 200,
+    "maestras_m": 1000,
+    "malla_m": "~90",
+    "simplificacion_grados": 0.00025,
+    "n": 2567
+  },
+  "bbox_overview": [
+    0.6000000000000001,
+    41.65,
+    3.2,
+    43.55
+  ],
+  "limites": [
+    "GLO-30 es un modelo de superficie",
+    "la exageración vertical es solo visual",
+    "las clases de pendiente no son un boletín de aludes"
+  ]
+}

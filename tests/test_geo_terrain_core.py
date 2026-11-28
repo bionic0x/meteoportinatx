@@ -113,5 +113,14 @@ class SamplingAndStats(unittest.TestCase):
         self.assertEqual(gt.change_stats([None], [1])["n"], 0)
 
 
+class Terrarium(unittest.TestCase):
+    def test_roundtrip_within_1_256_m(self):
+        for z in (-12.5, 0.0, 91.3, 1212.0, 2913.7, 3404.99):
+            self.assertLess(abs(gt.terrarium_decode(*gt.terrarium_encode(z)) - z), 1 / 256 + 1e-9)
+
+    def test_known_value(self):
+        self.assertEqual(gt.terrarium_encode(0.0), (128, 0, 0))
+
+
 if __name__ == "__main__":
     unittest.main()
