@@ -1,7 +1,9 @@
 # SEPI-P: protocolo de predicción y validación estacional (v0.4)
 
-**Estado: BORRADOR, no congelado.**
-- **Congelación:** la hace el titular, con fecha, **antes de ejecutar ningún cálculo de habilidad y antes de consultar las matrices de transición entre periodos** (§9). Desde entonces, todo cambio va al registro de decisiones (§13), con fecha y motivo, y no se presenta como prerregistro.
+**Estado: CANDIDATO A CONGELACIÓN (v0.4-rc), todavía no congelado.**
+- **Contenido:** incorpora las decisiones del titular del 28-11-2026 (§12).
+- **Momento de congelación:** el protocolo queda congelado **cuando el titular lo fusione en `main`**. La referencia es el commit de fusión, sin efecto retroactivo, y su SHA se anota en el registro (§13) en el primer PR posterior.
+- **Qué exige la congelación:** se hace **antes de ejecutar ningún cálculo de habilidad y antes de consultar las matrices de transición entre periodos** (§9). Desde entonces, todo cambio va al registro con fecha y motivo, y no se presenta como prerregistro.
 - **Versiones:**
   - v0.3, 28-11-2026: PR #72, solo con SEAS5.
   - v0.4: añade los periodos bimestrales, los objetivos medidos dentro de cada periodo, los modelos de referencia sin CDS y la separación entre modelos retrospectivos y operacionales.
@@ -81,9 +83,25 @@ Se cumple ΔSWE = G_SWE − L_SWE.
 - **G y L no son nevada ni fusión.** Son aproximaciones derivadas del balance diario del manto. En un mismo día, la nevada y la fusión se compensan: G infravalora la nevada y L infravalora la fusión.
 - **La nieve nueva real y la lluvia sobre nieve** necesitan el forzamiento de SAFRAN o ERA5, que no está en los CSV de S2M. Siguen en UNKNOWN hasta que haya datos.
 
-**Fecha de formación del manto:** primer día, contando desde el 1 de noviembre, a partir del cual HS ≥ 30 cm se mantiene durante 7 días seguidos. Si no ocurre en P1 se codifica como «> 31 dic», censurado, no como cero.
+**Fecha de formación del manto (criterio SEPI).** No es la formación física del manto permanente.
+- **Definición:** primer día de la primera secuencia de 7 días consecutivos con HS ≥ 30 cm.
+- **Dentro de P1:** los 7 días tienen que estar completamente observados y caer dentro de P1.
+- **Datos ausentes:** un día sin dato interrumpe la secuencia.
+- **Si no se alcanza:** el valor queda **censurado a 31 de diciembre** («> 31 dic»), no como cero.
+- **Sensibilidad posterior:** los umbrales de 20 y 40 cm, sin modificar la definición primaria.
+
+**Cobertura exigida por variable.** Una serie incompleta no equivale a ausencia de nieve; si no cumple, la variable queda en UNKNOWN para ese invierno.
+
+| Variable | Requisito |
+|---|---|
+| ΔSWE | SWE disponible en los dos extremos: el día anterior al periodo y el último día |
+| G_SWE, L_SWE, G_HS | Secuencia diaria completa, del día anterior al último |
+| Días ≥ 30 y ≥ 100 cm | Cobertura ≥ 90 % de los días del periodo, informando los ausentes |
+| Formación del manto | Secuencia de 7 días verificable (ver arriba) |
 
 **Regla de degeneración:** una variable cuyo P90 en el entrenamiento sea 0 en un estrato se excluye de ese estrato en ese pliegue, y se informa.
+
+**Coherencia física:** toda distribución predictiva de ΔSWE se restringe a SWE₀ + ΔSWE ≥ 0. Los miembros por debajo se truncan en −SWE₀, y se registra la proporción de predicciones truncadas por modelo, periodo y dominio.
 
 ## 4. Inicializaciones
 
@@ -116,7 +134,17 @@ Se cumple ΔSWE = G_SWE − L_SWE.
 **Los modelos R y O se separan obligatoriamente.**
 - **R** mide la predictibilidad potencial.
 - **O** mide la que se puede aprovechar al emitir.
-- Si no existe una fuente histórica archivada con la disponibilidad real en cada fecha, **los modelos O quedan en UNKNOWN**. Candidatos, sin verificar: nivosas de Météo-France, XEMA y ERA5-Land con su retraso de publicación. Que S2M tenga una versión abierta en tiempo real es UNKNOWN.
+- Si no existe una fuente histórica archivada con la disponibilidad real en cada fecha, **los modelos O quedan en UNKNOWN**. Por decisión del titular, **M0c-O y M0d-O están en UNKNOWN**, lo que no impide desarrollar sus equivalentes R.
+- **Auditoría comparativa de fuentes operacionales, pendiente.** De cada fuente se registran la fecha de medición, la de publicación, la de adquisición y las revisiones posteriores.
+
+| Fuente candidata | Variable | Uso |
+|---|---|---|
+| S2M en tiempo real | HS / SWE | Preferente si hay acceso verificable (UNKNOWN) |
+| NIVOSE | HS | Anclas francesas |
+| XEMA | HS | Contraste de la vertiente catalana |
+| ERA5-Land / ERA5T | SWE y variables auxiliares | Cobertura regional, publicación diferida |
+| SMN Andorra | HS / SWE, según estación | Validación territorial |
+| CERRA-Land | Variables nivológicas | Contraste retrospectivo, no operacional inmediato |
 
 **SEAS5 no es predictor por defecto.** Entra solo si demuestra valor añadido frente al mejor de los modelos M0.
 
@@ -130,15 +158,30 @@ Se cumple ΔSWE = G_SWE − L_SWE.
 | Temperatura y precipitación antecedentes | Futura (requieren otra fuente) |
 | NAO / WeMO antecedentes | Exploratoria |
 
-- **Dentro de cada pliegue de entrenamiento:** el número de vecinos (k ∈ {3, 5, 7}), la normalización (z con la media y la desviación del entrenamiento) y la ponderación (uniforme o por inverso de la distancia) se eligen ahí y nada más que ahí.
-- **Predicción:** la distribución empírica de los objetivos de los k vecinos.
-- **Exclusión:** se excluye el invierno inmediatamente anterior al evaluado. El posterior ya queda fuera por el diseño de origen móvil.
+- **Normalización:** z-score de cada predictor p con la media y la desviación **solo del conjunto de entrenamiento**.
+- **Distancia:** d_ij = √( Σ_p (z_ip − z_jp)² ).
+- **Hiperparámetros:** k ∈ {3, 5, 7}, con dos ponderaciones candidatas:
+  - uniforme, w_i = 1/k;
+  - inversa de la distancia, w_i = (1/d_i) / Σ_j (1/d_j).
+  
+  Si hay distancias exactamente iguales a 0, el peso se reparte uniformemente entre esos análogos exactos y los demás reciben peso 0.
+- **Predicción:** distribución empírica ponderada de los objetivos de los k vecinos.
+- **Reglas:**
+
+| Situación | Tratamiento |
+|---|---|
+| Predictor sin varianza en el entrenamiento | Se excluye dentro del pliegue |
+| Todos los predictores sin varianza | Se vuelve a M0 |
+| Menos de k vecinos elegibles | Configuración no válida para ese pliegue |
+| Selección de hiperparámetros | Por CRPS en un origen móvil **interno** al entrenamiento (entrenamiento inicial interno: los 15 primeros inviernos del pliegue) |
+| Empate en la selección | Se prefiere el k mayor y la ponderación uniforme |
+| Invierno inmediatamente anterior al evaluado | Excluido del conjunto de análogos, **también en los pliegues internos**. El posterior ya queda fuera por el diseño de origen móvil |
 
 ## 6. Validación
 - **Origen móvil (principal):** entrenamiento inicial de 1968–69 a 1990–91 (23 inviernos). Se prueba un invierno cada vez, de 1991–92 a 2025–26 (35 inviernos potenciales), y se reentrena incluyendo los anteriores. El tamaño efectivo depende de la cobertura (§2 de `SEPI-PROTOCOLO.md`) y de las exclusiones, y se informa.
 - **Control de 2002:** la habilidad debe tener el mismo signo en 1991–2001 y en 2002–2025. La ruptura del forzamiento de SAFRAN afecta también a la persistencia.
-- **Intervalos de confianza:** bootstrap circular por bloques sobre los inviernos de prueba (bloque de 5, B = 2.000, semilla fijada al congelar).
-- **SEAS5** (Parte B, §11): validación cruzada dejando un año fuera de 1981–2016, con exclusión de ±1 año, y prueba final 2017–2025 que se abre una sola vez (v0.3).
+- **Intervalos de confianza:** bootstrap circular por bloques sobre los inviernos de prueba (bloque de 5, B = 2.000, **semilla 20261128**). Se remuestrean **los mismos inviernos para todos los dominios**, para conservar la dependencia espacial.
+- **SEAS5** (Parte B, §11): **origen móvil como validación principal** sobre 1981–2016. Como sensibilidad, validación cruzada dejando un año fuera con exclusión de ±1 año. Prueba final 2017–2025, que se abre una sola vez. Se declara la pérdida de potencia por el menor tamaño muestral.
 
 ## 7. Métricas y criterio de aceptación
 **Métrica primaria:** CRPSS de ΔSWE frente a M0. Es la mejora del CRPS sobre la climatología; el CRPS mide el error de toda la distribución prevista, no solo de un valor.
@@ -153,10 +196,28 @@ Se cumple ΔSWE = G_SWE − L_SWE.
 
 **Hipótesis primarias:** H-P1, H-P2 y H-P3. En cada una, M0c-R supera a M0 en ΔSWE a 2.100 m en llano. Hay 6 dominios por familia.
 
+**Contraste estadístico:**
+1. **Diferencias pareadas,** por invierno de prueba: D_t = CRPS(M0)_t − CRPS(modelo)_t.
+2. **Distribución nula** de la media de D: bootstrap circular por bloques de las D **centradas**, es decir, D_t − D̄.
+3. **p-valor unilateral:** p = (1 + #{D̄* ≥ D̄}) / (B + 1).
+4. **Holm** sobre los 6 p-valores de cada familia (un periodo), con α = 0,05.
+5. **Intervalos de confianza** del CRPSS: bootstrap percentil no centrado, que se informa por separado y no decide.
+
 **Criterio, para cada dominio y periodo; deben cumplirse las tres condiciones:**
-1. CRPSS > 0, con la cota inferior unilateral del bootstrap al 95 % por encima de 0, tras corregir por Holm dentro de cada familia de 6 dominios.
-2. Mismo signo en 1991–2001 y en 2002–2025.
-3. Habilidad positiva también en los G_SWE o L_SWE del mismo periodo. Si solo hay habilidad en ΔSWE y no en G ni en L, se informa como «habilidad por el estado inicial (capacidad c)», no como habilidad para anticipar acumulación o pérdidas.
+1. Hipótesis nula rechazada por Holm (p ajustado < 0,05) y CRPSS > 0.
+2. Mismo signo de D̄ en 1991–2001 y en 2002–2025.
+3. Habilidad positiva también en G_SWE o en L_SWE del mismo periodo, con el mismo contraste, como secundario. Si no se cumple, el resultado se etiqueta **«habilidad del balance neto sin habilidad demostrada en sus componentes»**. Que G y L no mejoren no prueba que la habilidad venga del estado inicial. Y una mejora en L tampoco implica anticipar la meteorología: puede reflejar solo que había más nieve que perder.
+
+**Estados de aceptación, por dominio y periodo:**
+
+| Estado | Significado |
+|---|---|
+| PASS-R | Habilidad demostrada con el estado inicial retrospectivo (criterios 1–3) |
+| PASS-O | Habilidad demostrada con datos disponibles en la fecha de emisión (modelos O). Hoy no se puede alcanzar |
+| REJECT | Evidencia suficiente de que no hay mejora o de que hay deterioro: el IC al 90 % de D̄ queda entero por debajo de 0, o su cota superior está por debajo de una mejora de CRPSS de 0,05 |
+| UNKNOWN | Evidencia insuficiente, datos ausentes o validación incompleta |
+
+No superar el umbral de significación **no equivale a REJECT**: puede significar que faltan datos para demostrar la habilidad.
 
 **Afirmaciones sobre la temporada completa:** controlan además la multiplicidad entre los 3 periodos, con Holm sobre las 18 pruebas.
 
@@ -201,18 +262,44 @@ Salidas: `SEPI_DATA/f04/`, con copia de las tablas en `docs/datos/sepi-f04/`.
 - **Caja regional propuesta:** 42–43° N y 0,5–3° E. **Unidades:** `snow_depth` en m de equivalente en agua.
 - **Predictores:** tope de 3 por modelo. Candidatos: anomalías de T2m, de precipitación o nevada, de `snow_depth`, y un índice de régimen basado en la presión a nivel del mar.
 - **Corrección del sesgo:** solo dentro de cada pliegue; es una hipótesis, no una mejora presupuesta.
-- **Criterio:** SEAS5 tiene que añadir habilidad frente al mejor M0 (CRPSS de M5 frente a M0c > 0) con el mismo criterio de §7. Hindcast y previsión real tienen distinto número de miembros, así que se usan puntuaciones «fair».
+- **Índices de circulación** a partir de anomalías de presión a nivel del mar, ponderadas por cos(latitud). Anomalías y estandarización se calculan **solo con el entrenamiento**.
+
+  | Caja | Latitud | Longitud |
+  |---|---|---|
+  | A, Atlántico | 40–50° N | 20–10° O |
+  | M, Mediterráneo occidental | 38–44° N | 3–10° E |
+  | N, Norte | 48–55° N | 0–10° E |
+  | S, Sur | 30–37° N | 0–10° E |
+
+  - **I_AM = P′_M − P′_A:** candidato principal.
+  - **I_NS = P′_S − P′_N:** secundario, dentro del tope de 3 predictores.
+  - **Límite de interpretación:** son contrastes regionales de presión, no dirección del viento ni frecuencia de entradas atlánticas o mediterráneas. Su interpretación física se contrasta después con el viento a 700 y 850 hPa.
+- **Sistema:** System 51 preferente, sujeto a que esté disponible y sea equivalente en el periodo histórico.
+- **M6 (multimodelo):** diferido a una segunda iteración.
+- **Criterio incremental:** M5 se compara con **un modelo de referencia elegido solo por validación interna** entre M0, M0b, M0c y M0d, con los mismos años y las mismas condiciones de disponibilidad inicial. Se aplica el mismo contraste y los mismos estados de §7. Hindcast y previsión real tienen distinto número de miembros, así que se usan puntuaciones «fair».
+- **Desacoplamiento:** la Parte B no condiciona la congelación ni la ejecución de la Parte A.
 - **Herramientas por auditar** (licencia UNKNOWN): xskillscore e ibicus.
 
-## 12. Decisiones pendientes del titular (antes de congelar)
-1. Confirmar el umbral y la persistencia de la fecha de formación del manto (propuesta: HS ≥ 30 cm durante 7 días).
-2. Confirmar el conjunto de k y de ponderaciones de los análogos (§5).
-3. Fuente candidata para los modelos O, o aceptar que queden en UNKNOWN.
-4. Parte B: caja, índice de régimen y System 51 o 5.
-5. Fecha de congelación y semilla del bootstrap.
+## 12. Decisiones del titular (28-11-2026)
+| Parámetro | Decisión |
+|---|---|
+| Formación del manto | HS ≥ 30 cm durante 7 días consecutivos (§3) |
+| Vecinos de los análogos | k ∈ {3, 5, 7}* |
+| Ponderaciones | Uniforme e inversa de la distancia |
+| Normalización | z-score, solo con el entrenamiento |
+| Modelos operacionales O | UNKNOWN hasta validar la fuente |
+| Estrato primario | 2.100 m en llano |
+| Caja regional (Parte B) | 42–43° N, 0,5–3° E |
+| Sistema de ECMWF | 51 preferente, sujeto a disponibilidad y equivalencia histórica |
+| Multimodelo M6 | Diferido |
+| Bootstrap | 2.000 réplicas, bloques de 5 inviernos, semilla 20261128 |
+| Congelación | Al fusionar en `main` el commit que incorpora estas decisiones, sin retroactividad |
+
+\* El texto de la decisión decía «k ∈ 7». Como el titular aprobó «los valores de k» propuestos y la regla de desempate «preferir el k mayor» implica varios candidatos, se interpreta como {3, 5, 7}. **Debe confirmarse antes de fusionar.**
 
 ## 13. Registro de decisiones
 | Fecha | Decisión | Tipo |
 |---|---|---|
 | 28-11-2026 | v0.3: borrador solo con SEAS5 (PR #72) | Borrador |
+| 28-11-2026 | v0.4-rc: decisiones del §12; reglas de formación del manto y de cobertura; coherencia física SWE ≥ 0; definición matemática de los análogos y sus reglas; contraste pareado con bootstrap centrado y Holm; nueva etiqueta del criterio 3; estados PASS-R, PASS-O, REJECT y UNKNOWN; índices I_AM e I_NS; referencia incremental elegida por validación interna; origen móvil como validación principal de SEAS5. Concreciones de redacción: entrenamiento interno inicial de 15 inviernos y umbral de REJECT por CRPSS 0,05 | Candidato a congelación |
 | 28-11-2026 | v0.4: tres periodos; ΔSWE como objetivo primario y G/L como secundarios; d100 excluido en P1 y limitado a 2.100 m en P2 y P3; nieve nueva y lluvia sobre nieve en UNKNOWN; separación de modelos R y O; hipótesis H-P1 a H-P3 con Holm; origen móvil 1968–1990 / 1991–2025; matrices de transición bloqueadas hasta la congelación. Aprobado metodológicamente por el titular; pendiente de congelación | Borrador |
