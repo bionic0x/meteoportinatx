@@ -1,0 +1,35 @@
+{
+ "bbox": {
+  "lat_s": "float: 37.665299999999995",
+  "lat_n": "float: 40.5653",
+  "lon_w": "float: -0.42859999999999987",
+  "lon_e": "float: 3.4714"
+ },
+ "layers": {
+  "ir": {
+   "title": "str: 'IR 10,5 µm (MTG-FCI)'",
+   "layer": "str: 'mtg_fd:ir105_hrfi'",
+   "time": "str: '2026-11-28T12:40:00Z'",
+   "data": "str: 'data:image/jpeg;base64,/9j/4AAQSkZJRgAB"
+  },
+  "wv": {
+   "title": "str: 'Vapor de agua 6,2 µm (MSG)'",
+   "layer": "str: 'msg_fes:wv062'",
+   "time": "str: '2026-11-28T12:45:00Z'",
+   "data": "str: 'data:image/jpeg;base64,/9j/4AAQSkZJRgAB"
+  },
+  "airmass": {
+   "title": "str: 'RGB Airmass (MSG)'",
+   "layer": "str: 'msg_fes:rgb_airmass'",
+   "time": "str: '2026-11-28T12:45:00Z'",
+   "data": "str: 'data:image/jpeg;base64,/9j/4AAQSkZJRgAB"
+  },
+  "conv": {
+   "title": "str: 'RGB Convección (MSG, solo de día)'",
+   "layer": "str: 'msg_fes:rgb_convection'",
+   "time": "str: '2026-11-28T12:45:00Z'",
+   "data": "str: 'data:image/jpeg;base64,/9j/4AAQSkZJRgAB"
+  }
+ },
+ "status": "str: 'ok'"
+}

@@ -1,0 +1,192 @@
+{
+ "cycle_id": "str: 'NWC-20261128T130833Z'",
+ "issued": "str: '2026-11-28T13:08:33+00:00'",
+ "engine": "str: '0.6.1'",
+ "site": {
+  "name": "str: 'Portinatx'",
+  "lat": "float: 39.1153",
+  "lon": "float: 1.5214"
+ },
+ "official": {
+  "level_now": "str: 'quiet'",
+  "level_36h": "str: 'quiet'",
+  "vigentes": "lista vacía",
+  "posibles": "lista vacía",
+  "verificado": "bool: True",
+  "fuente_oficial": "str: 'AEMET_CAP+METEOALARM'",
+  "fuente_oficial_nota": "str: 'AEMET CAP y MeteoAlarm disponibles'",
+  "all": [
+   "lista[8]",
+   {
+    "nivel": "str: 'verde'",
+    "rank": "int: 0",
+    "tipo": "str: 'terrestre'",
+    "evento": "str: 'Aviso de temperaturas máximas de nivel ",
+    "desde": "str: '2026-11-30T00:00:00+01:00'",
+    "hasta": "str: '2026-11-30T23:59:59+01:00'",
+    "activo": "bool: False",
+    "posible": "bool: False",
+    "vigencia": "str: 'DECLARADA'",
+    "caduca_prudente": "str: ''",
+    "emitido": "str: '2026-11-27T22:50:01-00:00'",
+    "area": "str: 'Ibiza y Formentera'",
+    "umbral": "str: ''"
+   }
+  ]
+ },
+ "warning_changes": [
+  "lista[2]",
+  {
+   "kind": "str: 'INICIAL'",
+   "de": "str: '—'",
+   "a": "str: 'quiet'"
+  }
+ ],
+ "hazard": {
+  "lluvia_pluviometros": {
+   "estado": "str: 'OBSERVED'",
+   "nivel": "str: 'quiet'",
+   "local": "bool: True"
+  },
+  "lluvia_metar_aemet": {
+   "estado": "str: 'OBSERVED'",
+   "nivel": "str: 'quiet'",
+   "local": "bool: False"
+  },
+  "radar": {
+   "estado": "str: 'OBSERVED'",
+   "nivel": "str: 'quiet'",
+   "local": "bool: False"
+  },
+  "rayos": {
+   "estado": "str: 'UNKNOWN'",
+   "nivel": "str: '—'"
+  },
+  "viento": {
+   "estado": "str: 'OBSERVED'",
+   "nivel": "str: 'quiet'",
+   "local": "bool: False"
+  },
+  "mar": {
+   "estado": "str: 'OBSERVED'",
+   "nivel": "str: 'quiet'",
+   "local": "bool: False"
+  },
+  "runoff": {
+   "estado": "str: 'UNKNOWN'",
+   "nivel": "str: '—'"
+  },
+  "flooding": {
+   "estado": "str: 'UNKNOWN'",
+   "nivel": "str: '—'"
+  }
+ },
+ "precaution": {
+  "level": "str: 'quiet'",
+  "transition": "str: 'estable'",
+  "hold": "null",
+  "insufficient": "bool: False",
+  "rain_coverage": "str: '3/3'",
+  "decision": {
+   "from": "str: 'quiet'",
+   "to": "str: 'quiet'",
+   "decision": "str: 'PROCEED'",
+   "open_conditions": "lista vacía",
+   "challenger": "null",
+   "overridden": "lista vacía"
+  },
+  "exit_conditions": [
+   "lista[6]",
+   "str: 'aviso oficial vigente ≤ quiet'"
+  ],
+  "note": "str: 'precaución propia; NO prolonga la vigen"
+ },
+ "nowcast": {
+  "level": "str: 'quiet'",
+  "proposed": "str: 'quiet'",
+  "transition": "str: 'estable'",
+  "insufficient": "bool: False",
+  "rain_coverage": "str: '3/3'",
+  "reasons": "lista vacía"
+ },
+ "outlook": {
+  "level": "str: 'quiet'",
+  "proposed": "str: 'quiet'",
+  "transition": "str: 'estable'",
+  "reasons": "lista vacía"
+ },
+ "coverage": "str: '6/8 canales observados activos'",
+ "governance": {
+  "claims": [
+   "lista[16]",
+   {
+    "id": "str: 'C-lluvia_observada'",
+    "text": "str: 'lluvia_observada observa quiet: B908X S",
+    "epistemic": "str: 'EVIDENCE'",
+    "source_root": "str: 'aemet'",
+    "scope": "str: 'donde está el sensor (ver evidencia)'",
+    "expires": "str: '2026-11-28T13:28:33+00:00'",
+    "label": "str: ''"
+   }
+  ],
+  "claims_count": {
+   "EVIDENCE": "int: 6",
+   "HYPOTHESIS": "int: 7",
+   "ASSUMPTION": "int: 1",
+   "UNKNOWN": "int: 2"
+  },
+  "dissent": "lista vacía",
+  "anomalies": "lista vacía",
+  "overrides": {},
+  "predictions": "lista vacía",
+  "predictions_summary": {
+   "PENDING": "int: 0",
+   "HIT": "int: 0",
+   "MISS": "int: 0",
+   "UNVERIFIABLE": "int: 0",
+   "WITHDRAWN": "int: 0"
+  },
+  "bias": {
+   "n": "int: 0",
+   "note": "str: 'radar muestreado en cada pluviómetro ve",
+   "n_detect_mismatch": "int: 0"
+  },
+  "episode": {}
+ },
+ "channels": [
+  "lista[16]",
+  {
+   "name": "str: 'aviso_aemet'",
+   "level": "int: 0",
+   "kind": "str: 'institutional'",
+   "confidence": "str: 'alta'",
+   "evidence": [
+    "lista[9]",
+    "str: 'fuentes de aviso: aemet_cap, meteoalarm"
+   ],
+   "available": "bool: True",
+   "local": "bool: False",
+   "data_time": "null",
+   "age_min": "null"
+  }
+ ],
+ "sources": [
+  "lista[27]",
+  {
+   "name": "str: 'metar'",
+   "status": "str: 'ok'",
+   "kind": "str: 'obs'",
+   "fetched_at": "str: '2026-11-28T13:08:33+00:00'",
+   "data_time": "str: '2026-11-28T13:00:00+00:00'",
+   "detail": "str: '288 partes'"
+  }
+ ],
+ "history": [
+  "lista[1]",
+  {
+   "id": "str: 'NWC-20261128T130833Z'",
+   "level": "str: 'quiet'",
+   "nowcast": "str: 'quiet'"
+  }
+ ]
+}

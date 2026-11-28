@@ -1,0 +1,63 @@
+{
+ "_aviso": "DATOS SINTÉTICOS para diseño y pruebas de la interfaz (UI-00, issue #77). No son observaciones ni predicciones. Toda pantalla que los use debe mostrar la etiqueta «Datos de ejemplo». Los nombres de campo siguen los contratos publicados (contratos/*.schema.json, generación del 28-11-2026); cada escenario solo fija los campos que lo definen y el resto se hereda de una generación real o de la forma del esquema.",
+ "version": "0.1",
+ "escenarios": [
+  {
+   "id": "F1-calma-completa",
+   "proposito": "Línea base: todo observado, sin avisos. Comprueba que «sin aviso» no se confunde con «sin datos».",
+   "portinatx.core": {"issued": "2026-11-28T13:08:33+00:00", "official": {"level_now": "quiet", "level_36h": "quiet", "vigentes": [], "verificado": true},
+     "hazard": {"lluvia_pluviometros": {"estado": "OBSERVED", "nivel": "quiet"}, "radar": {"estado": "OBSERVED", "nivel": "quiet"}, "rayos": {"estado": "OBSERVED", "nivel": "quiet"}},
+     "precaution": {"level": "quiet", "insufficient": false}, "nowcast": {"level": "quiet", "insufficient": false}, "coverage": "8/8 canales observados activos"},
+   "esperado_ui": "Nivel en calma con fuentes visibles; ningún estado en inglés."
+  },
+  {
+   "id": "F2-todo-unknown",
+   "proposito": "Fallo de fuentes: UNKNOWN no es cero. La interfaz nunca debe pintar cielo despejado ni nivel verde.",
+   "portinatx.core": {"official": {"level_now": "unknown", "vigentes": [], "verificado": false},
+     "hazard": {"lluvia_pluviometros": {"estado": "UNKNOWN", "nivel": "—"}, "radar": {"estado": "UNKNOWN", "nivel": "—"}, "rayos": {"estado": "UNKNOWN", "nivel": "—"}},
+     "precaution": {"level": "unknown", "insufficient": true}, "nowcast": {"level": "unknown", "insufficient": true}, "coverage": "0/8 canales observados activos"},
+   "pirineo.core": {"avisos": [], "avisos_cobertura": [{"pais": "spain", "estado": "UNKNOWN"}, {"pais": "france", "estado": "UNKNOWN"}, {"pais": "andorra", "estado": "UNKNOWN"}]},
+   "esperado_ui": "«Desconocido (UNKNOWN)» explícito y la frase «la ausencia de mensajes no significa calma»."
+  },
+  {
+   "id": "F3-ciclo-caducado",
+   "proposito": "Dato viejo visible como incertidumbre (caso real del 28-11-2026: ciclo de ~320 min en Pages).",
+   "portinatx.core": {"issued": "2026-11-28T13:08:33+00:00"},
+   "pirineo.core": {"issued": "2026-11-28T13:10:43+00:00"},
+   "reloj_simulado_utc": "2026-11-28T18:30:00Z",
+   "esperado_ui": "Antigüedad destacada en todas las vistas, no solo en la cabecera; los valores se muestran atenuados con hora de emisión."
+  },
+  {
+   "id": "F4-aviso-naranja-convectivo-portinatx",
+   "proposito": "Aviso oficial frente a diagnóstico propio: distinguibles a simple vista; el diagnóstico no prolonga ni sustituye el aviso.",
+   "portinatx.core": {"official": {"level_now": "alert", "verificado": true, "vigentes": [{"nivel": "naranja", "tipo": "terrestre", "evento": "Aviso de tormentas de nivel naranja", "desde": "2026-11-28T15:00:00+01:00", "hasta": "2026-11-28T23:59:59+01:00"}]},
+     "hazard": {"radar": {"estado": "OBSERVED", "nivel": "alert"}, "rayos": {"estado": "OBSERVED", "nivel": "alarm"}}, "nowcast": {"level": "alarm", "insufficient": false}},
+   "esperado_ui": "Bloque «Aviso oficial · AEMET» separado y por encima del nivel propio; el nivel propio lleva «diagnóstico experimental»."
+  },
+  {
+   "id": "F5-discrepancia-nivel-texto",
+   "proposito": "El texto del aviso dice un nivel y el campo `nivel` otro (caso cubierto por test_a11y_mobile_browser).",
+   "portinatx.core": {"official": {"vigentes": [{"nivel": "naranja", "evento": "Aviso de lluvias de nivel amarillo"}]}},
+   "esperado_ui": "Color por `nivel` y nota «el texto del aviso dice amarillo»."
+  },
+  {
+   "id": "F6-foehn-norte-nieve-pirineo",
+   "proposito": "Contraste entre vertientes: nieve en la francesa y föhn seco en la Cerdanya.",
+   "pirineo.core": {"foehn": [{"par": "Puymorens → Cerdanya", "barlovento": "porte", "sotavento": "puigcerda", "estado": "OK", "horas": 9}, {"par": "Envalira → valle de Andorra", "estado": "UNKNOWN", "horas": 0}],
+     "avisos": [{"pais": "france", "nivel": "amarillo", "evento": "Vigilance jaune neige-verglas", "zona": "Ariège"}]},
+   "esperado_ui": "Mapa y corte que muestren las dos vertientes; el par sin estación de Andorra aparece como desconocido, no como «sin föhn»."
+  },
+  {
+   "id": "F7-generaciones-mezcladas",
+   "proposito": "public_fetch.js rechaza partes de generaciones distintas del backend y cae entera a la instantánea.",
+   "cabeceras": {"core": {"X-Meteo-Snapshot": "20261128T130833Z-aaaaaaaaaaaa", "X-Meteo-Freshness": "fresh"}, "radar": {"X-Meteo-Snapshot": "20261128T124500Z-bbbbbbbbbbbb", "X-Meteo-Freshness": "fresh"}},
+   "esperado_ui": "Fuente «instantánea» indicada; nunca una vista con partes mezcladas."
+  },
+  {
+   "id": "F8-fallo-de-carga",
+   "proposito": "HTTP 404/500 en una parte (UI-03 del plan consolidado: «esperando datos…» eterno).",
+   "http": {"pirineo/api/grid.json": 500},
+   "esperado_ui": "Error visible con hora y reintento; las demás vistas indican qué falta."
+  }
+ ]
+}

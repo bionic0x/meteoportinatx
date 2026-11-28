@@ -1,0 +1,443 @@
+{
+ "portus": {
+  "Boya Tarragona": {
+   "coords": [
+    "lista[2]",
+    "float: 40.69"
+   ],
+   "kind": "str: 'boya'",
+   "rows": [
+    "lista[36]",
+    "objeto(6 claves)"
+   ]
+  },
+  "Boya Valencia": {
+   "coords": [
+    "lista[2]",
+    "float: 39.51"
+   ],
+   "kind": "str: 'boya'",
+   "rows": [
+    "lista[36]",
+    "objeto(7 claves)"
+   ]
+  },
+  "Boya Dragonera": {
+   "coords": [
+    "lista[2]",
+    "float: 39.563"
+   ],
+   "kind": "str: 'boya'",
+   "rows": [
+    "lista[36]",
+    "objeto(7 claves)"
+   ]
+  },
+  "Puerto de Ibiza": {
+   "coords": [
+    "lista[2]",
+    "float: 38.904"
+   ],
+   "kind": "str: 'viento'",
+   "rows": [
+    "lista[60]",
+    "objeto(4 claves)"
+   ]
+  },
+  "Puerto de Formentera": {
+   "coords": [
+    "lista[2]",
+    "float: 38.735"
+   ],
+   "kind": "str: 'viento'",
+   "rows": [
+    "lista[60]",
+    "objeto(4 claves)"
+   ]
+  },
+  "Mareógrafo Ibiza 2": {
+   "coords": [
+    "lista[2]",
+    "float: 38.911"
+   ],
+   "kind": "str: 'viento'",
+   "rows": [
+    "lista[60]",
+    "objeto(4 claves)"
+   ]
+  },
+  "Boya canal de Ibiza (meteo)": {
+   "coords": [
+    "lista[2]",
+    "float: 38.824"
+   ],
+   "kind": "str: 'viento'",
+   "rows": [
+    "lista[60]",
+    "objeto(4 claves)"
+   ]
+  }
+ },
+ "gauges": [
+  "lista[10]",
+  {
+   "id": "str: 'ESIBA0700000207829A'",
+   "nombre": "str: 'Cala de Bou'",
+   "lat": "float: 38.96",
+   "lon": "float: 1.27",
+   "dist_km": "float: 27.7",
+   "t": "str: '2026-11-28T12:49:33+00:00'",
+   "edad_min": "float: 19.0",
+   "total": "float: 0.0",
+   "T": "float: 18.7",
+   "viento": "float: 6.0",
+   "near": "bool: False",
+   "hist": [
+    "lista[1]",
+    "objeto(2 claves)"
+   ]
+  }
+ ],
+ "models": {
+  "meteofrance_arome_france_hd": {
+   "time": [
+    "lista[48]",
+    "str: '2026-11-28T13:00'"
+   ],
+   "pr": [
+    "lista[48]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[48]",
+    "float: 14.4"
+   ],
+   "cape": [
+    "lista[48]",
+    "float: 30.0"
+   ],
+   "pr_neigh_max": [
+    "lista[48]",
+    "float: 0.0"
+   ]
+  },
+  "ecmwf_ifs025": {
+   "time": [
+    "lista[48]",
+    "str: '2026-11-28T13:00'"
+   ],
+   "pr": [
+    "lista[48]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[48]",
+    "float: 18.4"
+   ],
+   "cape": [
+    "lista[48]",
+    "float: 0.0"
+   ],
+   "pr_neigh_max": [
+    "lista[48]",
+    "float: 0.0"
+   ]
+  },
+  "icon_eu": {
+   "time": [
+    "lista[48]",
+    "str: '2026-11-28T13:00'"
+   ],
+   "pr": [
+    "lista[48]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[48]",
+    "float: 18.0"
+   ],
+   "cape": [
+    "lista[48]",
+    "float: 10.0"
+   ],
+   "pr_neigh_max": [
+    "lista[48]",
+    "float: 0.0"
+   ]
+  }
+ },
+ "ensemble": {
+  "n": "int: 51",
+  "start": "str: '2026-11-28T13:00'",
+  "p10": [
+   "lista[72]",
+   "float: 0.0"
+  ],
+  "p50": [
+   "lista[72]",
+   "float: 0.0"
+  ],
+  "p90": [
+   "lista[72]",
+   "float: 0.0"
+  ],
+  "max": [
+   "lista[72]",
+   "int: 0"
+  ],
+  "total72": {
+   "p10": "float: 0.4",
+   "p50": "float: 1.2",
+   "p90": "float: 2.3",
+   "max": "float: 2.5"
+  },
+  "exceed": {
+   "1": [
+    "lista[72]",
+    "float: 0.0"
+   ],
+   "5": [
+    "lista[72]",
+    "float: 0.0"
+   ],
+   "10": [
+    "lista[72]",
+    "float: 0.0"
+   ],
+   "20": [
+    "lista[72]",
+    "float: 0.0"
+   ]
+  },
+  "cum": [
+   "lista[51]",
+   [
+    "lista[24]",
+    "float: 0.0"
+   ]
+  ],
+  "p24_point": {
+   "10": "float: 0.0",
+   "30": "float: 0.0",
+   "50": "float: 0.0",
+   "100": "float: 0.0"
+  },
+  "p24_neigh": {
+   "10": "float: 0.0",
+   "30": "float: 0.0",
+   "50": "float: 0.0",
+   "100": "float: 0.0"
+  },
+  "hist24": [
+   "lista[51]",
+   "int: 0"
+  ]
+ },
+ "marine": {
+  "time": [
+   "lista[78]",
+   "str: '2026-11-28T07:00'"
+  ],
+  "hs": [
+   "lista[78]",
+   "float: 0.32"
+  ],
+  "dir": [
+   "lista[78]",
+   "int: 16"
+  ],
+  "tp": [
+   "lista[78]",
+   "float: 4.8"
+  ]
+ },
+ "tracks": {
+  "meteofrance_arome_france_hd": [
+   "lista[1]",
+   {
+    "init": "str: '2026-11-28T06:00:00+00:00'",
+    "max12": "float: 11.100000000000001",
+    "max_lat": "float: 38.85",
+    "max_lon": "float: 0.15",
+    "max_dist_km": "float: 122.15238771843046",
+    "local12": "float: 1.6",
+    "local6": "float: 1.6",
+    "local1": "float: 1.2",
+    "centered": "bool: False"
+   }
+  ],
+  "icon_eu": [
+   "lista[1]",
+   {
+    "init": "str: '2026-11-28T09:00:00+00:00'",
+    "max12": "float: 7.4",
+    "max_lat": "float: 39.15",
+    "max_lon": "float: 0.15",
+    "max_dist_km": "float: 118.34839022730611",
+    "local12": "float: 0.30000000000000004",
+    "local6": "float: 0.30000000000000004",
+    "local1": "float: 0.2",
+    "centered": "bool: False"
+   }
+  ]
+ },
+ "surface": {
+  "LEIB": [
+   "lista[48]",
+   {
+    "t": "str: '2026-11-27T13:30:00+00:00'",
+    "T": "float: 17.0",
+    "Td": "float: 7.0",
+    "P": "float: 1018.0",
+    "U": "float: 11.0",
+    "G": "null",
+    "D": "float: 320.0"
+   }
+  ],
+  "LEPA": [
+   "lista[48]",
+   {
+    "t": "str: '2026-11-27T13:30:00+00:00'",
+    "T": "float: 16.0",
+    "Td": "float: 8.0",
+    "P": "float: 1017.0",
+    "U": "float: 17.0",
+    "G": "null",
+    "D": "float: 310.0"
+   }
+  ],
+  "LEVC": [
+   "lista[48]",
+   {
+    "t": "str: '2026-11-27T13:30:00+00:00'",
+    "T": "float: 17.0",
+    "Td": "float: 1.0",
+    "P": "float: 1018.0",
+    "U": "float: 9.0",
+    "G": "null",
+    "D": "float: 200.0"
+   }
+  ],
+  "LEMH": [
+   "lista[48]",
+   {
+    "t": "str: '2026-11-27T13:30:00+00:00'",
+    "T": "float: 17.0",
+    "Td": "float: 9.0",
+    "P": "float: 1017.0",
+    "U": "float: 17.0",
+    "G": "null",
+    "D": "float: 260.0"
+   }
+  ],
+  "LECH": [
+   "lista[48]",
+   {
+    "t": "str: '2026-11-27T13:30:00+00:00'",
+    "T": "float: 16.0",
+    "Td": "float: 0.0",
+    "P": "float: 1017.0",
+    "U": "float: 6.0",
+    "G": "null",
+    "D": "float: 240.0"
+   }
+  ],
+  "LEAL": [
+   "lista[48]",
+   {
+    "t": "str: '2026-11-27T13:30:00+00:00'",
+    "T": "float: 18.0",
+    "Td": "float: 0.0",
+    "P": "float: 1018.0",
+    "U": "float: 6.0",
+    "G": "null",
+    "D": "float: 360.0"
+   }
+  ]
+ },
+ "metar_meta": [
+  "lista[6]",
+  {
+   "icao": "str: 'LEIB'",
+   "lat": "float: 38.876",
+   "lon": "float: 1.384",
+   "name": "str: 'Ibiza Arpt, IB, ES'",
+   "elev": "float: 4.0",
+   "last": "str: '2026-11-28T13:00:00+00:00'",
+   "raw": "str: 'METAR LEIB 281300Z 24007KT 9999 FEW025 ",
+   "visib": "str: '6+'",
+   "cover": "str: 'FEW'",
+   "dist_km": "float: 29.0",
+   "edad_min": "int: 10"
+  }
+ ],
+ "verif": {
+  "desde": "str: '2026-11-27T23:00:00+00:00'",
+  "filas": [
+   "lista[12]",
+   {
+    "nombre": "str: 'Portinatx'",
+    "obs_hoy": "null",
+    "modelos": "objeto(5 claves)"
+   }
+  ]
+ },
+ "fields": {
+  "meteofrance_arome_france_hd": {
+   "cells": [
+    "lista[247]",
+    [
+     "lista[2]",
+     "float: 38.4"
+    ]
+   ],
+   "win": {
+    "0-6": [
+     "lista[247]",
+     "int: 0"
+    ],
+    "6-12": [
+     "lista[247]",
+     "int: 0"
+    ],
+    "12-24": [
+     "lista[247]",
+     "int: 0"
+    ],
+    "24-48": [
+     "lista[247]",
+     "float: 0.4"
+    ]
+   },
+   "init": "str: '2026-11-28T06:00:00+00:00'"
+  },
+  "icon_eu": {
+   "cells": [
+    "lista[247]",
+    [
+     "lista[2]",
+     "float: 38.4"
+    ]
+   ],
+   "win": {
+    "0-6": [
+     "lista[247]",
+     "int: 0"
+    ],
+    "6-12": [
+     "lista[247]",
+     "int: 0"
+    ],
+    "12-24": [
+     "lista[247]",
+     "int: 0"
+    ],
+    "24-48": [
+     "lista[247]",
+     "float: 0.1"
+    ]
+   },
+   "init": "str: '2026-11-28T09:00:00+00:00'"
+  }
+ }
+}

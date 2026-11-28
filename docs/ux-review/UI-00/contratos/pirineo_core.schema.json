@@ -1,0 +1,597 @@
+{
+ "issued": "str: '2026-11-28T13:10:43+00:00'",
+ "engine": "str: '0.6.1'",
+ "box": {
+  "lat_s": "float: 42.28",
+  "lat_n": "float: 42.68",
+  "lon_w": "float: 1.4",
+  "lon_e": "float: 2.22"
+ },
+ "pois": [
+  "lista[32]",
+  {
+   "id": "str: 'andorra_vella'",
+   "nombre": "str: 'Andorra la Vella'",
+   "lat": "float: 42.5078",
+   "lon": "float: 1.5211",
+   "tipo": "str: 'pueblo'",
+   "zona": "str: 'Andorra'",
+   "alt_ref": "int: 1023",
+   "alt_dem": "int: 1045",
+   "desvio_m": "int: 22"
+  }
+ ],
+ "corte": [
+  "lista[13]",
+  "str: 'andorra_vella'"
+ ],
+ "contexto": {
+  "nota": "str: 'contexto, no observación ni aviso; UNKN",
+  "sidecars": {
+   "climatologia_cerra": {
+    "state": "str: 'sin_datos'",
+    "detail": "str: 'no existe climatologia_cerra.json'"
+   },
+   "climatologia_era5land_pirineo": {
+    "state": "str: 'sin_datos'",
+    "detail": "str: 'no existe climatologia_era5land_pirineo"
+   },
+   "nieve_hrsi": {
+    "state": "str: 'sin_datos'",
+    "detail": "str: 'no existe nieve_hrsi.json'"
+   }
+  },
+  "notas_lluvia_24h": "lista vacía"
+ },
+ "fuentes": {
+  "puntos": "str: 'ok'",
+  "malla": "str: 'ok'",
+  "perfil": "str: 'ok'",
+  "atmosfera_detalle": "str: 'ok'",
+  "meteoclimatic": "str: 'ok'",
+  "metar": "str: 'ok'",
+  "avisos": "str: 'ok · España: AEMET CAP'",
+  "aemet_obs": "str: 'ok · 5 estaciones'",
+  "xema": "str: 'ok · 8 estaciones'",
+  "meteo_france_obs": "str: 'ok · 7 estaciones'",
+  "cnp": "str: 'PERMISSION_UNKNOWN: sin autorización re",
+  "meteociel": "str: 'ok · 5 estaciones'",
+  "aemet_cap": "str: 'ok'",
+  "aemet_texto": "str: 'ok'",
+  "meteo_france_base": "str: 'ok · 6 estaciones (archivo diario, no t",
+  "relieve_fino": "str: 'PARCIAL'",
+  "carreteras": "str: 'ok · sct OK, bison_fute OK, andorra SIN",
+  "meta_15d": "str: 'ok · OK'"
+ },
+ "fuentes_edad_min": {
+  "puntos": "int: 0",
+  "malla": "int: 0",
+  "perfil": "int: 0",
+  "atmosfera_detalle": "int: 0",
+  "aemet_obs": "int: 0",
+  "xema": "int: 0",
+  "meteo_france_obs": "int: 0",
+  "meteociel": "int: 0",
+  "aemet_cap": "int: 0",
+  "aemet_texto": "int: 0",
+  "meteo_france_base": "int: 0",
+  "carreteras": "int: 0"
+ },
+ "atribuciones": [
+  "lista[3]",
+  "str: 'Meteocat XEMA (Servei Meteorològic de C"
+ ],
+ "verificacion_mf": {
+  "estado": "str: 'ARCHIVO_DIARIO'",
+  "nota": "str: 'verificación; no es tiempo real (public",
+  "fuente": "str: 'Météo-France, données climatologiques d",
+  "datos_hasta": "str: '2026-11-28T04:00:00+00:00'",
+  "estaciones": [
+   "lista[6]",
+   {
+    "id": "str: '66067402'",
+    "nombre": "str: 'PUIGMAL-NIVOSE'",
+    "alt": "float: 2461.0",
+    "lat": "float: 42.380667",
+    "lon": "float: 2.095333",
+    "ultima_hora": "str: '2026-11-28T04:00:00+00:00'",
+    "edad_h": "float: 9.2",
+    "T": "float: 2.6",
+    "QT": "str: '9'",
+    "neige_tot_cm": "float: 4.0",
+    "rr_24h": "null",
+    "validadas": "int: 16",
+    "sin_validar": "int: 8"
+   }
+  ]
+ },
+ "permiso_cnp": {
+  "activo": "bool: False",
+  "motivo": "str: 'sin autorización registrada (permisos/c",
+  "valido_hasta": "null"
+ },
+ "modelo_puntos": "str: 'Open-Meteo'",
+ "modelos": [
+  "lista[3]",
+  "str: 'meteofrance_arome_france_hd'"
+ ],
+ "modelo_nombre": {
+  "meteofrance_arome_france_hd": "str: 'AROME HD 1,5 km'",
+  "icon_eu": "str: 'ICON-EU 7 km'",
+  "ecmwf_ifs": "str: 'ECMWF IFS 9 km'",
+  "metno": "str: 'MET Norway (ECMWF)'"
+ },
+ "puntos": [
+  "lista[32]",
+  {
+   "id": "str: 'andorra_vella'",
+   "modelos": {
+    "meteofrance_arome_france_hd": "objeto(14 claves)",
+    "icon_eu": "objeto(14 claves)",
+    "ecmwf_ifs": "objeto(14 claves)"
+   },
+   "vertiente": "str: 'sur'",
+   "cotas": {
+    "vertiente": "str: 'sur'",
+    "perfil": "str: 'sur'",
+    "estado": "str: 'OK'",
+    "tw0_m": "float: 2564.0",
+    "cota_copo_m": "float: 2264.0",
+    "cota_acum_m": "float: 2764.0",
+    "capa_calida": "null",
+    "riesgo_engelante": "bool: False",
+    "sobre_cota_copo": "bool: False"
+   }
+  }
+ ],
+ "perfil": {
+  "norte": [
+   "lista[72]",
+   {
+    "t": "str: '2026-11-28T13:00'",
+    "isocero_m": "float: 3545.0",
+    "tw0_m": "float: 2744.0",
+    "tw07_m": "float: 2654.0",
+    "cota_copo_m": "float: 2444.0",
+    "cota_cuajado_m": "float: 2644.0",
+    "cota_acum_m": "float: 2944.0",
+    "capa_calida": "null",
+    "superficie_m": "float: 2282.0",
+    "riesgo_engelante": "bool: False",
+    "slr": "float: 4.0",
+    "viento700_kmh": "float: 24.0",
+    "dir700": "int: 307",
+    "flujo": "str: 'NW'",
+    "froude": "null",
+    "pr_mm": "float: 0.0"
+   }
+  ],
+  "sur": [
+   "lista[72]",
+   {
+    "t": "str: '2026-11-28T13:00'",
+    "isocero_m": "float: 3567.0",
+    "tw0_m": "float: 2564.0",
+    "tw07_m": "float: 2424.0",
+    "cota_copo_m": "float: 2264.0",
+    "cota_cuajado_m": "float: 2464.0",
+    "cota_acum_m": "float: 2764.0",
+    "capa_calida": "null",
+    "superficie_m": "float: 1088.0",
+    "riesgo_engelante": "bool: False",
+    "slr": "float: 4.0",
+    "viento700_kmh": "float: 20.4",
+    "dir700": "int: 308",
+    "flujo": "str: 'NW'",
+    "froude": "float: 0.46",
+    "pr_mm": "float: 0.0"
+   }
+  ]
+ },
+ "atmosfera_detalle": {
+  "norte": {
+   "time": [
+    "lista[60]",
+    "str: '2026-11-28T01:00'"
+   ],
+   "indices": {
+    "<30 claves, p.ej. cape, cin, li>": [
+     "lista[60]",
+     "float: 0.0"
+    ]
+   },
+   "levels": {
+    "1000": "objeto(5 claves)",
+    "925": "objeto(5 claves)",
+    "850": "objeto(5 claves)",
+    "700": "objeto(5 claves)",
+    "500": "objeto(5 claves)",
+    "300": "objeto(5 claves)"
+   },
+   "physics": {
+    "thetae": "objeto(6 claves)",
+    "tw": "objeto(6 claves)",
+    "shear_by_height": [
+     "lista[60]",
+     [
+      "lista[3]",
+      [
+       "lista[2]",
+       "float: 0.81"
+      ]
+     ]
+    ]
+   },
+   "composites": {
+    "icc": [
+     "lista[60]",
+     "objeto(5 claves)"
+    ],
+    "ipp": [
+     "lista[60]",
+     "objeto(5 claves)"
+    ]
+   },
+   "wind10": {
+    "ws": [
+     "lista[60]",
+     "float: 2.92"
+    ],
+    "wd": [
+     "lista[60]",
+     "float: 329.0"
+    ]
+   },
+   "modelo": "str: 'best_match (Open-Meteo)'",
+   "ubicacion": {
+    "lat": "float: 42.62",
+    "lon": "float: 1.8"
+   },
+   "elevacion_m": "float: 2282.0",
+   "quality": {
+    "engine": "str: 'atmospheric-core-v1'",
+    "basis": "str: 'MODEL_DIAGNOSTIC'",
+    "units": "str: 'explicit canonical conversions; missing",
+    "vertical_velocity_positive": "str: 'UNVERIFIED'",
+    "height_reference": "str: 'levels/WBZ MSL; shear_by_height AGL'",
+    "shear_basis": "str: 'surface-to-pressure-level proxies; not ",
+    "coverage": [
+     "lista[60]",
+     "objeto(3 claves)"
+    ],
+    "calibrated": "bool: False"
+   }
+  },
+  "sur": {
+   "time": [
+    "lista[60]",
+    "str: '2026-11-28T01:00'"
+   ],
+   "indices": {
+    "<30 claves, p.ej. cape, cin, li>": [
+     "lista[60]",
+     "float: 0.0"
+    ]
+   },
+   "levels": {
+    "1000": "objeto(5 claves)",
+    "925": "objeto(5 claves)",
+    "850": "objeto(5 claves)",
+    "700": "objeto(5 claves)",
+    "500": "objeto(5 claves)",
+    "300": "objeto(5 claves)"
+   },
+   "physics": {
+    "thetae": "objeto(6 claves)",
+    "tw": "objeto(6 claves)",
+    "shear_by_height": [
+     "lista[60]",
+     [
+      "lista[4]",
+      [
+       "lista[2]",
+       "float: 0.43"
+      ]
+     ]
+    ]
+   },
+   "composites": {
+    "icc": [
+     "lista[60]",
+     "objeto(5 claves)"
+    ],
+    "ipp": [
+     "lista[60]",
+     "objeto(5 claves)"
+    ]
+   },
+   "wind10": {
+    "ws": [
+     "lista[60]",
+     "float: 0.91"
+    ],
+    "wd": [
+     "lista[60]",
+     "float: 354.0"
+    ]
+   },
+   "modelo": "str: 'best_match (Open-Meteo)'",
+   "ubicacion": {
+    "lat": "float: 42.4",
+    "lon": "float: 1.9"
+   },
+   "elevacion_m": "float: 1088.0",
+   "quality": {
+    "engine": "str: 'atmospheric-core-v1'",
+    "basis": "str: 'MODEL_DIAGNOSTIC'",
+    "units": "str: 'explicit canonical conversions; missing",
+    "vertical_velocity_positive": "str: 'UNVERIFIED'",
+    "height_reference": "str: 'levels/WBZ MSL; shear_by_height AGL'",
+    "shear_basis": "str: 'surface-to-pressure-level proxies; not ",
+    "coverage": [
+     "lista[60]",
+     "objeto(3 claves)"
+    ],
+    "calibrated": "bool: False"
+   }
+  }
+ },
+ "foehn": [
+  "lista[3]",
+  {
+   "par": "str: 'Puymorens → Cerdanya'",
+   "barlovento": "str: 'porte'",
+   "sotavento": "str: 'puigcerda'",
+   "estado": "str: 'OK'",
+   "horas": "int: 0",
+   "primeras": "lista vacía",
+   "por_modelo": {
+    "meteofrance_arome_france_hd": "int: 0",
+    "icon_eu": "int: 0",
+    "ecmwf_ifs": "int: 0"
+   }
+  }
+ ],
+ "orografia": {
+  "version": "str: '0.1.0'",
+  "estado": "str: 'PARCIAL'",
+  "fuente_dem": "str: 'npz local (dem_full.npz; origen: Copern",
+  "modelo": "str: 'Smith y Barstad (2004), lineal'",
+  "generado": "str: '2026-11-26T08:39:51Z'",
+  "dominio": {
+   "lat_s": "float: 42.15",
+   "lat_n": "float: 43.05",
+   "lon_w": "float: 1.15",
+   "lon_e": "float: 2.65",
+   "step": "float: 0.01"
+  },
+  "puntos": {
+   "<129 claves, p.ej. andorra_vella, escaldes, la_massana>": {
+    "nombre": "str: 'Andorra la Vella'",
+    "tipo": "str: 'pueblo'",
+    "zona": "str: 'Andorra'",
+    "vertiente": "str: 'sur'",
+    "cpi": "float: 6.04",
+    "estado": "str: 'OK'",
+    "horas_validas": "int: 25",
+    "horas_parciales": "int: 0",
+    "horas_con_precipitacion": "int: 0",
+    "horas": "int: 25",
+    "sin_precipitacion_24h": "bool: True",
+    "ahora": "objeto(11 claves)",
+    "min24": "null"
+   }
+  },
+  "estaciones_esqui": {
+   "nota": "str: 'parte del desnivel esquiable sobre la c",
+   "estaciones": {
+    "est_ax3d": "objeto(8 claves)",
+    "est_ascou": "objeto(8 claves)",
+    "est_mijanes": "objeto(8 claves)",
+    "est_camurac": "objeto(8 claves)",
+    "est_les_angles": "objeto(8 claves)",
+    "est_formigueres": "objeto(8 claves)",
+    "est_puyvalador": "objeto(8 claves)",
+    "est_font_romeu": "objeto(8 claves)",
+    "est_pyrenees2000": "objeto(8 claves)",
+    "est_cambre_aze": "objeto(8 claves)",
+    "est_porte": "objeto(8 claves)",
+    "est_la_molina": "objeto(9 claves)",
+    "est_masella": "objeto(9 claves)",
+    "est_gv_pas": "objeto(8 claves)",
+    "est_gv_soldeu": "objeto(9 claves)",
+    "est_arcalis": "objeto(8 claves)",
+    "est_pal_arinsal": "objeto(9 claves)"
+   }
+  }
+ },
+ "cubeta_fria": {
+  "version": "str: '0.1.0'",
+  "estado": "str: 'OK'",
+  "cpi_ref_das": "float: 2.9",
+  "puntos": {
+   "<21 claves, p.ej. andorra_vella, escaldes, la_massana>": {
+    "estado": "str: 'NO_CALIBRADO'",
+    "cpi": "float: 6.04",
+    "motivo": "str: 'fuera de los fondos de cuenca de la Cer"
+   }
+  }
+ },
+ "carreteras": {
+  "oficial": {
+   "nota": "str: 'estado oficial de las vías según cada s",
+   "fuentes": {
+    "sct": "objeto(7 claves)",
+    "bison_fute": "objeto(7 claves)",
+    "andorra": "objeto(5 claves)",
+    "pyrenees_orientales": "objeto(5 claves)"
+   },
+   "edad_min": "int: 0"
+  },
+  "exposicion": {
+   "nota": "str: 'exposición meteorológica estimada sobre",
+   "carreteras": {
+    "cg2": "objeto(10 claves)",
+    "cg3": "objeto(10 claves)",
+    "rn22": "objeto(10 claves)",
+    "rn20_ariege": "objeto(10 claves)",
+    "rn20_puymorens": "objeto(10 claves)",
+    "rn116": "objeto(10 claves)",
+    "d618": "objeto(10 claves)",
+    "d118": "objeto(10 claves)",
+    "d613_pailheres": "objeto(10 claves)",
+    "n260_toses": "objeto(10 claves)",
+    "n260_seu": "objeto(10 claves)",
+    "c16": "objeto(10 claves)",
+    "acc_estaciones": "objeto(10 claves)",
+    "n154": "objeto(10 claves)"
+   },
+   "puertos": {
+    "Port d'Envalira": "int: 2408",
+    "Col du Puymorens": "int: 1915",
+    "Col de la Perche": "int: 1581",
+    "Collada de Toses": "int: 1800",
+    "Pas de la Casa": "int: 2085",
+    "Col de Pailhères": "int: 2001"
+   }
+  }
+ },
+ "inversion_obs": {
+  "gradiente_c_km": "float: -2.7",
+  "n": "int: 33",
+  "desnivel_m": "int: 1779",
+  "error_c_km": "float: 0.6",
+  "concluyente": "bool: True",
+  "inversion": "bool: False",
+  "lectura": "str: 'gradiente débil: capa estable'"
+ },
+ "obs": [
+  "lista[34]",
+  {
+   "id": "str: 'ADAND9000000100000A'",
+   "nombre": "str: 'Els Plans de Canillo'",
+   "lat": "float: 42.56",
+   "lon": "float: 1.6",
+   "alt": "float: 1672.0",
+   "t": "str: '2026-11-28T12:50:00+00:00'",
+   "edad_min": "int: 20",
+   "T": "float: 10.5",
+   "HR": "float: 53.0",
+   "P": "float: 1022.5",
+   "viento": "float: 4.0",
+   "racha_dia": "float: 13.0",
+   "lluvia_dia": "float: 0.0",
+   "red": "str: 'Meteoclimatic'"
+  }
+ ],
+ "metar": [
+  "lista[1]",
+  {
+   "icao": "str: 'LESU'",
+   "nombre": "str: 'La Seu Arpt, CT, ES'",
+   "lat": "float: 42.337",
+   "lon": "float: 1.406",
+   "alt": "int: 802",
+   "t": "str: '2026-11-28T13:00:00+00:00'",
+   "T": "int: 12",
+   "Td": "int: -1",
+   "viento_kt": "int: 2",
+   "racha_kt": "null",
+   "dir": "str: 'VRB'",
+   "raw": "str: 'METAR LESU 281300Z VRB02KT CAVOK 12/M01",
+   "edad_min": "int: 10"
+  }
+ ],
+ "avisos": "lista vacía",
+ "aemet": {
+  "montana": [
+   "lista[2]",
+   {
+    "dia": "int: 0",
+    "nombre": "str: 'Predicción'",
+    "prediccion": [
+     "lista[5]",
+     "objeto(2 claves)"
+    ],
+    "atmosfera_libre": [
+     "lista[4]",
+     "objeto(2 claves)"
+    ],
+    "cimas": [
+     "lista[6]",
+     "objeto(6 claves)"
+    ],
+    "isocero_m": "float: 3300.0"
+   }
+  ],
+  "nivologico": {
+   "texto": "str: 'Agencia Estatal de Meteorología\\n\\nInfo",
+   "fuera_de_campana": "bool: True"
+  }
+ },
+ "avisos_cobertura": [
+  "lista[3]",
+  {
+   "pais": "str: 'spain'",
+   "nombre": "str: 'España'",
+   "ambito": "str: 'Pirineo de Girona, Pirineo de Lleida, P",
+   "estado": "str: 'ok'",
+   "fuente": "str: 'AEMET CAP'"
+  }
+ ],
+ "status": {
+  "dem": {
+   "estado": "str: 'ESTÁNDAR'",
+   "nota": "str: 'Relieve de las teselas Terrarium (SRTM/"
+  },
+  "puntos": {
+   "estado": "str: 'DIAGNÓSTICO'",
+   "nota": "str: 'Previsión por punto a la altitud real d"
+  },
+  "cota": {
+   "estado": "str: 'DIAGNÓSTICO'",
+   "nota": "str: 'Cota de nieve desde el perfil por nivel"
+  },
+  "slr": {
+   "estado": "str: 'DIAGNÓSTICO'",
+   "nota": "str: 'Relación nieve/agua de Kuchera con la t"
+  },
+  "foehn": {
+   "estado": "str: 'EXPERIMENTAL'",
+   "nota": "str: 'Föhn del norte: flujo a 700 hPa perpend"
+  },
+  "inversion": {
+   "estado": "str: 'DIAGNÓSTICO'",
+   "nota": "str: 'Inversión observada entre estaciones de"
+  },
+  "viento_collados": {
+   "estado": "str: 'DIAGNÓSTICO'",
+   "nota": "str: 'Racha prevista en Envalira, Pas de la C"
+  },
+  "orografia": {
+   "estado": "str: 'EXPERIMENTAL'",
+   "nota": "str: 'Cota de copo efectiva por punto: la cot"
+  },
+  "cubeta_fria": {
+   "estado": "str: 'EXPERIMENTAL'",
+   "nota": "str: 'Mínima estimada en cubetas (Das, Capcir"
+  },
+  "carreteras": {
+   "estado": "str: 'EXPERIMENTAL'",
+   "nota": "str: 'Estado oficial: incidencias del Servei "
+  }
+ },
+ "enlaces": {
+  "aludes_andorra": "str: 'https://www.meteo.ad/estatneu'",
+  "aludes_meteocat": "str: 'https://www.meteo.cat/prediccio/allaus'",
+  "aludes_meteofrance": "str: 'https://meteofrance.com/meteo-montagne'",
+  "carreteras_andorra": "str: 'https://www.mobilitat.ad'",
+  "carreteras_francia": "str: 'https://www.inforoute66.fr'",
+  "carreteras_cat": "str: 'https://cit.transit.gencat.cat'"
+ },
+ "horizontes": {
+  "fisica_vertical_y_dem_h": "int: 72",
+  "metaanalisis_ensemble_dias": "int: 15",
+  "metaanalisis": "str: 'separado; no sustituye perfiles, observ"
+ }
+}

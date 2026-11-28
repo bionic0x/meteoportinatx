@@ -1,0 +1,78 @@
+{
+ "modelo": "str: 'meteofrance_arome_france_hd'",
+ "lats": [
+  "lista[8]",
+  "float: 42.3"
+ ],
+ "lons": [
+  "lista[16]",
+  "float: 1.45"
+ ],
+ "time": [
+  "lista[16]",
+  "str: '2026-11-28T13:00'"
+ ],
+ "paso_h": "int: 3",
+ "acumulado": {
+  "campos": [
+   "lista[2]",
+   "str: 'precipitation'"
+  ],
+  "semantica": "str: 'suma de las horas k..k+2 (acumulado de "
+ },
+ "elev": [
+  "lista[128]",
+  "float: 1204.0"
+ ],
+ "fields": {
+  "temperature_2m": [
+   "lista[16]",
+   [
+    "lista[128]",
+    "float: 10.7"
+   ]
+  ],
+  "dew_point_2m": [
+   "lista[16]",
+   [
+    "lista[128]",
+    "float: 0.4"
+   ]
+  ],
+  "precipitation": [
+   "lista[16]",
+   [
+    "lista[128]",
+    "float: 0.0"
+   ]
+  ],
+  "snowfall": [
+   "lista[16]",
+   [
+    "lista[128]",
+    "null"
+   ]
+  ],
+  "wind_speed_10m": [
+   "lista[16]",
+   [
+    "lista[128]",
+    "float: 2.1"
+   ]
+  ],
+  "wind_gusts_10m": [
+   "lista[16]",
+   [
+    "lista[128]",
+    "float: 6.5"
+   ]
+  ],
+  "freezing_level_height": [
+   "lista[16]",
+   [
+    "lista[128]",
+    "null"
+   ]
+  ]
+ }
+}
