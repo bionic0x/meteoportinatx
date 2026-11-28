@@ -1,6 +1,6 @@
 # SEPI-P: protocolo de predicción y validación estacional (v0.4)
 
-**Estado: CANDIDATO A CONGELACIÓN (v0.4-rc), todavía no congelado.**
+**Estado: CONGELADO el 28-11-2026 (v0.4), en el commit de fusión `1ae92c1a6131270f3083a5e640defca1953871a3` (PR #74, 12:29 UTC).**
 - **Contenido:** incorpora las decisiones del titular del 28-11-2026 (§12).
 - **Momento de congelación:** el protocolo queda congelado **cuando el titular lo fusione en `main`**. La referencia es el commit de fusión, sin efecto retroactivo, y su SHA se anota en el registro (§13) en el primer PR posterior.
 - **Qué exige la congelación:** se hace **antes de ejecutar ningún cálculo de habilidad y antes de consultar las matrices de transición entre periodos** (§9). Desde entonces, todo cambio va al registro con fecha y motivo, y no se presenta como prerregistro.
@@ -295,12 +295,13 @@ Salidas: `SEPI_DATA/f04/`, con copia de las tablas en `docs/datos/sepi-f04/`.
 | Bootstrap | 2.000 réplicas, bloques de 5 inviernos, semilla 20261128 |
 | Congelación | Al fusionar en `main` el commit que incorpora estas decisiones, sin retroactividad |
 
-\* El texto de la decisión decía «k ∈ 7». Como el titular aprobó «los valores de k» propuestos y la regla de desempate «preferir el k mayor» implica varios candidatos, se interpreta como {3, 5, 7}. **Debe confirmarse antes de fusionar.**
+\* El texto de la decisión decía «k ∈ 7». Como el titular aprobó «los valores de k» propuestos y la regla de desempate «preferir el k mayor» implica varios candidatos, se interpretó como {3, 5, 7}. **El titular lo confirmó el 28-11-2026 a las 12:36 UTC**, después de la fusión del PR #74. La confirmación no cambia el texto congelado; consta en el registro.
 
 ## 13. Registro de decisiones
 | Fecha | Decisión | Tipo |
 |---|---|---|
 | 28-11-2026 | v0.3: borrador solo con SEAS5 (PR #72) | Borrador |
+| 28-11-2026 | **Congelación:** commit de fusión `1ae92c1` del PR #74 (12:29 UTC). Confirmación posterior del titular (12:36 UTC) de k ∈ {3, 5, 7}, que ya era el texto congelado. Este cambio solo anota el estado y el SHA, sin modificar el método | Congelado |
 | 28-11-2026 | Regla de degeneración limitada a variables no negativas, no aplicable a ΔSWE. Surgió en la climatología descriptiva del PR #75 y la aprobó el titular | Candidato a congelación |
 | 28-11-2026 | v0.4-rc: decisiones del §12; reglas de formación del manto y de cobertura; coherencia física SWE ≥ 0; definición matemática de los análogos y sus reglas; contraste pareado con bootstrap centrado y Holm; nueva etiqueta del criterio 3; estados PASS-R, PASS-O, REJECT y UNKNOWN; índices I_AM e I_NS; referencia incremental elegida por validación interna; origen móvil como validación principal de SEAS5. Concreciones de redacción: entrenamiento interno inicial de 15 inviernos y umbral de REJECT por CRPSS 0,05 | Candidato a congelación |
 | 28-11-2026 | v0.4: tres periodos; ΔSWE como objetivo primario y G/L como secundarios; d100 excluido en P1 y limitado a 2.100 m en P2 y P3; nieve nueva y lluvia sobre nieve en UNKNOWN; separación de modelos R y O; hipótesis H-P1 a H-P3 con Holm; origen móvil 1968–1990 / 1991–2025; matrices de transición bloqueadas hasta la congelación. Aprobado metodológicamente por el titular; pendiente de congelación | Borrador |
