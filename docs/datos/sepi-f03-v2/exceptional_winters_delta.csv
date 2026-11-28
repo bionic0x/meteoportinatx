@@ -1,0 +1,143 @@
+dominio,massif,alt,geo,season,etiqueta,exc_v1,excepcional_V1_solo_regla,excepcional_V2_solo_degeneradas,excepcional_V3_principal,rank_v1,rank_V3_principal,cambio
+Couserans (control),69,1800,N20,1971,1971–72,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,1800,N20,1980,1980–81,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,1800,N20,1993,1993–94,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,1800,N20,2008,2008–09,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,1800,N20,2012,2012–13,True,True,True,True,2,2,sin cambio
+Couserans (control),69,1800,N20,2013,2013–14,True,True,True,True,1,1,sin cambio
+Couserans (control),69,1800,llano,1969,1969–70,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,1800,llano,1971,1971–72,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,1800,llano,1980,1980–81,True,True,True,True,1,1,sin cambio
+Couserans (control),69,1800,llano,2008,2008–09,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,1800,llano,2012,2012–13,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,1800,llano,2013,2013–14,True,True,True,True,1,1,sin cambio
+Couserans (control),69,2100,N20,1969,1969–70,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,N20,1971,1971–72,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,N20,1980,1980–81,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,N20,2008,2008–09,False,True,False,True,2,2,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,N20,2013,2013–14,False,True,False,True,1,1,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,N20,2017,2017–18,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,llano,1971,1971–72,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,llano,1980,1980–81,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,llano,2008,2008–09,False,True,False,True,2,2,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,llano,2012,2012–13,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,llano,2013,2013–14,False,True,False,True,1,1,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Couserans (control),69,2100,llano,2017,2017–18,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,1800,N20,1980,1980–81,True,True,True,True,1,1,sin cambio
+Haute-Ariège,70,1800,N20,1993,1993–94,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,1800,N20,1998,1998–99,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,1800,N20,2004,2004–05,True,True,True,True,2,2,sin cambio
+Haute-Ariège,70,1800,N20,2012,2012–13,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,1800,N20,2013,2013–14,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,1800,llano,1970,1970–71,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,1800,llano,1980,1980–81,True,True,True,True,1,1,sin cambio
+Haute-Ariège,70,1800,llano,1993,1993–94,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,1800,llano,2004,2004–05,True,True,True,True,2,1,sin cambio
+Haute-Ariège,70,1800,llano,2012,2012–13,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,1800,llano,2013,2013–14,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,N20,1969,1969–70,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,N20,1980,1980–81,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,N20,1993,1993–94,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,N20,2004,2004–05,False,True,False,True,2,2,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,N20,2013,2013–14,False,True,False,True,1,1,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,N20,2017,2017–18,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,llano,1969,1969–70,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,llano,1980,1980–81,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,llano,1993,1993–94,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,llano,2004,2004–05,True,True,True,True,1,1,sin cambio
+Haute-Ariège,70,2100,llano,2012,2012–13,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Haute-Ariège,70,2100,llano,2013,2013–14,True,True,True,True,2,2,sin cambio
+Andorra,71,1800,N20,1993,1993–94,True,True,True,True,3,3,sin cambio
+Andorra,71,1800,N20,1995,1995–96,False,True,False,True,3,1,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,1800,N20,2012,2012–13,False,True,False,True,5,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,1800,N20,2013,2013–14,True,True,True,True,1,2,sin cambio
+Andorra,71,1800,N20,2017,2017–18,False,True,False,True,6,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,1800,N20,2021,2021–22,False,True,False,True,2,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,1800,llano,1970,1970–71,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,1800,llano,1971,1971–72,False,False,False,True,6,6,ENTRA en excepcional: efecto conjunto de regla y métrica degenerada
+Andorra,71,1800,llano,1973,1973–74,False,True,False,True,4,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,1800,llano,1995,1995–96,True,True,True,True,1,1,sin cambio
+Andorra,71,1800,llano,2013,2013–14,True,True,True,True,2,1,sin cambio
+Andorra,71,1800,llano,2017,2017–18,False,True,False,True,4,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,2100,N20,1971,1971–72,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,2100,N20,1973,1973–74,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,2100,N20,1993,1993–94,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,2100,N20,1995,1995–96,False,True,False,True,1,1,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,2100,N20,2013,2013–14,True,True,True,True,2,2,sin cambio
+Andorra,71,2100,llano,1970,1970–71,False,True,False,True,6,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,2100,llano,1971,1971–72,True,True,True,True,1,2,sin cambio
+Andorra,71,2100,llano,1973,1973–74,True,True,True,True,3,4,sin cambio
+Andorra,71,2100,llano,1995,1995–96,True,True,True,True,2,1,sin cambio
+Andorra,71,2100,llano,2013,2013–14,False,True,False,True,4,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Andorra,71,2100,llano,2017,2017–18,False,True,False,True,5,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,1800,N20,1971,1971–72,True,True,True,True,1,1,sin cambio
+Orlu–St-Barthélemy,72,1800,N20,1977,1977–78,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,1800,N20,1980,1980–81,True,True,True,True,2,2,sin cambio
+Orlu–St-Barthélemy,72,1800,N20,1998,1998–99,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,1800,N20,2004,2004–05,True,True,True,True,2,2,sin cambio
+Orlu–St-Barthélemy,72,1800,N20,2012,2012–13,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,1800,llano,1971,1971–72,True,True,True,True,1,1,sin cambio
+Orlu–St-Barthélemy,72,1800,llano,1977,1977–78,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,1800,llano,1980,1980–81,True,True,True,True,3,2,sin cambio
+Orlu–St-Barthélemy,72,1800,llano,2004,2004–05,True,True,True,True,2,2,sin cambio
+Orlu–St-Barthélemy,72,1800,llano,2012,2012–13,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,1800,llano,2025,2025–26,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,N20,1969,1969–70,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,N20,1971,1971–72,True,True,True,True,1,1,sin cambio
+Orlu–St-Barthélemy,72,2100,N20,1973,1973–74,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,N20,1980,1980–81,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,N20,2004,2004–05,False,True,False,True,2,2,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,N20,2013,2013–14,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,llano,1969,1969–70,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,llano,1971,1971–72,True,True,True,True,1,1,sin cambio
+Orlu–St-Barthélemy,72,2100,llano,1980,1980–81,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,llano,2004,2004–05,True,True,True,True,2,2,sin cambio
+Orlu–St-Barthélemy,72,2100,llano,2012,2012–13,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Orlu–St-Barthélemy,72,2100,llano,2013,2013–14,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,1800,N20,1971,1971–72,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,1800,N20,1973,1973–74,True,True,True,True,5,5,sin cambio
+Capcir–Puymorens,73,1800,N20,1980,1980–81,True,True,True,True,1,1,sin cambio
+Capcir–Puymorens,73,1800,N20,1985,1985–86,False,True,False,True,2,2,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,1800,N20,2004,2004–05,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,1800,N20,2012,2012–13,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,1800,llano,1970,1970–71,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,1800,llano,1971,1971–72,False,True,False,True,1,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,1800,llano,1973,1973–74,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,1800,llano,1980,1980–81,True,True,True,True,3,3,sin cambio
+Capcir–Puymorens,73,1800,llano,1985,1985–86,True,True,True,True,4,2,sin cambio
+Capcir–Puymorens,73,1800,llano,2025,2025–26,True,True,True,True,1,1,sin cambio
+Capcir–Puymorens,73,2100,N20,1971,1971–72,False,True,False,True,1,1,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,2100,N20,1973,1973–74,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,2100,N20,1995,1995–96,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,2100,N20,2013,2013–14,True,True,True,True,1,1,sin cambio
+Capcir–Puymorens,73,2100,N20,2025,2025–26,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,2100,llano,1971,1971–72,True,True,True,True,1,1,sin cambio
+Capcir–Puymorens,73,2100,llano,1973,1973–74,True,True,True,True,4,4,sin cambio
+Capcir–Puymorens,73,2100,llano,1995,1995–96,True,True,True,True,2,2,sin cambio
+Capcir–Puymorens,73,2100,llano,2012,2012–13,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,2100,llano,2013,2013–14,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Capcir–Puymorens,73,2100,llano,2025,2025–26,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,1800,N20,1991,1991–92,True,True,True,True,3,3,sin cambio
+Cerdagne–Canigou,74,1800,N20,1995,1995–96,False,True,False,True,4,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,1800,N20,2008,2008–09,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,1800,N20,2017,2017–18,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,1800,N20,2019,2019–20,False,True,False,True,2,2,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,1800,N20,2025,2025–26,True,True,True,True,1,1,sin cambio
+Cerdagne–Canigou,74,1800,llano,1991,1991–92,True,True,True,True,2,2,sin cambio
+Cerdagne–Canigou,74,1800,llano,1995,1995–96,True,True,True,True,4,3,sin cambio
+Cerdagne–Canigou,74,1800,llano,2005,2005–06,False,False,False,True,6,4,ENTRA en excepcional: efecto conjunto de regla y métrica degenerada
+Cerdagne–Canigou,74,1800,llano,2017,2017–18,False,False,False,True,6,6,ENTRA en excepcional: efecto conjunto de regla y métrica degenerada
+Cerdagne–Canigou,74,1800,llano,2019,2019–20,False,False,False,True,8,5,ENTRA en excepcional: efecto conjunto de regla y métrica degenerada
+Cerdagne–Canigou,74,1800,llano,2025,2025–26,True,True,True,True,1,1,sin cambio
+Cerdagne–Canigou,74,2100,N20,1968,1968–69,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,2100,N20,1971,1971–72,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,2100,N20,1991,1991–92,True,True,True,True,2,2,sin cambio
+Cerdagne–Canigou,74,2100,N20,1995,1995–96,False,True,False,True,3,3,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,2100,N20,2019,2019–20,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,2100,N20,2025,2025–26,False,True,False,True,1,1,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,2100,llano,1968,1968–69,False,True,False,True,5,5,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,2100,llano,1971,1971–72,True,True,True,True,3,2,sin cambio
+Cerdagne–Canigou,74,2100,llano,1991,1991–92,True,True,True,True,2,2,sin cambio
+Cerdagne–Canigou,74,2100,llano,1995,1995–96,False,True,False,True,4,4,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,2100,llano,1996,1996–97,False,True,False,True,6,6,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
+Cerdagne–Canigou,74,2100,llano,2025,2025–26,False,True,False,True,1,1,ENTRA en excepcional: regla I>P90 de I (frente a todas las métricas ≥ P90)
