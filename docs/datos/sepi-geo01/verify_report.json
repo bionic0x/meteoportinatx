@@ -1,0 +1,42 @@
+{
+  "sha256_teselas": {
+    "fallos": []
+  },
+  "V1": {
+    "max_dif_pendiente_grados": 3.552713678800501e-15,
+    "max_dif_orientacion_grados": 5.684341886080802e-14,
+    "max_dif_tpi_m": 9.350742402602918e-12,
+    "d8_igual_que_referencia": true,
+    "nodata_nucleo": 0,
+    "celdas_cero_nucleo": 0,
+    "z_min_nucleo": 93.19198608398438
+  },
+  "V3": {
+    "max_dif_pendiente_grados": 3.552713678800501e-15,
+    "max_dif_orientacion_grados": 5.684341886080802e-14,
+    "max_dif_tpi_m": 1.2704504115390591e-11,
+    "d8_igual_que_referencia": true,
+    "nodata_nucleo": 0,
+    "celdas_cero_nucleo": 0,
+    "z_min_nucleo": 91.27933502197266
+  },
+  "costuras_glo30": {
+    "lon_1.0": {
+      "salto_mediano_m": 7.3845672607421875,
+      "salto_tipico_m": 3.80426025390625
+    },
+    "lon_2.0": {
+      "salto_mediano_m": 2.6879730224609375,
+      "salto_tipico_m": 2.92071533203125
+    },
+    "lat_42.0": {
+      "salto_mediano_m": 3.38531494140625,
+      "salto_tipico_m": 3.5785446166992188
+    },
+    "lat_43.0": {
+      "salto_mediano_m": 4.72607421875,
+      "salto_tipico_m": 4.448516845703125
+    }
+  },
+  "resultado": "OK"
+}
