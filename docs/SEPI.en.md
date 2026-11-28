@@ -2,7 +2,7 @@
 
 **Status:** experimental research line. Design v0.3 and results of phases 01, 02, 02b (26-11-2026) and 03 (27-11-2026). Each phase was reviewed by an independent verifier agent and its corrections are applied. **This is not a warning or a forecast**, and it does not replace Météo-France, AEMET, Meteocat or the SMA. No SEPI model is validated; no probability of an exceptional winter is issued.
 
-Scripts and reproduction: [`scripts/sepi/`](../scripts/sepi/README.md). The Spanish version, [`SEPI.md`](SEPI.md), is the reference. Source inventory 1968–2026 (Spanish only): [`SEPI-INVENTARIO-FUENTES.md`](SEPI-INVENTARIO-FUENTES.md).
+Scripts and reproduction: [`scripts/sepi/`](../scripts/sepi/README.md). The Spanish version, [`SEPI.md`](SEPI.md), is the reference. Source inventory 1968–2026 (Spanish only): [`SEPI-INVENTARIO-FUENTES.md`](SEPI-INVENTARIO-FUENTES.md). Also Spanish only: the protocol frozen on 28-11-2026 ([`SEPI-PROTOCOLO.md`](SEPI-PROTOCOLO.md)); the F03 v2 recalculation ([`SEPI-FASE03-V2.md`](SEPI-FASE03-V2.md)) and its comparison with v1 ([`SEPI-FASE03-COMPARATIVA.md`](SEPI-FASE03-COMPARATIVA.md)); the draft seasonal-prediction protocol ([`SEPI-P-PROTOCOLO.md`](SEPI-P-PROTOCOLO.md)); and the optional ECMWF Earthkit ingestion ([`SEPI-EARTHKIT.md`](SEPI-EARTHKIT.md)).
 
 ## Summary
 - Using open data (XEMA, Météo-France, NOAA CPC), an objective catalogue of 17 winters (2009–10 to 2025–26) has been built. 2017–18 and 2025–26 are the exceptional ones in the eastern Catalan Pyrenees; the east–west contrast separates Mediterranean-biased winters (2016–17, 2025–26, 2019–20) from Atlantic-biased ones (2013–14, 2012–13).

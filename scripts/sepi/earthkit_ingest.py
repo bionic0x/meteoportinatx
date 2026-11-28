@@ -1,4 +1,4 @@
-"""Optional SEPI seasonal acquisition; no network access unless --download."""
+"""Adquisición estacional opcional de SEPI (CDS, SEAS5); sin acceso a la red salvo con --download."""
 import argparse
 import hashlib
 import json
@@ -11,7 +11,7 @@ VARIABLES = ("2m_temperature", "total_precipitation", "mean_sea_level_pressure")
 
 
 def requests(year, system):
-    """November initialization; leads 2 and 3 are December and January."""
+    """Inicio el 1 de noviembre; los plazos 2 y 3 son diciembre y enero."""
     for variable in VARIABLES:
         yield {
             "originating_centre": "ecmwf",
@@ -32,11 +32,11 @@ def digest(path):
 
 def data_root():
     if not os.environ.get("SEPI_DATA"):
-        raise ValueError("Set SEPI_DATA outside the repository")
+        raise ValueError("Define SEPI_DATA fuera del repositorio")
     root = Path(os.environ["SEPI_DATA"]).resolve()
     repo = Path(__file__).resolve().parents[2]
     if root == repo or repo in root.parents:
-        raise ValueError("SEPI_DATA must be outside the repository")
+        raise ValueError("SEPI_DATA debe estar fuera del repositorio")
     return root / "cds" / "seasonal"
 
 
@@ -52,14 +52,14 @@ def retrieve(request, root):
             prior = json.loads(manifest.read_text())
             if prior["sha256"] == digest(target) and prior["request"] == request:
                 return
-        raise RuntimeError("Incomplete or inconsistent cached artifact: " + key)
+        raise RuntimeError("Artefacto en caché incompleto o incoherente: " + key)
     temporary = target.with_suffix(".part")
     if temporary.exists():
-        raise RuntimeError("Remove incomplete download after inspection: " + str(temporary))
+        raise RuntimeError("Revisa y elimina la descarga incompleta: " + str(temporary))
     cdsapi.Client().retrieve(DATASET, request, str(temporary))
     with temporary.open("rb") as stream:
         if stream.read(4) != b"GRIB":
-            raise ValueError("Expected GRIB data")
+            raise ValueError("Se esperaba un archivo GRIB")
     target_hash = digest(temporary)
     temporary.rename(target)
     manifest.write_text(json.dumps({
@@ -78,10 +78,10 @@ def inspect(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--system", required=True, help="CDS system verified for selected years")
-    parser.add_argument("--years", nargs="+", type=int, required=True)
-    parser.add_argument("--download", action="store_true")
-    parser.add_argument("--inspect", type=Path)
+    parser.add_argument("--system", required=True, help="Sistema del CDS comprobado para los años elegidos")
+    parser.add_argument("--years", nargs="+", type=int, required=True, help="Años de inicio (noviembre)")
+    parser.add_argument("--download", action="store_true", help="Descargar de verdad (por defecto solo muestra las peticiones)")
+    parser.add_argument("--inspect", type=Path, help="Inspeccionar un GRIB descargado con earthkit")
     args = parser.parse_args()
     if args.inspect:
         inspect(args.inspect)
