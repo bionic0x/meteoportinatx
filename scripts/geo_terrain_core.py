@@ -197,3 +197,18 @@ def change_stats(ref, new):
     return {"n": len(d), "sesgo": sum(d) / len(d), "mae": sum(ad) / len(ad),
             "rmse": math.sqrt(sum(v * v for v in d) / len(d)), "mediana_abs": q(0.5), "p95_abs": q(0.95),
             "max_abs": ad[-1], "spearman": spearman(ref, new)}
+
+
+def terrarium_encode(z):
+    """Codificación Terrarium (MapLibre raster-dem «terrarium»): v = z + 32768; R = v // 256, G = v % 256,
+    B = fracción × 256. Resolución 1/256 m. NODATA no se codifica: el llamador deja el píxel transparente."""
+    v = z + 32768.0
+    r = int(v // 256)
+    g = int(v - r * 256)
+    b = int((v - math.floor(v)) * 256)
+    return r, g, b
+
+
+def terrarium_decode(r, g, b):
+    return r * 256 + g + b / 256 - 32768.0
+

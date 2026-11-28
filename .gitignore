@@ -31,3 +31,4 @@ site.previous/
 # Local Node tooling for browser regressions
 node_modules/
 package-lock.json
+lab/terrain/data-full/
