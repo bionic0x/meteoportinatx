@@ -1,0 +1,531 @@
+{
+ "captured_utc": "2026-11-28T18:31:18.437Z",
+ "base": "https://bionic0x.github.io/meteoportinatx/",
+ "shots": [
+  {
+   "file": "hub-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/",
+   "tab": null,
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1916,
+   "errors": []
+  },
+  {
+   "file": "hub-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/",
+   "tab": null,
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1247,
+   "errors": []
+  },
+  {
+   "file": "portinatx-vigilancia-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "vigilancia",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 4842,
+   "errors": []
+  },
+  {
+   "file": "portinatx-territorio-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "territorio",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 2703,
+   "errors": []
+  },
+  {
+   "file": "portinatx-superficie-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "superficie",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 3471,
+   "errors": []
+  },
+  {
+   "file": "portinatx-ensemble-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "ensemble",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 2070,
+   "errors": []
+  },
+  {
+   "file": "portinatx-modelos-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "modelos",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 4298,
+   "errors": []
+  },
+  {
+   "file": "portinatx-atmosfera-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "atmosfera",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 7376,
+   "errors": []
+  },
+  {
+   "file": "portinatx-mar-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "mar",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 3291,
+   "errors": []
+  },
+  {
+   "file": "portinatx-satelite-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "satelite",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1301,
+   "errors": []
+  },
+  {
+   "file": "portinatx-forense-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "forense",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 6048,
+   "errors": []
+  },
+  {
+   "file": "portinatx-gobernanza-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "gobernanza",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 5349,
+   "errors": []
+  },
+  {
+   "file": "portinatx-laboratorio-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "laboratorio",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 2822,
+   "errors": []
+  },
+  {
+   "file": "portinatx-vigilancia-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "vigilancia",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 2557,
+   "errors": []
+  },
+  {
+   "file": "portinatx-territorio-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "territorio",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1653,
+   "errors": []
+  },
+  {
+   "file": "portinatx-superficie-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "superficie",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1622,
+   "errors": []
+  },
+  {
+   "file": "portinatx-ensemble-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "ensemble",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1427,
+   "errors": []
+  },
+  {
+   "file": "portinatx-modelos-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "modelos",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1966,
+   "errors": []
+  },
+  {
+   "file": "portinatx-atmosfera-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "atmosfera",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 3061,
+   "errors": []
+  },
+  {
+   "file": "portinatx-mar-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "mar",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1835,
+   "errors": []
+  },
+  {
+   "file": "portinatx-satelite-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "satelite",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1870,
+   "errors": []
+  },
+  {
+   "file": "portinatx-forense-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "forense",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 2310,
+   "errors": []
+  },
+  {
+   "file": "portinatx-gobernanza-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "gobernanza",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 2970,
+   "errors": []
+  },
+  {
+   "file": "portinatx-laboratorio-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/portinatx/",
+   "tab": "laboratorio",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1947,
+   "errors": []
+  },
+  {
+   "file": "decidir-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/decidir/",
+   "tab": null,
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 2252,
+   "errors": []
+  },
+  {
+   "file": "decidir-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/decidir/",
+   "tab": null,
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1230,
+   "errors": []
+  },
+  {
+   "file": "ruta-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/ruta/",
+   "tab": null,
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1763,
+   "errors": []
+  },
+  {
+   "file": "ruta-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/ruta/",
+   "tab": null,
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 900,
+   "errors": []
+  },
+  {
+   "file": "dispositivo-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/dispositivo/",
+   "tab": null,
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1995,
+   "errors": []
+  },
+  {
+   "file": "dispositivo-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/dispositivo/",
+   "tab": null,
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1449,
+   "errors": []
+  },
+  {
+   "file": "zona-portinatx-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/zones/portinatx/",
+   "tab": null,
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 15783,
+   "errors": []
+  },
+  {
+   "file": "zona-portinatx-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/zones/portinatx/",
+   "tab": null,
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 11506,
+   "errors": []
+  },
+  {
+   "file": "pirineo-vigilancia-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "vigilancia",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1807,
+   "errors": []
+  },
+  {
+   "file": "pirineo-mapa-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "mapa",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1404,
+   "errors": []
+  },
+  {
+   "file": "pirineo-corte-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "corte",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1625,
+   "errors": []
+  },
+  {
+   "file": "pirineo-puntos-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "puntos",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 2234,
+   "errors": []
+  },
+  {
+   "file": "pirineo-diagnostico-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "diagnostico",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 5048,
+   "errors": []
+  },
+  {
+   "file": "pirineo-modelos-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "modelos",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1738,
+   "errors": []
+  },
+  {
+   "file": "pirineo-atmosfera-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "atmosfera",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 8121,
+   "errors": []
+  },
+  {
+   "file": "pirineo-extendido-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "extendido",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 2030,
+   "errors": []
+  },
+  {
+   "file": "pirineo-satelite-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "satelite",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1421,
+   "errors": []
+  },
+  {
+   "file": "pirineo-forense-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "forense",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1508,
+   "errors": []
+  },
+  {
+   "file": "pirineo-gobernanza-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "gobernanza",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1742,
+   "errors": []
+  },
+  {
+   "file": "pirineo-laboratorio-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "laboratorio",
+   "viewport": "390",
+   "overflow_px": 0,
+   "page_height": 1375,
+   "errors": []
+  },
+  {
+   "file": "pirineo-vigilancia-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "vigilancia",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 900,
+   "errors": []
+  },
+  {
+   "file": "pirineo-mapa-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "mapa",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1425,
+   "errors": []
+  },
+  {
+   "file": "pirineo-corte-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "corte",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1607,
+   "errors": []
+  },
+  {
+   "file": "pirineo-puntos-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "puntos",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1682,
+   "errors": []
+  },
+  {
+   "file": "pirineo-diagnostico-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "diagnostico",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 2673,
+   "errors": []
+  },
+  {
+   "file": "pirineo-modelos-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "modelos",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1117,
+   "errors": []
+  },
+  {
+   "file": "pirineo-atmosfera-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "atmosfera",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 4979,
+   "errors": []
+  },
+  {
+   "file": "pirineo-extendido-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "extendido",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1371,
+   "errors": []
+  },
+  {
+   "file": "pirineo-satelite-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "satelite",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 900,
+   "errors": []
+  },
+  {
+   "file": "pirineo-forense-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "forense",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 900,
+   "errors": []
+  },
+  {
+   "file": "pirineo-gobernanza-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "gobernanza",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 1176,
+   "errors": []
+  },
+  {
+   "file": "pirineo-laboratorio-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/pirineo/",
+   "tab": "laboratorio",
+   "viewport": "1440",
+   "overflow_px": 0,
+   "page_height": 900,
+   "errors": []
+  },
+  {
+   "file": "zona-pirineo-1440.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/zones/pirineo/",
+   "tab": null,
+   "viewport": "1440",
+   "overflow_px": null,
+   "page_height": null,
+   "errors": [],
+   "nota": "registro original perdido al fusionar; captura del primer pase"
+  },
+  {
+   "file": "zona-pirineo-390.png",
+   "url": "https://bionic0x.github.io/meteoportinatx/zones/pirineo/",
+   "tab": null,
+   "viewport": "390",
+   "overflow_px": null,
+   "page_height": null,
+   "errors": [],
+   "nota": "registro original perdido al fusionar; captura del primer pase"
+  }
+ ],
+ "nota": "Pirineo recapturado abriendo <details id=\"other-sections\"> («Más herramientas»), donde están 7 de sus 12 pestañas."
+}

@@ -1,0 +1,1231 @@
+{
+ "puntuacion": {
+  "ecmwf_aifs025_single|D0": {
+   "m": "str: 'ecmwf_aifs025_single'",
+   "L": "str: 'D0'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "ecmwf_aifs025_single|D1": {
+   "m": "str: 'ecmwf_aifs025_single'",
+   "L": "str: 'D1'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "ecmwf_aifs025_single|D2": {
+   "m": "str: 'ecmwf_aifs025_single'",
+   "L": "str: 'D2'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "ecmwf_ifs025|D0": {
+   "m": "str: 'ecmwf_ifs025'",
+   "L": "str: 'D0'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "ecmwf_ifs025|D1": {
+   "m": "str: 'ecmwf_ifs025'",
+   "L": "str: 'D1'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "ecmwf_ifs025|D2": {
+   "m": "str: 'ecmwf_ifs025'",
+   "L": "str: 'D2'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "icon_eu|D0": {
+   "m": "str: 'icon_eu'",
+   "L": "str: 'D0'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "icon_eu|D1": {
+   "m": "str: 'icon_eu'",
+   "L": "str: 'D1'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "icon_eu|D2": {
+   "m": "str: 'icon_eu'",
+   "L": "str: 'D2'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "meteofrance_arome_france_hd|D0": {
+   "m": "str: 'meteofrance_arome_france_hd'",
+   "L": "str: 'D0'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "meteofrance_arome_france_hd|D1": {
+   "m": "str: 'meteofrance_arome_france_hd'",
+   "L": "str: 'D1'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "ncep_aigfs025|D0": {
+   "m": "str: 'ncep_aigfs025'",
+   "L": "str: 'D0'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "ncep_aigfs025|D1": {
+   "m": "str: 'ncep_aigfs025'",
+   "L": "str: 'D1'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  },
+  "ncep_aigfs025|D2": {
+   "m": "str: 'ncep_aigfs025'",
+   "L": "str: 'D2'",
+   "n": "int: 10",
+   "n_dias": "int: 0",
+   "n_eff": "int: 0",
+   "obs_mm": "float: 0.4",
+   "fc_mm": "float: 0.0",
+   "ratio": "float: 0.0",
+   "mae": "float: 0.0",
+   "rmse": "float: 0.1",
+   "mae_rel": "float: 1.0",
+   "contingencia": {
+    "10": "objeto(6 claves)",
+    "30": "objeto(6 claves)"
+   }
+  }
+ },
+ "desplazamiento": "lista vacía",
+ "nucleo": "lista vacía",
+ "malla": {
+  "pts": [
+   "lista[42]",
+   [
+    "lista[2]",
+    "float: 38.5"
+   ]
+  ],
+  "daily": {
+   "meteofrance_arome_france_hd|D0": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "meteofrance_arome_france_hd|D1": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "icon_eu|D0": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "icon_eu|D1": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.4"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "ecmwf_ifs025|D0": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.2"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.1"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "ecmwf_ifs025|D1": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.2"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.1"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "ecmwf_aifs025_single|D0": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "ecmwf_aifs025_single|D1": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.5"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.1"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "ncep_aigfs025|D0": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 1.7"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.2"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   },
+   "ncep_aigfs025|D1": {
+    "2026-11-14": [
+     "lista[42]",
+     "float: 0.6"
+    ],
+    "2026-11-15": [
+     "lista[42]",
+     "float: 0.1"
+    ],
+    "2026-11-16": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-17": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-18": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-19": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-20": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-21": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-22": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-23": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-24": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-25": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-26": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-27": [
+     "lista[42]",
+     "float: 0.0"
+    ],
+    "2026-11-28": [
+     "lista[42]",
+     "float: 0.0"
+    ]
+   }
+  }
+ },
+ "desfase": {},
+ "oleaje": {
+  "meteofrance_wave": {
+   "n": "int: 108",
+   "pico_obs": "float: 1.17",
+   "pico_mod": "float: 1.08",
+   "ratio": "float: 0.73",
+   "sesgo_m": "float: -0.19",
+   "rmse_m": "float: 0.22"
+  },
+  "dwd_ewam": {
+   "n": "int: 108",
+   "pico_obs": "float: 1.17",
+   "pico_mod": "float: 1.04",
+   "ratio": "float: 0.75",
+   "sesgo_m": "float: -0.18",
+   "rmse_m": "float: 0.22"
+  },
+  "ecmwf_wam": {
+   "n": "int: 108",
+   "pico_obs": "float: 1.17",
+   "pico_mod": "float: 1.2",
+   "ratio": "float: 0.84",
+   "sesgo_m": "float: -0.11",
+   "rmse_m": "float: 0.15"
+  },
+  "ncep_gfswave016": {
+   "n": "int: 108",
+   "pico_obs": "float: 1.17",
+   "pico_mod": "float: 1.5",
+   "ratio": "float: 0.77",
+   "sesgo_m": "float: -0.17",
+   "rmse_m": "float: 0.2"
+  },
+  "dwd_gwam": {
+   "n": "int: 108",
+   "pico_obs": "float: 1.17",
+   "pico_mod": "float: 1.16",
+   "ratio": "float: 0.72",
+   "sesgo_m": "float: -0.21",
+   "rmse_m": "float: 0.23"
+  },
+  "ecmwf_wam025": {
+   "n": "int: 108",
+   "pico_obs": "float: 1.17",
+   "pico_mod": "float: 1.26",
+   "ratio": "float: 0.83",
+   "sesgo_m": "float: -0.12",
+   "rmse_m": "float: 0.16"
+  },
+  "ncep_gfswave025": {
+   "n": "int: 108",
+   "pico_obs": "float: 1.17",
+   "pico_mod": "float: 1.62",
+   "ratio": "float: 0.78",
+   "sesgo_m": "float: -0.16",
+   "rmse_m": "float: 0.22"
+  }
+ },
+ "aprendizaje": {
+  "factor_lluvia": {},
+  "peso": {
+   "ecmwf_aifs025_single|D0": "float: 0.2",
+   "ecmwf_ifs025|D0": "float: 0.2",
+   "icon_eu|D0": "float: 0.2",
+   "meteofrance_arome_france_hd|D0": "float: 0.2",
+   "ncep_aigfs025|D0": "float: 0.2",
+   "ecmwf_aifs025_single|D1": "float: 0.2",
+   "ecmwf_ifs025|D1": "float: 0.2",
+   "icon_eu|D1": "float: 0.2",
+   "meteofrance_arome_france_hd|D1": "float: 0.2",
+   "ncep_aigfs025|D1": "float: 0.2",
+   "ecmwf_aifs025_single|D2": "float: 0.25",
+   "ecmwf_ifs025|D2": "float: 0.25",
+   "icon_eu|D2": "float: 0.25",
+   "ncep_aigfs025|D2": "float: 0.25"
+  },
+  "factor_oleaje": {
+   "meteofrance_wave": {
+    "factor": "float: 1.29",
+    "n": "int: 108",
+    "confianza": "float: 0.82"
+   },
+   "dwd_ewam": {
+    "factor": "float: 1.27",
+    "n": "int: 108",
+    "confianza": "float: 0.82"
+   },
+   "ecmwf_wam": {
+    "factor": "float: 1.15",
+    "n": "int: 108",
+    "confianza": "float: 0.82"
+   },
+   "ncep_gfswave016": {
+    "factor": "float: 1.24",
+    "n": "int: 108",
+    "confianza": "float: 0.82"
+   },
+   "dwd_gwam": {
+    "factor": "float: 1.31",
+    "n": "int: 108",
+    "confianza": "float: 0.82"
+   },
+   "ecmwf_wam025": {
+    "factor": "float: 1.16",
+    "n": "int: 108",
+    "confianza": "float: 0.82"
+   },
+   "ncep_gfswave025": {
+    "factor": "float: 1.23",
+    "n": "int: 108",
+    "confianza": "float: 0.82"
+   }
+  }
+ },
+ "aprendizaje_regimen": {
+  "dana_levante": {
+   "puntuacion": {},
+   "aprendizaje": {
+    "factor_lluvia": "objeto(0 claves)",
+    "peso": "objeto(0 claves)",
+    "factor_oleaje": "objeto(0 claves)"
+   },
+   "min_episodios": "int: 3",
+   "aplicacion_automatica": "bool: False",
+   "estado": "str: 'muestra_insuficiente'"
+  },
+  "conveccion_estival": {
+   "puntuacion": {},
+   "aprendizaje": {
+    "factor_lluvia": "objeto(0 claves)",
+    "peso": "objeto(0 claves)",
+    "factor_oleaje": "objeto(0 claves)"
+   },
+   "min_episodios": "int: 3",
+   "aplicacion_automatica": "bool: False",
+   "estado": "str: 'muestra_insuficiente'"
+  },
+  "frente_atlantico": {
+   "puntuacion": {},
+   "aprendizaje": {
+    "factor_lluvia": "objeto(0 claves)",
+    "peso": "objeto(0 claves)",
+    "factor_oleaje": "objeto(0 claves)"
+   },
+   "min_episodios": "int: 3",
+   "aplicacion_automatica": "bool: False",
+   "estado": "str: 'muestra_insuficiente'"
+  }
+ },
+ "corregido": {
+  "0-6": {
+   "antelacion": "str: 'D0'",
+   "modelos": {
+    "meteofrance_arome_france_hd": "objeto(4 claves)",
+    "icon_eu": "objeto(4 claves)",
+    "ecmwf_ifs025": "objeto(4 claves)",
+    "ecmwf_aifs025_single": "objeto(4 claves)",
+    "ncep_aigfs025": "objeto(4 claves)"
+   },
+   "media_bruta": "float: 0.0",
+   "consenso_aprendido": "null"
+  },
+  "6-12": {
+   "antelacion": "str: 'D0'",
+   "modelos": {
+    "meteofrance_arome_france_hd": "objeto(4 claves)",
+    "icon_eu": "objeto(4 claves)",
+    "ecmwf_ifs025": "objeto(4 claves)",
+    "ecmwf_aifs025_single": "objeto(4 claves)",
+    "ncep_aigfs025": "objeto(4 claves)"
+   },
+   "media_bruta": "float: 0.0",
+   "consenso_aprendido": "null"
+  },
+  "12-24": {
+   "antelacion": "str: 'D0'",
+   "modelos": {
+    "meteofrance_arome_france_hd": "objeto(4 claves)",
+    "icon_eu": "objeto(4 claves)",
+    "ecmwf_ifs025": "objeto(4 claves)",
+    "ecmwf_aifs025_single": "objeto(4 claves)",
+    "ncep_aigfs025": "objeto(4 claves)"
+   },
+   "media_bruta": "float: 0.0",
+   "consenso_aprendido": "null"
+  },
+  "24-48": {
+   "antelacion": "str: 'D1'",
+   "modelos": {
+    "meteofrance_arome_france_hd": "objeto(4 claves)",
+    "icon_eu": "objeto(4 claves)",
+    "ecmwf_ifs025": "objeto(4 claves)",
+    "ecmwf_aifs025_single": "objeto(4 claves)",
+    "ncep_aigfs025": "objeto(4 claves)"
+   },
+   "media_bruta": "float: 0.5",
+   "consenso_aprendido": "null"
+  },
+  "48-72": {
+   "antelacion": "str: 'D2'",
+   "modelos": {
+    "meteofrance_arome_france_hd": "objeto(4 claves)",
+    "icon_eu": "objeto(4 claves)",
+    "ecmwf_ifs025": "objeto(4 claves)",
+    "ecmwf_aifs025_single": "objeto(4 claves)",
+    "ncep_aigfs025": "objeto(4 claves)"
+   },
+   "media_bruta": "float: 0.2",
+   "consenso_aprendido": "null"
+  }
+ },
+ "lecciones": [
+  "lista[13]",
+  "str: 'Mejor modelo a 0–24 h: ECMWF AIFS (erro"
+ ],
+ "historial_aprendizaje": {
+  "2026-11-28": {}
+ },
+ "dias": [
+  "lista[1]",
+  "str: '2026-11-28'"
+ ],
+ "archivo": {
+  "ESIBA0700000207829A": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207839A": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207800A": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207829B": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207820A": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207817A": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207812A": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207816A": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207815B": {
+   "2026-11-28": "int: 1"
+  },
+  "ESIBA0700000207816B": {
+   "2026-11-28": "int: 1"
+  }
+ },
+ "config": {
+  "days": "int: 14",
+  "half_life_d": "float: 10.0",
+  "n0": "float: 5.0",
+  "thr": [
+   "lista[2]",
+   "float: 10.0"
+  ],
+  "clamp": [
+   "lista[2]",
+   "float: 0.2"
+  ]
+ },
+ "archivado_ciclo": {
+  "ok": "int: 10",
+  "arrastre": "int: 0",
+  "descartada": "int: 0"
+ },
+ "modelos": [
+  "lista[5]",
+  "str: 'meteofrance_arome_france_hd'"
+ ],
+ "info": {
+  "meteofrance_arome_france_hd": "str: 'AROME HD'",
+  "icon_eu": "str: 'ICON-EU'",
+  "ecmwf_ifs025": "str: 'ECMWF IFS 0,25°'",
+  "ecmwf_aifs025_single": "str: 'ECMWF AIFS'",
+  "ncep_aigfs025": "str: 'NOAA AIGFS'"
+ },
+ "estaciones": {
+  "ESIBA0700000207815B": {
+   "nombre": "str: 'Sant Miquel de Balansat'",
+   "lat": "float: 39.085",
+   "lon": "float: 1.443"
+  },
+  "ESIBA0700000207812A": {
+   "nombre": "str: 'Sant Llorenç de Balafia'",
+   "lat": "float: 39.044",
+   "lon": "float: 1.487"
+  },
+  "ESIBA0700000207840A": {
+   "nombre": "str: 'Santa Eulària des Riu'",
+   "lat": "float: 38.985",
+   "lon": "float: 1.535"
+  },
+  "ESIBA0700000207816A": {
+   "nombre": "str: \"Sant Mateu d'Albarca\"",
+   "lat": "float: 39.045",
+   "lon": "float: 1.37"
+  },
+  "ESIBA0700000207816B": {
+   "nombre": "str: 'Sant Rafel de sa Creu'",
+   "lat": "float: 38.966",
+   "lon": "float: 1.386"
+  },
+  "ESIBA0700000207800A": {
+   "nombre": "str: 'Eivissa'",
+   "lat": "float: 38.91",
+   "lon": "float: 1.43"
+  },
+  "ESIBA0700000207820A": {
+   "nombre": "str: 'Sant Antoni de Portmany'",
+   "lat": "float: 38.98",
+   "lon": "float: 1.303"
+  },
+  "ESIBA0700000207817A": {
+   "nombre": "str: 'Sant Jordi de ses Salines'",
+   "lat": "float: 38.88",
+   "lon": "float: 1.41"
+  },
+  "ESIBA0700000207829B": {
+   "nombre": "str: 'Sant Agustí des Vedrà'",
+   "lat": "float: 38.925",
+   "lon": "float: 1.3"
+  },
+  "ESIBA0700000207829A": {
+   "nombre": "str: 'Cala de Bou'",
+   "lat": "float: 38.96",
+   "lon": "float: 1.27"
+  },
+  "ESIBA0700000207839A": {
+   "nombre": "str: 'Cala Jondal'",
+   "lat": "float: 38.865",
+   "lon": "float: 1.33"
+  }
+ },
+ "pares_cols": [
+  "lista[8]",
+  "str: 'sid'"
+ ],
+ "pares": [
+  "lista[140]",
+  [
+   "lista[8]",
+   "str: 'ESIBA0700000207829A'"
+  ]
+ ],
+ "status": {
+  "forense": "str: 'DIAGNÓSTICO'",
+  "aprendizaje": "str: 'EXPERIMENTAL'"
+ }
+}

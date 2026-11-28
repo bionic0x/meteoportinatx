@@ -1,0 +1,10 @@
+{
+ "lat_n": "float: 42.68",
+ "lon_w": "float: 1.4",
+ "step": "float: 0.004",
+ "nlat": "int: 101",
+ "nlon": "int: 206",
+ "fuente": "str: 'Terrarium z11 (~56 m)'",
+ "enc": "str: 'uint16le_base64'",
+ "data": "str: 'QQqICucKYwpVCWsIRwgTCeoJxwnWCNEHZgYiBvU"
+}

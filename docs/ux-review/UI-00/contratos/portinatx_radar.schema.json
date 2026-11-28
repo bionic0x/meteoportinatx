@@ -1,0 +1,44 @@
+{
+ "geometry": {
+  "lat_n": "float: 40.5653",
+  "lon_w": "float: -0.42859999999999987",
+  "step": "float: 0.025",
+  "nlat": "int: 117",
+  "nlon": "int: 157",
+  "encoding": "str: 'base64 uint8: 0 sin eco, 1 eco sin tabu"
+ },
+ "metrics_radius_km": "float: 80.0",
+ "frames": [
+  "lista[6]",
+  {
+   "time": "str: '2026-11-28T12:10:00+00:00'",
+   "dup": "bool: False",
+   "grid": "str: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+   "cover": {
+    "10": "float: 0.0",
+    "30": "float: 0.0",
+    "60": "float: 0.0"
+   },
+   "nearest_km": "null",
+   "nearest_strong_km": "null",
+   "max_dbz_30km": "float: 0.0",
+   "max_dbz_15km": "float: 0.0",
+   "site_max_dbz": "float: 0.0",
+   "qpe": {
+    "marshall_palmer": "float: 0.0",
+    "tropical": "float: 0.0"
+   }
+  }
+ ],
+ "status": "str: 'ok'",
+ "motion": {
+  "estado": "str: 'MOTION_UNKNOWN'",
+  "motivo": "str: 'sin patrón de ecos coherente entre fram"
+ },
+ "window_skill": {
+  "lead_min": "int: 10",
+  "csi_euleriana": "null",
+  "estado": "str: 'MOTION_UNKNOWN'",
+  "csi_lagrangiana": "null"
+ }
+}

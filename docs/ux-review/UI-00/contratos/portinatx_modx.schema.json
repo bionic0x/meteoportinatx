@@ -1,0 +1,421 @@
+{
+ "info": {
+  "meteofrance_arome_france_hd": {
+   "nombre": "str: 'AROME HD'",
+   "familia": "str: 'física'",
+   "res": "str: '1,5 km · convectivo'"
+  },
+  "icon_eu": {
+   "nombre": "str: 'ICON-EU'",
+   "familia": "str: 'física'",
+   "res": "str: '7 km'"
+  },
+  "ecmwf_ifs": {
+   "nombre": "str: 'ECMWF IFS HRES'",
+   "familia": "str: 'física'",
+   "res": "str: '9 km'"
+  },
+  "ecmwf_ifs025": {
+   "nombre": "str: 'ECMWF IFS 0,25°'",
+   "familia": "str: 'física'",
+   "res": "str: '25 km'"
+  },
+  "meteofrance_arpege_europe": {
+   "nombre": "str: 'ARPEGE Europa'",
+   "familia": "str: 'física'",
+   "res": "str: '10 km'"
+  },
+  "ukmo_global_deterministic_10km": {
+   "nombre": "str: 'UKMO Global'",
+   "familia": "str: 'física'",
+   "res": "str: '10 km'"
+  },
+  "ecmwf_aifs025_single": {
+   "nombre": "str: 'ECMWF AIFS'",
+   "familia": "str: 'IA'",
+   "res": "str: '25 km · 6-horario'"
+  },
+  "ncep_aigfs025": {
+   "nombre": "str: 'NOAA AIGFS'",
+   "familia": "str: 'IA'",
+   "res": "str: '25 km · 6-horario'"
+  }
+ },
+ "status": {
+  "modelos_ia": "str: 'DIAGNÓSTICO'",
+  "superens": "str: 'EXPERIMENTAL'"
+ },
+ "time": [
+  "lista[96]",
+  "str: '2026-11-27T13:00'"
+ ],
+ "series": {
+  "meteofrance_arome_france_hd": {
+   "pr": [
+    "lista[96]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[96]",
+    "float: 24.8"
+   ],
+   "mslp": [
+    "lista[96]",
+    "null"
+   ]
+  },
+  "icon_eu": {
+   "pr": [
+    "lista[96]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[96]",
+    "float: 20.5"
+   ],
+   "mslp": [
+    "lista[96]",
+    "float: 1018.7"
+   ]
+  },
+  "ecmwf_ifs": {
+   "pr": [
+    "lista[96]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[96]",
+    "float: 23.0"
+   ],
+   "mslp": [
+    "lista[96]",
+    "float: 1018.7"
+   ]
+  },
+  "ecmwf_ifs025": {
+   "pr": [
+    "lista[96]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[96]",
+    "float: 19.8"
+   ],
+   "mslp": [
+    "lista[96]",
+    "float: 1018.6"
+   ]
+  },
+  "meteofrance_arpege_europe": {
+   "pr": [
+    "lista[96]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[96]",
+    "float: 24.1"
+   ],
+   "mslp": [
+    "lista[96]",
+    "float: 1018.7"
+   ]
+  },
+  "ukmo_global_deterministic_10km": {
+   "pr": [
+    "lista[96]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[96]",
+    "float: 22.7"
+   ],
+   "mslp": [
+    "lista[96]",
+    "float: 1018.4"
+   ]
+  },
+  "ecmwf_aifs025_single": {
+   "pr": [
+    "lista[96]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[96]",
+    "null"
+   ],
+   "mslp": [
+    "lista[96]",
+    "float: 1019.0"
+   ]
+  },
+  "ncep_aigfs025": {
+   "pr": [
+    "lista[96]",
+    "float: 0.0"
+   ],
+   "gust": [
+    "lista[96]",
+    "null"
+   ],
+   "mslp": [
+    "lista[96]",
+    "float: 1018.6"
+   ]
+  }
+ },
+ "ventanas": {
+  "meteofrance_arome_france_hd": {
+   "lluvia": {
+    "0-6": "int: 0",
+    "6-12": "int: 0",
+    "12-24": "int: 0",
+    "24-48": "float: 0.6",
+    "48-72": "int: 0"
+   },
+   "racha_max": {
+    "0-24": "float: 17.0",
+    "24-48": "float: 36.0"
+   },
+   "cape_max": {
+    "0-24": "float: 50.0",
+    "24-48": "float: 60.0"
+   }
+  },
+  "icon_eu": {
+   "lluvia": {
+    "0-6": "int: 0",
+    "6-12": "int: 0",
+    "12-24": "float: 0.1",
+    "24-48": "float: 0.1",
+    "48-72": "int: 0"
+   },
+   "racha_max": {
+    "0-24": "float: 18.0",
+    "24-48": "float: 34.0"
+   },
+   "cape_max": {
+    "0-24": "float: 30.0",
+    "24-48": "float: 20.0"
+   }
+  },
+  "ecmwf_ifs": {
+   "lluvia": {
+    "0-6": "int: 0",
+    "6-12": "int: 0",
+    "12-24": "int: 0",
+    "24-48": "float: 2.4",
+    "48-72": "int: 0"
+   },
+   "racha_max": {
+    "0-24": "float: 18.0",
+    "24-48": "float: 31.0"
+   },
+   "cape_max": {
+    "0-24": "float: 0.0",
+    "24-48": "float: 60.0"
+   }
+  },
+  "ecmwf_ifs025": {
+   "lluvia": {
+    "0-6": "int: 0",
+    "6-12": "int: 0",
+    "12-24": "int: 0",
+    "24-48": "float: 1.2",
+    "48-72": "int: 0"
+   },
+   "racha_max": {
+    "0-24": "float: 17.0",
+    "24-48": "float: 27.0"
+   },
+   "cape_max": {
+    "0-24": "float: 10.0",
+    "24-48": "float: 60.0"
+   }
+  },
+  "meteofrance_arpege_europe": {
+   "lluvia": {
+    "0-6": "int: 0",
+    "6-12": "int: 0",
+    "12-24": "int: 0",
+    "24-48": "float: 0.9",
+    "48-72": "float: 0.1"
+   },
+   "racha_max": {
+    "0-24": "float: 20.0",
+    "24-48": "float: 25.0"
+   },
+   "cape_max": {
+    "0-24": "float: 10.0",
+    "24-48": "float: 70.0"
+   }
+  },
+  "ukmo_global_deterministic_10km": {
+   "lluvia": {
+    "0-6": "int: 0",
+    "6-12": "int: 0",
+    "12-24": "int: 0",
+    "24-48": "float: 1.5",
+    "48-72": "int: 0"
+   },
+   "racha_max": {
+    "0-24": "float: 17.0",
+    "24-48": "float: 18.0"
+   },
+   "cape_max": {
+    "0-24": "float: 30.0",
+    "24-48": "float: 120.0"
+   }
+  },
+  "ecmwf_aifs025_single": {
+   "lluvia": {
+    "0-6": "int: 0",
+    "6-12": "int: 0",
+    "12-24": "int: 0",
+    "24-48": "float: 0.6",
+    "48-72": "int: 0"
+   },
+   "racha_max": {
+    "0-24": "null",
+    "24-48": "null"
+   },
+   "cape_max": {
+    "0-24": "null",
+    "24-48": "null"
+   }
+  },
+  "ncep_aigfs025": {
+   "lluvia": {
+    "0-6": "int: 0",
+    "6-12": "int: 0",
+    "12-24": "int: 0",
+    "24-48": "int: 0",
+    "48-72": "float: 1.2"
+   },
+   "racha_max": {
+    "0-24": "null",
+    "24-48": "null"
+   },
+   "cape_max": {
+    "0-24": "null",
+    "24-48": "null"
+   }
+  }
+ },
+ "fuente": "str: '8/8 modelos (2 de IA)'",
+ "superens": {
+  "time": [
+   "lista[72]",
+   "str: '2026-11-28T13:00'"
+  ],
+  "sistemas": {
+   "ecmwf_ifs025": {
+    "nombre": "str: 'ECMWF IFS ENS'",
+    "familia": "str: 'física'",
+    "n": "int: 51",
+    "ventanas": "objeto(3 claves)",
+    "racha24": "objeto(3 claves)",
+    "mediana_h": [
+     "lista[72]",
+     "float: 0.0"
+    ],
+    "p90_h": [
+     "lista[72]",
+     "float: 0.0"
+    ]
+   },
+   "ncep_gefs025": {
+    "nombre": "str: 'NOAA GEFS'",
+    "familia": "str: 'física'",
+    "n": "int: 31",
+    "ventanas": "objeto(3 claves)",
+    "racha24": "objeto(3 claves)",
+    "mediana_h": [
+     "lista[72]",
+     "float: 0.0"
+    ],
+    "p90_h": [
+     "lista[72]",
+     "float: 0.0"
+    ]
+   },
+   "ecmwf_aifs025_ensemble": {
+    "nombre": "str: 'ECMWF AIFS ENS'",
+    "familia": "str: 'IA'",
+    "n": "int: 51",
+    "ventanas": "objeto(3 claves)",
+    "mediana_h": [
+     "lista[72]",
+     "float: 0.0"
+    ],
+    "p90_h": [
+     "lista[72]",
+     "float: 0.0"
+    ]
+   },
+   "ncep_aigefs025": {
+    "nombre": "str: 'NOAA AIGEFS'",
+    "familia": "str: 'IA'",
+    "n": "int: 31",
+    "ventanas": "objeto(3 claves)",
+    "mediana_h": [
+     "lista[72]",
+     "float: 0.0"
+    ],
+    "p90_h": [
+     "lista[72]",
+     "float: 0.0"
+    ]
+   },
+   "google_weathernext2_ensemble": {
+    "nombre": "str: 'Google WeatherNext 2'",
+    "familia": "str: 'IA'",
+    "n": "int: 64",
+    "ventanas": "objeto(3 claves)",
+    "mediana_h": [
+     "lista[72]",
+     "float: 0.0"
+    ],
+    "p90_h": [
+     "lista[72]",
+     "float: 0.0"
+    ]
+   }
+  },
+  "conjunto": {
+   "0-24": {
+    "1": "float: 0.0",
+    "5": "float: 0.0",
+    "10": "float: 0.0",
+    "30": "float: 0.0",
+    "50": "float: 0.0"
+   },
+   "24-48": {
+    "1": "float: 0.237",
+    "5": "float: 0.0",
+    "10": "float: 0.0",
+    "30": "float: 0.0",
+    "50": "float: 0.0"
+   },
+   "48-72": {
+    "1": "float: 0.184",
+    "5": "float: 0.006",
+    "10": "float: 0.0",
+    "30": "float: 0.0",
+    "50": "float: 0.0"
+   }
+  },
+  "por_familia": {
+   "física": {
+    "0-24": "objeto(5 claves)",
+    "24-48": "objeto(5 claves)",
+    "48-72": "objeto(5 claves)"
+   },
+   "IA": {
+    "0-24": "objeto(5 claves)",
+    "24-48": "objeto(5 claves)",
+    "48-72": "objeto(5 claves)"
+   }
+  }
+ },
+ "superens_fuente": "str: '5 sistemas · 228 miembros'"
+}
